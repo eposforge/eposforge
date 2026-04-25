@@ -162,19 +162,108 @@ A product is a strong Dev Product candidate if it:
   [execution-sandbox.md](./execution-sandbox.md). Adapter must
   declare which slot it fills in a given factory instance.
 
+### Blitzy
+
+- **Type:** enterprise platform (agentic engineer).
+- **Cost tier:** enterprise (est. $50k evaluation / $500k/yr).
+- **Privacy posture:** private; focuses on secure enterprise ingestion.
+- **Capabilities:** GraphRAG core, legacy code mapping, Technical Specs
+  generation.
+- **Notes:** full-platform candidate; not typically installed directly
+  into the Dev Product slot. May host a Dev Product Adapter internally.
+  Native GraphRAG for full-system knowledge mapping suits large
+  enterprise legacy-replacement programs.
+
+### Graph-Code
+
+- **Type:** agentic IDE / platform.
+- **Cost tier:** commercial (est. $10k–$50k/yr, usage-based tiers).
+- **Privacy posture:** private; graph-based logic stays on the vendor
+  platform.
+- **Capabilities:** multi-repo mapping, Docker/K8s automation, native
+  multi-repo graph mapping & RAG.
+- **Notes:** knowledge-graph-native design; a strong candidate where
+  graph-aware Dev Product Adapters are required.
+
+### Harness AIDA
+
+- **Type:** enterprise DevOps platform.
+- **Cost tier:** commercial ($50–$150/dev/mo; free tier for small
+  teams).
+- **Privacy posture:** commercial / enterprise standards.
+- **Capabilities:** pipeline automation, built-in knowledge graph RAG,
+  compliance tooling.
+- **Notes:** full-platform candidate; may host a Dev Product Adapter
+  internally rather than filling the slot directly. Best fit for
+  enterprise DevOps and compliance workflows.
+
+### StackGen
+
+- **Type:** autonomous ops platform.
+- **Cost tier:** enterprise (est. $100k+; limited trial).
+- **Privacy posture:** enterprise-grade isolation.
+- **Capabilities:** intent-based infrastructure management, autonomous
+  remediation, graph-backed intent & remediation engine.
+- **Notes:** graph-backed ops focus; better suited to
+  infrastructure/ops sub-tasks than typical code-generation Dev
+  Product tasks.
+
+### Autonomy AI
+
+- **Type:** agentic workflow platform.
+- **Cost tier:** commercial ($125–$999+/mo, tiered by usage).
+- **Privacy posture:** departmental isolation.
+- **Capabilities:** ACE engine, custom internal agents, graph workflow
+  orchestration.
+- **Notes:** full-platform candidate for building org-specific internal
+  tools; not typically installed directly into the Dev Product slot.
+
+### Microsoft Agent Framework
+
+- **Type:** open-source multi-agent framework (successor to AutoGen).
+- **Cost tier:** free OSS + model API keys.
+- **Privacy posture:** local deployment / private cloud.
+- **Capabilities:** conversable agents, multi-agent orchestration,
+  graph management & sync.
+- **Notes:** primarily a Router candidate; can also dispatch in ways
+  that resemble a Dev Product for some tasks. See router research for
+  the primary evaluation.
+
+### Kagent
+
+- **Type:** open-source Kubernetes agent.
+- **Cost tier:** free OSS (Apache 2.0) + model API keys.
+- **Privacy posture:** local infrastructure control.
+- **Capabilities:** K8s troubleshooting, security analysis, extendable
+  to K8s resource graphs.
+- **Notes:** infra-focused; good Adapter target for DevOps and
+  Kubernetes management sub-tasks.
+
+### Code-Graph-RAG
+
+- **Type:** open-source knowledge graph tool.
+- **Cost tier:** free OSS + model API keys.
+- **Privacy posture:** local / BYOK.
+- **Capabilities:** Tree-sitter-based code mapping, deep multi-repo
+  code context, knowledge graph generation.
+- **Notes:** native code knowledge graph via Tree-sitter; strong
+  candidate for graph-aware Adapters needing deep codebase
+  understanding.
+
 ---
 
 ## Likely component cross-overs
 
-A few products listed elsewhere in research may also work as Dev
-Products in narrow scenarios:
+Some products have full entries in the Candidates section above but
+primarily fit a different factory slot:
 
 - **Microsoft Agent Framework** is primarily a Router candidate; it
-  can also dispatch in a way that resembles a Dev Product for some
-  tasks.
-- **Blitzy / Harness AIDA / Autonomy AI** are full-platform candidates
-  rather than Dev Products. They could host a Dev Product Adapter
-  internally, but would not themselves install into the slot.
+  can also dispatch in ways that resemble a Dev Product for some tasks.
+- **Blitzy / Harness AIDA / Autonomy AI** are full-platform candidates;
+  they could host a Dev Product Adapter internally but would not
+  themselves install into the slot.
+- **StackGen** is an autonomous ops platform; better suited to
+  infrastructure/ops sub-tasks than code-generation work.
 
 When an Adapter could fit multiple slots, the operator declares which
 slot it fills in their instance.
