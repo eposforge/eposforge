@@ -24,6 +24,11 @@ Any Adapter for this slot must:
 - Define the minimum content of a Living Spec: purpose, observable
   behavior, inputs / outputs, dependencies, non-functional bounds,
   versioning policy.
+- Declare inputs/outputs and non-functional bounds with enough
+  precision that black-box test partitions (equivalence classes and
+  boundary values) can be derived from the spec mechanically, without
+  reading implementation code. A Living Spec that cannot support this
+  derivation is under-specified.
 - Be projectable into the Spec Graph (component 6) without lossy
   transformations.
 

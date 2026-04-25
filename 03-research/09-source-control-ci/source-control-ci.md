@@ -79,8 +79,69 @@ Each entry includes (where known):
 
 ---
 
+## Integration Test Harness — Container Tooling
+
+The factory-level integration check requires real, disposable service
+instances — no mocks of factory components. The following products are
+the primary candidates for implementing this isolation.
+
+### Testcontainers (multi-language)
+
+- **Website:** https://testcontainers.com
+- **Language SDKs:** Java, .NET, Go, Python, Node.js, Rust (and more).
+- **Cost tier:** free OSS (Apache 2.0); Testcontainers Cloud is a
+  paid SaaS option for CI runners without local Docker.
+- **Hosting model:** local Docker daemon or Testcontainers Cloud.
+- **Capabilities:** programmatic container lifecycle (start, wait,
+  stop), dynamic port assignment, per-test isolation, automatic
+  cleanup via reaper, pre-built modules for common services (Postgres,
+  Redis, Kafka, LocalStack, Kubernetes via kind, etc.).
+- **Notes:** reference pattern for the integration harness. Each
+  integration test run spins up the required factory components
+  (Source Control, Tool Transport endpoint, etc.) as fresh containers,
+  runs assertions against the full chain, and discards them. Reusable
+  mode accelerates local dev by keeping containers alive between runs.
+  Testcontainers Cloud removes the need for local Docker in restricted
+  CI environments.
+
+### Testcontainers Cloud (AtomicJar / Docker)
+
+- **Website:** https://testcontainers.com/cloud
+- **Cost tier:** commercial SaaS.
+- **Hosting model:** cloud-hosted container execution.
+- **Capabilities:** same Testcontainers API, containers run remotely;
+  no Docker required on the CI runner.
+- **Notes:** useful when the CI environment (e.g., a rootless runner)
+  cannot run Docker. Drop-in replacement — no code changes needed.
+
+### LocalStack
+
+- **Website:** https://localstack.cloud
+- **Cost tier:** free community edition; Pro tier for advanced
+  services.
+- **Hosting model:** self-hosted container or SaaS.
+- **Capabilities:** emulates AWS services (S3, SQS, Secrets Manager,
+  etc.) locally.
+- **Notes:** relevant when the factory's Secrets & Key Management or
+  Audit & Observability Adapter targets AWS. Use via the Testcontainers
+  LocalStack module for lifecycle management.
+
+### kind (Kubernetes in Docker)
+
+- **Website:** https://kind.sigs.k8s.io
+- **Cost tier:** free OSS (Apache 2.0).
+- **Hosting model:** local Docker.
+- **Capabilities:** full Kubernetes cluster inside Docker containers;
+  Testcontainers has a first-class kind module.
+- **Notes:** relevant for factories deployed on Kubernetes substrate.
+  Allows integration tests to exercise real scheduler and networking
+  behavior.
+
+---
+
 ## Contribution
 
 Open a PR adding new entries with the same fields. Prefer Adapters
 with explicit support for signed commits, paired-change checks, and
-tier-gated auto-merge.
+tier-gated auto-merge. For integration harness entries, document the
+isolation strategy and which factory components the harness exercises.

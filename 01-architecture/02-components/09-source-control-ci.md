@@ -17,6 +17,16 @@ Any Adapter for this slot must:
   (component 2). A change that touches behavior without updating the
   Living Spec must fail CI.
 - Run automated tests for each PR; gate merges on test status.
+- Run factory-level integration tests as a required PR check. These
+  tests exercise the full component chain (Spec Input → Router → Dev
+  Product → Tool Transport → Source Control gate) against real service
+  instances, not mocks of factory components. Isolation is provided by
+  Component 7 (Execution Sandbox); disposable container environments
+  (e.g., Testcontainers) are the reference pattern.
+- Derive integration test cases from the Living Spec's declared
+  observable behavior, inputs/outputs, and non-functional bounds using
+  equivalence partitioning and boundary value analysis — not from code
+  internals.
 - Consult Agent Policy ([08-agent-policy.md](./08-agent-policy.md)) for
   merge tier decisions. Tier-1 PRs may auto-merge on green; Tier-2 PRs
   require human approval.
@@ -39,6 +49,9 @@ In addition to the universal fields in
 - `signed_commits_required` — whether agent commits must be signed.
 - `paired_change_check_id` — identifier of the CI check enforcing the
   paired-change rule.
+- `integration_test_check_id` — identifier of the CI check running
+  factory-level integration tests. Must be a required status check;
+  cannot be bypassed by auto-merge.
 
 ## Boundaries
 
