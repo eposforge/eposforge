@@ -94,6 +94,10 @@ By the end of Phase 3:
 - Tier-1 actions include at least: restart unhealthy services, rotate
   certificates, apply security patches after canary, restart workloads
   for substrate optimization.
+- Release Rings (component 9b) are formalized: alpha and beta rings
+  are active. Agents deploy autonomously to alpha; beta promotion
+  requires human approval at the gate. Ring-lock is enforced in Agent
+  Policy for beta and above.
 - Failure modes are documented and rehearsed.
 
 **Done when:** the factory handles routine ops autonomously, the human
@@ -119,6 +123,11 @@ By the end of Phase 4:
   verifies them.
 - The factory scales across multiple substrate hosts or zones without
   re-architecture.
+- All four Release Rings (alpha, beta, preview, GA) are active. The
+  fully automated promotion pipeline evaluates evidence thresholds and
+  executes ring transitions without human intervention below the
+  preview → GA gate. GA ring-lock is fully enforced: agents are
+  forbidden from any direct interaction with GA infrastructure.
 
 **Done when:** a human writes a strategic goal → agents implement and
 verify → the factory operates against the goal autonomously for a

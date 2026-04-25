@@ -52,6 +52,11 @@ In addition to the universal fields in
 - `integration_test_check_id` — identifier of the CI check running
   factory-level integration tests. Must be a required status check;
   cannot be bypassed by auto-merge.
+- `ring_promotion_pipeline_refs` — references to the promotion
+  pipeline definitions for each ring transition. Each pipeline is a
+  required status check on the merge that executes the transition;
+  cannot be bypassed. Governed by Release Rings (component 9b) and
+  Agent Policy (component 8).
 
 ## Boundaries
 
@@ -60,7 +65,11 @@ In addition to the universal fields in
 - **Is not:** the Spec Graph (which is a queryable projection, not a
   source-of-truth store).
 - **Is not:** the deploy target. Deploy is downstream and is governed
-  separately by each deliverable's deploy contract.
+  by the Release Rings component
+  ([09b-release-rings.md](./09b-release-rings.md)). Ring promotion
+  pipelines are defined in source control and triggered from CI, but
+  the ring governance contract — evidence thresholds, ring-lock rules,
+  promotion authority — belongs to that component, not here.
 
 ## Reference implementations
 

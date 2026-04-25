@@ -99,6 +99,17 @@ A dark factory matures along two parallel ladders, one per peer factory:
   framing). From human-in-the-loop authoring to specs-in / artifacts-out
   Level 5.
 
+A third axis governs **where artifacts run and how much autonomous
+authority applies there**: the Release Ring model. Alpha is the
+narrow edge where agents deploy freely; as an artifact earns
+operational confidence, it graduates to beta, preview, and finally
+General Availability. At GA, the artifact is fully shielded from
+direct agent deployment — only the automated promotion pipeline may
+touch it, and only after evidence thresholds have been met. This is
+the **Defense in Depth** Core Principle applied to deployment
+authority, not just to infrastructure. The factory does not graduate
+to full autonomy all at once; it earns it one ring at a time.
+
 At Level 5 / Phase F, the operator's role becomes:
 
 1. **Think clearly** about what should exist (not how to build it).
