@@ -4,13 +4,13 @@
 > retire when stale. Treat as recon, not gospel.
 
 What's already being built in the dark-factory / agent-orchestration /
-physical-AI space, and where DarkForge fits.
+physical-AI space, and where EposForge fits.
 
 ---
 
 ## Why this exists
 
-DarkForge is a pattern, not a product. The pattern only matters if
+EposForge is a pattern, not a product. The pattern only matters if
 operators reach for it instead of (re-)building one of the platforms
 already in the field. This scan keeps the project honest about the
 overlap and the genuine gap.
@@ -83,9 +83,9 @@ on the hardware is the vendor's choice.
 
 ---
 
-## Where DarkForge sits
+## Where EposForge sits
 
-DarkForge is **not** trying to be any of the above. It is trying to be
+EposForge is **not** trying to be any of the above. It is trying to be
 the **shared, opinionated pattern** that:
 
 - Names the twelve components every dark factory needs.
@@ -123,5 +123,13 @@ issue or a PR. Scope this doc to "what shapes of work exist," not
 
 Concrete Adapter candidates per component slot:
 
+- [spec-input.md](./spec-input.md) — Spec Input slot (component 1).
 - [dev-products.md](./dev-products.md) — Dev Product slot (component 3).
+- [router.md](./router.md) — Router slot (component 4).
+- [spec-graph.md](./spec-graph.md) — Spec Graph slot (component 6).
+- [execution-sandbox.md](./execution-sandbox.md) — Execution Sandbox slot (component 7).
+- [source-control-ci.md](./source-control-ci.md) — Source Control + CI slot (component 9).
+- [inference.md](./inference.md) — Inference slot (component 10).
+- [audit-observability.md](./audit-observability.md) — Audit & Observability slot (component 11).
+- [secrets-key-management.md](./secrets-key-management.md) — Secrets & Key Management slot (component 12).
 - More to come as research surveys mature.
