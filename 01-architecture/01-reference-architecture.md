@@ -76,6 +76,8 @@ factory.
   capabilities to Dev Products.
 - [09-source-control-ci.md](./02-components/09-source-control-ci.md) —
   lands and gates artifacts.
+- [09b-release-rings.md](./02-components/09b-release-rings.md) —
+  governs where artifacts run and who may put them there.
 
 **Memory and state** — components that record and project the factory's
 work over time.

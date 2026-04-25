@@ -24,8 +24,16 @@ Any Adapter for this slot must:
   - Tier 3: human approval gate at completion — agents may proceed with
     work but final apply requires human sign-off.
   - (Adapters may add finer tiers; these four are the minimum.)
-- Scope policies by domain (Platform vs Product), by Adapter type, and
-  by resource class.
+- Scope policies by domain (Platform vs Product), by Adapter type,
+  by resource class, and by **deployment ring** (alpha, beta, preview,
+  GA). Ring membership is a required input to every policy decision;
+  the decision point must reject requests that do not declare a ring.
+- Enforce ring-lock: declare, per ring, which action classes are
+  permitted (tier-1 auto-approve), require human review (tier-2),
+  require gated apply (tier-3), or are forbidden entirely (tier-0).
+  At minimum: GA ring deploy actions must be tier-0 (forbidden for
+  agents); alpha ring deploy actions may be tier-1. Intermediate rings
+  are tier-2 or tier-3 at the instance's discretion.
 - Provide a decision API the Router and Tool Transport call before any
   action.
 - Be versioned with audit history. Policy changes are auditable like
@@ -41,6 +49,10 @@ In addition to the universal fields in
 - `policy_format` — file format the Adapter consumes (e.g., YAML, OPA
   Rego, JSON, custom DSL).
 - `tiers_supported` — full tier list, beyond the required minimum.
+- `rings_supported` — ordered list of deployment ring names the
+  policy enforces; must include at minimum alpha, beta, preview, GA.
+- `ring_lock_rules_ref` — reference to the declarative ring-lock rule
+  set in source control.
 - `decision_latency_target` — declared p99 latency for policy decisions.
 
 ## Boundaries
@@ -52,6 +64,10 @@ In addition to the universal fields in
   decisions.
 - **Is not:** a runtime monitor. Audit & Observability handles
   observation; Agent Policy handles permission.
+- **Is not:** the ring governance model. Release Rings
+  ([09b-release-rings.md](./09b-release-rings.md)) declares what the
+  rings are and what the evidence thresholds are; Agent Policy enforces
+  the access rules those rings require.
 
 ## Reference implementations
 
