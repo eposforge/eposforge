@@ -1,5 +1,7 @@
-# DarkForge
+# EposForge
 
+> **epos** \e-ˌpäs\ — see [Merriam-Webster](https://www.merriam-webster.com/dictionary/epos).
+>
 > Open-source dark factory: declarative specs in, production artifacts out.
 > Vendor-agnostic orchestration that ships software today and unifies platform
 > ops and physical (robotics) execution tomorrow.
@@ -8,12 +10,12 @@
 
 ## What this is
 
-DarkForge is the open, vendor-agnostic **pattern** for a dark factory — a
+EposForge is the open, vendor-agnostic **pattern** for a dark factory — a
 fully agentic software, platform, and (eventually) physical-execution
 factory driven by declarative intent. You describe what should exist;
 the factory builds, deploys, and operates it.
 
-DarkForge defines:
+EposForge defines:
 
 - A **vision** for unified intent execution across software, platform, and
   physical substrates.
@@ -25,7 +27,7 @@ DarkForge defines:
 - A **research catalog** of candidate Adapters so you don't reinvent the
   wheel.
 
-DarkForge does not pick implementations. Instances pick implementations.
+EposForge does not pick implementations. Instances pick implementations.
 
 ## How to read this repo
 
