@@ -148,6 +148,20 @@ A product is a strong Dev Product candidate if it:
   ([../01-architecture/02-components/01-spec-input.md](../01-architecture/02-components/01-spec-input.md))
   than the Dev Product slot. Listed here for awareness.
 
+### OpenClaw
+
+- **Type:** open-source agent gateway + sandbox browser.
+- **Cost tier:** free OSS.
+- **Privacy posture:** local; runs entirely inside the operator's
+  network.
+- **Capabilities:** LLM-driven multi-step browser automation, file
+  ops, and shell ops via a sandboxed VNC / noVNC / CDP environment.
+- **Notes:** dual-fit — operates as a Dev Product for browser-heavy
+  sub-tasks, and is the canonical **Execution Sandbox** in instances
+  that adopt it. See
+  [execution-sandbox.md](./execution-sandbox.md). Adapter must
+  declare which slot it fills in a given factory instance.
+
 ---
 
 ## Likely component cross-overs
