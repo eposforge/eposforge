@@ -12,6 +12,15 @@ a microservice, manages a server fleet, or — at the horizon — coordinates
 robotic actuators. Software, platform, and physical work are peer
 expressions of the same idea: machines executing human intent.
 
+A dark factory is not an island. Every artifact it produces — Living
+Specs, Adapters, components, research catalog entries — is publishable
+to open-source platforms in a form other dark factories (including other
+DarkForge instances) can discover, audit, and reuse on demand. The
+endgame is **dynamic, on-demand software**: when a factory needs a
+capability, it first asks the shared corpus whether something already
+exists; only if nothing fits does it build new. Each factory's output
+expands the substrate every other factory builds from.
+
 ## Three Pillars
 
 ### 1. Substrate-Agnostic Platform
@@ -117,12 +126,35 @@ orders against it," and the factory dispatches to software adapters,
 platform automations, and (eventually) robotic adapters with the same
 orchestration spine.
 
-### OSS flywheel
+### OSS flywheel — dynamic, on-demand software
 
-DarkForge instances can publish Living Specs, component Adapters, and
-research catalog entries to a shared discovery layer. Other instances
-can find, audit, and reuse them. Every factory contributes to the
-shared knowledge of what works.
+The factory's outputs are first-class open-source artifacts, not
+internal byproducts. Every Living Spec, Adapter, component, and research
+catalog entry a DarkForge instance produces is structured to be
+**publishable, discoverable, and reusable** by any other dark factory.
+
+This unlocks a qualitatively different mode of software production:
+
+- **Discover-before-build.** When a factory needs a capability, the
+  Router first queries the shared Spec Graph and OSS registries for an
+  existing Living Spec or Adapter that satisfies the intent. Building
+  new is the fallback, not the default.
+- **Reuse at the spec layer, not just the code layer.** Because Living
+  Specs travel with their artifacts and are projected into queryable
+  graphs, other factories can match on *intent and contract*, not just
+  on package names or READMEs.
+- **Compounding corpus.** Every factory that ships also publishes.
+  The shared substrate of reusable specs and adapters grows with each
+  deliverable across the ecosystem — including eposforge consuming
+  artifacts produced by other DarkForge instances, and vice versa.
+- **On-demand assembly.** At maturity, "needing software" looks less
+  like a build project and more like a query: declare the intent, let
+  the factory compose existing published pieces, and only generate the
+  delta that is genuinely new.
+
+This is the long-arc payoff of the pattern. A single dark factory
+accelerates one operator. A network of publishing dark factories
+collapses the cost of software for everyone.
 
 ### Appliance-ready
 
