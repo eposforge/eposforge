@@ -1,0 +1,55 @@
+# Component 9: Source Control + CI
+
+## Purpose
+
+Where artifacts land, where the paired-change rule is enforced, and
+where deploys originate. Source Control + CI is the durable home for the
+factory's output. Every Living Spec, every Adapter configuration, every
+deliverable lives here.
+
+## Contract
+
+Any Adapter for this slot must:
+
+- Provide source control with branches, pull requests, and signed
+  commits.
+- Enforce the paired-change rule defined by the Living Spec Adapter
+  (component 2). A change that touches behavior without updating the
+  Living Spec must fail CI.
+- Run automated tests for each PR; gate merges on test status.
+- Consult Agent Policy ([08-agent-policy.md](./08-agent-policy.md)) for
+  merge tier decisions. Tier-1 PRs may auto-merge on green; Tier-2 PRs
+  require human approval.
+- Trigger Spec Graph re-projection (component 6) on every merge that
+  touches a Living Spec.
+- Emit audit events for every PR open, review, merge, and deploy.
+
+The Adapter must support **agent attribution**: every commit produced by
+an agent identifies which Adapter authored it, under which Spec Input,
+under which Agent Policy tier.
+
+## Required Adapter metadata
+
+In addition to the universal fields in
+[../00-adapter-pattern.md](../00-adapter-pattern.md):
+
+- `vcs` — the source control system (git, jj, etc.).
+- `host` — the hosting / forge (GitHub, Gitea, GitLab, self-hosted).
+- `ci_engine` — which CI engine runs (Actions, GitLab CI, custom).
+- `signed_commits_required` — whether agent commits must be signed.
+- `paired_change_check_id` — identifier of the CI check enforcing the
+  paired-change rule.
+
+## Boundaries
+
+- **Is:** the durable home of artifacts and the gating layer for
+  changes.
+- **Is not:** the Spec Graph (which is a queryable projection, not a
+  source-of-truth store).
+- **Is not:** the deploy target. Deploy is downstream and is governed
+  separately by each deliverable's deploy contract.
+
+## Reference implementations
+
+See [../../03-research/](../../03-research/) for the catalog (GitHub +
+Actions, Gitea + Gitea Actions, GitLab, custom self-hosted, etc.).
