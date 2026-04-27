@@ -2,8 +2,18 @@
 .env
 .env.*
 
-# Claude Code MCP config (machine-specific paths)
+# AI assistant machine-specific configs
 .mcp.json
-
-# VS Code MCP config (contains credentials)
 .vscode/mcp.json
+
+# Node / Gemini CLI
+node_modules/
+.gemini/
+package-lock.json
+
+# GraphRAG runtime output
+graphrag/output/
+graphrag/cache/
+graphrag/.venv/
+graphrag/__pycache__/
+graphrag/*.pyc
