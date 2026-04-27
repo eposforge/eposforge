@@ -1,0 +1,23 @@
+{
+  "name": "eposforge",
+  "version": "1.0.0",
+  "description": "> **epos** \\e-ˌpäs\\ — see [Merriam-Webster](https://www.merriam-webster.com/dictionary/epos). > > Open-source dark factory: declarative specs in, production artifacts out. > Vendor-agnostic orchestration that ships software today and unifies platform > ops and physical (robotics) execution tomorrow.",
+  "private": true,
+  "scripts": {
+    "gemini": "gemini"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eposforge/eposforge.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/eposforge/eposforge/issues"
+  },
+  "homepage": "https://github.com/eposforge/eposforge#readme",
+  "devDependencies": {
+    "@google/gemini-cli": "^0.39.1"
+  }
+}
