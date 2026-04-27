@@ -2,8 +2,8 @@
   "servers": {
     "eposforge-graph": {
       "type": "stdio",
-      "command": "uvx",
-      "args": ["mcp-neo4j-cypher"],
+      "command": "${workspaceFolder}/graphrag/.venv/bin/mcp-neo4j-cypher",
+      "args": [],
       "env": {
         "NEO4J_URI": "bolt://localhost:7688",
         "NEO4J_USERNAME": "neo4j",

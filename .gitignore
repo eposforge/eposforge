@@ -1,3 +1,6 @@
 # Local secrets — never commit
 .env
 .env.*
+
+# Claude Code MCP config (machine-specific paths)
+.mcp.json
