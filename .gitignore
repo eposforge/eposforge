@@ -4,3 +4,6 @@
 
 # Claude Code MCP config (machine-specific paths)
 .mcp.json
+
+# VS Code MCP config (contains credentials)
+.vscode/mcp.json
