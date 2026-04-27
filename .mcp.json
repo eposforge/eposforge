@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "eposforge-graph": {
+      "command": "uvx",
+      "args": ["mcp-neo4j-cypher"],
+      "env": {
+        "NEO4J_URI": "bolt://localhost:7688",
+        "NEO4J_USERNAME": "neo4j"
+      }
+    }
+  }
+}
