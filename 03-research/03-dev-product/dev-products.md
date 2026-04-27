@@ -81,8 +81,19 @@ A product is a strong Dev Product candidate if it:
 - **Cost tier:** free + consumer-paid tiers.
 - **Privacy posture:** free tier may train on data; paid tiers
   generally do not.
-- **Capabilities:** very large context windows, fast, low cost.
-- **Notes:** strong for large-codebase ingestion tasks.
+- **Capabilities:** very large context windows, fast, low cost;
+  MCP extension ecosystem (install any MCP server and Gemini CLI
+  consumes it).
+- **Notes:** strong for large-codebase ingestion tasks. When
+  paired with the Neo4j MCP extension (Tool Transport slot), gains
+  live read/write access to the Spec Graph; operators can issue
+  natural-language consistency checks and spec-generation commands
+  against the full knowledge graph. See
+  [../06-spec-graph/graphrag-neo4j-integration.md](../06-spec-graph/graphrag-neo4j-integration.md)
+  for the recommended pipeline. Reference Dev Product for the
+  GraphRAG + Neo4j integration pattern, though any MCP-compatible
+  Dev Product (Claude Code, Cursor, Goose, OpenCode) is a drop-in
+  substitute at the Tool Transport layer.
 
 ### Aider
 

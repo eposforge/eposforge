@@ -66,6 +66,30 @@ Each entry includes (where known):
   data point for instances evaluating a buy-vs-build trade-off on
   the Spec Graph slot.
 
+### Microsoft GraphRAG
+
+- **Type:** open-source graph extraction pipeline (Microsoft
+  Research).
+- **Cost tier:** free OSS; inference costs depend on the model
+  backend (Gemini, OpenAI, or local via Ollama).
+- **Query languages:** none natively — outputs Parquet files.
+  Pair with the Neo4j import step to unlock Cypher queries and
+  vector similarity search against the extracted graph.
+- **Capabilities:** full-document entity and relationship
+  extraction, hierarchical community detection at multiple
+  resolution levels, embedding generation, community summary
+  reports. Produces Entity, Relationship, Community, and
+  TextUnit records.
+- **Notes:** designed for unstructured text corpora; well-suited
+  to Markdown architecture docs. Custom prompts in the
+  `prompts/` directory let Adapter authors tune extraction to
+  domain-specific vocabulary (e.g., Component, Adapter, Phase,
+  Pillar). Rebuild is a full nuke-and-reproject; incremental
+  update is not supported out of the box. See
+  [graphrag-neo4j-integration.md](./graphrag-neo4j-integration.md)
+  for the recommended pipeline that feeds GraphRAG output into
+  Neo4j as the query layer.
+
 ### Hybrid vector + graph store
 
 - **Type:** stack pattern (e.g., Neo4j + pgvector, Weaviate,

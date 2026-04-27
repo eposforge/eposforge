@@ -40,6 +40,14 @@ EposForge does not pick implementations. Instances pick implementations.
 
 This repo is docs-first. Code lands as components mature.
 
+## Documentation maintenance (Spec Graph)
+
+This repo implements its own Spec Graph (Component 6) using Microsoft
+GraphRAG + Neo4j CE. See [SPEC.md](./SPEC.md) for the Living Spec and
+[graphrag/README.md](./graphrag/README.md) for setup instructions.
+Run `bash scripts/spec-graph-rebuild.sh` after significant doc batches
+to refresh the knowledge graph.
+
 ## Status
 
 Early. Vision, components, and maturity roadmaps are being extracted from

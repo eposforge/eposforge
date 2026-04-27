@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# spec-graph-rebuild.sh — Full nuke-and-reproject: GraphRAG index + Neo4j import.
+#
+# This is the standard maintenance command. Run it after any significant
+# batch of Markdown changes. Per the Spec Graph component contract,
+# nuke-and-reproject is the rebuild model; there is no incremental update.
+#
+# Required environment variables:
+#   ANTHROPIC_API_KEY — Anthropic API key (claude-sonnet-4-6)
+#   OPENAI_API_KEY    — OpenAI API key (text-embedding-3-small)
+#   NEO4J_URI         — Neo4j bolt URI (default: bolt://localhost:7687)
+#   NEO4J_USERNAME    — Neo4j username (default: neo4j)
+#   NEO4J_PASSWORD    — Neo4j password
+#
+# Usage:
+#   ANTHROPIC_API_KEY=xxx OPENAI_API_KEY=yyy NEO4J_PASSWORD=zzz bash scripts/spec-graph-rebuild.sh
+set -euo pipefail
+
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Apply defaults for optional env vars
+export NEO4J_URI="${NEO4J_URI:-bolt://localhost:7687}"
+export NEO4J_USERNAME="${NEO4J_USERNAME:-neo4j}"
+
+echo "==> Starting full Spec Graph rebuild"
+echo "    Index: GraphRAG over Markdown → Parquet"
+echo "    Import: Parquet → Neo4j (${NEO4J_URI})"
+echo ""
+
+bash "${SCRIPTS_DIR}/spec-graph-index.sh"
+echo ""
+bash "${SCRIPTS_DIR}/spec-graph-import.sh"
+
+echo ""
+echo "==> Spec Graph rebuild complete."
