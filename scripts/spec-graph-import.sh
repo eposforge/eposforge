@@ -50,6 +50,8 @@ export GRAPHRAG_OUTPUT_DIR="${OUTPUT_DIR}"
 import os
 import glob
 import pathlib
+import lancedb
+import numpy as np
 import pandas as pd
 from neo4j import GraphDatabase
 
@@ -100,6 +102,30 @@ with driver.session() as session:
                 "FOR (e:Entity) ON (e.title)")
     session.run("CREATE INDEX entity_type IF NOT EXISTS "
                 "FOR (e:Entity) ON (e.type)")
+    session.run("CREATE CONSTRAINT community_report_id IF NOT EXISTS "
+                "FOR (r:CommunityReport) REQUIRE r.id IS UNIQUE")
+    # Vector indexes — native Neo4j 5.11+ feature; GDS not required.
+    session.run(
+        "CREATE VECTOR INDEX entity_embedding IF NOT EXISTS "
+        "FOR (e:Entity) ON (e.embedding) "
+        "OPTIONS {indexConfig: {"
+        "`vector.dimensions`: 1536, "
+        "`vector.similarity_function`: 'cosine'}}"
+    )
+    session.run(
+        "CREATE VECTOR INDEX text_unit_embedding IF NOT EXISTS "
+        "FOR (t:TextUnit) ON (t.embedding) "
+        "OPTIONS {indexConfig: {"
+        "`vector.dimensions`: 1536, "
+        "`vector.similarity_function`: 'cosine'}}"
+    )
+    session.run(
+        "CREATE VECTOR INDEX community_report_embedding IF NOT EXISTS "
+        "FOR (c:CommunityReport) ON (c.embedding) "
+        "OPTIONS {indexConfig: {"
+        "`vector.dimensions`: 1536, "
+        "`vector.similarity_function`: 'cosine'}}"
+    )
 
     # -----------------------------------------------------------------------
     # Entities
@@ -196,6 +222,7 @@ with driver.session() as session:
     # via the integer "community" FK field.
     # -----------------------------------------------------------------------
     community_reports = read_parquet("community_reports.parquet")
+    community_report_ids = []
     if not community_reports.empty:
         print(f"  Importing {len(community_reports)} community reports...")
         rows = [
@@ -210,6 +237,7 @@ with driver.session() as session:
             }
             for _, row in community_reports.iterrows()
         ]
+        community_report_ids = [r["id"] for r in rows]
         session.run(
             "UNWIND $rows AS row "
             "MERGE (r:CommunityReport {id: row.id}) "
@@ -280,6 +308,68 @@ with driver.session() as session:
                 rows=entity_tu_rows,
             )
 
+    # -----------------------------------------------------------------------
+    # Embedding write passes — copy LanceDB vectors into Neo4j node properties.
+    # Uses db.create.setNodeVectorProperty for optimised binary storage.
+    # Runs after all MERGE blocks (nodes must exist) and before tombstone sweep.
+    # -----------------------------------------------------------------------
+    print("  Writing embeddings from LanceDB...")
+    ldb = lancedb.connect(str(OUTPUT_DIR / "lancedb"))
+
+    if not entities.empty:
+        entity_emb = ldb.open_table("entity_description").to_pandas()[["id", "vector"]]
+        entities_with_emb = entities.merge(entity_emb, on="id", how="left")
+        emb_rows = [
+            {"id": str(r["id"]), "embedding": [float(x) for x in r["vector"]]}
+            for _, r in entities_with_emb.iterrows()
+            if isinstance(r["vector"], np.ndarray)
+        ]
+        if emb_rows:
+            session.run(
+                "UNWIND $rows AS row "
+                "MATCH (e:Entity {id: row.id}) "
+                "CALL db.create.setNodeVectorProperty(e, 'embedding', row.embedding) "
+                "RETURN count(*)",
+                rows=emb_rows,
+            )
+            print(f"  Wrote embeddings for {len(emb_rows)} entities.")
+
+    if not text_units.empty:
+        tu_emb = ldb.open_table("text_unit_text").to_pandas()[["id", "vector"]]
+        text_units_with_emb = text_units.merge(tu_emb, on="id", how="left")
+        emb_rows = [
+            {"id": str(r["id"]), "embedding": [float(x) for x in r["vector"]]}
+            for _, r in text_units_with_emb.iterrows()
+            if isinstance(r["vector"], np.ndarray)
+        ]
+        if emb_rows:
+            session.run(
+                "UNWIND $rows AS row "
+                "MATCH (t:TextUnit {id: row.id}) "
+                "CALL db.create.setNodeVectorProperty(t, 'embedding', row.embedding) "
+                "RETURN count(*)",
+                rows=emb_rows,
+            )
+            print(f"  Wrote embeddings for {len(emb_rows)} text units.")
+
+    if not community_reports.empty:
+        cr_emb = ldb.open_table("community_full_content").to_pandas()[["id", "vector"]]
+        cr_with_emb = community_reports.merge(cr_emb, on="id", how="left")
+        emb_rows = [
+            {"id": str(r["id"]), "embedding": [float(x) for x in r["vector"]]}
+            for _, r in cr_with_emb.iterrows()
+            if isinstance(r["vector"], np.ndarray)
+        ]
+        if emb_rows:
+            session.run(
+                "UNWIND $rows AS row "
+                "MATCH (c:CommunityReport {id: row.id}) "
+                "CALL db.create.setNodeVectorProperty(c, 'embedding', row.embedding) "
+                "RETURN count(*)",
+                rows=emb_rows,
+            )
+            print(f"  Wrote embeddings for {len(emb_rows)} community reports.")
+
     # Tombstone sweep — remove nodes from previous runs not in current index
     # -----------------------------------------------------------------------
     if entity_ids:
@@ -299,6 +389,12 @@ with driver.session() as session:
         session.run(
             "MATCH (t:TextUnit) WHERE NOT t.id IN $ids DETACH DELETE t",
             ids=text_unit_ids,
+        )
+    if community_report_ids:
+        print("  Tombstone sweep: removing stale community reports...")
+        session.run(
+            "MATCH (r:CommunityReport) WHERE NOT r.id IN $ids DETACH DELETE r",
+            ids=community_report_ids,
         )
 
 print("  Import complete.")

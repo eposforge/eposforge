@@ -41,7 +41,7 @@ and [01-architecture/02-components/06-spec-graph.md](01-architecture/02-componen
 | `version` | `0.1.0` |
 | `privacy_posture` | `local` (Neo4j) / `vendor-default` (inference during indexing) |
 | `cost_hint` | free (Neo4j CE) + metered (Gemini API for indexing) |
-| `capabilities` | graph-query, community-detection, vector-similarity |
+| `capabilities` | graph-query, community-detection, [vector-similarity](../graphrag/README.md#hybrid-graph--vector-queries) |
 | `invocation_surface` | CLI scripts (`scripts/spec-graph-rebuild.sh`) |
 | `status` | `experimental` |
 | `query_languages` | Cypher (via Neo4j); natural language (via Neo4j MCP) |
@@ -107,12 +107,12 @@ and [01-architecture/02-components/06-spec-graph.md](01-architecture/02-componen
 | Dependency | Version | Role |
 |---|---|---|
 | Python | 3.10–3.12 | GraphRAG runtime |
-| `graphrag` (pip) | 1.x | Indexing pipeline |
+| `graphrag` (pip) | 3.0.9 | Indexing pipeline |
 | `neo4j` (pip) | 5.x | Neo4j Python driver |
+| `lancedb` (pip) | 0.24.3 | Vector store reader (transitively installed via graphrag) |
 | `pandas`, `pyarrow` (pip) | current | Parquet reading |
-| Neo4j Community Edition | 5.x | Graph store |
+| Neo4j Community Edition | ≥ 5.11 | Graph store + native vector indexes |
 | APOC plugin | compatible | Neo4j stored procedures |
-| Graph Data Science plugin | compatible | Vector indexes |
 | Gemini API | current | Entity extraction inference |
 
 ---
