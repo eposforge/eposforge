@@ -1,0 +1,12 @@
+# GraphRAG runtime output — gitignored
+output/
+# Explicit lancedb entry for clarity (covered by output/ above)
+output/lancedb/
+cache/
+.venv/
+__pycache__/
+*.pyc
+
+# Local secrets (never commit)
+.env
+.env.*

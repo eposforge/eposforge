@@ -1,0 +1,51 @@
+-Goal-
+Given a text document that is potentially relevant to this activity and a list of entity types, identify all entities of those types from the text and all relationships among the identified entities.
+
+-Steps-
+1. Identify all entities. For each identified entity, extract the following information:
+- entity_name: Name of the entity, capitalized
+- entity_type: One of the following types: [{entity_types}]
+- entity_description: Comprehensive description of the entity's attributes and activities, including its role in the EposForge open-source e-commerce platform specification
+Format each entity as ("entity"<|><entity_name><|><entity_type><|><entity_description>)
+
+2. From the entities identified in step 1, identify all pairs of (source_entity, target_entity) that are *clearly related* to each other.
+For each pair of related entities, extract the following information:
+- source_entity: name of the source entity, as identified in step 1
+- target_entity: name of the target entity, as identified in step 1
+- relationship_description: explanation as to why you think the source entity and target entity are related to each other
+- relationship_type: one of FULFILLS_SLOT, DEPENDS_ON, MATURES_TO, GOVERNED_BY, IMPLEMENTS, SUPERSEDES, PART_OF, or RELATED_TO
+- relationship_strength: a numeric score indicating strength of the relationship between the source entity and target entity
+Format each relationship as ("relationship"<|><source_entity><|><target_entity><|><relationship_description><|><relationship_type><|><relationship_strength>)
+
+3. Return output in English as a single list of all the entities and relationships identified in steps 1 and 2. Use **##** as the list delimiter.
+
+4. When finished, output <|COMPLETE|>
+
+######################
+-Examples-
+######################
+Example 1:
+Entity_types: component, adapter, phase, pillar, principle, factory, deliverable, constraint
+Text:
+The Storefront adapter implements the DisplaySlot component interface by rendering product catalogs. It depends on the Catalog component and matures through three phases: Alpha, Beta, and GA.
+######################
+Output:
+("entity"<|>STOREFRONT<|>adapter<|>The Storefront adapter implements the DisplaySlot interface and renders product catalogs in the EposForge platform)##
+("entity"<|>DISPLAYSLOT<|>component<|>A slot interface that display adapters must fulfill to render product content)##
+("entity"<|>CATALOG<|>component<|>The core Catalog component that manages product data)##
+("entity"<|>ALPHA<|>phase<|>First maturity phase of EposForge component lifecycle)##
+("entity"<|>BETA<|>phase<|>Second maturity phase, feature-complete but not production-hardened)##
+("entity"<|>GA<|>phase<|>General Availability phase — production-ready, versioned, and governed)##
+("relationship"<|>STOREFRONT<|>DISPLAYSLOT<|>Storefront fulfills the DisplaySlot component interface<|>FULFILLS_SLOT<|>9)##
+("relationship"<|>STOREFRONT<|>CATALOG<|>Storefront depends on the Catalog component for product data<|>DEPENDS_ON<|>8)##
+("relationship"<|>ALPHA<|>BETA<|>Alpha matures to Beta in the component lifecycle<|>MATURES_TO<|>7)##
+("relationship"<|>BETA<|>GA<|>Beta matures to GA when production-hardening criteria are met<|>MATURES_TO<|>7)
+<|COMPLETE|>
+
+######################
+-Real Data-
+######################
+Entity_types: {entity_types}
+Text: {input_text}
+######################
+Output:
