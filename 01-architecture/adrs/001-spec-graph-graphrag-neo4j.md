@@ -56,7 +56,7 @@ Edition (graph store).
   so extraction quality is consistent across rebuilds.
 
 **Rebuild model:** full nuke-and-reproject per the Spec Graph component
-contract. Incremental update is not supported by GraphRAG v1.x.
+contract. Incremental update is not supported by GraphRAG v3.x.
 Rebuild target: 15 minutes for the current corpus.
 
 **Privacy posture:** Neo4j is local (`local`). Inference during
@@ -170,6 +170,12 @@ Deferred: acceptable for a future scale-out option; see
   MCP-compatible Dev Product with a single config line. Consistency
   checks, cross-component reasoning, and new-content generation are
   grounded in the actual documented structure.
+- **Positive:** native Neo4j vector indexes (three: `entity_embedding`,
+  `text_unit_embedding`, `community_report_embedding`) are created by
+  `scripts/spec-graph-import.sh` using embeddings sourced from LanceDB
+  (`graphrag/output/lancedb`). Hybrid Cypher queries that combine
+  structural traversal with semantic similarity are supported without
+  any MCP-layer changes. See `graphrag/README.md` for example queries.
 - **Positive:** all configuration, prompts, and scripts are in the
   repo; the graph is fully reproducible from source.
 - **Negative:** rebuild requires a Gemini API key and a running Neo4j
@@ -180,6 +186,8 @@ Deferred: acceptable for a future scale-out option; see
 - **Trade-off:** Gemini free tier is documented but carries a training-
   data risk for private content. Operators must read the privacy posture
   section in `SPEC.md` and choose accordingly.
+- **Note:** Incremental update is not supported by GraphRAG v3.x.
+  Rebuild target: 15 minutes for the current corpus.
 
 ---
 
