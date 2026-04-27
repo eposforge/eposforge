@@ -28,7 +28,7 @@ graphrag init --root . --force
 # 4. Set your API keys
 export ANTHROPIC_API_KEY=your-anthropic-key
 export OPENAI_API_KEY=your-openai-key        # used for embeddings
-export NEO4J_URI=bolt://localhost:7687
+export NEO4J_URI=bolt://localhost:7688  # host port mapped from container's 7687
 export NEO4J_USERNAME=neo4j
 export NEO4J_PASSWORD=your-neo4j-password
 
