@@ -34,11 +34,30 @@ There is no application code; the artefacts are Markdown files.
 
 ---
 
-## Spec Graph MCP tool (`eposforge-graph`) — MCP-FIRST POLICY
+## Authoritative-docs MCPs — MCP-FIRST POLICY
+
+Before answering from training data or routing to external-LLM research,
+query the relevant authoritative MCP. These are expected to be available
+to any agent working in this repo (configured user-scope or via a
+repo-pinned `.mcp.json`):
+
+| MCP server | Use for |
+|---|---|
+| `eposforge-graph` | This repo's architecture, components, adapters, principles, phases, and research surveys. See policy below. |
+| `github` | Open-source repos and their issues, PRs, commits, releases, labels — anything hosted on github.com. |
+| `microsoft.docs` | Azure, .NET, and the broader Microsoft platform via Microsoft Learn. Coverage spans virtually all Microsoft products, but the corpus is developer-focused in practice — best for technical and coding scenarios, less reliable for general end-user or non-dev documentation. |
+| Hugging Face Hub *(optional)* | ML models, datasets, papers, Hub metadata. Use when extending the Inference component (10) or evaluating model adapters. |
+
+Prefer the MCP over `WebFetch` or `WebSearch` against the same source —
+MCP results are structured, citation-aware, and avoid stale verbatim
+recall from training data. If a question spans multiple MCPs (e.g.
+"which Azure SDK does adapter X depend on, and is that SDK still
+maintained?"), chain the calls: `eposforge-graph` → `github` → `microsoft.docs`.
+
+### Spec Graph MCP (`eposforge-graph`) rules
 
 The `eposforge-graph` MCP server exposes the Neo4j Spec Graph via Cypher.
-It is the **authoritative interface** for architecture knowledge in this
-repo.
+It is the authoritative interface for architecture knowledge in this repo.
 
 You MUST query `eposforge-graph` before reading Markdown when the prompt
 mentions any of: adapter, component, slot, contract, FULFILLS_SLOT,
@@ -47,21 +66,23 @@ Living Spec, Spec Graph, dark factory, Router, Dev Product, Tool
 Transport, Execution Sandbox, Agent Policy, Inference, Audit, Secrets,
 Spec Input, vocabulary, or any of the twelve component names.
 
-**Anti-pattern.** Do not open `01-architecture/02-components/*.md` or
-grep the corpus to answer “what adapters fulfill the X slot?” — a single
-Cypher query against `eposforge-graph` returns the canonical answer with
-cross-references intact.
+Anti-pattern (outside fallback cases): do not open
+`01-architecture/02-components/*.md` or grep the corpus to answer
+"what adapters fulfill the X slot?" — a single Cypher query against
+`eposforge-graph` returns the canonical answer with cross-references
+intact.
 
-**Example.** Question: *“Which adapters fulfill the Inference slot?”*
+Example question: *"Which adapters fulfill the Inference slot?"*
 Correct first action — call `read_neo4j_cypher` with:
 ~~~cypher
 MATCH (a:Entity {type:'ADAPTER'})-[:FULFILLS_SLOT]->(s:Entity {title:'INFERENCE'})
 RETURN a.title, a.description ORDER BY a.title;
 ~~~
 
-Fall back to Markdown only if (a) the MCP server is unreachable, (b) the
-question is about prose/wording rather than structure, or (c) the graph
-returns zero results and you need to verify the corpus.
+Fall back to Markdown only if (a) the MCP server is unreachable,
+(b) the question is about prose/wording rather than structure, or
+(c) the graph returns zero results and you need to verify the corpus.
+When fallback is needed, targeted repo-file reads and searches are allowed.
 
 ### Graph schema
 
@@ -149,22 +170,22 @@ do not require a `SPEC.md` update.
 Use this workflow when the user provides a description of additions, deletions, or edits to the EposForge architecture.
 
 1.  **Research & Reconcile:**
-    *   Query `eposforge-graph` to identify current components, adapters, and relationships affected by the requested change.
-    *   Compare the requested state with the existing design to identify contradictions or missing dependencies.
+  *   Query `eposforge-graph` to identify current components, adapters, and relationships affected by the requested change.
+  *   Compare the requested state with the existing design to identify contradictions or missing dependencies.
 2.  **Clarify:**
-    *   Prompt the user for clarification if the intent is ambiguous (e.g., if a new entity should be a `component` or an `adapter`, or which `phase` it matures to).
+  *   Prompt the user for clarification if the intent is ambiguous (e.g., if a new entity should be a `component` or an `adapter`, or which `phase` it matures to).
 3.  **Implement (Graph-Influence Checklist):**
-    *   **Reserved Vocabulary:** Use exactly the terms from the [Vocabulary](#vocabulary--use-these-terms-exactly) section (`component`, `adapter`, `phase`, `pillar`, `principle`, `factory`, `deliverable`, `constraint`) as entity types.
-    *   **Relationship Keywords:** Explicitly use keywords to ensure the `spec-graph-import.sh` script maps edges correctly:
-        *   `FULFILLS_SLOT`: "fulfills", "fills slot", "candidate adapter".
-        *   `DEPENDS_ON`: "depends on", "dependency", "requires".
-        *   `MATURES_TO`: "matures", "operational at phase", "graduation".
-        *   `GOVERNED_BY`: "governed", "enforced by", "policy".
-        *   `IMPLEMENTS`: "implements", "implementation of".
-    *   **Living Spec Contract:** If creating or updating a spec (e.g., `SPEC.md` or `01-architecture/02-components/*.md`), ensure it contains: Purpose, Observable Behavior, Inputs/Outputs, Dependencies, Non-functional Bounds (Metadata Table), and Versioning Policy.
-    *   **Metadata Tables:** Ensure every Adapter and Component doc includes a machine-readable metadata table per the [Adapter Pattern](01-architecture/00-adapter-pattern.md).
+  *   **Reserved Vocabulary:** Use exactly the terms from the [Vocabulary](#vocabulary--use-these-terms-exactly) section (`component`, `adapter`, `phase`, `pillar`, `principle`, `factory`, `deliverable`, `constraint`) as entity types.
+  *   **Relationship Keywords:** Explicitly use keywords to ensure the `spec-graph-import.sh` script maps edges correctly:
+    *   `FULFILLS_SLOT`: "fulfills", "fills slot", "candidate adapter".
+    *   `DEPENDS_ON`: "depends on", "dependency", "requires".
+    *   `MATURES_TO`: "matures", "operational at phase", "graduation".
+    *   `GOVERNED_BY`: "governed", "enforced by", "policy".
+    *   `IMPLEMENTS`: "implements", "implementation of".
+  *   **Living Spec Contract:** If creating or updating a spec (e.g., `SPEC.md` or `01-architecture/02-components/*.md`), ensure it contains: Purpose, Observable Behavior, Inputs/Outputs, Dependencies, Non-functional Bounds (Metadata Table), and Versioning Policy.
+  *   **Metadata Tables:** Ensure every Adapter and Component doc includes a machine-readable metadata table per the [Adapter Pattern](01-architecture/00-adapter-pattern.md).
 4.  **Validate & Rebuild:**
-    *   Once files are updated, offer to perform the required steps to rebuild the Spec Graph: `bash scripts/spec-graph-rebuild.sh`.
+  *   Once files are updated, offer to perform the required steps to rebuild the Spec Graph: `bash scripts/spec-graph-rebuild.sh`.
 
 ---
 
