@@ -170,7 +170,7 @@ A product is a strong Dev Product candidate if it:
 - **Notes:** dual-fit — operates as a Dev Product for browser-heavy
   sub-tasks, and is the canonical **Execution Sandbox** in instances
   that adopt it. See
-  [execution-sandbox.md](./execution-sandbox.md). Adapter must
+  [execution-sandbox.md](../07-execution-sandbox/execution-sandbox.md). Adapter must
   declare which slot it fills in a given factory instance.
 
 ### Blitzy

@@ -1,0 +1,29 @@
+{
+  "mcpServers": {
+    "eposforge-graph": {
+      "command": "<abs-path-to>\\graphrag\\.venv\\Scripts\\mcp-neo4j-cypher.exe",
+      "args": ["--read-only"],
+      "env": {
+        "NEO4J_URI": "bolt://<neo4j-host-or-ip>:7688",
+        "NEO4J_USERNAME": "neo4j",
+        "NEO4J_PASSWORD": "<your-neo4j-password>"
+      },
+      "trust": true
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "<your-github-pat>"
+      },
+      "trust": true
+    },
+    "ms-docs": {
+      "httpUrl": "https://learn.microsoft.com/api/mcp",
+      "trust": true
+    }
+  },
+  "directoryFilteringOptions": {
+    "allowedDirectories": ["<abs-path-to-repo-root>"]
+  }
+}

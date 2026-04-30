@@ -1,8 +1,8 @@
 # Agent Instructions — EposForge
 
 Shared instructions for AI coding assistants (GitHub Copilot, Claude Code,
-and others) working in this repo. `.github/copilot-instructions.md` and
-`CLAUDE.md` are thin pointers to this file.
+and others) working in this repo. `.github/copilot-instructions.md`,
+`CLAUDE.md`, and `GEMINI.md` are thin pointers to this file.
 
 ---
 
@@ -34,12 +34,34 @@ There is no application code; the artefacts are Markdown files.
 
 ---
 
-## Spec Graph MCP tool (`eposforge-graph`)
+## Spec Graph MCP tool (`eposforge-graph`) — MCP-FIRST POLICY
 
 The `eposforge-graph` MCP server exposes the Neo4j Spec Graph via Cypher.
-**Use it when answering questions about the architecture**, instead of
-reading individual Markdown files. It is faster, cross-referenced, and
-semantically searchable.
+It is the **authoritative interface** for architecture knowledge in this
+repo.
+
+You MUST query `eposforge-graph` before reading Markdown when the prompt
+mentions any of: adapter, component, slot, contract, FULFILLS_SLOT,
+DEPENDS_ON, MATURES_TO, GOVERNED_BY, IMPLEMENTS, phase, principle, ADR,
+Living Spec, Spec Graph, dark factory, Router, Dev Product, Tool
+Transport, Execution Sandbox, Agent Policy, Inference, Audit, Secrets,
+Spec Input, vocabulary, or any of the twelve component names.
+
+**Anti-pattern.** Do not open `01-architecture/02-components/*.md` or
+grep the corpus to answer “what adapters fulfill the X slot?” — a single
+Cypher query against `eposforge-graph` returns the canonical answer with
+cross-references intact.
+
+**Example.** Question: *“Which adapters fulfill the Inference slot?”*
+Correct first action — call `read_neo4j_cypher` with:
+~~~cypher
+MATCH (a:Entity {type:'ADAPTER'})-[:FULFILLS_SLOT]->(s:Entity {title:'INFERENCE'})
+RETURN a.title, a.description ORDER BY a.title;
+~~~
+
+Fall back to Markdown only if (a) the MCP server is unreachable, (b) the
+question is about prose/wording rather than structure, or (c) the graph
+returns zero results and you need to verify the corpus.
 
 ### Graph schema
 
@@ -114,8 +136,35 @@ scripts/            spec-graph-rebuild.sh, spec-graph-import.sh, etc.
 SPEC.md             Living Spec for the Spec Graph tooling (Component 6)
 ```
 
-Paired-change rule: any change to `graphrag/` or `scripts/` must update
-`SPEC.md` in the same commit.
+Paired-change rule: changes to the specific files enumerated in the
+`SPEC.md §Paired-change rule` section must update `SPEC.md` in the same
+commit. Additions to `scripts/` or `graphrag/` that are not in that list
+do not require a `SPEC.md` update.
+
+---
+
+## Agent Workflows
+
+### `/modifyef` — Reconcile and apply design changes
+Use this workflow when the user provides a description of additions, deletions, or edits to the EposForge architecture.
+
+1.  **Research & Reconcile:**
+    *   Query `eposforge-graph` to identify current components, adapters, and relationships affected by the requested change.
+    *   Compare the requested state with the existing design to identify contradictions or missing dependencies.
+2.  **Clarify:**
+    *   Prompt the user for clarification if the intent is ambiguous (e.g., if a new entity should be a `component` or an `adapter`, or which `phase` it matures to).
+3.  **Implement (Graph-Influence Checklist):**
+    *   **Reserved Vocabulary:** Use exactly the terms from the [Vocabulary](#vocabulary--use-these-terms-exactly) section (`component`, `adapter`, `phase`, `pillar`, `principle`, `factory`, `deliverable`, `constraint`) as entity types.
+    *   **Relationship Keywords:** Explicitly use keywords to ensure the `spec-graph-import.sh` script maps edges correctly:
+        *   `FULFILLS_SLOT`: "fulfills", "fills slot", "candidate adapter".
+        *   `DEPENDS_ON`: "depends on", "dependency", "requires".
+        *   `MATURES_TO`: "matures", "operational at phase", "graduation".
+        *   `GOVERNED_BY`: "governed", "enforced by", "policy".
+        *   `IMPLEMENTS`: "implements", "implementation of".
+    *   **Living Spec Contract:** If creating or updating a spec (e.g., `SPEC.md` or `01-architecture/02-components/*.md`), ensure it contains: Purpose, Observable Behavior, Inputs/Outputs, Dependencies, Non-functional Bounds (Metadata Table), and Versioning Policy.
+    *   **Metadata Tables:** Ensure every Adapter and Component doc includes a machine-readable metadata table per the [Adapter Pattern](01-architecture/00-adapter-pattern.md).
+4.  **Validate & Rebuild:**
+    *   Once files are updated, offer to perform the required steps to rebuild the Spec Graph: `bash scripts/spec-graph-rebuild.sh`.
 
 ---
 
@@ -123,6 +172,11 @@ Paired-change rule: any change to `graphrag/` or `scripts/` must update
 
 - All docs use American English.
 - File and heading names are lowercase-hyphenated.
+- Never commit internal environment identifiers in docs: private IP
+  addresses, internal hostnames, internal DNS zones, machine names,
+  VPN details, or user-specific network topology.
+- When examples require endpoints, use placeholders like
+  `https://<service-host>` and `bolt://<neo4j-host-or-ip>:7688`.
 - Do not commit `graphrag/output/`, `graphrag/cache/`, `graphrag/.venv/`,
   `.env`, or any file containing API keys or passwords.
 - Never edit generated output under `graphrag/output/`.

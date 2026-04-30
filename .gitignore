@@ -5,10 +5,12 @@
 # AI assistant machine-specific configs
 .mcp.json
 .vscode/mcp.json
+.claude/settings.local.json
 
 # Node / Gemini CLI
 node_modules/
-.gemini/
+.gemini/*
+!.gemini/settings.json.example
 package-lock.json
 
 # GraphRAG runtime output
