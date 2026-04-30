@@ -58,6 +58,6 @@ In addition to the universal fields in
 
 ## Reference implementations
 
-See [../../03-research/dev-products.md](../../03-research/dev-products.md)
+See [../../03-research/03-dev-product/dev-products.md](../../03-research/03-dev-product/dev-products.md)
 for the catalog (Claude Code, Cursor, Goose, Aider, Copilot, OpenHands,
 Microsoft Agent Framework, etc.).

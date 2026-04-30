@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__eposforge-graph__get_neo4j_schema",
+      "mcp__eposforge-graph__read_neo4j_cypher"
+    ]
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "adapter|component|slot|FULFILLS_SLOT|DEPENDS_ON|MATURES_TO|GOVERNED_BY|IMPLEMENTS|phase|principle|ADR|Living Spec|Spec Graph|dark.factory|Router|Dev Product|Tool Transport|Execution Sandbox|Agent Policy|Inference|Audit|Secrets|Spec Input",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[eposforge MCP-first reminder] This prompt matches an architecture keyword. Call mcp__eposforge-graph__read_neo4j_cypher BEFORE reading Markdown. See AGENTS.md Spec Graph section.'"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Launch Gemini (sandbox)",
+      "type": "shell",
+      "command": "runas",
+      "args": [
+        "/user:gemini-runner",
+        "/savecred",
+        "${workspaceFolder}\\scripts\\run-gemini-sandbox-as-runner.cmd"
+      ],
+      "problemMatcher": []
+    }
+  ]
+}

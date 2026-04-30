@@ -23,7 +23,7 @@ embedding_models:
 ### Document processing settings ###
 input:
   type: text
-  file_pattern: "/(00-vision|01-architecture|02-roadmap|03-research)/.*\\.md$$"
+  file_pattern: "[/\\\\](00-vision|01-architecture|02-roadmap|03-research)[/\\\\].*\\.md$$"
 
 chunking:
   type: tokens
