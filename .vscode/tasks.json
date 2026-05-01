@@ -11,6 +11,20 @@
         "${workspaceFolder}\\scripts\\run-gemini-sandbox-as-runner.cmd"
       ],
       "problemMatcher": []
+    },
+    {
+      "label": "Launch eposforge MCP (http)",
+      "type": "shell",
+      "command": "pwsh",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}\\scripts\\run-eposforge-mcp-http.ps1"
+      ],
+      "isBackground": true,
+      "problemMatcher": []
     }
   ]
 }

@@ -1,0 +1,132 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix ef: <http://eposforge.org/ontology/> .
+
+ef:Ontology rdf:type owl:Ontology ;
+    rdfs:label "EposForge Dark Factory Ontology" ;
+    rdfs:comment "Formal terminology and taxonomy for the EposForge dark factory pattern." .
+
+### Classes
+
+ef:DarkFactory rdf:type owl:Class ;
+    rdfs:label "Dark Factory" ;
+    rdfs:comment "A system where the operator declares desired capabilities and AI agents build, deploy, and operate them with minimal supervision." .
+
+ef:PlatformFactory rdf:type owl:Class ;
+    rdfs:subClassOf ef:DarkFactory ;
+    rdfs:label "Platform Factory" ;
+    rdfs:comment "Operations autonomy — the substrate everything runs on." .
+
+ef:ProductFactory rdf:type owl:Class ;
+    rdfs:subClassOf ef:DarkFactory ;
+    rdfs:label "Product Factory" ;
+    rdfs:comment "Development autonomy — software the operator authors." .
+
+ef:Platform rdf:type owl:Class ;
+    rdfs:label "Platform" ;
+    rdfs:comment "The operational substrate: hardware, network, operating systems, etc." .
+
+ef:Product rdf:type owl:Class ;
+    rdfs:label "Product" ;
+    rdfs:comment "Software (or physical workflow) authored by the operator." .
+
+ef:Component rdf:type owl:Class ;
+    rdfs:label "Component" ;
+    rdfs:comment "An architectural slot in a dark factory." .
+
+ef:Adapter rdf:type owl:Class ;
+    rdfs:label "Adapter" ;
+    rdfs:comment "A concrete implementation that plugs into a component slot." .
+
+ef:Agent rdf:type owl:Class ;
+    rdfs:label "Agent" ;
+    rdfs:comment "An autonomous AI-driven executor." .
+
+ef:Spec rdf:type owl:Class ;
+    rdfs:label "Spec" ;
+    rdfs:comment "A declarative statement of desired capability." .
+
+ef:LivingSpec rdf:type owl:Class ;
+    rdfs:subClassOf ef:Spec ;
+    rdfs:label "Living Spec" ;
+    rdfs:comment "A canonical spec document that lives inside every factory deliverable repo." .
+
+ef:Phase rdf:type owl:Class ;
+    rdfs:label "Phase" ;
+    rdfs:comment "A stage of factory maturity." .
+
+ef:Policy rdf:type owl:Class ;
+    rdfs:label "Policy" ;
+    rdfs:comment "A machine-enforceable rule that constrains what an agent may do." .
+
+ef:Guardrail rdf:type owl:Class ;
+    rdfs:label "Guardrail" ;
+    rdfs:comment "A runtime check or approval gate that enforces a policy." .
+
+ef:Operator rdf:type owl:Class ;
+    rdfs:label "Operator" ;
+    rdfs:comment "The human in charge of a DarkForge instance." .
+
+ef:DevProduct rdf:type owl:Class ;
+    rdfs:label "Dev Product" ;
+    rdfs:comment "A third-party AI coding tool consumed as an executor." .
+
+ef:Router rdf:type owl:Class ;
+    rdfs:label "Router" ;
+    rdfs:comment "The decomposition and dispatch layer of the Product Factory." .
+
+ef:ToolTransport rdf:type owl:Class ;
+    rdfs:label "Tool Transport" ;
+    rdfs:comment "The protocol/contract by which Dev Products consume capabilities." .
+
+ef:SpecGraph rdf:type owl:Class ;
+    rdfs:label "Spec Graph" ;
+    rdfs:comment "A queryable projection of every Living Spec across the factory." .
+
+ef:ExecutionSandbox rdf:type owl:Class ;
+    rdfs:label "Execution Sandbox" ;
+    rdfs:comment "The isolated runtime in which dispatched Dev Product work executes." .
+
+### Object Properties (Relationships)
+
+ef:fulfillsSlot rdf:type owl:ObjectProperty ;
+    rdfs:label "FULFILLS_SLOT" ;
+    rdfs:domain ef:Adapter ;
+    rdfs:range ef:Component .
+
+ef:maturesTo rdf:type owl:ObjectProperty ;
+    rdfs:label "MATURES_TO" ;
+    rdfs:domain ef:Phase ;
+    rdfs:range ef:Phase .
+
+ef:dependsOn rdf:type owl:ObjectProperty ;
+    rdfs:label "DEPENDS_ON" .
+
+ef:governedBy rdf:type owl:ObjectProperty ;
+    rdfs:label "GOVERNED_BY" .
+
+ef:implements rdf:type owl:ObjectProperty ;
+    rdfs:label "IMPLEMENTS" .
+
+ef:supersedes rdf:type owl:ObjectProperty ;
+    rdfs:label "SUPERSEDES" .
+
+ef:partOf rdf:type owl:ObjectProperty ;
+    rdfs:label "PART_OF" .
+
+### Individuals (The 12 Core Components)
+
+ef:SpecInput rdf:type ef:Component ; rdfs:label "Spec Input" .
+ef:LivingSpecComponent rdf:type ef:Component ; rdfs:label "Living Spec" .
+ef:DevProductComponent rdf:type ef:Component ; rdfs:label "Dev Product" .
+ef:RouterComponent rdf:type ef:Component ; rdfs:label "Router" .
+ef:ToolTransportComponent rdf:type ef:Component ; rdfs:label "Tool Transport" .
+ef:SpecGraphComponent rdf:type ef:Component ; rdfs:label "Spec Graph" .
+ef:ExecutionSandboxComponent rdf:type ef:Component ; rdfs:label "Execution Sandbox" .
+ef:AgentPolicyComponent rdf:type ef:Component ; rdfs:label "Agent Policy" .
+ef:SourceControlCIComponent rdf:type ef:Component ; rdfs:label "Source Control + CI" .
+ef:InferenceLayerComponent rdf:type ef:Component ; rdfs:label "Inference Layer" .
+ef:AuditObservabilityComponent rdf:type ef:Component ; rdfs:label "Audit & Observability" .
+ef:SecretsKeyManagementComponent rdf:type ef:Component ; rdfs:label "Secrets & Key Management" .

@@ -13,23 +13,51 @@
 #   NEO4J_PASSWORD    — Neo4j password
 #
 # Usage:
-#   ANTHROPIC_API_KEY=xxx OPENAI_API_KEY=yyy NEO4J_PASSWORD=zzz bash scripts/spec-graph-rebuild.sh
+#   ANTHROPIC_API_KEY=xxx OPENAI_API_KEY=yyy NEO4J_PASSWORD=zzz bash scripts/spec-graph-rebuild.sh [--cognee]
 set -euo pipefail
 
 SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPTS_DIR}/.." && pwd)"
 
 # Apply defaults for optional env vars
 export NEO4J_URI="${NEO4J_URI:-bolt://localhost:7687}"
 export NEO4J_USERNAME="${NEO4J_USERNAME:-neo4j}"
 
+USE_COGNEE=false
+if [[ "${1:-}" == "--cognee" ]]; then
+  USE_COGNEE=true
+fi
+
 echo "==> Starting full Spec Graph rebuild"
-echo "    Index: GraphRAG over Markdown → Parquet"
-echo "    Import: Parquet → Neo4j (${NEO4J_URI})"
+if [ "$USE_COGNEE" = true ]; then
+  echo "    Engine: Cognee (Ontology-Grounded Extraction)"
+else
+  echo "    Engine: Microsoft GraphRAG"
+fi
+echo "    Target: Neo4j (${NEO4J_URI})"
 echo ""
 
-bash "${SCRIPTS_DIR}/spec-graph-index.sh"
-echo ""
-bash "${SCRIPTS_DIR}/spec-graph-import.sh"
+if [ "$USE_COGNEE" = true ]; then
+  VENV="${REPO_ROOT}/graphrag/.venv"
+  # Use Windows path for python if on Windows, else standard
+  if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+    PYTHON="${VENV}/Scripts/python"
+  else
+    PYTHON="${VENV}/bin/python"
+  fi
+  
+  if [[ ! -f "${PYTHON}" ]]; then
+    echo "ERROR: Cognee venv not found. Run the setup steps first." >&2
+    exit 1
+  fi
+  
+  echo "==> Running Cognee indexing..."
+  "${PYTHON}" "${SCRIPTS_DIR}/spec-graph-cognee.py"
+else
+  bash "${SCRIPTS_DIR}/spec-graph-index.sh"
+  echo ""
+  bash "${SCRIPTS_DIR}/spec-graph-import.sh"
+fi
 
 echo ""
 echo "==> Spec Graph rebuild complete."

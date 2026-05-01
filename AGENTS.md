@@ -45,7 +45,8 @@ repo-pinned `.mcp.json`):
 |---|---|
 | `eposforge-graph` | This repo's architecture, components, adapters, principles, phases, and research surveys. See policy below. |
 | `github` | Open-source repos and their issues, PRs, commits, releases, labels — anything hosted on github.com. |
-| `microsoft.docs` | Azure, .NET, and the broader Microsoft platform via Microsoft Learn. Coverage spans virtually all Microsoft products, but the corpus is developer-focused in practice — best for technical and coding scenarios, less reliable for general end-user or non-dev documentation. |
+| `microsoft.docs` | Azure, .NET, and the broader Microsoft platform via Microsoft Learn. |
+| `cognee` | Persistent AI memory and runtime memory operations for Cognee-enabled agents (remember/recall/improve), not repository documentation or source-code search. |
 | Hugging Face Hub *(optional)* | ML models, datasets, papers, Hub metadata. Use when extending the Inference component (10) or evaluating model adapters. |
 
 Prefer the MCP over `WebFetch` or `WebSearch` against the same source —
@@ -53,6 +54,12 @@ MCP results are structured, citation-aware, and avoid stale verbatim
 recall from training data. If a question spans multiple MCPs (e.g.
 "which Azure SDK does adapter X depend on, and is that SDK still
 maintained?"), chain the calls: `eposforge-graph` → `github` → `microsoft.docs`.
+
+For Cognee documentation and Cognee source-code lookups, use the `github` MCP
+against `topoteretes/cognee` (and related integration repositories) first.
+Do not route Cognee docs/source searches through the `cognee` MCP server.
+Do not use `WebFetch`/`WebSearch` for Cognee docs/source lookups unless the
+`github` MCP is unavailable; if fallback is required, state that explicitly.
 
 ### Spec Graph MCP (`eposforge-graph`) rules
 
