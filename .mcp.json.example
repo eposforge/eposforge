@@ -18,6 +18,10 @@
     },
     "ms-docs": {
       "url": "https://learn.microsoft.com/api/mcp"
+    },
+    "cognee": {
+      "command": "npx",
+      "args": ["-y", "@cognee/mcp-server"]
     }
   }
 }

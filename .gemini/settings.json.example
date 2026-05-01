@@ -21,6 +21,11 @@
     "ms-docs": {
       "httpUrl": "https://learn.microsoft.com/api/mcp",
       "trust": true
+    },
+    "cognee": {
+      "command": "npx",
+      "args": ["-y", "@cognee/mcp-server"],
+      "trust": true
     }
   },
   "directoryFilteringOptions": {
