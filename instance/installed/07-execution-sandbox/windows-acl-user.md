@@ -1,8 +1,15 @@
+---
+doc_kind: reference-implementation
+scope: repo-instance
+maturity: experimental
+source_of_truth: yes
+---
+
 # Installed Adapter: windows-acl-user → Execution Sandbox (Component 7)
 
 > Living Spec for the Windows OS-user + NTFS-ACL Execution Sandbox
 > Adapter installed in this repo. Per
-> [../../00-adapter-pattern.md](../../00-adapter-pattern.md), all
+> [../../../01-architecture/00-adapter-pattern.md](../../../01-architecture/00-adapter-pattern.md), all
 > required universal and component-specific fields are declared here.
 
 ---
@@ -39,13 +46,13 @@
 | `runner_principal` | `gemini-runner` (local Windows standard account, non-admin) |
 | `outbound_network` | open — required for Gemini inference, GitHub MCP, Microsoft Docs MCP, and loopback `eposforge-graph` MCP |
 | `teardown` | manual (no per-sub-task teardown; ephemeral workspace not implemented in v1) |
-| `bound_dev_product` | `gemini-cli` (see [../../03-dev-product/installed/gemini-cli.md](../../03-dev-product/installed/gemini-cli.md)) |
+| `bound_dev_product` | `gemini-cli` (see [../03-dev-product/gemini-cli.md](../03-dev-product/gemini-cli.md)) |
 
 ---
 
 ## Setup
 
-Run `scripts/install-gemini-sandbox.ps1` as administrator. The script is
+Run `instance/scripts/install-gemini-sandbox.ps1` as administrator. The script is
 idempotent and performs:
 
 1. Creates local standard user `gemini-runner` (non-admin, no interactive
@@ -75,7 +82,7 @@ idempotent and performs:
 This sandbox is a *coarse* implementation. It satisfies filesystem
 isolation for human-driven sessions but does not meet the full
 Execution Sandbox component contract
-([../../07-execution-sandbox.md](../../07-execution-sandbox.md)):
+([../../../01-architecture/02-components/07-execution-sandbox.md](../../../01-architecture/02-components/07-execution-sandbox.md)):
 
 | Contract requirement | Status | Notes |
 |---|---|---|
@@ -108,3 +115,4 @@ dimensions that are documented here rather than silently omitted:
    layer. This adapter relies on Gemini's API-level `vendor-no-training`
    guarantee and does not add network-layer enforcement. This is an
    intentional v1 scope boundary.
+

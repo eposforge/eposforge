@@ -15,7 +15,7 @@
 #   NEO4J_URI=bolt://localhost:7687 \
 #   NEO4J_USERNAME=neo4j \
 #   NEO4J_PASSWORD=your-password \
-#   bash scripts/spec-graph-import.sh
+#   bash instance/scripts/spec-graph-import.sh
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -39,7 +39,7 @@ done
 
 if [[ ! -d "${OUTPUT_DIR}" ]]; then
   echo "ERROR: GraphRAG output directory not found: ${OUTPUT_DIR}" >&2
-  echo "Run scripts/spec-graph-index.sh first." >&2
+    echo "Run instance/scripts/spec-graph-index.sh first." >&2
   exit 1
 fi
 

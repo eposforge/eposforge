@@ -7,7 +7,7 @@ on:
       - "01-architecture/**"
       - "02-roadmap/**"
       - "03-research/**"
-      - "SPEC.md"
+      - "instance/**"
 
 permissions:
   contents: read
@@ -28,4 +28,4 @@ jobs:
           python-version: "3.12"
 
       - name: Check doc classification metadata
-        run: python scripts/check-doc-classification.py
+        run: python instance/scripts/check-doc-classification.py

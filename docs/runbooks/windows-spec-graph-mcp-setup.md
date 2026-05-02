@@ -28,7 +28,7 @@ cd eposforge
 ## 2. Create Python venv and install MCP server
 
 ```powershell
-cd graphrag
+cd instance\graphrag
 py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
@@ -42,7 +42,7 @@ pip install graphrag==3.0.9 neo4j pandas pyarrow lancedb
 ```
 
 If you plan to run the rebuild scripts from Windows, use Git Bash or WSL.
-The repo's rebuild helpers in `scripts/` are shell scripts.
+The repo's rebuild helpers in `instance/scripts/` are shell scripts.
 
 ## 3. Neo4j endpoint assumptions
 
@@ -73,7 +73,7 @@ them from a local `.env` file before starting the MCP server.
 Run this in a dedicated PowerShell terminal and keep it running:
 
 ```powershell
-cd graphrag
+cd instance\graphrag
 .\.venv\Scripts\Activate.ps1
 mcp-neo4j-cypher `
   --transport http `

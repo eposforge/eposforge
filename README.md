@@ -49,8 +49,10 @@ what is a concrete local implementation.
 | Layer | Paths | Meaning | Portability |
 |---|---|---|---|
 | Architecture definition | `00-vision/`, `01-architecture/`, `02-roadmap/` | Normative EposForge pattern, contracts, and maturity models | Reused across adopting repos |
-| Implementation for this repo instance | `SPEC.md`, `scripts/`, `graphrag/`, `docs/runbooks/` | Concrete implementation choices used by this repository | Varies by repo |
+| Implementation for this repo instance | `instance/`, `docs/runbooks/` | Concrete implementation choices used by this repository | Varies by repo |
 | Research and candidates | `03-research/` | Candidate adapters, comparative analysis, and implementation options | Reused as reference, non-normative |
+
+See `instance/README.md` for a slot-by-slot map of what this repo installs.
 
 ## Portable Conventions For Adopting Repos
 
@@ -77,9 +79,10 @@ Repo-local conventions (customizable per adopting repo):
 ## Documentation maintenance (Spec Graph)
 
 This repo implements its own Spec Graph (Component 6) using Microsoft
-GraphRAG + Neo4j CE. See [SPEC.md](./SPEC.md) for the Living Spec and
-[graphrag/README.md](./graphrag/README.md) for setup instructions.
-Run `bash scripts/spec-graph-rebuild.sh` after significant doc batches
+GraphRAG + Neo4j CE. See [instance/SPEC.md](./instance/SPEC.md) for the
+Living Spec and [instance/graphrag/README.md](./instance/graphrag/README.md)
+for setup instructions. Run `bash instance/scripts/spec-graph-rebuild.sh`
+after significant doc batches
 to refresh the knowledge graph.
 
 ## Status

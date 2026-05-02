@@ -11,8 +11,8 @@
 #     (or GEMINI_API_KEY if using the Gemini alternative in settings.yaml)
 #
 # Usage:
-#   bash scripts/spec-graph-index.sh
-#   ANTHROPIC_API_KEY=your-key OPENAI_API_KEY=your-key bash scripts/spec-graph-index.sh
+#   bash instance/scripts/spec-graph-index.sh
+#   ANTHROPIC_API_KEY=your-key OPENAI_API_KEY=your-key bash instance/scripts/spec-graph-index.sh
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -50,4 +50,4 @@ cd "${GRAPHRAG_DIR}"
 rm -f "${GRAPHRAG_DIR}/.needs-rebuild"
 
 echo "==> Indexing complete. Parquet files in ${GRAPHRAG_DIR}/output/"
-echo "    Run scripts/spec-graph-import.sh to load into Neo4j."
+echo "    Run instance/scripts/spec-graph-import.sh to load into Neo4j."

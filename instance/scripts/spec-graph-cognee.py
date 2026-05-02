@@ -6,7 +6,8 @@ import cognee
 from neo4j import GraphDatabase
 
 # Configure output directories for GraphRAG compatibility
-GRAPHRAG_OUTPUT_DIR = pathlib.Path("graphrag/output")
+REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
+GRAPHRAG_OUTPUT_DIR = REPO_ROOT / "instance" / "graphrag" / "output"
 GRAPHRAG_OUTPUT_DIR.mkdir(parents = True, exist_ok = True)
 
 async def export_cognee_to_parquet():
@@ -50,9 +51,9 @@ async def export_cognee_to_parquet():
 
 async def main():
     # 1. Setup Cognee configuration
-    cognee_root = os.path.join(os.getcwd(), "graphrag", ".cognee")
-    os.makedirs(cognee_root, exist_ok = True)
-    cognee.config.system_root_directory = cognee_root
+    cognee_root = REPO_ROOT / "instance" / "graphrag" / ".cognee"
+    cognee_root.mkdir(parents = True, exist_ok = True)
+    cognee.config.system_root_directory = str(cognee_root)
     
     cognee.config.set_llm_provider("litellm")
     cognee.config.set_llm_model("anthropic/claude-3-5-sonnet-20240620") 
@@ -76,14 +77,21 @@ async def main():
     await cognee.prune()
     
     # 2. Add and Cognify
-    targets = ["00-vision", "01-architecture", "02-roadmap", "03-research"]
+    targets = [
+        REPO_ROOT / "00-vision",
+        REPO_ROOT / "01-architecture",
+        REPO_ROOT / "02-roadmap",
+        REPO_ROOT / "03-research",
+        REPO_ROOT / "instance" / "installed",
+        REPO_ROOT / "instance" / "adrs",
+    ]
     for target in targets:
-        if os.path.exists(target):
-            await cognee.add(target)
+        if target.exists():
+            await cognee.add(str(target))
     
-    ontology_path = "00-vision/01-glossary.ttl"
+    ontology_path = REPO_ROOT / "00-vision" / "01-glossary.ttl"
     print(f"==> Running Cognee grounded extraction with: {ontology_path}")
-    await cognee.cognify(ontology_file_path = ontology_path)
+    await cognee.cognify(ontology_file_path = str(ontology_path))
     
     # 3. Export to Parquet for GraphRAG
     print("==> Exporting Cognee graph to Parquet for GraphRAG community detection...")

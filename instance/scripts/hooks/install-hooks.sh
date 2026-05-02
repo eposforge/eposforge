@@ -2,11 +2,11 @@
 # install-hooks.sh — Install eposforge Git hooks into .git/hooks/.
 #
 # Usage:
-#   bash scripts/hooks/install-hooks.sh
+#   bash instance/scripts/hooks/install-hooks.sh
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-HOOKS_SRC="${REPO_ROOT}/scripts/hooks"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+HOOKS_SRC="${REPO_ROOT}/instance/scripts/hooks"
 HOOKS_DST="${REPO_ROOT}/.git/hooks"
 
 install_hook() {

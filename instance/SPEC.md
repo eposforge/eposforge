@@ -1,8 +1,15 @@
+---
+doc_kind: reference-implementation
+scope: repo-instance
+maturity: experimental
+source_of_truth: yes
+---
+
 # SPEC.md — EposForge Documentation Maintenance Tooling
 
 > Living Spec for Component 6 (Spec Graph) as implemented in this repo.
 > Per the paired-change rule: any change to the tooling behavior in
-> `graphrag/` or `scripts/` must update this file in the same commit.
+> `instance/graphrag/` or `instance/scripts/` must update this file in the same commit.
 
 ---
 
@@ -26,16 +33,18 @@ architecture contracts versus repo-instance implementations.
 ## Component slot
 
 This tooling implements **Component 6: Spec Graph** for the EposForge
-repo itself. It is a concrete reference implementation of the pattern
-documented in
-[03-research/06-spec-graph/graphrag-neo4j-integration.md](03-research/06-spec-graph/graphrag-neo4j-integration.md).
+repo itself. This is one of many possible Spec Graph implementations;
+the slot contract is defined in
+[../01-architecture/02-components/06-spec-graph.md](../01-architecture/02-components/06-spec-graph.md).
+It is a concrete reference implementation of the pattern documented in
+[../03-research/06-spec-graph/graphrag-neo4j-integration.md](../03-research/06-spec-graph/graphrag-neo4j-integration.md).
 
 ---
 
 ## Adapter metadata
 
-Per [01-architecture/00-adapter-pattern.md](01-architecture/00-adapter-pattern.md)
-and [01-architecture/02-components/06-spec-graph.md](01-architecture/02-components/06-spec-graph.md):
+Per [../01-architecture/00-adapter-pattern.md](../01-architecture/00-adapter-pattern.md)
+and [../01-architecture/02-components/06-spec-graph.md](../01-architecture/02-components/06-spec-graph.md):
 
 | Field | Value |
 |---|---|
@@ -43,9 +52,9 @@ and [01-architecture/02-components/06-spec-graph.md](01-architecture/02-componen
 | `component` | `06-spec-graph` |
 | `version` | `0.1.0` |
 | `privacy_posture` | `local` (Neo4j) / `vendor-default` (inference during indexing) |
-| `cost_hint` | free (Neo4j CE) + metered (Gemini API for indexing) |
-| `capabilities` | graph-query, community-detection, [vector-similarity](../graphrag/README.md#hybrid-graph--vector-queries) |
-| `invocation_surface` | CLI scripts (`scripts/spec-graph-rebuild.sh`) |
+| `cost_hint` | free (Neo4j CE) + metered (Anthropic/OpenAI APIs for indexing) |
+| `capabilities` | graph-query, community-detection, [vector-similarity](./graphrag/README.md#hybrid-graph--vector-queries) |
+| `invocation_surface` | CLI scripts (`instance/scripts/spec-graph-rebuild.sh`) |
 | `status` | `experimental` |
 | `query_languages` | Cypher (via Neo4j); natural language (via Neo4j MCP) |
 | `projection_format` | hybrid (graph nodes/edges + embeddings) |
@@ -60,13 +69,15 @@ Single source of truth for Component 6 adapter status in this repository.
 
 | Adapter | FULFILLS_SLOT | Status | Invocation surface | Notes |
 |---|---|---|---|---|
-| `microsoft-graphrag` | `SPEC_GRAPH` | implemented, default, experimental | `bash scripts/spec-graph-rebuild.sh` | Default extraction/indexing path |
-| `neo4j-ce` | `SPEC_GRAPH` | implemented, active, experimental | `scripts/spec-graph-import.sh` + Neo4j MCP | Query store and Cypher/vector surface |
-| `cognee-ontology-preprocessor` | `SPEC_GRAPH` | implemented, optional, experimental | `bash scripts/spec-graph-rebuild.sh --cognee` | Ontology-grounded extraction path |
+| `microsoft-graphrag` | `SPEC_GRAPH` | implemented, default, experimental | `bash instance/scripts/spec-graph-rebuild.sh` | Default extraction/indexing path |
+| `neo4j-ce` | `SPEC_GRAPH` | implemented, active, experimental | `instance/scripts/spec-graph-import.sh` + Neo4j MCP | Query store and Cypher/vector surface |
+| `cognee-ontology-preprocessor` | `SPEC_GRAPH` | implemented, optional, experimental | `bash instance/scripts/spec-graph-rebuild.sh --cognee` | Ontology-grounded extraction path |
 
 Candidate adapters remain cataloged in
-`03-research/06-spec-graph/spec-graph.md` and are non-normative until listed
+`../03-research/06-spec-graph/spec-graph.md` and are non-normative until listed
 here as implemented.
+These adapters fill Component 6 for THIS repo only. Other instances will pick
+differently; see `../03-research/06-spec-graph/spec-graph.md` for the candidate catalog.
 
 ---
 
@@ -100,15 +111,15 @@ source_of_truth: yes
 
 ## Observable behavior
 
-1. **Trigger:** operator runs `bash scripts/spec-graph-rebuild.sh` (or
-   `bash scripts/spec-graph-rebuild.sh --cognee`) or CI runs it on a
+1. **Trigger:** operator runs `bash instance/scripts/spec-graph-rebuild.sh` (or
+  `bash instance/scripts/spec-graph-rebuild.sh --cognee`) or CI runs it on a
    schedule / after significant doc batches.
 
 2. **Indexing / extraction:**
    - Default path: GraphRAG reads all `*.md` files matching
-     `^(00-vision|01-architecture|02-roadmap|03-research)/.*\.md$`
+     `^(00-vision|01-architecture|02-roadmap|03-research|instance/installed|instance/adrs)/.*\.md$`
      from the repo root. It extracts Entity, Relationship, Community,
-     and TextUnit records into Parquet files under `graphrag/output/`.
+     and TextUnit records into Parquet files under `instance/graphrag/output/`.
    - Optional Cognee path (`--cognee`): Cognee performs ontology-grounded
      extraction (seeded by `00-vision/01-glossary.ttl`) and exports
      GraphRAG-compatible Parquet output.
@@ -127,8 +138,8 @@ source_of_truth: yes
    - "List all principles that govern the Router component."
    - "Generate a new ADR for adding a second Dev Product Adapter."
 
-5. **Rebuild flag:** The `scripts/hooks/post-commit` hook writes
-   `graphrag/.needs-rebuild` when doc files change. This is a
+5. **Rebuild flag:** The `instance/scripts/hooks/post-commit` hook writes
+  `instance/graphrag/.needs-rebuild` when doc files change. This is a
    non-blocking reminder; it does not trigger the rebuild itself.
 
 ---
@@ -151,9 +162,9 @@ source_of_truth: yes
 
 | Output | Description |
 |---|---|
-| `graphrag/output/*.parquet` | Entity, Relationship, Community, TextUnit tables |
+| `instance/graphrag/output/*.parquet` | Entity, Relationship, Community, TextUnit tables |
 | Neo4j graph | Fully imported knowledge graph |
-| `graphrag/.needs-rebuild` | Flag file set by post-commit hook |
+| `instance/graphrag/.needs-rebuild` | Flag file set by post-commit hook |
 
 ---
 
@@ -207,8 +218,8 @@ from this spec without reading implementation code:
 | Missing extraction key | `ANTHROPIC_API_KEY` unset | `spec-graph-index.sh` exits 1 with error message |
 | Missing embeddings key | `OPENAI_API_KEY` unset | `spec-graph-index.sh` exits 1 with error message |
 | Missing Neo4j vars | `NEO4J_PASSWORD` unset | `spec-graph-import.sh` exits 1 with error message |
-| No output dir | `graphrag/output/` absent | `spec-graph-import.sh` exits 1 with error message |
-| No venv | `graphrag/.venv/` absent | Index/import scripts exit 1 with setup instructions |
+| No output dir | `instance/graphrag/output/` absent | `spec-graph-import.sh` exits 1 with error message |
+| No venv | `instance/graphrag/.venv/` absent | Index/import scripts exit 1 with setup instructions |
 | Zero matching files | All docs dirs empty | GraphRAG produces empty Parquet; Neo4j graph has 0 entities |
 | Large corpus | > 500 Markdown files | Completes within `rebuild_target` (15 min) |
 
@@ -219,11 +230,12 @@ from this spec without reading implementation code:
 Changes to the following files require updating this `SPEC.md` in the
 same commit:
 
-- `graphrag/settings.yaml` (any key that changes observable behavior)
-- `scripts/spec-graph-index.sh`
-- `scripts/spec-graph-import.sh`
-- `scripts/spec-graph-rebuild.sh`
-- `scripts/spec-graph-cognee.py`
-- `scripts/check-doc-classification.py` (regulated directories, exempt patterns, or required fields)
+- `instance/graphrag/settings.yaml` (any key that changes observable behavior)
+- `instance/scripts/spec-graph-index.sh`
+- `instance/scripts/spec-graph-import.sh`
+- `instance/scripts/spec-graph-rebuild.sh`
+- `instance/scripts/spec-graph-cognee.py`
+- `instance/scripts/check-doc-classification.py` (regulated directories, exempt patterns, or required fields)
 - `.github/workflows/doc-lint.yml` (trigger paths or job behaviour)
-- `scripts/hooks/post-commit`
+- `instance/scripts/hooks/post-commit`
+

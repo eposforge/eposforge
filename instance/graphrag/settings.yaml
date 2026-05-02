@@ -23,7 +23,7 @@ embedding_models:
 ### Document processing settings ###
 input:
   type: text
-  file_pattern: "[/\\\\](00-vision|01-architecture|02-roadmap|03-research)[/\\\\].*\\.md$$"
+  file_pattern: "[/\\\\](00-vision|01-architecture|02-roadmap|03-research|instance[/\\\\]installed|instance[/\\\\]adrs)[/\\\\].*\\.md$$"
 
 chunking:
   type: tokens
@@ -34,7 +34,7 @@ chunking:
 ### Storage settings ###
 input_storage:
   type: file
-  base_dir: "../"
+  base_dir: "../../"
 
 output_storage:
   type: file

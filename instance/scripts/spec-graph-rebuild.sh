@@ -13,7 +13,7 @@
 #   NEO4J_PASSWORD    — Neo4j password
 #
 # Usage:
-#   ANTHROPIC_API_KEY=xxx OPENAI_API_KEY=yyy NEO4J_PASSWORD=zzz bash scripts/spec-graph-rebuild.sh [--cognee]
+#   ANTHROPIC_API_KEY=xxx OPENAI_API_KEY=yyy NEO4J_PASSWORD=zzz bash instance/scripts/spec-graph-rebuild.sh [--cognee]
 set -euo pipefail
 
 SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

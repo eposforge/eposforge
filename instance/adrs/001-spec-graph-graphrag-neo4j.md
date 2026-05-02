@@ -1,3 +1,10 @@
+---
+doc_kind: reference-implementation
+scope: repo-instance
+maturity: experimental
+source_of_truth: yes
+---
+
 # ADR 001 — Spec Graph: GraphRAG + Neo4j
 
 | Field | Value |
@@ -10,27 +17,20 @@
 
 ## Context
 
-EposForge is itself an instance of the dark-factory pattern it
 documents. Its corpus of vision and architecture Markdown files is the
 primary artifact the factory maintains. As the corpus grows, keeping
 it consistent — detecting contradictions, tracing dependencies between
-components and phases, generating new ADRs and research entries that
 align with the established vocabulary — becomes a non-trivial cognitive
 task for any maintainer or contributing Dev Product.
 
 Component 6 (Spec Graph) addresses this by projecting all Living Specs
 into a queryable knowledge graph that Dev Products can consult during
-authoring. This ADR records the concrete Adapter decisions made for
 the EposForge repo's own Spec Graph implementation.
-
 The goal is a local, reproducible, version-controlled setup that:
-
 - Requires no external hosted services beyond the inference API
   used during indexing.
-- Works with any MCP-compatible Dev Product without Dev Product
   changes.
-- Stores all configuration and prompts in the repo so the graph
-  is fully rebuildable from source.
+  section in `instance/SPEC.md` and choose accordingly.
 
 ---
 
@@ -50,7 +50,7 @@ Edition (graph store).
 - Neo4j CE is free OSS, runs locally, and provides mature Cypher
   pattern matching well-suited to the dependency/impact query shapes
   required by the Spec Graph contract.
-- Custom extraction prompts in `graphrag/prompts/` encode the
+- Custom extraction prompts in `instance/graphrag/prompts/` encode the
   EposForge vocabulary (Component, Adapter, Phase, Pillar,
   FULFILLS_SLOT, MATURES_TO, etc.) and travel with the repo,
   so extraction quality is consistent across rebuilds.
@@ -107,14 +107,14 @@ implementation for documentation and examples.
   lower the barrier to entry for contributors.
 - Instances with privacy requirements should substitute a local Dev
   Product (e.g., Goose + Ollama) and update the inference backend in
-  `graphrag/settings.yaml` accordingly.
+  `instance/graphrag/settings.yaml` accordingly.
 
 ---
 
 ## Decision: Automation — Non-blocking post-commit flag + manual rebuild
 
-**Chosen:** post-commit hook writes `graphrag/.needs-rebuild` flag;
-operator runs `scripts/spec-graph-rebuild.sh` after significant batches.
+**Chosen:** post-commit hook writes `instance/graphrag/.needs-rebuild` flag;
+operator runs `instance/scripts/spec-graph-rebuild.sh` after significant batches.
 
 **Rationale:**
 
@@ -123,10 +123,10 @@ operator runs `scripts/spec-graph-rebuild.sh` after significant batches.
 - A CI-triggered rebuild (optional extension) adds complexity that is
   not yet warranted for a single-operator repo. It can be added by
   adding a scheduled workflow job that runs
-  `scripts/spec-graph-rebuild.sh` on the CI host.
+  `instance/scripts/spec-graph-rebuild.sh` on the CI host.
 - The non-blocking flag preserves the reminder without blocking
   developer flow. The post-commit hook is installed manually via
-  `scripts/hooks/install-hooks.sh` rather than forced on all
+  `instance/scripts/hooks/install-hooks.sh` rather than forced on all
   contributors; this respects the DCO-based contribution model.
 
 ---
@@ -172,10 +172,10 @@ Deferred: acceptable for a future scale-out option; see
   grounded in the actual documented structure.
 - **Positive:** native Neo4j vector indexes (three: `entity_embedding`,
   `text_unit_embedding`, `community_report_embedding`) are created by
-  `scripts/spec-graph-import.sh` using embeddings sourced from LanceDB
-  (`graphrag/output/lancedb`). Hybrid Cypher queries that combine
+  `instance/scripts/spec-graph-import.sh` using embeddings sourced from LanceDB
+  (`instance/graphrag/output/lancedb`). Hybrid Cypher queries that combine
   structural traversal with semantic similarity are supported without
-  any MCP-layer changes. See `graphrag/README.md` for example queries.
+  any MCP-layer changes. See `instance/graphrag/README.md` for example queries.
 - **Positive:** all configuration, prompts, and scripts are in the
   repo; the graph is fully reproducible from source.
 - **Negative:** rebuild requires a Gemini API key and a running Neo4j
@@ -199,3 +199,4 @@ Open a PR to supersede this ADR if:
   update becomes necessary.
 - A new Tool Transport replaces MCP as the factory standard.
 - The operator chooses to lock in a specific Dev Product Adapter.
+

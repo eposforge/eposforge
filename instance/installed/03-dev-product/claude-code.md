@@ -1,7 +1,14 @@
+---
+doc_kind: reference-implementation
+scope: repo-instance
+maturity: experimental
+source_of_truth: yes
+---
+
 # Installed Adapter: claude-code → Dev Product (Component 3)
 
 > Living Spec for the Claude Code Dev Product Adapter installed in this
-> repo. Per [../../00-adapter-pattern.md](../../00-adapter-pattern.md),
+> repo. Per [../../../01-architecture/00-adapter-pattern.md](../../../01-architecture/00-adapter-pattern.md),
 > all required universal and component-specific fields are declared here.
 
 ---
@@ -83,5 +90,6 @@ Secrets are read from the operator environment at session start:
 - Other model keys managed by Anthropic's own credential chain.
 
 No secrets are committed to this repo. See
-[../../../12-secrets-key-management.md](../../../12-secrets-key-management.md)
+[../../../01-architecture/02-components/12-secrets-key-management.md](../../../01-architecture/02-components/12-secrets-key-management.md)
 for the slot contract.
+
