@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# post-commit — Non-blocking Spec Graph rebuild flag.
+#
+# Sets instance/installed/06-spec-graph/.needs-rebuild when any *.md files in the vision or
+# architecture directories are modified. The flag is a reminder to run
+# instance/installed/06-spec-graph/scripts/rebuild.sh; it does NOT trigger the rebuild
+# automatically (GraphRAG indexing takes ~10 min and is not suitable
+# for a blocking commit hook).
+#
+# Install via:
+#   bash instance/installed/06-spec-graph/scripts/hooks/install-hooks.sh
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+FLAG="${REPO_ROOT}/instance/installed/06-spec-graph/.needs-rebuild"
+
+# Check whether any tracked docs directories were touched in this commit
+CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null \
+  | grep -E "^(00-vision|01-architecture|02-roadmap|03-research|instance/adrs|instance/installed)/.*\.md$" \
+  || true)
+
+if [[ -n "${CHANGED}" ]]; then
+  touch "${FLAG}" 2>/dev/null || true
+  echo "spec-graph: Markdown docs changed. Run instance/installed/06-spec-graph/scripts/rebuild.sh to update the Spec Graph."
+fi
