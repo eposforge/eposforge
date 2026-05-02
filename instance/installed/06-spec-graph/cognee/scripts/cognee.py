@@ -89,11 +89,21 @@ async def main():
         REPO_ROOT / "instance" / "installed",
         REPO_ROOT / "instance" / "adrs",
     ]
+    # Directories to exclude (venvs, caches, generated output)
+    EXCLUDE_DIRS = {".venv", ".cognee", ".cognee_system", "node_modules", "__pycache__",
+                   "graphrag", "output", "cache", ".git"}
+
+    def _collect(root: pathlib.Path, pattern: str) -> list:
+        return [
+            p for p in root.rglob(pattern)
+            if not any(part in EXCLUDE_DIRS for part in p.parts)
+        ]
+
     doc_files = []
     for root in search_roots:
         if root.exists():
-            doc_files.extend(root.rglob("*.md"))
-            doc_files.extend(root.rglob("*.ttl"))
+            doc_files.extend(_collect(root, "*.md"))
+            doc_files.extend(_collect(root, "*.ttl"))
     for f in doc_files:
         await cognee.add(str(f))
     
