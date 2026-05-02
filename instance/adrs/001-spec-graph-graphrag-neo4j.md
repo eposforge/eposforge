@@ -50,7 +50,7 @@ Edition (graph store).
 - Neo4j CE is free OSS, runs locally, and provides mature Cypher
   pattern matching well-suited to the dependency/impact query shapes
   required by the Spec Graph contract.
-- Custom extraction prompts in `instance/graphrag/prompts/` encode the
+- Custom extraction prompts in `instance/installed/06-spec-graph/prompts/` encode the
   EposForge vocabulary (Component, Adapter, Phase, Pillar,
   FULFILLS_SLOT, MATURES_TO, etc.) and travel with the repo,
   so extraction quality is consistent across rebuilds.
@@ -107,13 +107,13 @@ implementation for documentation and examples.
   lower the barrier to entry for contributors.
 - Instances with privacy requirements should substitute a local Dev
   Product (e.g., Goose + Ollama) and update the inference backend in
-  `instance/graphrag/settings.yaml` accordingly.
+  `instance/installed/06-spec-graph/settings.yaml` accordingly.
 
 ---
 
 ## Decision: Automation — Non-blocking post-commit flag + manual rebuild
 
-**Chosen:** post-commit hook writes `instance/graphrag/.needs-rebuild` flag;
+**Chosen:** post-commit hook writes `instance/installed/06-spec-graph/.needs-rebuild` flag;
 operator runs `instance/scripts/spec-graph-rebuild.sh` after significant batches.
 
 **Rationale:**
@@ -173,9 +173,9 @@ Deferred: acceptable for a future scale-out option; see
 - **Positive:** native Neo4j vector indexes (three: `entity_embedding`,
   `text_unit_embedding`, `community_report_embedding`) are created by
   `instance/scripts/spec-graph-import.sh` using embeddings sourced from LanceDB
-  (`instance/graphrag/output/lancedb`). Hybrid Cypher queries that combine
+  (`instance/installed/06-spec-graph/output/lancedb`). Hybrid Cypher queries that combine
   structural traversal with semantic similarity are supported without
-  any MCP-layer changes. See `instance/graphrag/README.md` for example queries.
+  any MCP-layer changes. See `instance/installed/06-spec-graph/README.md` for example queries.
 - **Positive:** all configuration, prompts, and scripts are in the
   repo; the graph is fully reproducible from source.
 - **Negative:** rebuild requires a Gemini API key and a running Neo4j

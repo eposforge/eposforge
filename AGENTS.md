@@ -167,7 +167,7 @@ RETURN report.title, report.summary, score ORDER BY score DESC;
 02-roadmap/         Phase plans
 03-research/        Domain research including spec-graph integration notes
 instance/           Self-host implementation for this repo
-instance/graphrag/  GraphRAG project (settings, prompts, output/)
+instance/installed/06-spec-graph/  GraphRAG project (settings, prompts, output/)
 instance/scripts/   spec-graph-rebuild.sh, spec-graph-import.sh, etc.
 instance/SPEC.md    Living Spec for this repo's Spec Graph adapter (Component 6)
 ```
@@ -175,7 +175,7 @@ instance/SPEC.md    Living Spec for this repo's Spec Graph adapter (Component 6)
 Paired-change rule: changes to the specific files enumerated in the
 `instance/SPEC.md §Paired-change rule` section must update `instance/SPEC.md`
 in the same commit. Additions to `instance/scripts/` or
-`instance/graphrag/` that are not in that list do not require an
+`instance/installed/06-spec-graph/` that are not in that list do not require an
 `instance/SPEC.md` update.
 
 ---
@@ -214,8 +214,8 @@ Use this workflow when the user provides a description of additions, deletions, 
   VPN details, or user-specific network topology.
 - When examples require endpoints, use placeholders like
   `https://<service-host>` and `bolt://<neo4j-host-or-ip>:7688`.
-- Do not commit `instance/graphrag/output/`, `instance/graphrag/cache/`, `instance/graphrag/.venv/`,
+- Do not commit `instance/installed/06-spec-graph/output/`, `instance/installed/06-spec-graph/cache/`, `instance/installed/06-spec-graph/.venv/`,
   `.env`, or any file containing API keys or passwords.
-- Never edit generated output under `instance/graphrag/output/`.
+- Never edit generated output under `instance/installed/06-spec-graph/output/`.
 - Rebuilding the Spec Graph: `bash instance/scripts/spec-graph-rebuild.sh`
   (requires `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `NEO4J_PASSWORD`).

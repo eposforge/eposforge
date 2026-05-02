@@ -34,7 +34,7 @@ chunking:
 ### Storage settings ###
 input_storage:
   type: file
-  base_dir: "../../"
+  base_dir: "../../../"
 
 output_storage:
   type: file

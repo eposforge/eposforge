@@ -38,7 +38,7 @@ echo "    Target: Neo4j (${NEO4J_URI})"
 echo ""
 
 if [ "$USE_COGNEE" = true ]; then
-  VENV="${REPO_ROOT}/graphrag/.venv"
+  VENV="${REPO_ROOT}/installed/06-spec-graph/.venv"
   # Use Windows path for python if on Windows, else standard
   if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
     PYTHON="${VENV}/Scripts/python"

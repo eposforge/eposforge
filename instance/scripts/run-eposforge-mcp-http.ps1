@@ -8,7 +8,7 @@ param(
 $ErrorActionPreference = "Stop"
 $serverHost = "127.0.0.1"
 $serverPath = "/mcp/"
-$exePath = Join-Path $PSScriptRoot "..\graphrag\.venv\Scripts\mcp-neo4j-cypher.exe"
+$exePath = Join-Path $PSScriptRoot "..\installed\06-spec-graph\.venv\Scripts\mcp-neo4j-cypher.exe"
 $exePath = [System.IO.Path]::GetFullPath($exePath)
 
 if (-not (Test-Path $exePath)) {
