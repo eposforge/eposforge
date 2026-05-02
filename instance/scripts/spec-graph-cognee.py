@@ -7,7 +7,7 @@ from neo4j import GraphDatabase
 
 # Configure output directories for GraphRAG compatibility
 REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
-GRAPHRAG_OUTPUT_DIR = REPO_ROOT / "instance" / "installed" / "06-spec-graph" / "output"
+GRAPHRAG_OUTPUT_DIR = REPO_ROOT / "instance" / "installed" / "06-spec-graph" / "graphrag" / "output"
 GRAPHRAG_OUTPUT_DIR.mkdir(parents = True, exist_ok = True)
 
 async def export_cognee_to_parquet():
@@ -51,7 +51,7 @@ async def export_cognee_to_parquet():
 
 async def main():
     # 1. Setup Cognee configuration
-    cognee_root = REPO_ROOT / "instance" / "installed" / "06-spec-graph" / ".cognee"
+    cognee_root = REPO_ROOT / "instance" / "installed" / "06-spec-graph" / "cognee" / ".cognee"
     cognee_root.mkdir(parents = True, exist_ok = True)
     cognee.config.system_root_directory = str(cognee_root)
     

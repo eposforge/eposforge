@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # spec-graph-index.sh — Run GraphRAG indexing over EposForge Markdown docs.
 #
-# Reads all *.md files matched by installed/06-spec-graph/settings.yaml (00-vision/,
+# Reads all *.md files matched by installed/06-spec-graph/graphrag/settings.yaml (00-vision/,
 # 01-architecture/, 02-roadmap/, 03-research/) and produces Parquet
-# output in installed/06-spec-graph/output/.
+# output in installed/06-spec-graph/graphrag/output/.
 #
 # Prerequisites:
-#   - Python venv at installed/06-spec-graph/.venv with graphrag installed
+#   - Python venv at installed/06-spec-graph/graphrag/.venv with graphrag installed
 #   - ANTHROPIC_API_KEY and OPENAI_API_KEY environment variables set
 #     (or GEMINI_API_KEY if using the Gemini alternative in settings.yaml)
 #
@@ -16,14 +16,14 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-GRAPHRAG_DIR="${REPO_ROOT}/installed/06-spec-graph"
+GRAPHRAG_DIR="${REPO_ROOT}/installed/06-spec-graph/graphrag"
 VENV="${GRAPHRAG_DIR}/.venv"
 PYTHON="${VENV}/bin/python"
 
 # Verify prerequisites
 if [[ ! -d "${VENV}" ]]; then
   echo "ERROR: Python venv not found at ${VENV}" >&2
-  echo "Run: cd instance/installed/06-spec-graph && python -m venv .venv && source .venv/bin/activate && pip install graphrag" >&2
+  echo "Run: cd instance/installed/06-spec-graph/graphrag && python -m venv .venv && source .venv/bin/activate && pip install graphrag" >&2
   exit 1
 fi
 
@@ -47,7 +47,7 @@ cd "${GRAPHRAG_DIR}"
 "${PYTHON}" -m graphrag index --root .
 
 # Clear the .needs-rebuild flag if it exists
-rm -f "${GRAPHRAG_DIR}/.needs-rebuild"
+rm -f "${GRAPHRAG_DIR}/../.needs-rebuild"
 
 echo "==> Indexing complete. Parquet files in ${GRAPHRAG_DIR}/output/"
 echo "    Run instance/scripts/spec-graph-import.sh to load into Neo4j."

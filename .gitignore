@@ -19,8 +19,10 @@ graphrag/cache/
 graphrag/.venv/
 graphrag/__pycache__/
 graphrag/*.pyc
-instance/installed/06-spec-graph/output/
-instance/installed/06-spec-graph/cache/
-instance/installed/06-spec-graph/.venv/
-instance/installed/06-spec-graph/__pycache__/
-instance/installed/06-spec-graph/.cognee/
+instance/installed/06-spec-graph/graphrag/output/
+instance/installed/06-spec-graph/graphrag/cache/
+instance/installed/06-spec-graph/graphrag/.venv/
+instance/installed/06-spec-graph/graphrag/__pycache__/
+instance/installed/06-spec-graph/cognee/.venv/
+instance/installed/06-spec-graph/cognee/__pycache__/
+instance/installed/06-spec-graph/cognee/.cognee/

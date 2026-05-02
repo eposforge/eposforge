@@ -32,7 +32,7 @@ source_of_truth: yes
 | `model_classes` | completion + embedding |
 | `selection_policy` | fixed defaults in settings file |
 | `fallback_strategy` | none in v1 |
-| `prompt_control` | prompt files under `instance/installed/06-spec-graph/prompts/` |
+| `prompt_control` | prompt files under `instance/installed/06-spec-graph/graphrag/prompts/` |
 
 ### Repo-specific fields
 
@@ -40,7 +40,7 @@ source_of_truth: yes
 |---|---|
 | `completion_model` | `claude-sonnet-4-6` |
 | `embedding_model` | `text-embedding-3-small` |
-| `settings_file` | `instance/installed/06-spec-graph/settings.yaml` |
+| `settings_file` | `instance/installed/06-spec-graph/graphrag/settings.yaml` |
 | `api_bindings` | `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` |
 
 ## Contract gaps (v1)
