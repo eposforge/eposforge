@@ -1,9 +1,11 @@
 {
   "mcpServers": {
-    "eposforge-graph": {
-      "command": "<abs-path-to>\\graphrag\\.venv\\Scripts\\mcp-neo4j-cypher.exe",
-      "args": ["--read-only"],
+    "cognee": {
+      "command": "uvx",
+      "args": ["cognee-mcp"],
       "env": {
+        "ANTHROPIC_API_KEY": "<your-anthropic-api-key>",
+        "OPENAI_API_KEY": "<your-openai-api-key>",
         "NEO4J_URI": "bolt://localhost:7688",
         "NEO4J_USERNAME": "neo4j",
         "NEO4J_PASSWORD": "<your-neo4j-password>"
@@ -18,10 +20,6 @@
     },
     "ms-docs": {
       "url": "https://learn.microsoft.com/api/mcp"
-    },
-    "cognee": {
-      "command": "npx",
-      "args": ["-y", "@cognee/mcp-server"]
     }
   }
 }

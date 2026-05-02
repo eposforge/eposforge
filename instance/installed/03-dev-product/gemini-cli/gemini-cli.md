@@ -54,7 +54,7 @@ All three Tool Transport servers are wired via `.gemini/settings.json`:
 
 | Server | Transport | Notes |
 |---|---|---|
-| `eposforge-graph` | http (`http://127.0.0.1:7777/mcp/`) | read-only; loopback only |
+| `cognee` | stdio (`uvx cognee-mcp`) | local-hosted MCP; graph and memory operations |
 | `github` | stdio (`@modelcontextprotocol/server-github`) | requires `GITHUB_PERSONAL_ACCESS_TOKEN` in env |
 | `ms-docs` | http (`https://learn.microsoft.com/api/mcp`) | public; no auth required |
 

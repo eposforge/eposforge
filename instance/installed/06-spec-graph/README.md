@@ -5,11 +5,12 @@ maturity: experimental
 source_of_truth: yes
 ---
 
-# GraphRAG workspace — EposForge Spec Graph
+# GraphRAG workspace — EposForge Spec Graph (installed fallback)
 
-This directory is the Microsoft GraphRAG project that indexes the
-EposForge vision and architecture Markdown files and projects them
-into a Neo4j knowledge graph (Component 6: Spec Graph).
+This directory is the Microsoft GraphRAG project retained as an
+installed fallback adapter for Component 6 (Spec Graph). The default
+path now runs Cognee-first extraction; use this GraphRAG workspace only
+for explicit fallback runs.
 
 See [03-research/06-spec-graph/graphrag-neo4j-integration.md](../../../03-research/06-spec-graph/graphrag-neo4j-integration.md)
 for the full architecture and setup walkthrough.
@@ -34,7 +35,6 @@ graphrag init --root . --force
 
 # 4. Set your API keys
 export ANTHROPIC_API_KEY=your-anthropic-key
-export OPENAI_API_KEY=your-openai-key        # used for embeddings
 export NEO4J_URI=bolt://localhost:7688  # host port mapped from container's 7687
 export NEO4J_USERNAME=neo4j
 export NEO4J_PASSWORD=your-neo4j-password
@@ -43,9 +43,9 @@ export NEO4J_PASSWORD=your-neo4j-password
 # uncommenting the Gemini blocks in settings.yaml and setting:
 # export GEMINI_API_KEY=your-gemini-key
 
-# 5. Index all Markdown files and import into Neo4j
+# 5. Run the GraphRAG fallback path explicitly
 cd ../../..                         # repo root
-bash instance/scripts/spec-graph-rebuild.sh
+bash instance/scripts/spec-graph-rebuild.sh --graphrag
 ```
 
 > **Note:** The first index run creates `output/lancedb/` (the vector

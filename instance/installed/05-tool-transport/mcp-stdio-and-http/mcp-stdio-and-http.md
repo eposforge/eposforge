@@ -20,7 +20,7 @@ source_of_truth: yes
 | `component` | `05-tool-transport` |
 | `version` | `0.1.0` |
 | `status` | `experimental` |
-| `privacy_posture` | `mixed` (`local` for loopback graph, `vendor-default` for external servers) |
+| `privacy_posture` | `mixed` (`local` for Cognee MCP process, `vendor-default` for external inference APIs) |
 | `cost_hint` | `free + metered` (server-dependent) |
 | `capabilities` | `graph-query`, `repo-query`, `docs-query`, `memory` |
 | `invocation_surface` | `MCP` (`stdio` and `http`) |
@@ -46,10 +46,9 @@ source_of_truth: yes
 
 | Server | Transport | Capability set | Notes |
 |---|---|---|---|
-| `eposforge-graph` | `stdio` (loopback) | `graph-query` | Neo4j-backed Spec Graph surface |
+| `cognee` | `stdio` (loopback) | `graph-query`, `memory` | Local Cognee MCP service; external LLM API calls via env keys |
 | `github` | `stdio` | `repo-query` | Requires `GITHUB_PERSONAL_ACCESS_TOKEN` |
 | `microsoft.docs` | `http` | `docs-query` | Public endpoint |
-| `cognee` | varies by runtime setup | `memory` | Runtime memory operations; docs/source lookup stays on GitHub MCP |
 
 ## Contract gaps (v1)
 

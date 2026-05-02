@@ -54,7 +54,7 @@ All three Tool Transport servers are wired via `.mcp.json`:
 
 | Server | Transport | Notes |
 |---|---|---|
-| `eposforge-graph` | stdio (`mcp-neo4j-cypher`) | read-only; loopback only |
+| `cognee` | stdio (`uvx cognee-mcp`) | local-hosted MCP; graph and memory operations |
 | `github` | stdio (`@modelcontextprotocol/server-github`) | requires `GITHUB_PERSONAL_ACCESS_TOKEN` in env |
 | `ms-docs` | http (`https://learn.microsoft.com/api/mcp`) | public; no auth required |
 
@@ -67,7 +67,7 @@ Two layers:
 1. **`AGENTS.md`** — tool-neutral policy inherited by all Dev Products.
 2. **`.claude/settings.json` UserPromptSubmit hook** — injects an
    MCP-first reminder when the prompt contains architecture vocabulary.
-   Pre-allows `mcp__eposforge-graph__*` tools to avoid deferred-tool
+   Pre-allows `mcp__cognee__*` tools to avoid deferred-tool
    friction.
 
 ---

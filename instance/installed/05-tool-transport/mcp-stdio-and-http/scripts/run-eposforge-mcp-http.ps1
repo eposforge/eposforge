@@ -1,15 +1,15 @@
 param(
+    [string]$AnthropicApiKey,
     [string]$Neo4jUri,
     [string]$Neo4jUsername,
-    [string]$Neo4jPassword,
-    [int]$Port = 7788
+    [string]$Neo4jPassword
 )
 
 $ErrorActionPreference = "Stop"
-$serverHost = "127.0.0.1"
-$serverPath = "/mcp/"
-$exePath = Join-Path $PSScriptRoot "..\..\06-spec-graph\graphrag\.venv\Scripts\mcp-neo4j-cypher.exe"
-$exePath = [System.IO.Path]::GetFullPath($exePath)
+
+if (-not $AnthropicApiKey) {
+    $AnthropicApiKey = $env:ANTHROPIC_API_KEY
+}
 
 if (-not $Neo4jUri) {
     $Neo4jUri = $env:NEO4J_URI
@@ -24,6 +24,10 @@ if (-not $Neo4jPassword) {
 }
 
 $missingSettings = @()
+
+if (-not $AnthropicApiKey) {
+    $missingSettings += "ANTHROPIC_API_KEY or -AnthropicApiKey"
+}
 
 if (-not $Neo4jUri) {
     $missingSettings += "NEO4J_URI or -Neo4jUri"
@@ -42,30 +46,16 @@ if ($missingSettings.Count -gt 0) {
     exit 1
 }
 
-if (-not (Test-Path $exePath)) {
-    Write-Error "MCP executable not found: $exePath"
+$uvx = Get-Command uvx -ErrorAction SilentlyContinue
+if (-not $uvx) {
+    Write-Error "uvx is required to launch Cognee MCP. Install uv (https://docs.astral.sh/uv/) and retry."
     exit 1
 }
 
-$listener = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1
-if ($listener) {
-    $ownerPid = $listener.OwningProcess
-    $proc = Get-Process -Id $ownerPid -ErrorAction SilentlyContinue
-    $cmdline = (Get-CimInstance Win32_Process -Filter "ProcessId = $ownerPid" -ErrorAction SilentlyContinue).CommandLine
-
-    if ($cmdline -and $cmdline -match "mcp-neo4j-cypher") {
-        Write-Host "Stopping existing MCP process on port $Port (PID $ownerPid)."
-        Stop-Process -Id $ownerPid -Force
-    }
-    else {
-        $name = if ($proc) { $proc.ProcessName } else { "unknown" }
-        Write-Error "Port $Port is already in use by PID $ownerPid ($name). Refusing to stop non-MCP process."
-        exit 1
-    }
-}
-
+$env:ANTHROPIC_API_KEY = $AnthropicApiKey
 $env:NEO4J_URI = $Neo4jUri
 $env:NEO4J_USERNAME = $Neo4jUsername
 $env:NEO4J_PASSWORD = $Neo4jPassword
 
-& $exePath --transport http --server-host $serverHost --server-port $Port --server-path $serverPath --read-only
+Write-Host "Starting local Cognee MCP server over stdio..."
+& uvx cognee-mcp
