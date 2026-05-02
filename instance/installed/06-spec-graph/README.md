@@ -11,7 +11,7 @@ This directory is the Microsoft GraphRAG project that indexes the
 EposForge vision and architecture Markdown files and projects them
 into a Neo4j knowledge graph (Component 6: Spec Graph).
 
-See [03-research/06-spec-graph/graphrag-neo4j-integration.md](../../03-research/06-spec-graph/graphrag-neo4j-integration.md)
+See [03-research/06-spec-graph/graphrag-neo4j-integration.md](../../../03-research/06-spec-graph/graphrag-neo4j-integration.md)
 for the full architecture and setup walkthrough.
 
 ---
@@ -44,7 +44,7 @@ export NEO4J_PASSWORD=your-neo4j-password
 # export GEMINI_API_KEY=your-gemini-key
 
 # 5. Index all Markdown files and import into Neo4j
-cd ../..                         # repo root
+cd ../../..                         # repo root
 bash instance/scripts/spec-graph-rebuild.sh
 ```
 

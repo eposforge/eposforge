@@ -9,7 +9,7 @@ source_of_truth: yes
 
 > Living Spec for Component 6 (Spec Graph) as implemented in this repo.
 > Per the paired-change rule: any change to the tooling behavior in
-> `instance/graphrag/` or `instance/scripts/` must update this file in the same commit.
+> `instance/installed/06-spec-graph/` or `instance/scripts/` must update this file in the same commit.
 
 ---
 
@@ -53,7 +53,7 @@ and [../01-architecture/02-components/06-spec-graph.md](../01-architecture/02-co
 | `version` | `0.1.0` |
 | `privacy_posture` | `local` (Neo4j) / `vendor-default` (inference during indexing) |
 | `cost_hint` | free (Neo4j CE) + metered (Anthropic/OpenAI APIs for indexing) |
-| `capabilities` | graph-query, community-detection, [vector-similarity](./graphrag/README.md#hybrid-graph--vector-queries) |
+| `capabilities` | graph-query, community-detection, [vector-similarity](./installed/06-spec-graph/README.md#hybrid-graph--vector-queries) |
 | `invocation_surface` | CLI scripts (`instance/scripts/spec-graph-rebuild.sh`) |
 | `status` | `experimental` |
 | `query_languages` | Cypher (via Neo4j); natural language (via Neo4j MCP) |
@@ -119,7 +119,7 @@ source_of_truth: yes
    - Default path: GraphRAG reads all `*.md` files matching
      `^(00-vision|01-architecture|02-roadmap|03-research|instance/installed|instance/adrs)/.*\.md$`
      from the repo root. It extracts Entity, Relationship, Community,
-     and TextUnit records into Parquet files under `instance/graphrag/output/`.
+     and TextUnit records into Parquet files under `instance/installed/06-spec-graph/output/`.
    - Optional Cognee path (`--cognee`): Cognee performs ontology-grounded
      extraction (seeded by `00-vision/01-glossary.ttl`) and exports
      GraphRAG-compatible Parquet output.
@@ -139,7 +139,7 @@ source_of_truth: yes
    - "Generate a new ADR for adding a second Dev Product Adapter."
 
 5. **Rebuild flag:** The `instance/scripts/hooks/post-commit` hook writes
-  `instance/graphrag/.needs-rebuild` when doc files change. This is a
+  `instance/installed/06-spec-graph/.needs-rebuild` when doc files change. This is a
    non-blocking reminder; it does not trigger the rebuild itself.
 
 ---
@@ -162,9 +162,9 @@ source_of_truth: yes
 
 | Output | Description |
 |---|---|
-| `instance/graphrag/output/*.parquet` | Entity, Relationship, Community, TextUnit tables |
+| `instance/installed/06-spec-graph/output/*.parquet` | Entity, Relationship, Community, TextUnit tables |
 | Neo4j graph | Fully imported knowledge graph |
-| `instance/graphrag/.needs-rebuild` | Flag file set by post-commit hook |
+| `instance/installed/06-spec-graph/.needs-rebuild` | Flag file set by post-commit hook |
 
 ---
 
@@ -218,8 +218,8 @@ from this spec without reading implementation code:
 | Missing extraction key | `ANTHROPIC_API_KEY` unset | `spec-graph-index.sh` exits 1 with error message |
 | Missing embeddings key | `OPENAI_API_KEY` unset | `spec-graph-index.sh` exits 1 with error message |
 | Missing Neo4j vars | `NEO4J_PASSWORD` unset | `spec-graph-import.sh` exits 1 with error message |
-| No output dir | `instance/graphrag/output/` absent | `spec-graph-import.sh` exits 1 with error message |
-| No venv | `instance/graphrag/.venv/` absent | Index/import scripts exit 1 with setup instructions |
+| No output dir | `instance/installed/06-spec-graph/output/` absent | `spec-graph-import.sh` exits 1 with error message |
+| No venv | `instance/installed/06-spec-graph/.venv/` absent | Index/import scripts exit 1 with setup instructions |
 | Zero matching files | All docs dirs empty | GraphRAG produces empty Parquet; Neo4j graph has 0 entities |
 | Large corpus | > 500 Markdown files | Completes within `rebuild_target` (15 min) |
 
@@ -230,7 +230,7 @@ from this spec without reading implementation code:
 Changes to the following files require updating this `SPEC.md` in the
 same commit:
 
-- `instance/graphrag/settings.yaml` (any key that changes observable behavior)
+- `instance/installed/06-spec-graph/settings.yaml` (any key that changes observable behavior)
 - `instance/scripts/spec-graph-index.sh`
 - `instance/scripts/spec-graph-import.sh`
 - `instance/scripts/spec-graph-rebuild.sh`

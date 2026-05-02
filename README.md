@@ -80,7 +80,7 @@ Repo-local conventions (customizable per adopting repo):
 
 This repo implements its own Spec Graph (Component 6) using Microsoft
 GraphRAG + Neo4j CE. See [instance/SPEC.md](./instance/SPEC.md) for the
-Living Spec and [instance/graphrag/README.md](./instance/graphrag/README.md)
+Living Spec and [instance/installed/06-spec-graph/README.md](./instance/installed/06-spec-graph/README.md)
 for setup instructions. Run `bash instance/scripts/spec-graph-rebuild.sh`
 after significant doc batches
 to refresh the knowledge graph.

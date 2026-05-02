@@ -2,13 +2,13 @@
 # spec-graph-import.sh — Import GraphRAG Parquet output into Neo4j.
 #
 # Reads Entity, Relationship, Community, CommunityReport, and TextUnit
-# Parquet files from graphrag/output/ and batch-imports them into Neo4j.
+# Parquet files from installed/06-spec-graph/output/ and batch-imports them into Neo4j.
 # Uses MERGE-by-id for idempotent re-imports, APOC for dynamic relationship
 # types, and a tombstone sweep to remove stale nodes from prior runs.
 #
 # Prerequisites:
 #   - Neo4j CE running with APOC plugin enabled.
-#   - Python venv at graphrag/.venv with neo4j, pandas, pyarrow installed.
+#   - Python venv at installed/06-spec-graph/.venv with neo4j, pandas, pyarrow installed.
 #   - NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD environment variables set.
 #
 # Usage:
@@ -19,7 +19,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-GRAPHRAG_DIR="${REPO_ROOT}/graphrag"
+GRAPHRAG_DIR="${REPO_ROOT}/installed/06-spec-graph"
 VENV="${GRAPHRAG_DIR}/.venv"
 PYTHON="${VENV}/bin/python"
 OUTPUT_DIR="${GRAPHRAG_DIR}/output"
