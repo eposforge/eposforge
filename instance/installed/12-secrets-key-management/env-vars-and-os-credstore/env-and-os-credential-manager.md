@@ -8,7 +8,7 @@ source_of_truth: yes
 # Installed Adapter: env-vars-and-os-credstore -> Secrets & Key Management (Component 12)
 
 > Living Spec for this repo's current secrets binding strategy.
-> Slot contract: [../../../01-architecture/02-components/12-secrets-key-management.md](../../../01-architecture/02-components/12-secrets-key-management.md)
+> Slot contract: [../../../../01-architecture/02-components/12-secrets-key-management.md](../../../../01-architecture/02-components/12-secrets-key-management.md)
 
 ## Adapter metadata
 
@@ -41,7 +41,7 @@ source_of_truth: yes
 | `env_bindings` | `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `NEO4J_PASSWORD`, `GITHUB_PERSONAL_ACCESS_TOKEN` |
 | `os_credential_binding` | Gemini CLI credentials via Windows Credential Manager for `gemini-runner` |
 | `mcp_config_file` | `.mcp.json` is gitignored |
-| `sandbox_reference` | [../07-execution-sandbox/windows-acl-user.md](../07-execution-sandbox/windows-acl-user.md) |
+| `sandbox_reference` | [../../07-execution-sandbox/windows-acl-user/windows-acl-user.md](../../07-execution-sandbox/windows-acl-user/windows-acl-user.md) |
 
 ## Contract gaps (v1)
 

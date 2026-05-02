@@ -5,14 +5,37 @@ maturity: experimental
 source_of_truth: yes
 ---
 
-# GraphRAG workspace — EposForge Spec Graph
+# Installed Adapter: graphrag → Spec Graph (Component 6)
 
-This directory is the Microsoft GraphRAG project that indexes the
-EposForge vision and architecture Markdown files and projects them
-into a Neo4j knowledge graph (Component 6: Spec Graph).
+> Living Spec for the Microsoft GraphRAG + Neo4j adapter installed in this
+> repo.  Per [../../../../01-architecture/00-adapter-pattern.md](../../../../01-architecture/00-adapter-pattern.md),
+> all required universal and component-specific fields are declared here.
 
-See [03-research/06-spec-graph/graphrag-neo4j-integration.md](../../../../03-research/06-spec-graph/graphrag-neo4j-integration.md)
-for the full architecture and setup walkthrough.
+---
+
+## Adapter metadata
+
+### Universal fields
+
+| Field | Value |
+|---|---|
+| `name` | `graphrag` |
+| `component` | `06-spec-graph` |
+| `version` | `graphrag==3.0.9` (pinned) |
+| `status` | `approved` |
+| `privacy_posture` | `vendor-default` (OpenAI for embeddings and LLM extraction) |
+| `cost_hint` | `metered` (OpenAI API for indexing; Neo4j self-hosted) |
+| `capabilities` | `entity-extraction`, `community-detection`, `global-search`, `neo4j-write`, `vector-index` |
+| `invocation_surface` | `CLI script (instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh)` |
+
+### Component-6-specific fields
+
+| Field | Value |
+|---|---|
+| `graph_store` | Neo4j (self-hosted) |
+| `embedding_model` | `text-embedding-3-small` (1 536 dims) |
+| `extraction_model` | Claude (Anthropic) or GPT-4o (OpenAI) |
+| `query_surface` | Cypher via `eposforge-graph` MCP |
 
 ---
 

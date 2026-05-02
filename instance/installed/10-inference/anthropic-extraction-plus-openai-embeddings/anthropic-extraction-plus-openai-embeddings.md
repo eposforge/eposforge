@@ -8,7 +8,7 @@ source_of_truth: yes
 # Installed Adapter: anthropic-extraction-plus-openai-embeddings -> Inference (Component 10)
 
 > Living Spec for this repo's indexing-time inference adapter pair.
-> Slot contract: [../../../01-architecture/02-components/10-inference.md](../../../01-architecture/02-components/10-inference.md)
+> Slot contract: [../../../../01-architecture/02-components/10-inference.md](../../../../01-architecture/02-components/10-inference.md)
 
 ## Adapter metadata
 

@@ -1,0 +1,173 @@
+{
+  "generated_at": "2026-05-02T19:52:57Z",
+  "adapters": [
+    {
+      "component": "03-dev-product",
+      "adapter": "claude-code",
+      "spec": "instance/installed/03-dev-product/claude-code/claude-code.md",
+      "scripts_dir": null,
+      "name": "claude-code",
+      "status": "approved",
+      "privacy_posture": "vendor-no-training",
+      "cost_hint": "consumer-paid",
+      "capabilities": [
+        "multi-file-edit",
+        "terminal-ops",
+        "browser-ops",
+        "agentic-autonomy",
+        "mcp-tool-use"
+      ],
+      "invocation_surface": "CLI"
+    },
+    {
+      "component": "03-dev-product",
+      "adapter": "copilot",
+      "spec": "instance/installed/03-dev-product/copilot/copilot.md",
+      "scripts_dir": null,
+      "name": "copilot",
+      "status": "approved",
+      "privacy_posture": "vendor-no-training",
+      "cost_hint": "consumer-paid",
+      "capabilities": [
+        "inline-autocomplete",
+        "chat",
+        "agent-mode",
+        "multi-file-edit",
+        "mcp-tool-use"
+      ],
+      "invocation_surface": "IDE-extension"
+    },
+    {
+      "component": "03-dev-product",
+      "adapter": "gemini-cli",
+      "spec": "instance/installed/03-dev-product/gemini-cli/gemini-cli.md",
+      "scripts_dir": null,
+      "name": "gemini-cli",
+      "status": "experimental",
+      "privacy_posture": "vendor-default",
+      "cost_hint": "free",
+      "capabilities": [
+        "very-large-context",
+        "multi-file-edit",
+        "terminal-ops",
+        "mcp-extensible"
+      ],
+      "invocation_surface": "CLI"
+    },
+    {
+      "component": "05-tool-transport",
+      "adapter": "mcp-stdio-and-http",
+      "spec": "instance/installed/05-tool-transport/mcp-stdio-and-http/mcp-stdio-and-http.md",
+      "scripts_dir": "instance/installed/05-tool-transport/mcp-stdio-and-http/scripts",
+      "name": "mcp-stdio-and-http",
+      "status": "experimental",
+      "privacy_posture": "mixed",
+      "cost_hint": "free + metered",
+      "capabilities": [
+        "graph-query",
+        "repo-query",
+        "docs-query",
+        "memory"
+      ],
+      "invocation_surface": "MCP"
+    },
+    {
+      "component": "06-spec-graph",
+      "adapter": "cognee",
+      "spec": "instance/installed/06-spec-graph/cognee/cognee.md",
+      "scripts_dir": "instance/installed/06-spec-graph/cognee/scripts",
+      "name": "cognee-ontology-preprocessor",
+      "status": "implemented, optional, experimental",
+      "privacy_posture": "vendor-default",
+      "cost_hint": "metered",
+      "capabilities": [
+        "ontology-grounded-extraction",
+        "entity-normalization",
+        "synonym-collapse",
+        "neo4j-write"
+      ],
+      "invocation_surface": "CLI script"
+    },
+    {
+      "component": "06-spec-graph",
+      "adapter": "graphrag",
+      "spec": "instance/installed/06-spec-graph/graphrag/graphrag.md",
+      "scripts_dir": "instance/installed/06-spec-graph/graphrag/scripts",
+      "name": "graphrag",
+      "status": "approved",
+      "privacy_posture": "vendor-default",
+      "cost_hint": "metered",
+      "capabilities": [
+        "entity-extraction",
+        "community-detection",
+        "global-search",
+        "neo4j-write",
+        "vector-index"
+      ],
+      "invocation_surface": "CLI script"
+    },
+    {
+      "component": "07-execution-sandbox",
+      "adapter": "windows-acl-user",
+      "spec": "instance/installed/07-execution-sandbox/windows-acl-user/windows-acl-user.md",
+      "scripts_dir": "instance/installed/07-execution-sandbox/windows-acl-user/scripts",
+      "name": "windows-acl-user",
+      "status": "experimental",
+      "privacy_posture": "local",
+      "cost_hint": "free",
+      "capabilities": [
+        "filesystem-isolation",
+        "identity-separation"
+      ],
+      "invocation_surface": "OS-user-account"
+    },
+    {
+      "component": "09-source-control-ci",
+      "adapter": "github-and-actions",
+      "spec": "instance/installed/09-source-control-ci/github-and-actions/github-and-actions.md",
+      "scripts_dir": "instance/installed/09-source-control-ci/github-and-actions/scripts",
+      "name": "github-and-actions",
+      "status": "approved",
+      "privacy_posture": "vendor-default",
+      "cost_hint": "free + metered",
+      "capabilities": [
+        "version-control",
+        "pr-review",
+        "workflow-runs"
+      ],
+      "invocation_surface": "github.com + GitHub Actions"
+    },
+    {
+      "component": "10-inference",
+      "adapter": "anthropic-extraction-plus-openai-embeddings",
+      "spec": "instance/installed/10-inference/anthropic-extraction-plus-openai-embeddings/anthropic-extraction-plus-openai-embeddings.md",
+      "scripts_dir": null,
+      "name": "anthropic-extraction-plus-openai-embeddings",
+      "status": "experimental",
+      "privacy_posture": "vendor-default",
+      "cost_hint": "metered",
+      "capabilities": [
+        "text-extraction",
+        "entity-generation",
+        "embedding-generation"
+      ],
+      "invocation_surface": "GraphRAG pipeline config"
+    },
+    {
+      "component": "12-secrets-key-management",
+      "adapter": "env-vars-and-os-credstore",
+      "spec": "instance/installed/12-secrets-key-management/env-vars-and-os-credstore/env-vars-and-os-credstore.md",
+      "scripts_dir": null,
+      "name": "env-vars-and-os-credstore",
+      "status": "experimental",
+      "privacy_posture": "local",
+      "cost_hint": "free",
+      "capabilities": [
+        "runtime-secret-injection",
+        "credential-isolation",
+        "gitignore-protected-config"
+      ],
+      "invocation_surface": "process environment + OS credential manager"
+    }
+  ]
+}

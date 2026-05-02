@@ -12,7 +12,7 @@
 
     This script implements the windows-acl-user Execution Sandbox Adapter
     declared in:
-            instance/installed/07-execution-sandbox/windows-acl-user.md
+            instance/installed/07-execution-sandbox/windows-acl-user/windows-acl-user.md
 
     Safe to run multiple times. Each step checks existing state before acting.
 
@@ -426,7 +426,7 @@ The /savecred flag caches the account password after first use.
 Note: /savecred may be restricted by enterprise group policy on some machines.
 
 Sandbox Living Spec:
-    $WorkspaceRoot\01-architecture\02-components\07-execution-sandbox\installed\windows-acl-user.md
+    $WorkspaceRoot\instance\installed\07-execution-sandbox\windows-acl-user\windows-acl-user.md
 
 "@ -ForegroundColor Cyan
 

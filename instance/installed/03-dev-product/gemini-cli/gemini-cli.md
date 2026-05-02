@@ -8,7 +8,7 @@ source_of_truth: yes
 # Installed Adapter: gemini-cli → Dev Product (Component 3)
 
 > Living Spec for the Gemini CLI Dev Product Adapter installed in this
-> repo. Per [../../../01-architecture/00-adapter-pattern.md](../../../01-architecture/00-adapter-pattern.md),
+> repo. Per [../../../../01-architecture/00-adapter-pattern.md](../../../../01-architecture/00-adapter-pattern.md),
 > all required universal and component-specific fields are declared here.
 
 ---
@@ -44,7 +44,7 @@ source_of_truth: yes
 | `mcp_wiring` | `.gemini/settings.json` (gitignored; derive from `.gemini/settings.json.example`) |
 | `enforcement_surface` | `AGENTS.md only` |
 | `instruction_file` | `GEMINI.md` |
-| `execution_sandbox` | `windows-acl-user` (see [../07-execution-sandbox/windows-acl-user.md](../07-execution-sandbox/windows-acl-user.md)) |
+| `execution_sandbox` | `windows-acl-user` (see [../../../07-execution-sandbox/windows-acl-user/windows-acl-user.md](../../../07-execution-sandbox/windows-acl-user/windows-acl-user.md)) |
 
 ---
 
@@ -80,7 +80,7 @@ Daily operator launch:
 runas /user:gemini-runner /savecred "gemini chat --workspace D:\src\git\gh\eposforge\eposforge"
 ```
 
-Setup: run `instance/scripts/install-gemini-sandbox.ps1` as administrator.
+Setup: run `instance/installed/07-execution-sandbox/windows-acl-user/scripts/install-gemini-sandbox.ps1` as administrator.
 
 ---
 
@@ -105,6 +105,6 @@ Manager (never in env files or committed configs):
 - `GITHUB_PERSONAL_ACCESS_TOKEN` — required for GitHub MCP server.
 
 No secrets are committed to this repo. See
-[../../../01-architecture/02-components/12-secrets-key-management.md](../../../01-architecture/02-components/12-secrets-key-management.md)
+[../../../../01-architecture/02-components/12-secrets-key-management.md](../../../../01-architecture/02-components/12-secrets-key-management.md)
 for the slot contract.
 
