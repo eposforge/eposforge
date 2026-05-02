@@ -1,10 +1,17 @@
+---
+doc_kind: reference-implementation
+scope: repo-instance
+maturity: experimental
+source_of_truth: yes
+---
+
 # GraphRAG workspace — EposForge Spec Graph
 
 This directory is the Microsoft GraphRAG project that indexes the
 EposForge vision and architecture Markdown files and projects them
 into a Neo4j knowledge graph (Component 6: Spec Graph).
 
-See [03-research/06-spec-graph/graphrag-neo4j-integration.md](../03-research/06-spec-graph/graphrag-neo4j-integration.md)
+See [03-research/06-spec-graph/graphrag-neo4j-integration.md](../../03-research/06-spec-graph/graphrag-neo4j-integration.md)
 for the full architecture and setup walkthrough.
 
 ---
@@ -37,8 +44,8 @@ export NEO4J_PASSWORD=your-neo4j-password
 # export GEMINI_API_KEY=your-gemini-key
 
 # 5. Index all Markdown files and import into Neo4j
-cd ..                            # repo root
-bash scripts/spec-graph-rebuild.sh
+cd ../..                         # repo root
+bash instance/scripts/spec-graph-rebuild.sh
 ```
 
 > **Note:** The first index run creates `output/lancedb/` (the vector
@@ -129,7 +136,7 @@ ORDER BY score DESC LIMIT 5;
 
 ## Verification
 
-After a full rebuild (`bash scripts/spec-graph-rebuild.sh`), confirm
+After a full rebuild (`bash instance/scripts/spec-graph-rebuild.sh`), confirm
 the vector indexes are online and fully populated:
 
 ```bash
@@ -171,3 +178,4 @@ This repo's content is public, so `vendor-default` posture is
 acceptable. For private Living Spec content in a factory instance,
 use a `vendor-no-training` API key or substitute Ollama as the
 backend by updating `api_base` in `settings.yaml`.
+

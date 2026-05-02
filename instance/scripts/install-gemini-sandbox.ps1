@@ -12,7 +12,7 @@
 
     This script implements the windows-acl-user Execution Sandbox Adapter
     declared in:
-      01-architecture/02-components/07-execution-sandbox/installed/windows-acl-user.md
+            instance/installed/07-execution-sandbox/windows-acl-user.md
 
     Safe to run multiple times. Each step checks existing state before acting.
 

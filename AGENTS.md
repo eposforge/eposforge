@@ -14,6 +14,10 @@ and AI agents build, deploy, and operate them. The repo contains vision
 docs, architecture decision records, component contracts, and research.
 There is no application code; the artefacts are Markdown files.
 
+This repo has two layers that must stay explicit:
+- **Spec layer**: `00-vision/`, `01-architecture/`, `02-roadmap/`, `03-research/`.
+- **Self-host layer**: `instance/` (the concrete adapter choices for this repo).
+
 ---
 
 ## Vocabulary — use these terms exactly
@@ -48,6 +52,9 @@ repo-pinned `.mcp.json`):
 | `microsoft.docs` | Azure, .NET, and the broader Microsoft platform via Microsoft Learn. |
 | `cognee` | Persistent AI memory and runtime memory operations for Cognee-enabled agents (remember/recall/improve), not repository documentation or source-code search. |
 | Hugging Face Hub *(optional)* | ML models, datasets, papers, Hub metadata. Use when extending the Inference component (10) or evaluating model adapters. |
+
+These MCPs are THIS repo's Tool Transport choices in `instance/`; other
+instances choose their own adapters.
 
 Prefer the MCP over `WebFetch` or `WebSearch` against the same source —
 MCP results are structured, citation-aware, and avoid stale verbatim
@@ -156,18 +163,20 @@ RETURN report.title, report.summary, score ORDER BY score DESC;
 
 ```
 00-vision/          Principles, glossary, north star
-01-architecture/    ADRs, component contracts, adapter pattern
+01-architecture/    Component contracts, adapter pattern, pattern ADRs
 02-roadmap/         Phase plans
 03-research/        Domain research including spec-graph integration notes
-graphrag/           GraphRAG project (settings, prompts, output/)
-scripts/            spec-graph-rebuild.sh, spec-graph-import.sh, etc.
-SPEC.md             Living Spec for the Spec Graph tooling (Component 6)
+instance/           Self-host implementation for this repo
+instance/graphrag/  GraphRAG project (settings, prompts, output/)
+instance/scripts/   spec-graph-rebuild.sh, spec-graph-import.sh, etc.
+instance/SPEC.md    Living Spec for this repo's Spec Graph adapter (Component 6)
 ```
 
 Paired-change rule: changes to the specific files enumerated in the
-`SPEC.md §Paired-change rule` section must update `SPEC.md` in the same
-commit. Additions to `scripts/` or `graphrag/` that are not in that list
-do not require a `SPEC.md` update.
+`instance/SPEC.md §Paired-change rule` section must update `instance/SPEC.md`
+in the same commit. Additions to `instance/scripts/` or
+`instance/graphrag/` that are not in that list do not require an
+`instance/SPEC.md` update.
 
 ---
 
@@ -189,10 +198,10 @@ Use this workflow when the user provides a description of additions, deletions, 
     *   `MATURES_TO`: "matures", "operational at phase", "graduation".
     *   `GOVERNED_BY`: "governed", "enforced by", "policy".
     *   `IMPLEMENTS`: "implements", "implementation of".
-  *   **Living Spec Contract:** If creating or updating a spec (e.g., `SPEC.md` or `01-architecture/02-components/*.md`), ensure it contains: Purpose, Observable Behavior, Inputs/Outputs, Dependencies, Non-functional Bounds (Metadata Table), and Versioning Policy.
+  *   **Living Spec Contract:** If creating or updating a spec (e.g., `instance/SPEC.md` or `01-architecture/02-components/*.md`), ensure it contains: Purpose, Observable Behavior, Inputs/Outputs, Dependencies, Non-functional Bounds (Metadata Table), and Versioning Policy.
   *   **Metadata Tables:** Ensure every Adapter and Component doc includes a machine-readable metadata table per the [Adapter Pattern](01-architecture/00-adapter-pattern.md).
 4.  **Validate & Rebuild:**
-  *   Once files are updated, offer to perform the required steps to rebuild the Spec Graph: `bash scripts/spec-graph-rebuild.sh`.
+  *   Once files are updated, offer to perform the required steps to rebuild the Spec Graph: `bash instance/scripts/spec-graph-rebuild.sh`.
 
 ---
 
@@ -205,8 +214,8 @@ Use this workflow when the user provides a description of additions, deletions, 
   VPN details, or user-specific network topology.
 - When examples require endpoints, use placeholders like
   `https://<service-host>` and `bolt://<neo4j-host-or-ip>:7688`.
-- Do not commit `graphrag/output/`, `graphrag/cache/`, `graphrag/.venv/`,
+- Do not commit `instance/graphrag/output/`, `instance/graphrag/cache/`, `instance/graphrag/.venv/`,
   `.env`, or any file containing API keys or passwords.
-- Never edit generated output under `graphrag/output/`.
-- Rebuilding the Spec Graph: `bash scripts/spec-graph-rebuild.sh`
+- Never edit generated output under `instance/graphrag/output/`.
+- Rebuilding the Spec Graph: `bash instance/scripts/spec-graph-rebuild.sh`
   (requires `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `NEO4J_PASSWORD`).

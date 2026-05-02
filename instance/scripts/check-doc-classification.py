@@ -20,10 +20,10 @@ Exit codes
 
 Usage
 -----
-  python scripts/check-doc-classification.py
-  python scripts/check-doc-classification.py 01-architecture/02-components/
-  python scripts/check-doc-classification.py SPEC.md 01-architecture/
-  python scripts/check-doc-classification.py --all
+    python instance/scripts/check-doc-classification.py
+    python instance/scripts/check-doc-classification.py 01-architecture/02-components/
+    python instance/scripts/check-doc-classification.py instance/SPEC.md 01-architecture/
+    python instance/scripts/check-doc-classification.py --all
 """
 
 import argparse
@@ -45,11 +45,12 @@ REGULATED_DIRS = [
     "01-architecture",
     "02-roadmap",
     "03-research",
+    "instance",
 ]
 
 # Files always checked regardless of diff (core normative docs).
 ALWAYS_CHECK = [
-    "SPEC.md",
+    "instance/SPEC.md",
 ]
 
 # Patterns for files exempt from classification checks.
@@ -62,7 +63,7 @@ EXEMPT_PATTERNS = [
     r"(^|/)GEMINI\.md$",
 ]
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 # ---------------------------------------------------------------------------
@@ -228,7 +229,7 @@ def main() -> int:
         print()
         print("Add a YAML frontmatter block or metadata table to each file.")
         print("Required fields: doc_kind, scope, maturity, source_of_truth")
-        print("See SPEC.md §Document classification convention for format details.")
+        print("See instance/SPEC.md §Document classification convention for format details.")
         return 1
 
     print("doc-classification: all files OK.")

@@ -1,3 +1,10 @@
+---
+doc_kind: candidate-research
+scope: eposforge-pattern
+maturity: draft
+source_of_truth: no
+---
+
 # GraphRAG + Neo4j Integration Pattern
 
 > **Snapshot date:** 2026-04. Verify current tool versions before
@@ -99,7 +106,7 @@ EposForge vocabulary.
 | `IMPLEMENTS` | Adapter implements a capability |
 | `SUPERSEDES` | A newer spec or adapter replaces an older one |
 
-These are declared in `graphrag/prompts/entity_extraction.txt` and
+These are declared in `instance/graphrag/prompts/entity_extraction.txt` and
 can be extended by the operator.
 
 ---
@@ -118,7 +125,7 @@ can be extended by the operator.
 ### One-time initialization
 
 ```bash
-cd eposforge/graphrag
+cd eposforge/instance/graphrag
 python -m venv .venv
 source .venv/bin/activate
 pip install graphrag neo4j pandas pyarrow
@@ -129,18 +136,18 @@ graphrag init --root .   # generates default prompts; custom prompts
 ### Indexing
 
 ```bash
-bash scripts/spec-graph-index.sh
+bash instance/scripts/spec-graph-index.sh
 ```
 
 This runs GraphRAG over all Markdown files in `00-vision/`,
 `01-architecture/`, `02-roadmap/`, `03-research/`, and any Living
-Spec files included via the `file_pattern` in `graphrag/settings.yaml`.
-Output Parquet files land in `graphrag/output/`.
+Spec files included via the `file_pattern` in `instance/graphrag/settings.yaml`.
+Output Parquet files land in `instance/graphrag/output/`.
 
 ### Import into Neo4j
 
 ```bash
-bash scripts/spec-graph-import.sh
+bash instance/scripts/spec-graph-import.sh
 ```
 
 Reads the Parquet output and batch-imports all Entity, Relationship,
@@ -150,18 +157,18 @@ for hybrid graph + semantic search.
 ### Full rebuild (index + import)
 
 ```bash
-bash scripts/spec-graph-rebuild.sh
+bash instance/scripts/spec-graph-rebuild.sh
 ```
 
 ### Git post-commit hook (optional)
 
 ```bash
-bash scripts/hooks/install-hooks.sh
+bash instance/scripts/hooks/install-hooks.sh
 ```
 
 Sets a non-blocking `.needs-rebuild` flag when `*.md` files in the
 vision/architecture directories change. Run
-`scripts/spec-graph-rebuild.sh` after significant doc batches.
+`instance/scripts/spec-graph-rebuild.sh` after significant doc batches.
 
 ---
 
@@ -194,12 +201,12 @@ RETURN dep.name, dep.type;
   change. GraphRAG does not support incremental update; nuke-and-
   reproject is the rebuild contract per the Spec Graph component
   contract.
-- Keep custom prompt files under `graphrag/prompts/` in version
+- Keep custom prompt files under `instance/graphrag/prompts/` in version
   control. They encode the extraction vocabulary for the factory.
 - Keep Neo4j local. Scale to Neo4j Aura only if graph sharing
   across multiple operators is required; Aura introduces vendor
   dependency and data-residency considerations.
-- Monitor `graphrag/output/reports/` after each index run. GraphRAG
+- Monitor `instance/graphrag/output/reports/` after each index run. GraphRAG
   emits per-document processing reports that surface extraction
   quality issues.
 
@@ -216,7 +223,7 @@ GraphRAG sends text chunks to the inference model for extraction.
 | Neo4j graph itself | `local` — stays on the operator's machine |
 
 For private instances, substitute the Gemini API key with an Ollama
-local model endpoint in `graphrag/settings.yaml` (set `api_base` to
+local model endpoint in `instance/graphrag/settings.yaml` (set `api_base` to
 the Ollama OpenAI-compatible endpoint and `api_key` to any string).
 
 ---
@@ -225,8 +232,9 @@ the Ollama OpenAI-compatible endpoint and `api_key` to any string).
 
 | File | Purpose |
 |---|---|
-| [`graphrag/settings.yaml`](../../graphrag/settings.yaml) | GraphRAG project config |
-| [`graphrag/prompts/`](../../graphrag/prompts/) | Custom entity/relationship extraction prompts |
-| [`scripts/spec-graph-rebuild.sh`](../../scripts/spec-graph-rebuild.sh) | Index + import in one command |
-| [`SPEC.md`](../../SPEC.md) | Living Spec for this tooling (Component 2 contract) |
-| [`01-architecture/adrs/001-spec-graph-graphrag-neo4j.md`](../../01-architecture/adrs/001-spec-graph-graphrag-neo4j.md) | ADR recording adapter decisions |
+| [`instance/graphrag/settings.yaml`](../../instance/graphrag/settings.yaml) | GraphRAG project config |
+| [`instance/graphrag/prompts/`](../../instance/graphrag/prompts/) | Custom entity/relationship extraction prompts |
+| [`instance/scripts/spec-graph-rebuild.sh`](../../instance/scripts/spec-graph-rebuild.sh) | Index + import in one command |
+| [`instance/SPEC.md`](../../instance/SPEC.md) | Living Spec for this tooling (Component 2 contract) |
+| [`instance/adrs/001-spec-graph-graphrag-neo4j.md`](../../instance/adrs/001-spec-graph-graphrag-neo4j.md) | ADR recording adapter decisions |
+
