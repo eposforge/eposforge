@@ -77,7 +77,7 @@
       "spec": "instance/installed/06-spec-graph/cognee/cognee.md",
       "scripts_dir": "instance/installed/06-spec-graph/cognee/scripts",
       "name": "cognee-ontology-preprocessor",
-      "status": "implemented, optional, experimental",
+      "status": "implemented, default, experimental",
       "privacy_posture": "vendor-default",
       "cost_hint": "metered",
       "capabilities": [
@@ -94,7 +94,7 @@
       "spec": "instance/installed/06-spec-graph/graphrag/graphrag.md",
       "scripts_dir": "instance/installed/06-spec-graph/graphrag/scripts",
       "name": "graphrag",
-      "status": "approved",
+      "status": "implemented, installed-fallback, experimental",
       "privacy_posture": "vendor-default",
       "cost_hint": "metered",
       "capabilities": [

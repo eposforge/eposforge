@@ -22,11 +22,11 @@ source_of_truth: yes
 | `name` | `graphrag` |
 | `component` | `06-spec-graph` |
 | `version` | `graphrag==3.0.9` (pinned) |
-| `status` | `approved` |
+| `status` | `implemented, installed-fallback, experimental` |
 | `privacy_posture` | `vendor-default` (OpenAI for embeddings and LLM extraction) |
 | `cost_hint` | `metered` (OpenAI API for indexing; Neo4j self-hosted) |
 | `capabilities` | `entity-extraction`, `community-detection`, `global-search`, `neo4j-write`, `vector-index` |
-| `invocation_surface` | `CLI script (instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh)` |
+| `invocation_surface` | `CLI script (instance/scripts/spec-graph-rebuild.sh --graphrag)` |
 
 ### Component-6-specific fields
 
@@ -66,9 +66,9 @@ export NEO4J_PASSWORD=your-neo4j-password
 # uncommenting the Gemini blocks in settings.yaml and setting:
 # export GEMINI_API_KEY=your-gemini-key
 
-# 5. Index all Markdown files and import into Neo4j
+# 5. Run GraphRAG fallback path explicitly
 cd ../../../..                      # repo root
-bash instance/scripts/spec-graph-rebuild.sh
+bash instance/scripts/spec-graph-rebuild.sh --graphrag
 ```
 
 > **Note:** The first index run creates `output/lancedb/` (the vector
@@ -159,7 +159,7 @@ ORDER BY score DESC LIMIT 5;
 
 ## Verification
 
-After a full rebuild (`bash instance/scripts/spec-graph-rebuild.sh`), confirm
+After a GraphRAG fallback rebuild (`bash instance/scripts/spec-graph-rebuild.sh --graphrag`), confirm
 the vector indexes are online and fully populated:
 
 ```bash

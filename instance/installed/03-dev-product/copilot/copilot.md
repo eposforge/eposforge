@@ -54,7 +54,7 @@ All three Tool Transport servers are wired via `.vscode/mcp.json`:
 
 | Server | Transport | Notes |
 |---|---|---|
-| `eposforge-graph` | stdio (`mcp-neo4j-cypher`) | read-only; loopback only |
+| `cognee` | stdio (`uvx cognee-mcp`) | local-hosted MCP; graph and memory operations |
 | `github` | stdio (`@modelcontextprotocol/server-github`) | requires `GITHUB_PERSONAL_ACCESS_TOKEN` in env |
 | `ms-docs` | http (`https://learn.microsoft.com/api/mcp`) | public; no auth required |
 

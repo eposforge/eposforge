@@ -1,4 +1,30 @@
 $p = 'C:\Users\gemini-runner\.gemini\settings.json'
-$newConfig = "{`n  `"mcpServers`": {`n    `"eposforge-graph`": {`n      `"httpUrl`": `"http://127.0.0.1:7776/mcp/`",`n      `"trust`": true`n    },`n    `"github`": {`n      `"command`": `"npx`",`n      `"args`": [`"-y`", `"@modelcontextprotocol/server-github`"],`n      `"env`": {`n        `"GITHUB_PERSONAL_ACCESS_TOKEN`": `"your-token-here`"`n      },`n      `"trust`": true`n    },`n    `"ms-docs`": {`n      `"httpUrl`": `"https://learn.microsoft.com/api/mcp`",`n      `"trust`": true`n    },`n    `"cognee`": {`n      `"command`": `"npx`",`n      `"args`": [`"-y`", `"@cognee/mcp-server`"],`n      `"trust`": true`n    }`n  },`n  `"directoryFilteringOptions`": {`n    `"allowedDirectories`": [`"<abs-path-to-repo-root>`"]`n  },`n  `"autoAccept`": true`n}"
+$newConfig = @"
+{
+	"mcpServers": {
+		"cognee": {
+			"command": "uvx",
+			"args": ["cognee-mcp"],
+			"trust": true
+		},
+		"github": {
+			"command": "npx",
+			"args": ["-y", "@modelcontextprotocol/server-github"],
+			"env": {
+				"GITHUB_PERSONAL_ACCESS_TOKEN": "your-token-here"
+			},
+			"trust": true
+		},
+		"ms-docs": {
+			"httpUrl": "https://learn.microsoft.com/api/mcp",
+			"trust": true
+		}
+	},
+	"directoryFilteringOptions": {
+		"allowedDirectories": ["<abs-path-to-repo-root>"]
+	},
+	"autoAccept": true
+}
+"@
 [System.IO.File]::WriteAllText($p, $newConfig, [System.Text.Encoding]::UTF8)
-Write-Host "Done. eposforge-graph now uses httpUrl port 7776."
+Write-Host "Done. Gemini runner now uses local cognee MCP wiring."

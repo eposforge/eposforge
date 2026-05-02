@@ -1,14 +1,14 @@
-# Win11 Setup for EposForge Spec Graph MCP
+# Win11 Setup for Cognee Spec Graph MCP
 
-This runbook sets up `eposforge-graph` on a Windows 11 workstation
+This runbook sets up local `cognee` MCP on a Windows 11 workstation
 connecting to a shared Neo4j instance.
 
 ## Scope
 
-- Use VS Code Copilot Chat with `eposforge-graph` MCP tools.
+- Use VS Code Copilot Chat with `cognee` MCP tools.
 - Connect Neo4j via direct host/IP on your private network (Bolt is TCP,
   not HTTP).
-- Avoid stdio startup timeout by running MCP as a persistent HTTP service.
+- Run Cognee MCP locally over stdio.
 
 ## Prerequisites
 
@@ -17,6 +17,7 @@ connecting to a shared Neo4j instance.
 - VS Code with GitHub Copilot Chat enabled.
 - Git installed.
 - Python 3.11 to 3.13 installed with the `py` launcher available.
+- `uv` installed (`uvx` command available).
 
 ## 1. Clone the repo
 
@@ -25,14 +26,11 @@ git clone https://github.com/eposforge/eposforge.git
 cd eposforge
 ```
 
-## 2. Create Python venv and install MCP server
+## 2. Install local Cognee MCP runtime
 
 ```powershell
-cd instance\installed\06-spec-graph\graphrag
-py -3.12 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-pip install mcp-neo4j-cypher
+uv --version
+uvx --version
 ```
 
 Optional, only if you also want to rebuild the graph on this machine:
@@ -56,36 +54,30 @@ Bolt connection: `bolt://<neo4j-host-or-ip>:7688`
 
 Browser UI: `https://<neo4j-browser-host>`
 
-## 4. Set Neo4j connection values
+## 4. Set Neo4j and inference API values
 
 ```powershell
 $env:NEO4J_URI = "bolt://<neo4j-host-or-ip>:7688"
 $env:NEO4J_USERNAME = "neo4j"
 $env:NEO4J_PASSWORD = "<your-password>"
+$env:ANTHROPIC_API_KEY = "<your-anthropic-api-key>"
+$env:OPENAI_API_KEY = "<your-openai-api-key>"
 ```
 
 These values only live for the current PowerShell session. If you want them to
 persist across terminal restarts, add them to your PowerShell profile or load
 them from a local `.env` file before starting the MCP server.
 
-## 5. Run MCP as a persistent HTTP process
+## 5. Run local Cognee MCP
 
 Run this in a dedicated PowerShell terminal and keep it running:
 
 ```powershell
-cd instance\installed\06-spec-graph\graphrag
-.\.venv\Scripts\Activate.ps1
-mcp-neo4j-cypher `
-  --transport http `
-  --server-host 127.0.0.1 `
-  --server-port 7776 `
-  --server-path /mcp/ `
-  --read-only
+uvx cognee-mcp
 ```
 
-Why this mode: it avoids the stdio cold-start timing issues seen with Python-
-based MCP servers, and `mcp-neo4j-cypher` will read `NEO4J_URI`,
-`NEO4J_USERNAME`, and `NEO4J_PASSWORD` directly from the environment.
+This runs the MCP server locally. Inference still uses external APIs via
+`ANTHROPIC_API_KEY` and `OPENAI_API_KEY`.
 
 ## 6. Configure the VS Code MCP client
 
@@ -94,9 +86,10 @@ Create local file `.vscode/mcp.json` in the repo:
 ```json
 {
   "servers": {
-    "eposforge-graph": {
-      "type": "http",
-      "url": "http://127.0.0.1:7776/mcp/"
+    "cognee": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["cognee-mcp"]
     }
   }
 }
@@ -108,7 +101,7 @@ copyable template. `.vscode/mcp.json` is local-only and ignored by git.
 ## 7. Validate in Copilot Chat
 
 - Open Copilot Chat.
-- Open Tools and confirm `eposforge-graph` appears.
+- Open Tools and confirm `cognee` appears.
 - Start it if needed.
 - Run a simple read query, for example:
 

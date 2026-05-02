@@ -22,11 +22,11 @@ source_of_truth: yes
 | `name` | `cognee-ontology-preprocessor` |
 | `component` | `06-spec-graph` |
 | `version` | `unpinned` (latest `cognee` release) |
-| `status` | `implemented, optional, experimental` |
+| `status` | `implemented, default, experimental` |
 | `privacy_posture` | `vendor-default` (Anthropic for LLM; OpenAI for embeddings during indexing) |
 | `cost_hint` | metered (Anthropic + OpenAI APIs for indexing) |
 | `capabilities` | `ontology-grounded-extraction`, `entity-normalization`, `synonym-collapse`, `neo4j-write` |
-| `invocation_surface` | `CLI script (instance/scripts/spec-graph-rebuild.sh --cognee)` |
+| `invocation_surface` | `CLI script (instance/scripts/spec-graph-rebuild.sh)` |
 
 ### Spec Graph required fields
 
@@ -43,8 +43,8 @@ source_of_truth: yes
 |---|---|
 | `script` | `instance/scripts/spec-graph-cognee.py` |
 | `ontology_file` | `00-vision/01-glossary.ttl` |
-| `llm_provider` | `litellm` → `anthropic/claude-3-5-sonnet-20240620` |
-| `embedding_provider` | `openai` → `text-embedding-3-small` (1536 dims) |
+| `llm_provider` | `anthropic` → `claude-sonnet-4-5` |
+| `embedding_provider` | `fastembed` (local; `BAAI/bge-small-en-v1.5`; no API key required) |
 | `graph_database` | `neo4j` (shared instance; same `NEO4J_URI` / `NEO4J_USERNAME` / `NEO4J_PASSWORD` env vars) |
 | `cognee_root` | `instance/installed/06-spec-graph/cognee/.cognee/` (gitignored) |
 
@@ -52,8 +52,8 @@ source_of_truth: yes
 
 ## Role in the rebuild pipeline
 
-This adapter is the **optional first stage** of the Spec Graph rebuild. When
-`--cognee` is passed to `spec-graph-rebuild.sh`, the pipeline runs in this order:
+This adapter is the **default extraction stage** of the Spec Graph rebuild.
+When `spec-graph-rebuild.sh` is run with no flags, the pipeline runs in this order:
 
 1. **`spec-graph-cognee.py`** — Cognee reads the corpus Markdown files, grounds
    entity extraction against `00-vision/01-glossary.ttl`, normalizes synonyms,
@@ -67,7 +67,7 @@ This adapter is the **optional first stage** of the Spec Graph rebuild. When
 3. **`spec-graph-import.sh`** — imports the final Parquet tables back into
    Neo4j, attaching vector embeddings and community reports.
 
-Without `--cognee`, step 1 is skipped and GraphRAG performs extraction
+With `--graphrag`, this adapter is skipped and GraphRAG performs extraction
 from scratch with no ontology grounding.
 
 ---
@@ -76,11 +76,26 @@ from scratch with no ontology grounding.
 
 | Variable | Required | Notes |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | yes | LLM extraction (Claude 3.5 Sonnet via LiteLLM) |
-| `OPENAI_API_KEY` | yes | Embeddings (`text-embedding-3-small`) |
+| `ANTHROPIC_API_KEY` | yes | LLM extraction (Claude via Anthropic provider) |
 | `NEO4J_URI` | yes | e.g. `bolt://<neo4j-host-or-ip>:7688` |
 | `NEO4J_USERNAME` | yes | default `neo4j` |
 | `NEO4J_PASSWORD` | yes | |
+
+---
+
+## Windows setup note
+
+Windows limits file paths to 260 characters by default. The repo-relative
+venv path (`instance/installed/06-spec-graph/cognee/.venv`) may exceed this
+limit during `pip install`. Use a short path instead:
+
+```powershell
+python -m venv C:\cognee-venv
+C:\cognee-venv\Scripts\pip install cognee fastembed neo4j pandas pyarrow
+```
+
+Then set `COGNEE_VENV=C:\cognee-venv` when running the rebuild script, or
+enable long paths via Group Policy / registry (`LongPathsEnabled = 1`).
 
 ---
 

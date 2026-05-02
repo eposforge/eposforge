@@ -7,20 +7,22 @@
 #
 # Required environment variables:
 #   ANTHROPIC_API_KEY — Anthropic API key (claude-sonnet-4-6)
-#   OPENAI_API_KEY    — OpenAI API key (text-embedding-3-small)
-#   NEO4J_URI         — Neo4j bolt URI (default: bolt://localhost:7687)
+#   NEO4J_URI         — Neo4j bolt URI (default: bolt://localhost:7688)
 #   NEO4J_USERNAME    — Neo4j username (default: neo4j)
 #   NEO4J_PASSWORD    — Neo4j password
+#   COGNEE_VENV       — Optional: override Cognee venv path.
+#                       On Windows (long-path disabled) use a short path:
+#                       e.g. COGNEE_VENV=C:\cognee-venv
 #
 # Usage:
-#   ANTHROPIC_API_KEY=xxx OPENAI_API_KEY=yyy NEO4J_PASSWORD=zzz bash instance/installed/06-spec-graph/scripts/rebuild.sh [--cognee]
+#   ANTHROPIC_API_KEY=xxx NEO4J_PASSWORD=zzz bash instance/installed/06-spec-graph/scripts/rebuild.sh [--cognee]
 set -euo pipefail
 
 SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPTS_DIR}/../../.." && pwd)"
 
 # Apply defaults for optional env vars
-export NEO4J_URI="${NEO4J_URI:-bolt://localhost:7687}"
+export NEO4J_URI="${NEO4J_URI:-bolt://localhost:7688}"
 export NEO4J_USERNAME="${NEO4J_USERNAME:-neo4j}"
 
 USE_COGNEE=false
@@ -38,7 +40,7 @@ echo "    Target: Neo4j (${NEO4J_URI})"
 echo ""
 
 if [ "$USE_COGNEE" = true ]; then
-  VENV="${REPO_ROOT}/installed/06-spec-graph/cognee/.venv"
+  VENV="${COGNEE_VENV:-${REPO_ROOT}/installed/06-spec-graph/cognee/.venv}"
   # Use Windows path for python if on Windows, else standard
   if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
     PYTHON="${VENV}/Scripts/python"
@@ -47,7 +49,7 @@ if [ "$USE_COGNEE" = true ]; then
   fi
   
   if [[ ! -f "${PYTHON}" ]]; then
-    echo "ERROR: Cognee venv not found at ${VENV}. Run: cd instance/installed/06-spec-graph/cognee && python -m venv .venv && pip install cognee neo4j pandas pyarrow" >&2
+    echo "ERROR: Cognee venv not found at ${VENV}. Run: cd instance/installed/06-spec-graph/cognee && python -m venv .venv && pip install cognee fastembed neo4j pandas pyarrow" >&2
     exit 1
   fi
   

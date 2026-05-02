@@ -47,10 +47,9 @@ repo-pinned `.mcp.json`):
 
 | MCP server | Use for |
 |---|---|
-| `eposforge-graph` | This repo's architecture, components, adapters, principles, phases, and research surveys. See policy below. |
+| `cognee` | This repo's architecture, components, adapters, principles, phases, and research surveys via Cognee's graph-query interface. See policy below. |
 | `github` | Open-source repos and their issues, PRs, commits, releases, labels — anything hosted on github.com. |
 | `microsoft.docs` | Azure, .NET, and the broader Microsoft platform via Microsoft Learn. |
-| `cognee` | Persistent AI memory and runtime memory operations for Cognee-enabled agents (remember/recall/improve), not repository documentation or source-code search. |
 | Hugging Face Hub *(optional)* | ML models, datasets, papers, Hub metadata. Use when extending the Inference component (10) or evaluating model adapters. |
 
 These MCPs are THIS repo's Tool Transport choices in `instance/`; other
@@ -60,7 +59,7 @@ Prefer the MCP over `WebFetch` or `WebSearch` against the same source —
 MCP results are structured, citation-aware, and avoid stale verbatim
 recall from training data. If a question spans multiple MCPs (e.g.
 "which Azure SDK does adapter X depend on, and is that SDK still
-maintained?"), chain the calls: `eposforge-graph` → `github` → `microsoft.docs`.
+maintained?"), chain the calls: `cognee` → `github` → `microsoft.docs`.
 
 For Cognee documentation and Cognee source-code lookups, use the `github` MCP
 against `topoteretes/cognee` (and related integration repositories) first.
@@ -68,12 +67,13 @@ Do not route Cognee docs/source searches through the `cognee` MCP server.
 Do not use `WebFetch`/`WebSearch` for Cognee docs/source lookups unless the
 `github` MCP is unavailable; if fallback is required, state that explicitly.
 
-### Spec Graph MCP (`eposforge-graph`) rules
+### Spec Graph MCP (`cognee`) rules
 
-The `eposforge-graph` MCP server exposes the Neo4j Spec Graph via Cypher.
-It is the authoritative interface for architecture knowledge in this repo.
+The `cognee` MCP server exposes the Neo4j Spec Graph via Cognee's graph-query
+and semantic-search tools. It is the authoritative interface for architecture
+knowledge in this repo.
 
-You MUST query `eposforge-graph` before reading Markdown when the prompt
+You MUST query `cognee` before reading Markdown when the prompt
 mentions any of: adapter, component, slot, contract, FULFILLS_SLOT,
 DEPENDS_ON, MATURES_TO, GOVERNED_BY, IMPLEMENTS, phase, principle, ADR,
 Living Spec, Spec Graph, dark factory, Router, Dev Product, Tool
@@ -82,16 +82,18 @@ Spec Input, vocabulary, or any of the twelve component names.
 
 Anti-pattern (outside fallback cases): do not open
 `01-architecture/02-components/*.md` or grep the corpus to answer
-"what adapters fulfill the X slot?" — a single Cypher query against
-`eposforge-graph` returns the canonical answer with cross-references
-intact.
+"what adapters fulfill the X slot?" — a single `graph_query` call against
+`cognee` returns the canonical answer with cross-references intact.
 
 Example question: *"Which adapters fulfill the Inference slot?"*
-Correct first action — call `read_neo4j_cypher` with:
+Correct first action — call `cognee`'s `graph_query` with:
 ~~~cypher
-MATCH (a:Entity {type:'ADAPTER'})-[:FULFILLS_SLOT]->(s:Entity {title:'INFERENCE'})
-RETURN a.title, a.description ORDER BY a.title;
+MATCH (a:Entity {type:'ADAPTER'})-[:FULFILLS_SLOT]->(s:Entity {name:'INFERENCE'})
+RETURN a.name, a.description ORDER BY a.name;
 ~~~
+
+For semantic/conceptual questions, prefer `cognee`'s `search` tool with a
+natural-language query; use `graph_query` for relationship traversal.
 
 Fall back to Markdown only if (a) the MCP server is unreachable,
 (b) the question is about prose/wording rather than structure, or
@@ -100,61 +102,37 @@ When fallback is needed, targeted repo-file reads and searches are allowed.
 
 ### Graph schema
 
-| Label | Key properties | Notes |
-|---|---|---|
-| `Entity` | `id`, `title`, `type`, `description`, `embedding` | `type` matches vocabulary above |
-| `Community` | `id`, `title`, `level`, `size` | Leiden cluster |
-| `CommunityReport` | `id`, `title`, `summary`, `full_content`, `embedding` | Thematic summary of a cluster |
-| `TextUnit` | `id`, `text`, `document_id`, `embedding` | Source paragraph chunk |
+Cognee extracts entities and relationships from the documentation corpus
+and writes them to Neo4j. The primary node label is `Entity`; relationships
+are labelled by the extracted predicate. Use `CALL db.labels()` and
+`CALL db.relationshipTypes()` to enumerate the live schema.
 
-Relationships: `FULFILLS_SLOT`, `DEPENDS_ON`, `MATURES_TO`, `GOVERNED_BY`,
-`IMPLEMENTS`, `SUPERSEDES`, `PART_OF`, `RELATED_TO`, `APPEARS_IN`,
-`HAS_REPORT`.
+Key entity properties: `id`, `name`, `description`, `type`.
+Key relationship properties vary by predicate; `description` is common.
 
 ### Vector indexes
 
-Three indexes support semantic similarity queries (Neo4j native, cosine,
-1536 dims, `text-embedding-3-small`):
-
-| Index name | On label |
-|---|---|
-| `entity_embedding` | `Entity` |
-| `text_unit_embedding` | `TextUnit` |
-| `community_report_embedding` | `CommunityReport` |
+Cognee creates its own vector indexes (fastembed `BAAI/bge-small-en-v1.5`,
+384 dims). Prefer the `search` MCP tool for semantic similarity queries
+rather than constructing raw vector Cypher.
 
 ### Query patterns
 
-**Structural — use when the question is about relationships:**
+**Structural — use `graph_query` when the question is about relationships:**
 ```cypher
-MATCH (a:Entity {type: 'ADAPTER'})-[:FULFILLS_SLOT]->(s:Entity {title: 'SPEC_GRAPH'})
-RETURN a.title, a.description;
+MATCH (a:Entity {type: 'ADAPTER'})-[:FULFILLS_SLOT]->(s:Entity {name: 'SPEC_GRAPH'})
+RETURN a.name, a.description;
 ```
 
-**Semantic — use when the question involves a concept, not a known name.**
-Embed the query string client-side (OpenAI `text-embedding-3-small`) and
-pass the vector as `$query_vec`:
-```cypher
-CALL db.index.vector.queryNodes('entity_embedding', 20, $query_vec)
-YIELD node AS e, score
-RETURN e.title, e.type, score ORDER BY score DESC LIMIT 10;
+**Semantic — use `search` with a natural-language query:**
+```
+cognee.search("Which adapters fulfill the Spec Graph slot?")
 ```
 
-**Hybrid — combine both in one query:**
+**Exploratory — list entity types and relationship types:**
 ```cypher
-CALL db.index.vector.queryNodes('entity_embedding', 25, $query_vec)
-YIELD node AS candidate, score
-WHERE candidate.type = 'ADAPTER'
-  AND EXISTS {
-    MATCH (candidate)-[:FULFILLS_SLOT]->(s:Entity {title: 'INFERENCE'})
-  }
-RETURN candidate.title, score ORDER BY score DESC LIMIT 5;
-```
-
-**Community synthesis — high-level architectural overviews:**
-```cypher
-CALL db.index.vector.queryNodes('community_report_embedding', 5, $query_vec)
-YIELD node AS report, score
-RETURN report.title, report.summary, score ORDER BY score DESC;
+CALL db.labels() YIELD label RETURN label;
+CALL db.relationshipTypes() YIELD relationshipType RETURN relationshipType;
 ```
 
 ---
@@ -187,7 +165,7 @@ in the same commit. Additions to `instance/scripts/` or
 Use this workflow when the user provides a description of additions, deletions, or edits to the EposForge architecture.
 
 1.  **Research & Reconcile:**
-  *   Query `eposforge-graph` to identify current components, adapters, and relationships affected by the requested change.
+  *   Query `cognee` to identify current components, adapters, and relationships affected by the requested change.
   *   Compare the requested state with the existing design to identify contradictions or missing dependencies.
 2.  **Clarify:**
   *   Prompt the user for clarification if the intent is ambiguous (e.g., if a new entity should be a `component` or an `adapter`, or which `phase` it matures to).

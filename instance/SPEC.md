@@ -16,10 +16,11 @@ source_of_truth: yes
 ## Purpose
 
 Maintain the EposForge vision and architecture Markdown corpus as a
-queryable knowledge graph. Microsoft GraphRAG extracts entities,
-relationships, and hierarchical community summaries from all Markdown
-files in the docs directories. The resulting Parquet tables are
-imported into a local Neo4j instance. Any MCP-compatible Dev Product
+queryable knowledge graph. Cognee performs ontology-grounded extraction
+from all Markdown files in the docs directories and writes normalized
+entities and relationships into Neo4j. GraphRAG remains installed as an
+opt-in fallback path for extraction and community detection. Any
+MCP-compatible Dev Product
 (Gemini CLI, Claude Code, Cursor, Goose, or equivalent) connects to
 Neo4j via the Neo4j MCP extension and gains structured, graph-augmented
 memory of the full EposForge architecture for natural-language-driven
@@ -48,12 +49,12 @@ and [../01-architecture/02-components/06-spec-graph.md](../01-architecture/02-co
 
 | Field | Value |
 |---|---|
-| `name` | `graphrag-neo4j` |
+| `name` | `cognee-neo4j` |
 | `component` | `06-spec-graph` |
 | `version` | `0.1.0` |
 | `privacy_posture` | `local` (Neo4j) / `vendor-default` (inference during indexing) |
 | `cost_hint` | free (Neo4j CE) + metered (Anthropic/OpenAI APIs for indexing) |
-| `capabilities` | graph-query, community-detection, [vector-similarity](./installed/06-spec-graph/graphrag/README.md#hybrid-graph--vector-queries) |
+| `capabilities` | ontology-grounded-extraction, entity-normalization, graph-query |
 | `invocation_surface` | CLI scripts (`instance/scripts/spec-graph-rebuild.sh`) |
 | `status` | `experimental` |
 | `query_languages` | Cypher (via Neo4j); natural language (via Neo4j MCP) |
@@ -69,9 +70,9 @@ Single source of truth for Component 6 adapter status in this repository.
 
 | Adapter | FULFILLS_SLOT | Status | Invocation surface | Notes |
 |---|---|---|---|---|
-| `microsoft-graphrag` | `SPEC_GRAPH` | implemented, default, experimental | `bash instance/scripts/spec-graph-rebuild.sh` | Default extraction/indexing path |
+| `cognee-ontology-preprocessor` | `SPEC_GRAPH` | implemented, default, experimental | `bash instance/scripts/spec-graph-rebuild.sh` | Default ontology-grounded extraction path |
 | `neo4j-ce` | `SPEC_GRAPH` | implemented, active, experimental | `instance/scripts/spec-graph-import.sh` + Neo4j MCP | Query store and Cypher/vector surface |
-| `cognee-ontology-preprocessor` | `SPEC_GRAPH` | implemented, optional, experimental | `bash instance/scripts/spec-graph-rebuild.sh --cognee` | Ontology-grounded extraction path |
+| `microsoft-graphrag` | `SPEC_GRAPH` | implemented, installed-fallback, experimental | `bash instance/scripts/spec-graph-rebuild.sh --graphrag` | Opt-in GraphRAG extraction and import path |
 
 Candidate adapters remain cataloged in
 `../03-research/06-spec-graph/spec-graph.md` and are non-normative until listed
@@ -112,33 +113,38 @@ source_of_truth: yes
 ## Observable behavior
 
 1. **Trigger:** operator runs `bash instance/scripts/spec-graph-rebuild.sh` (or
-  `bash instance/scripts/spec-graph-rebuild.sh --cognee`) or CI runs it on a
+  `bash instance/scripts/spec-graph-rebuild.sh --graphrag`) or CI runs it on a
    schedule / after significant doc batches.
 
-2. **Indexing / extraction:**
-   - Default path: GraphRAG reads all `*.md` files matching
-     `^(00-vision|01-architecture|02-roadmap|03-research|instance/installed|instance/adrs)/.*\.md$`
-     from the repo root. It extracts Entity, Relationship, Community,
-     and TextUnit records into Parquet files under `instance/installed/06-spec-graph/graphrag/output/`.
-   - Optional Cognee path (`--cognee`): Cognee performs ontology-grounded
-     extraction (seeded by `00-vision/01-glossary.ttl`) and exports
-     GraphRAG-compatible Parquet output.
+2. **Wipe stage:**
+   - The rebuild script clears Neo4j graph projection state, prunes Cognee
+     state, and removes generated GraphRAG `output/` and `cache/` artifacts.
+   - Wipe stage executes before either extraction path.
 
-3. **Import / projection to query store:**
-   - Default path: the import script reads Parquet files and loads all
-     records into the local Neo4j instance at `NEO4J_URI`.
-   - Optional Cognee path: the Cognee script writes to Neo4j directly and
-     also exports Parquet artifacts.
+3. **Indexing / extraction:**
+   - Default path: Cognee performs ontology-grounded extraction (seeded by
+     `00-vision/01-glossary.ttl`) and writes normalized entities and
+     relationships to Neo4j.
+   - Opt-in fallback path (`--graphrag`): GraphRAG reads all `*.md` files
+     matching
+     `^(00-vision|01-architecture|02-roadmap|03-research|instance/installed|instance/adrs)/.*\.md$`
+     from the repo root and produces Parquet outputs under
+     `instance/installed/06-spec-graph/graphrag/output/`.
+
+4. **Import / projection to query store:**
+   - Default path: Cognee writes directly into Neo4j.
+   - Opt-in GraphRAG path: the import script reads Parquet files and loads
+     all records into the local Neo4j instance at `NEO4J_URI`.
    Both paths follow full nuke-and-reproject semantics.
 
-4. **Query surface:** After import, the Neo4j MCP extension exposes
+5. **Query surface:** After import, the Neo4j MCP extension exposes
    Cypher generation and graph-memory RAG to any connected Dev
    Product. Operators can issue instructions such as:
    - "Find all adapters that fulfill the Spec Graph slot."
    - "List all principles that govern the Router component."
    - "Generate a new ADR for adding a second Dev Product Adapter."
 
-5. **Rebuild flag:** The `instance/scripts/hooks/post-commit` hook writes
+6. **Rebuild flag:** The `instance/scripts/hooks/post-commit` hook writes
   `instance/installed/06-spec-graph/.needs-rebuild` when doc files change. This is a
    non-blocking reminder; it does not trigger the rebuild itself.
 
@@ -151,12 +157,12 @@ source_of_truth: yes
 | Input | Description | Bounds |
 |---|---|---|
 | Markdown files | `*.md` in 4 docs directories | Any valid Markdown |
-| `ANTHROPIC_API_KEY` | Anthropic API key for extraction | Required for default GraphRAG path and current Cognee script |
-| `OPENAI_API_KEY` | OpenAI API key for embeddings | Required for default GraphRAG path and current Cognee script |
-| `NEO4J_URI` | Neo4j bolt URI | Default: `bolt://localhost:7687` |
+| `ANTHROPIC_API_KEY` | Anthropic API key for extraction | Required for default Cognee path and GraphRAG fallback |
+| `OPENAI_API_KEY` | OpenAI API key for embeddings | Required for GraphRAG fallback (`--graphrag`) only |
+| `NEO4J_URI` | Neo4j bolt URI | Default: `bolt://localhost:7688` |
 | `NEO4J_USERNAME` | Neo4j username | Default: `neo4j` |
 | `NEO4J_PASSWORD` | Neo4j password | Must be set in env |
-| `--cognee` | Rebuild flag selecting Cognee extraction path | Optional |
+| `--graphrag` | Rebuild flag selecting GraphRAG fallback extraction path | Optional |
 
 ### Outputs
 

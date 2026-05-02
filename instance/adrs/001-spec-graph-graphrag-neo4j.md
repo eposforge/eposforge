@@ -9,7 +9,7 @@ source_of_truth: yes
 
 | Field | Value |
 |---|---|
-| Status | Accepted |
+| Status | Superseded by [ADR 002](002-spec-graph-cognee-default.md) |
 | Date | 2026-04 |
 | Components affected | 06-spec-graph, 05-tool-transport, 03-dev-product, 10-inference |
 

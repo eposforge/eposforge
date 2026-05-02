@@ -1,8 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "mcp__eposforge-graph__get_neo4j_schema",
-      "mcp__eposforge-graph__read_neo4j_cypher"
+      "mcp__cognee__*"
     ]
   },
   "hooks": {
@@ -12,7 +11,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '[eposforge MCP-first reminder] This prompt matches an architecture keyword. Call mcp__eposforge-graph__read_neo4j_cypher BEFORE reading Markdown. See AGENTS.md Spec Graph section.'"
+            "command": "echo '[eposforge MCP-first reminder] This prompt matches an architecture keyword. Call mcp__cognee__* tools before reading Markdown. See AGENTS.md Spec Graph section.'"
           }
         ]
       }
