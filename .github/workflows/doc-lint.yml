@@ -1,0 +1,31 @@
+name: Doc Lint
+
+on:
+  pull_request:
+    paths:
+      - "00-vision/**"
+      - "01-architecture/**"
+      - "02-roadmap/**"
+      - "03-research/**"
+      - "SPEC.md"
+
+permissions:
+  contents: read
+
+jobs:
+  doc-classification:
+    name: Classification metadata check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history for diff)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check doc classification metadata
+        run: python scripts/check-doc-classification.py

@@ -18,6 +18,9 @@ Neo4j via the Neo4j MCP extension and gains structured, graph-augmented
 memory of the full EposForge architecture for natural-language-driven
 consistency checks, spec generation, and ADR authoring.
 
+This spec also defines conventions that clarify which docs are
+architecture contracts versus repo-instance implementations.
+
 ---
 
 ## Component slot
@@ -51,21 +54,71 @@ and [01-architecture/02-components/06-spec-graph.md](01-architecture/02-componen
 
 ---
 
+## Adapter registry (repo instance)
+
+Single source of truth for Component 6 adapter status in this repository.
+
+| Adapter | FULFILLS_SLOT | Status | Invocation surface | Notes |
+|---|---|---|---|---|
+| `microsoft-graphrag` | `SPEC_GRAPH` | implemented, default, experimental | `bash scripts/spec-graph-rebuild.sh` | Default extraction/indexing path |
+| `neo4j-ce` | `SPEC_GRAPH` | implemented, active, experimental | `scripts/spec-graph-import.sh` + Neo4j MCP | Query store and Cypher/vector surface |
+| `cognee-ontology-preprocessor` | `SPEC_GRAPH` | implemented, optional, experimental | `bash scripts/spec-graph-rebuild.sh --cognee` | Ontology-grounded extraction path |
+
+Candidate adapters remain cataloged in
+`03-research/06-spec-graph/spec-graph.md` and are non-normative until listed
+here as implemented.
+
+---
+
+## Document classification convention
+
+All architecture, implementation, and research documents should declare a
+machine-readable classification block near the top.
+
+Required fields:
+
+- `doc_kind`: `architecture-contract` | `reference-implementation` | `candidate-research` | `operator-runbook`
+- `scope`: `eposforge-pattern` | `repo-instance`
+- `maturity`: `draft` | `experimental` | `approved` | `deprecated`
+- `source_of_truth`: `yes` | `no`
+
+Recommended placement:
+
+- YAML frontmatter at file start, or
+- a compact metadata table in the first major section.
+
+Example (YAML frontmatter):
+
+```yaml
+doc_kind: reference-implementation
+scope: repo-instance
+maturity: experimental
+source_of_truth: yes
+```
+
+---
+
 ## Observable behavior
 
 1. **Trigger:** operator runs `bash scripts/spec-graph-rebuild.sh` (or
-   CI job runs it on a schedule / after significant doc batches).
+   `bash scripts/spec-graph-rebuild.sh --cognee`) or CI runs it on a
+   schedule / after significant doc batches.
 
-2. **Indexing:** GraphRAG reads all `*.md` files matching
-   `^(00-vision|01-architecture|02-roadmap|03-research)/.*\.md$`
-   from the repo root. Extracts Entity, Relationship, Community, and
-   TextUnit records into Parquet files under `graphrag/output/`.
+2. **Indexing / extraction:**
+   - Default path: GraphRAG reads all `*.md` files matching
+     `^(00-vision|01-architecture|02-roadmap|03-research)/.*\.md$`
+     from the repo root. It extracts Entity, Relationship, Community,
+     and TextUnit records into Parquet files under `graphrag/output/`.
+   - Optional Cognee path (`--cognee`): Cognee performs ontology-grounded
+     extraction (seeded by `00-vision/01-glossary.ttl`) and exports
+     GraphRAG-compatible Parquet output.
 
-3. **Import:** The import script reads Parquet files and loads all
-   records into the local Neo4j instance at `NEO4J_URI`. Clears
-   prior graph data before import (full nuke-and-reproject).
-   Creates constraints on `Entity.id` and `Community.id`, and
-   indexes on `Entity.name` and `Entity.type`.
+3. **Import / projection to query store:**
+   - Default path: the import script reads Parquet files and loads all
+     records into the local Neo4j instance at `NEO4J_URI`.
+   - Optional Cognee path: the Cognee script writes to Neo4j directly and
+     also exports Parquet artifacts.
+   Both paths follow full nuke-and-reproject semantics.
 
 4. **Query surface:** After import, the Neo4j MCP extension exposes
    Cypher generation and graph-memory RAG to any connected Dev
@@ -87,10 +140,12 @@ and [01-architecture/02-components/06-spec-graph.md](01-architecture/02-componen
 | Input | Description | Bounds |
 |---|---|---|
 | Markdown files | `*.md` in 4 docs directories | Any valid Markdown |
-| `GEMINI_API_KEY` | Gemini API key for GraphRAG inference | Must be set in env |
+| `ANTHROPIC_API_KEY` | Anthropic API key for extraction | Required for default GraphRAG path and current Cognee script |
+| `OPENAI_API_KEY` | OpenAI API key for embeddings | Required for default GraphRAG path and current Cognee script |
 | `NEO4J_URI` | Neo4j bolt URI | Default: `bolt://localhost:7687` |
 | `NEO4J_USERNAME` | Neo4j username | Default: `neo4j` |
 | `NEO4J_PASSWORD` | Neo4j password | Must be set in env |
+| `--cognee` | Rebuild flag selecting Cognee extraction path | Optional |
 
 ### Outputs
 
@@ -108,12 +163,14 @@ and [01-architecture/02-components/06-spec-graph.md](01-architecture/02-componen
 |---|---|---|
 | Python | 3.10–3.12 | GraphRAG runtime |
 | `graphrag` (pip) | 3.0.9 | Indexing pipeline |
+| `cognee` (pip) | current | Optional ontology-grounded extraction path |
 | `neo4j` (pip) | 5.x | Neo4j Python driver |
 | `lancedb` (pip) | 0.24.3 | Vector store reader (transitively installed via graphrag) |
 | `pandas`, `pyarrow` (pip) | current | Parquet reading |
 | Neo4j Community Edition | ≥ 5.11 | Graph store + native vector indexes |
 | APOC plugin | compatible | Neo4j stored procedures |
-| Gemini API | current | Entity extraction inference |
+| Anthropic API | current | Text extraction inference |
+| OpenAI API | current | Embedding generation |
 
 ---
 
@@ -147,7 +204,8 @@ from this spec without reading implementation code:
 | Partition | Input | Expected outcome |
 |---|---|---|
 | Happy path | All env vars set, Neo4j running, valid Markdown | Graph imported; exit 0 |
-| Missing API key | `GEMINI_API_KEY` unset | `spec-graph-index.sh` exits 1 with error message |
+| Missing extraction key | `ANTHROPIC_API_KEY` unset | `spec-graph-index.sh` exits 1 with error message |
+| Missing embeddings key | `OPENAI_API_KEY` unset | `spec-graph-index.sh` exits 1 with error message |
 | Missing Neo4j vars | `NEO4J_PASSWORD` unset | `spec-graph-import.sh` exits 1 with error message |
 | No output dir | `graphrag/output/` absent | `spec-graph-import.sh` exits 1 with error message |
 | No venv | `graphrag/.venv/` absent | Index/import scripts exit 1 with setup instructions |
@@ -165,4 +223,7 @@ same commit:
 - `scripts/spec-graph-index.sh`
 - `scripts/spec-graph-import.sh`
 - `scripts/spec-graph-rebuild.sh`
+- `scripts/spec-graph-cognee.py`
+- `scripts/check-doc-classification.py` (regulated directories, exempt patterns, or required fields)
+- `.github/workflows/doc-lint.yml` (trigger paths or job behaviour)
 - `scripts/hooks/post-commit`
