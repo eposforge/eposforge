@@ -56,9 +56,12 @@ async def main():
     cognee.config.system_root_directory = str(cognee_root)
     
     cognee.config.set_llm_provider("anthropic")
-    cognee.config.set_llm_model("claude-sonnet-4-5")
+    # claude-haiku-3-5 is ~20x cheaper than sonnet and sufficient for structured extraction.
+    # Switch to claude-sonnet-4-5 (or set LLM_MODEL env var) for higher-quality graphs.
+    llm_model = os.environ.get("LLM_MODEL", "claude-haiku-3-5-20241022")
+    cognee.config.set_llm_model(llm_model)
     cognee.config.set_llm_api_key(os.environ.get("ANTHROPIC_API_KEY"))
-    cognee.config.set_llm_config({"llm_args": {"max_tokens": 16384}})
+    cognee.config.set_llm_config({"llm_args": {"max_tokens": 4096}})
     cognee.config.set_embedding_provider("fastembed")
     cognee.config.set_embedding_model("BAAI/bge-small-en-v1.5")
     cognee.config.set_embedding_dimensions(384)
