@@ -1,3 +1,10 @@
+---
+doc_kind: architecture-contract
+scope: eposforge-pattern
+maturity: draft
+source_of_truth: yes
+---
+
 # Component 6: Spec Graph
 
 ## Purpose
@@ -54,3 +61,4 @@ In addition to the universal fields in
 
 See [../../03-research/](../../03-research/) for the catalog (Neo4j,
 Code-Graph-RAG, Blitzy GraphRAG, hybrid vector + graph stores, etc.).
+

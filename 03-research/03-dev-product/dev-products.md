@@ -1,10 +1,17 @@
+---
+doc_kind: candidate-research
+scope: eposforge-pattern
+maturity: draft
+source_of_truth: no
+---
+
 # Dev Products — Implementation Catalog
 
 > **Snapshot date:** 2026-04. Pricing, features, and privacy postures
 > change frequently. Verify current details before installing.
 
 Candidate Adapters for the Dev Product slot
-([../01-architecture/02-components/03-dev-product.md](../01-architecture/02-components/03-dev-product.md)).
+([../../01-architecture/02-components/03-dev-product.md](../../01-architecture/02-components/03-dev-product.md)).
 A Dev Product accepts a sub-task descriptor from the Router and
 produces artifacts. Many products listed here can plug into the slot
 once an Adapter exists for them.
@@ -156,7 +163,7 @@ A product is a strong Dev Product candidate if it:
 - **Privacy posture:** depends on provider.
 - **Capabilities:** intent-to-spec-to-tasks workflow.
 - **Notes:** may better fit the **Spec Input** slot
-  ([../01-architecture/02-components/01-spec-input.md](../01-architecture/02-components/01-spec-input.md))
+  ([../../01-architecture/02-components/01-spec-input.md](../../01-architecture/02-components/01-spec-input.md))
   than the Dev Product slot. Listed here for awareness.
 
 ### OpenClaw
@@ -287,3 +294,4 @@ Open a PR adding new entries with the same fields. Prefer products
 with stable invocation surfaces and clear privacy postures. If a
 product's status changes materially, update its entry rather than
 adding a duplicate.
+

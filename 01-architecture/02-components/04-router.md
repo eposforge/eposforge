@@ -1,3 +1,10 @@
+---
+doc_kind: architecture-contract
+scope: eposforge-pattern
+maturity: draft
+source_of_truth: yes
+---
+
 # Component 4: Router / Orchestrator
 
 ## Purpose
@@ -56,3 +63,4 @@ In addition to the universal fields in
 See [../../03-research/](../../03-research/) for the catalog (Microsoft
 Agent Framework, OpenHands, AutoGen, LangGraph, custom in-house
 orchestrators, etc.).
+

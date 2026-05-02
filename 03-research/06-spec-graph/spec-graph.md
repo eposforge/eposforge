@@ -1,9 +1,16 @@
+---
+doc_kind: candidate-research
+scope: eposforge-pattern
+maturity: draft
+source_of_truth: no
+---
+
 # Spec Graph — Implementation Catalog
 
 > **Snapshot date:** 2026-04. Verify current details before adopting.
 
 Candidate Adapters for the Spec Graph slot
-([../01-architecture/02-components/06-spec-graph.md](../01-architecture/02-components/06-spec-graph.md)).
+([../../01-architecture/02-components/06-spec-graph.md](../../01-architecture/02-components/06-spec-graph.md)).
 A Spec Graph Adapter projects every Living Spec across the factory
 into a queryable form, supporting reuse detection, dependency
 mapping, and change-impact analysis.
@@ -110,3 +117,4 @@ Each entry includes (where known):
 Open a PR adding new entries with the same fields. Prefer Adapters
 with declared rebuild target durations and explicit support for
 incremental re-projection on a single spec change.
+

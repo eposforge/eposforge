@@ -1,3 +1,10 @@
+---
+doc_kind: architecture-contract
+scope: eposforge-pattern
+maturity: draft
+source_of_truth: yes
+---
+
 # Component 8: Agent Policy
 
 ## Purpose
@@ -73,3 +80,4 @@ In addition to the universal fields in
 
 See [../../03-research/](../../03-research/) for the catalog (OPA /
 Rego, custom YAML policy engines, hand-rolled per-instance, etc.).
+

@@ -1,3 +1,10 @@
+---
+doc_kind: architecture-contract
+scope: eposforge-pattern
+maturity: draft
+source_of_truth: yes
+---
+
 # Component 1: Spec Input
 
 ## Purpose
@@ -50,3 +57,4 @@ In addition to the universal fields in
 See [../../03-research/](../../03-research/) for a catalog of products
 that can fill this slot (e.g., GitHub Spec Kit, Kiro, custom
 markdown-based briefs).
+

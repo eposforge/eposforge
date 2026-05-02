@@ -1,3 +1,10 @@
+---
+doc_kind: architecture-contract
+scope: eposforge-pattern
+maturity: draft
+source_of_truth: yes
+---
+
 # DarkForge — Vision
 
 ## Mission
@@ -195,3 +202,4 @@ path; instances should plan for it explicitly.
   internal workflow*. Workflow choices are instance-level.
 
 See [01-glossary.md](./01-glossary.md) for shared vocabulary.
+

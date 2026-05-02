@@ -1,3 +1,10 @@
+---
+doc_kind: architecture-contract
+scope: eposforge-pattern
+maturity: draft
+source_of_truth: yes
+---
+
 # Component 7: Execution Sandbox
 
 ## Purpose
@@ -50,3 +57,4 @@ In addition to the universal fields in
 See [../../03-research/](../../03-research/) for the catalog (Docker
 containers, Kubernetes ephemeral pods, Firecracker micro-VMs,
 devcontainers, OpenClaw / similar agent sandboxes, etc.).
+

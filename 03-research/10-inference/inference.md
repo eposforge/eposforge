@@ -1,3 +1,10 @@
+---
+doc_kind: candidate-research
+scope: eposforge-pattern
+maturity: draft
+source_of_truth: no
+---
+
 # Inference — Implementation Catalog
 
 > **Snapshot date:** 2026-04. Pricing, model availability, and
@@ -5,7 +12,7 @@
 > committing.
 
 Candidate Adapters for the Inference slot
-([../01-architecture/02-components/10-inference.md](../01-architecture/02-components/10-inference.md)).
+([../../01-architecture/02-components/10-inference.md](../../01-architecture/02-components/10-inference.md)).
 An Inference Adapter serves language-model (and related) inference
 to Adapters that need it — primarily Dev Products and the Router.
 Most factories install **multiple** Inference Adapters and pick per
@@ -135,3 +142,4 @@ the multi-Adapter posture is what makes this enforceable.
 Open a PR adding new entries with the same fields. Prefer Adapters
 with declared cost metering and explicit support for the slot's
 privacy-routing contract.
+

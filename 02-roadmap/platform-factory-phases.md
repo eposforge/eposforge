@@ -1,3 +1,10 @@
+---
+doc_kind: architecture-contract
+scope: eposforge-pattern
+maturity: draft
+source_of_truth: yes
+---
+
 # Platform Factory — Maturity Phases
 
 The Platform Factory is the side of a dark factory that owns the
@@ -147,3 +154,4 @@ month.
   substrate (containers + GPU + future robotics) may be at different
   phases per substrate type.
 - Going **slower than the roadmap** is fine. Skipping phases is not.
+

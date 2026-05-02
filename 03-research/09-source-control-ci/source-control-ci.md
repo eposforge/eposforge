@@ -1,9 +1,16 @@
+---
+doc_kind: candidate-research
+scope: eposforge-pattern
+maturity: draft
+source_of_truth: no
+---
+
 # Source Control + CI — Implementation Catalog
 
 > **Snapshot date:** 2026-04. Verify current details before adopting.
 
 Candidate Adapters for the Source Control + CI slot
-([../01-architecture/02-components/09-source-control-ci.md](../01-architecture/02-components/09-source-control-ci.md)).
+([../../01-architecture/02-components/09-source-control-ci.md](../../01-architecture/02-components/09-source-control-ci.md)).
 A Source Control + CI Adapter provides the durable home for factory
 artifacts, enforces the paired-change rule, runs tests, applies
 merge-tier rules from Agent Policy, and triggers Spec Graph
@@ -145,3 +152,4 @@ Open a PR adding new entries with the same fields. Prefer Adapters
 with explicit support for signed commits, paired-change checks, and
 tier-gated auto-merge. For integration harness entries, document the
 isolation strategy and which factory components the harness exercises.
+

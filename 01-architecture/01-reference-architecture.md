@@ -1,3 +1,10 @@
+---
+doc_kind: architecture-contract
+scope: eposforge-pattern
+maturity: draft
+source_of_truth: yes
+---
+
 # Reference Architecture
 
 System-level view of a DarkForge instance. Shows how the twelve
@@ -216,3 +223,4 @@ contract, the audit event schema, the Agent Policy tier model.
 This document specifies how the components fit together. Everything
 else is the operator's choice, made with whatever Adapters they
 install.
+

@@ -1,3 +1,10 @@
+---
+doc_kind: candidate-research
+scope: eposforge-pattern
+maturity: draft
+source_of_truth: no
+---
+
 # Landscape Scan
 
 > **Snapshot date:** 2026-04. This document goes stale fast. Update or
@@ -133,3 +140,4 @@ Concrete Adapter candidates per component slot:
 - [audit-observability.md](./11-audit-observability/audit-observability.md) — Audit & Observability slot (component 11).
 - [secrets-key-management.md](./12-secrets-key-management/secrets-key-management.md) — Secrets & Key Management slot (component 12).
 - More to come as research surveys mature.
+

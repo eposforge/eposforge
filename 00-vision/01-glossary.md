@@ -1,3 +1,10 @@
+---
+doc_kind: architecture-contract
+scope: eposforge-pattern
+maturity: draft
+source_of_truth: yes
+---
+
 # Glossary and Taxonomy
 
 Shared vocabulary for DarkForge. Every other doc in this repo — and any
@@ -168,3 +175,4 @@ emergent from installed Adapters per the universal Adapter Pattern.
   docs.
 - If two terms overlap, pick one and mark the other as an alias or
   retire it.
+

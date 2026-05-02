@@ -1,9 +1,16 @@
+---
+doc_kind: candidate-research
+scope: eposforge-pattern
+maturity: draft
+source_of_truth: no
+---
+
 # Router — Implementation Catalog
 
 > **Snapshot date:** 2026-04. Verify current details before adopting.
 
 Candidate Adapters for the Router slot
-([../01-architecture/02-components/04-router.md](../01-architecture/02-components/04-router.md)).
+([../../01-architecture/02-components/04-router.md](../../01-architecture/02-components/04-router.md)).
 A Router Adapter consumes normalized Spec Input, decomposes it into
 sub-tasks, picks Dev Product Adapters per sub-task, dispatches via
 Tool Transport, and iterates.
@@ -82,7 +89,7 @@ Each entry includes (where known):
 - **Cost tier:** free OSS.
 - **Decomposition strategy:** LLM-driven autonomous task execution.
 - **Capabilities:** self-directed multi-step development workflows.
-- **Notes:** also listed in [dev-products.md](./dev-products.md);
+- **Notes:** also listed in [dev-products.md](../03-dev-product/dev-products.md);
   whether it fits the Router slot or the Dev Product slot depends on
   how the operator scopes its autonomy.
 
@@ -104,3 +111,4 @@ Each entry includes (where known):
 Open a PR adding new entries with the same fields. Prefer Adapters
 with declared retry / escalation behavior and a clear emission
 surface for the audit events the Router slot requires.
+
