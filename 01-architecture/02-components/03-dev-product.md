@@ -1,12 +1,18 @@
+---
+doc_kind: architecture-contract
+scope: eposforge-pattern
+maturity: draft
+source_of_truth: yes
+---
+
 # Component 3: Dev Product
 
 ## Purpose
 
 The slot for products that take a sub-task description and produce
 artifacts (code, configuration, infrastructure, prose, etc.). Dev
-Products are the factory's hands. Examples include Claude Code, Cursor,
-Goose, Aider, Copilot, OpenHands, Microsoft Agent Framework, and other
-AI coding tools.
+Products are the factory's hands. Concrete product choices are
+instance-specific.
 
 The Router selects a Dev Product Adapter per sub-task based on its
 declared metadata (capabilities, privacy posture, cost). DarkForge
@@ -59,5 +65,6 @@ In addition to the universal fields in
 ## Reference implementations
 
 See [../../03-research/03-dev-product/dev-products.md](../../03-research/03-dev-product/dev-products.md)
-for the catalog (Claude Code, Cursor, Goose, Aider, Copilot, OpenHands,
-Microsoft Agent Framework, etc.).
+for the candidate catalog and [../../instance/installed/03-dev-product/](../../instance/installed/03-dev-product/)
+for what THIS repo installs.
+

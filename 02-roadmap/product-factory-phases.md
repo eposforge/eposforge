@@ -1,3 +1,10 @@
+---
+doc_kind: architecture-contract
+scope: eposforge-pattern
+maturity: draft
+source_of_truth: yes
+---
+
 # Product Factory — Maturity Phases
 
 The Product Factory is the side of a dark factory that authors
@@ -156,3 +163,4 @@ the factory increasingly uses **itself** to build the next one.
 The factory builds the factory. Plan for it explicitly: each phase's
 deliverables are themselves authored under the previous phase's
 constraints.
+

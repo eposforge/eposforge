@@ -1,3 +1,10 @@
+---
+doc_kind: architecture-contract
+scope: eposforge-pattern
+maturity: draft
+source_of_truth: yes
+---
+
 # The Adapter Pattern
 
 ## Why this exists once, here
@@ -93,3 +100,4 @@ Each file in [02-components/](./02-components/) follows the same shape:
   [../03-research/](../03-research/).
 
 Read the contract; pick (or write) an Adapter; install. That's the loop.
+

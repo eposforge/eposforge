@@ -1,3 +1,10 @@
+---
+doc_kind: architecture-contract
+scope: eposforge-pattern
+maturity: draft
+source_of_truth: yes
+---
+
 # Component 12: Secrets & Key Management
 
 ## Purpose
@@ -61,3 +68,4 @@ In addition to the universal fields in
 See [../../03-research/](../../03-research/) for the catalog (env vars
 on host, SOPS + age, HashiCorp Vault, AWS / GCP / Azure KMS, Keeper,
 1Password, Doppler, etc.).
+

@@ -1,3 +1,10 @@
+---
+doc_kind: architecture-contract
+scope: eposforge-pattern
+maturity: draft
+source_of_truth: yes
+---
+
 # Component 5: Tool Transport
 
 ## Purpose
@@ -55,3 +62,4 @@ In addition to the universal fields in
 See [../../03-research/](../../03-research/) for the catalog. Today's
 common choice is Model Context Protocol (MCP); other transports are
 acceptable as long as the contract is met.
+

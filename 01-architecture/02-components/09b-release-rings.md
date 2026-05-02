@@ -1,3 +1,10 @@
+---
+doc_kind: architecture-contract
+scope: eposforge-pattern
+maturity: draft
+source_of_truth: yes
+---
+
 # Component 9b: Release Rings
 
 ## Purpose
@@ -183,3 +190,4 @@ See [../../03-research/](../../03-research/) for the catalog
 (environment-per-ring with Kubernetes namespaces, Argo Rollouts canary,
 GitHub Environments with required reviewers, custom YAML ring manifests,
 etc.).
+

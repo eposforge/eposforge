@@ -1,9 +1,16 @@
+---
+doc_kind: candidate-research
+scope: eposforge-pattern
+maturity: draft
+source_of_truth: no
+---
+
 # Execution Sandbox — Implementation Catalog
 
 > **Snapshot date:** 2026-04. Verify current details before adopting.
 
 Candidate Adapters for the Execution Sandbox slot
-([../01-architecture/02-components/07-execution-sandbox.md](../01-architecture/02-components/07-execution-sandbox.md)).
+([../../01-architecture/02-components/07-execution-sandbox.md](../../01-architecture/02-components/07-execution-sandbox.md)).
 An Execution Sandbox Adapter provides isolated, ephemeral runtimes
 for dispatched Dev Product work — shell, filesystem, browser, and
 network capabilities under strict isolation.
@@ -36,7 +43,7 @@ Each entry includes (where known):
   Chrome DevTools Protocol browser; integrates cleanly with Tool
   Transport (MCP) for browser and shell capabilities.
 - **Notes:** dual-fit — also listed in
-  [dev-products.md](./dev-products.md). When OpenClaw fills the
+  [dev-products.md](../03-dev-product/dev-products.md). When OpenClaw fills the
   Execution Sandbox slot, Dev Product Adapters dispatched into it
   inherit its network and isolation posture; declare
   `network_policy_modes` per instance.
@@ -106,3 +113,4 @@ Each entry includes (where known):
 Open a PR adding new entries with the same fields. Prefer Adapters
 with explicit network egress controls and clean teardown semantics
 on sub-task completion.
+

@@ -1,3 +1,10 @@
+---
+doc_kind: candidate-research
+scope: eposforge-pattern
+maturity: draft
+source_of_truth: no
+---
+
 # Tool Transport — Implementation Catalog
 
 > **Snapshot date:** 2026-04. Verify current details before adopting.
@@ -99,3 +106,4 @@ Open a PR adding new entries with the same fields. Prefer Adapters
 that support the full required minimum capability set (git, fs,
 shell, graph-query, browser, http) or clearly declare which
 categories they cover and which require a complementary Adapter.
+

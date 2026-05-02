@@ -1,3 +1,10 @@
+---
+doc_kind: candidate-research
+scope: eposforge-pattern
+maturity: draft
+source_of_truth: no
+---
+
 # Research
 
 Research materials organized by architecture component.
@@ -37,3 +44,4 @@ When adding new research materials:
 2. **Place files in the appropriate subdirectory**
 3. **Name files descriptively** (e.g., `design-patterns.md`, `competitive-analysis.md`)
 4. **Link from component docs** in [01-architecture/02-components/](../01-architecture/02-components/) where relevant
+

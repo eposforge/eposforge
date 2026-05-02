@@ -1,3 +1,10 @@
+---
+doc_kind: candidate-research
+scope: eposforge-pattern
+maturity: draft
+source_of_truth: no
+---
+
 # Living Spec — Implementation Catalog
 
 > **Snapshot date:** 2026-04. Verify current details before adopting.
@@ -136,3 +143,4 @@ Open a PR adding new entries with the same fields. For Living Spec
 format entries, document the paired-change check mechanism and test
 derivability. For test tooling entries, document which spec formats are
 supported and how the tool integrates with the CI gate.
+

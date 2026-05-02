@@ -1,9 +1,16 @@
+---
+doc_kind: candidate-research
+scope: eposforge-pattern
+maturity: draft
+source_of_truth: no
+---
+
 # Secrets & Key Management — Implementation Catalog
 
 > **Snapshot date:** 2026-04. Verify current details before adopting.
 
 Candidate Adapters for the Secrets & Key Management slot
-([../01-architecture/02-components/12-secrets-key-management.md](../01-architecture/02-components/12-secrets-key-management.md)).
+([../../01-architecture/02-components/12-secrets-key-management.md](../../01-architecture/02-components/12-secrets-key-management.md)).
 A Secrets & Key Management Adapter resolves, rotates, and redacts
 every secret the factory or its dispatched work consumes — vendor
 API keys, deploy keys, service credentials, signing keys.
@@ -178,3 +185,4 @@ runtime resolution change.
 Open a PR adding new entries with the same fields. Prefer Adapters
 with rotation support and explicit redaction behavior at the
 emitter layer.
+
