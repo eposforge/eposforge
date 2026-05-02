@@ -139,16 +139,29 @@
     },
     {
       "component": "10-inference",
-      "adapter": "anthropic-extraction-plus-openai-embeddings",
-      "spec": "instance/installed/10-inference/anthropic-extraction-plus-openai-embeddings/anthropic-extraction-plus-openai-embeddings.md",
+      "adapter": "anthropic",
+      "spec": "instance/installed/10-inference/anthropic/anthropic.md",
       "scripts_dir": null,
-      "name": "anthropic-extraction-plus-openai-embeddings",
+      "name": "anthropic",
       "status": "experimental",
       "privacy_posture": "vendor-default",
       "cost_hint": "metered",
       "capabilities": [
         "text-extraction",
-        "entity-generation",
+        "entity-generation"
+      ],
+      "invocation_surface": "GraphRAG pipeline config"
+    },
+    {
+      "component": "10-inference",
+      "adapter": "openai",
+      "spec": "instance/installed/10-inference/openai/openai.md",
+      "scripts_dir": null,
+      "name": "openai",
+      "status": "experimental",
+      "privacy_posture": "vendor-default",
+      "cost_hint": "metered",
+      "capabilities": [
         "embedding-generation"
       ],
       "invocation_surface": "GraphRAG pipeline config"
