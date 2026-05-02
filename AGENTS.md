@@ -167,7 +167,8 @@ RETURN report.title, report.summary, score ORDER BY score DESC;
 02-roadmap/         Phase plans
 03-research/        Domain research including spec-graph integration notes
 instance/           Self-host implementation for this repo
-instance/installed/06-spec-graph/  GraphRAG project (settings, prompts, output/)
+instance/installed/06-spec-graph/graphrag/  GraphRAG project (settings, prompts, output/)
+instance/installed/06-spec-graph/cognee/    Cognee ontology-grounded extraction adapter
 instance/scripts/   spec-graph-rebuild.sh, spec-graph-import.sh, etc.
 instance/SPEC.md    Living Spec for this repo's Spec Graph adapter (Component 6)
 ```
@@ -214,8 +215,8 @@ Use this workflow when the user provides a description of additions, deletions, 
   VPN details, or user-specific network topology.
 - When examples require endpoints, use placeholders like
   `https://<service-host>` and `bolt://<neo4j-host-or-ip>:7688`.
-- Do not commit `instance/installed/06-spec-graph/output/`, `instance/installed/06-spec-graph/cache/`, `instance/installed/06-spec-graph/.venv/`,
+- Do not commit `instance/installed/06-spec-graph/graphrag/output/`, `instance/installed/06-spec-graph/graphrag/cache/`, `instance/installed/06-spec-graph/graphrag/.venv/`, `instance/installed/06-spec-graph/cognee/.venv/`, `instance/installed/06-spec-graph/cognee/.cognee/`,
   `.env`, or any file containing API keys or passwords.
-- Never edit generated output under `instance/installed/06-spec-graph/output/`.
+- Never edit generated output under `instance/installed/06-spec-graph/graphrag/output/`.
 - Rebuilding the Spec Graph: `bash instance/scripts/spec-graph-rebuild.sh`
   (requires `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `NEO4J_PASSWORD`).

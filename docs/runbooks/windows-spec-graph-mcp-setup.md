@@ -28,7 +28,7 @@ cd eposforge
 ## 2. Create Python venv and install MCP server
 
 ```powershell
-cd instance\installed\06-spec-graph
+cd instance\installed\06-spec-graph\graphrag
 py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
@@ -73,7 +73,7 @@ them from a local `.env` file before starting the MCP server.
 Run this in a dedicated PowerShell terminal and keep it running:
 
 ```powershell
-cd instance\installed\06-spec-graph
+cd instance\installed\06-spec-graph\graphrag
 .\.venv\Scripts\Activate.ps1
 mcp-neo4j-cypher `
   --transport http `
