@@ -27,5 +27,20 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Check doc classification metadata
-        run: python instance/scripts/check-doc-classification.py
+      - name: Check doc classification metadata and installed layout
+        run: python instance/installed/09-source-control-ci/github-and-actions/scripts/check-doc-classification.py
+
+  installed-index-fresh:
+    name: Installed adapter index freshness
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify _index.json matches installed adapters
+        run: python instance/installed/09-source-control-ci/github-and-actions/scripts/generate-installed-index.py --check

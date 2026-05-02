@@ -8,7 +8,7 @@ source_of_truth: yes
 # Installed Adapter: mcp-stdio-and-http -> Tool Transport (Component 5)
 
 > Living Spec for the Tool Transport Adapter installed in this repo.
-> Slot contract: [../../../01-architecture/02-components/05-tool-transport.md](../../../01-architecture/02-components/05-tool-transport.md)
+> Slot contract: [../../../../01-architecture/02-components/05-tool-transport.md](../../../../01-architecture/02-components/05-tool-transport.md)
 
 ## Adapter metadata
 
@@ -39,7 +39,7 @@ source_of_truth: yes
 | Field | Value |
 |---|---|
 | `mcp_config_source` | `.mcp.json` (gitignored; starts from `.mcp.json.example`) |
-| `policy_anchor` | [../../../AGENTS.md](../../../AGENTS.md) MCP-first policy |
+| `policy_anchor` | [../../../../AGENTS.md](../../../../AGENTS.md) MCP-first policy |
 | `scope_note` | this is this repo's Tool Transport choice, not a normative requirement for other instances |
 
 ## Installed server set

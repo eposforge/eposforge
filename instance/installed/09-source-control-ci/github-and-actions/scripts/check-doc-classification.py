@@ -1,14 +1,26 @@
 #!/usr/bin/env python3
-"""check-doc-classification.py — Validate EposForge doc classification metadata.
+"""check-doc-classification.py — Validate EposForge doc classification metadata
+and installed-adapter folder structure.
 
-Checks that Markdown files in regulated directories declare the required
-classification fields (doc_kind, scope, maturity, source_of_truth) as either
-YAML frontmatter or a metadata table row, as defined in SPEC.md.
+Two checks are performed:
+
+1. Classification metadata check — every .md in regulated directories must
+   declare doc_kind, scope, maturity, source_of_truth as YAML frontmatter
+   or a metadata table row.
+
+2. Installed-adapter layout check (--check-layout / CI always) — each entry
+   under instance/installed/<component>/<adapter>/ must satisfy:
+   - The adapter directory must contain exactly one <adapter>.md Living Spec.
+   - scripts/ is the only permitted direct subdirectory of an adapter folder
+     (besides sub-adapter folders that themselves follow this pattern).
+   - No bare .md Living Specs directly under a component folder (except
+     intentional _index.md files, README.md, and component-level specs
+     explicitly named the same as the component folder).
 
 Behaviour
 ---------
 - Without arguments: checks all .md files changed relative to origin/main
-  (suitable for CI on PRs).
+  (suitable for CI on PRs) plus always runs the layout check.
 - With explicit path arguments: checks those files/directories directly
   (suitable for local validation).
 - Skips exempt files (READMEs, root housekeeping docs, generated output).
@@ -16,14 +28,16 @@ Behaviour
 Exit codes
 ----------
 - 0  All checked files pass.
-- 1  One or more checked files are missing required fields.
+- 1  One or more checked files are missing required fields, or layout
+     violations found.
 
 Usage
 -----
-    python instance/installed/09-source-control-ci/scripts/check-doc-classification.py
-    python instance/installed/09-source-control-ci/scripts/check-doc-classification.py 01-architecture/02-components/
-    python instance/installed/09-source-control-ci/scripts/check-doc-classification.py instance/SPEC.md 01-architecture/
-    python instance/installed/09-source-control-ci/scripts/check-doc-classification.py --all
+    python instance/installed/09-source-control-ci/github-and-actions/scripts/check-doc-classification.py
+    python instance/installed/09-source-control-ci/github-and-actions/scripts/check-doc-classification.py 01-architecture/02-components/
+    python instance/installed/09-source-control-ci/github-and-actions/scripts/check-doc-classification.py instance/SPEC.md 01-architecture/
+    python instance/installed/09-source-control-ci/github-and-actions/scripts/check-doc-classification.py --all
+    python instance/installed/09-source-control-ci/github-and-actions/scripts/check-doc-classification.py --check-layout
 """
 
 import argparse
@@ -63,7 +77,22 @@ EXEMPT_PATTERNS = [
     r"(^|/)GEMINI\.md$",
 ]
 
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent.parent.parent
+
+INSTALLED_DIR = REPO_ROOT / "instance" / "installed"
+
+# Component folder names that are known to have a sub-adapter pattern.
+# Any directory directly under INSTALLED_DIR is considered a component folder.
+# Files (not folders) directly under a component folder are violations
+# (except _index.md, README.md).
+COMPONENT_LEVEL_EXEMPT_NAMES = {"_index.md", "README.md"}
+
+# Directory names directly under a component folder that are component-level
+# utilities rather than adapter folders.  These are skipped during layout checks.
+COMPONENT_LEVEL_SKIP_DIRS = {"scripts", "hooks", "docs", "examples"}
+
+# Permitted direct subdirectories within an adapter folder.
+PERMITTED_ADAPTER_SUBDIRS = {"scripts", "docs", "examples", "tests", "prompts"}
 
 
 # ---------------------------------------------------------------------------
@@ -153,6 +182,72 @@ def resolve_targets(args_paths: list[str]) -> list[Path]:
     return result
 
 
+def check_installed_layout() -> list[str]:
+    """Validate instance/installed/<component>/<adapter>/<adapter>.md convention.
+
+    Returns a list of human-readable violation strings (empty = no violations).
+    """
+    violations: list[str] = []
+
+    if not INSTALLED_DIR.exists():
+        return violations  # Nothing to check yet.
+
+    for component_dir in sorted(INSTALLED_DIR.iterdir()):
+        if not component_dir.is_dir():
+            continue  # Top-level files under installed/ are tolerated.
+
+        for item in sorted(component_dir.iterdir()):
+            rel = item.relative_to(REPO_ROOT).as_posix()
+
+            if item.is_file():
+                # A bare .md file directly under a component folder is a violation
+                # unless it is an explicitly permitted component-level file.
+                if item.suffix == ".md" and item.name not in COMPONENT_LEVEL_EXEMPT_NAMES:
+                    violations.append(
+                        f"LAYOUT: bare spec at component level (should be in adapter subfolder): {rel}"
+                    )
+                # Non-.md files directly under component dir are always a violation.
+                elif item.suffix != ".md":
+                    violations.append(
+                        f"LAYOUT: unexpected file directly under component folder: {rel}"
+                    )
+                continue
+
+            # Skip known component-level utility directories.
+            if item.name in COMPONENT_LEVEL_SKIP_DIRS:
+                continue
+
+            # item is a directory — treat as an adapter folder.
+            adapter_dir = item
+            adapter_name = adapter_dir.name
+            expected_spec = adapter_dir / f"{adapter_name}.md"
+
+            if not expected_spec.exists():
+                # Check if any .md exists at all; if so, name mismatch.
+                any_md = list(adapter_dir.glob("*.md"))
+                if any_md:
+                    found = ", ".join(f.name for f in any_md)
+                    violations.append(
+                        f"LAYOUT: adapter spec name mismatch in {rel}/ "
+                        f"— expected {adapter_name}.md, found: {found}"
+                    )
+                else:
+                    violations.append(
+                        f"LAYOUT: no adapter spec found in {rel}/ "
+                        f"— expected {adapter_name}.md"
+                    )
+
+            # Check that only permitted subdirs exist under adapter folder.
+            for sub in sorted(adapter_dir.iterdir()):
+                if sub.is_dir() and sub.name not in PERMITTED_ADAPTER_SUBDIRS:
+                    violations.append(
+                        f"LAYOUT: unexpected subdirectory in adapter folder "
+                        f"{rel}/{sub.name} — only {sorted(PERMITTED_ADAPTER_SUBDIRS)} permitted"
+                    )
+
+    return violations
+
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -170,7 +265,38 @@ def main() -> int:
         dest="check_all",
         help="Check all .md files in regulated directories (not just changed ones).",
     )
+    parser.add_argument(
+        "--check-layout",
+        action="store_true",
+        dest="check_layout_only",
+        help="Run only the installed-adapter folder layout check (skips classification check).",
+    )
     args = parser.parse_args()
+
+    exit_code = 0
+
+    # -----------------------------------------------------------------------
+    # Layout check — always runs unless --check-layout-only with no doc check
+    # -----------------------------------------------------------------------
+    layout_violations = check_installed_layout()
+    if layout_violations:
+        print("FAIL — installed adapter layout violations:")
+        for v in layout_violations:
+            print(f"  {v}")
+        print()
+        print("Convention: instance/installed/<component>/<adapter>/<adapter>.md")
+        print("  Scripts go in: instance/installed/<component>/<adapter>/scripts/")
+        print("  See instance/README.md for the adapter registry.")
+        exit_code = 1
+    else:
+        print("installed-layout: all adapter folders OK.")
+
+    if args.check_layout_only:
+        return exit_code
+
+    # -----------------------------------------------------------------------
+    # Classification metadata check
+    # -----------------------------------------------------------------------
 
     # Determine which files to check
     if args.paths:
@@ -203,7 +329,7 @@ def main() -> int:
 
     if not to_check:
         print("doc-classification: no regulated files to check.")
-        return 0
+        return exit_code
 
     print(f"doc-classification: checking {len(to_check)} file(s) [{mode} mode]")
     failures: list[tuple[str, list[str]]] = []
@@ -230,10 +356,11 @@ def main() -> int:
         print("Add a YAML frontmatter block or metadata table to each file.")
         print("Required fields: doc_kind, scope, maturity, source_of_truth")
         print("See instance/SPEC.md §Document classification convention for format details.")
-        return 1
+        exit_code = 1
+    else:
+        print("doc-classification: all files OK.")
 
-    print("doc-classification: all files OK.")
-    return 0
+    return exit_code
 
 
 if __name__ == "__main__":

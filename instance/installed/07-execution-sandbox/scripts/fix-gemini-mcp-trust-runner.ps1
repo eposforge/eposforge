@@ -1,4 +1,0 @@
-$p = 'C:\Users\gemini-runner\.gemini\settings.json'
-$newConfig = "{`n  `"mcpServers`": {`n    `"eposforge-graph`": {`n      `"httpUrl`": `"http://127.0.0.1:7776/mcp/`",`n      `"trust`": true`n    },`n    `"github`": {`n      `"command`": `"npx`",`n      `"args`": [`"-y`", `"@modelcontextprotocol/server-github`"],`n      `"env`": {`n        `"GITHUB_PERSONAL_ACCESS_TOKEN`": `"your-token-here`"`n      },`n      `"trust`": true`n    },`n    `"ms-docs`": {`n      `"httpUrl`": `"https://learn.microsoft.com/api/mcp`",`n      `"trust`": true`n    },`n    `"cognee`": {`n      `"command`": `"npx`",`n      `"args`": [`"-y`", `"@cognee/mcp-server`"],`n      `"trust`": true`n    }`n  },`n  `"directoryFilteringOptions`": {`n    `"allowedDirectories`": [`"<abs-path-to-repo-root>`"]`n  },`n  `"autoAccept`": true`n}"
-[System.IO.File]::WriteAllText($p, $newConfig, [System.Text.Encoding]::UTF8)
-Write-Host "Done. eposforge-graph now uses httpUrl port 7776."

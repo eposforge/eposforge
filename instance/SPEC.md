@@ -235,7 +235,8 @@ same commit:
 - `instance/scripts/spec-graph-import.sh`
 - `instance/scripts/spec-graph-rebuild.sh`
 - `instance/scripts/spec-graph-cognee.py`
-- `instance/scripts/check-doc-classification.py` (regulated directories, exempt patterns, or required fields)
+- `instance/installed/09-source-control-ci/github-and-actions/scripts/check-doc-classification.py` (regulated directories, exempt patterns, or required fields)
+- `instance/installed/09-source-control-ci/github-and-actions/scripts/generate-installed-index.py` (adapter crawl logic or index schema)
 - `.github/workflows/doc-lint.yml` (trigger paths or job behaviour)
 - `instance/scripts/hooks/post-commit`
 
