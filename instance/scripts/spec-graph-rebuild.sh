@@ -123,6 +123,9 @@ else
     exit 1
   fi
   echo "==> Running Cognee indexing..."
+  # Cognee 1.0: skip startup LLM ping and disable multi-user ACL (kuzu conflicts with neo4j).
+  export COGNEE_SKIP_CONNECTION_TEST=true
+  export ENABLE_BACKEND_ACCESS_CONTROL=false
   "${COGNEE_PYTHON}" "${SCRIPTS_DIR}/spec-graph-cognee.py"
 fi
 
