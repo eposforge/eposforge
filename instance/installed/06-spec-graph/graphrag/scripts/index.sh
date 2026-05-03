@@ -15,8 +15,7 @@
 #   ANTHROPIC_API_KEY=your-key OPENAI_API_KEY=your-key bash instance/installed/06-spec-graph/graphrag/scripts/index.sh
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
-GRAPHRAG_DIR="${REPO_ROOT}/installed/06-spec-graph/graphrag"
+GRAPHRAG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VENV="${GRAPHRAG_DIR}/.venv"
 PYTHON="${VENV}/bin/python"
 

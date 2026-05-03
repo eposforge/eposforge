@@ -26,3 +26,6 @@ instance/installed/06-spec-graph/graphrag/__pycache__/
 instance/installed/06-spec-graph/cognee/.venv/
 instance/installed/06-spec-graph/cognee/__pycache__/
 instance/installed/06-spec-graph/cognee/.cognee/
+
+# Troubleshooting scratchpad — never commit
+scratchpad/

@@ -6,7 +6,7 @@ import cognee
 from neo4j import GraphDatabase
 
 # Configure output directories for GraphRAG compatibility
-REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent.parent.parent.parent.parent
+REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent.parent.parent.parent.parent  # scripts/->cognee/->06-spec-graph/->installed/->instance/->repo
 GRAPHRAG_OUTPUT_DIR = REPO_ROOT / "instance" / "installed" / "06-spec-graph" / "graphrag" / "output"
 GRAPHRAG_OUTPUT_DIR.mkdir(parents = True, exist_ok = True)
 
@@ -56,11 +56,14 @@ async def main():
     cognee.config.system_root_directory = str(cognee_root)
     
     cognee.config.set_llm_provider("anthropic")
-    # claude-haiku-4-5 is ~20x cheaper than sonnet and sufficient for structured extraction.
-    # Switch to claude-sonnet-4-6 (or set LLM_MODEL env var) for higher-quality graphs.
+    # claude-haiku-3-5 is ~20x cheaper than sonnet and sufficient for structured extraction.
+    # Switch to claude-sonnet-4-5 (or set LLM_MODEL env var) for higher-quality graphs.
     llm_model = os.environ.get("LLM_MODEL", "claude-haiku-4-5-20251001")
+    llm_api_key = os.environ.get("LLM_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")
+    if not llm_api_key:
+        raise RuntimeError("Missing LLM API key. Set LLM_API_KEY or ANTHROPIC_API_KEY.")
     cognee.config.set_llm_model(llm_model)
-    cognee.config.set_llm_api_key(os.environ.get("ANTHROPIC_API_KEY"))
+    cognee.config.set_llm_api_key(llm_api_key)
     cognee.config.set_llm_config({"llm_args": {"max_tokens": 4096}})
     cognee.config.set_embedding_provider("fastembed")
     cognee.config.set_embedding_model("BAAI/bge-small-en-v1.5")

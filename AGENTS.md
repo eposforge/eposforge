@@ -147,7 +147,10 @@ CALL db.relationshipTypes() YIELD relationshipType RETURN relationshipType;
 instance/           Self-host implementation for this repo
 instance/installed/06-spec-graph/graphrag/  GraphRAG project (settings, prompts, output/)
 instance/installed/06-spec-graph/cognee/    Cognee ontology-grounded extraction adapter
-instance/scripts/   spec-graph-rebuild.sh, spec-graph-import.sh, etc.
+instance/scripts/   hooks/ (git hook helpers only)
+instance/installed/06-spec-graph/scripts/  rebuild.sh and other Spec Graph orchestration
+instance/installed/06-spec-graph/cognee/scripts/  Cognee adapter scripts
+instance/installed/06-spec-graph/graphrag/scripts/ GraphRAG adapter scripts
 instance/SPEC.md    Living Spec for this repo's Spec Graph adapter (Component 6)
 ```
 
@@ -180,7 +183,7 @@ Use this workflow when the user provides a description of additions, deletions, 
   *   **Living Spec Contract:** If creating or updating a spec (e.g., `instance/SPEC.md` or `01-architecture/02-components/*.md`), ensure it contains: Purpose, Observable Behavior, Inputs/Outputs, Dependencies, Non-functional Bounds (Metadata Table), and Versioning Policy.
   *   **Metadata Tables:** Ensure every Adapter and Component doc includes a machine-readable metadata table per the [Adapter Pattern](01-architecture/00-adapter-pattern.md).
 4.  **Validate & Rebuild:**
-  *   Once files are updated, offer to perform the required steps to rebuild the Spec Graph: `bash instance/scripts/spec-graph-rebuild.sh`.
+  *   Once files are updated, offer to perform the required steps to rebuild the Spec Graph: `bash instance/installed/06-spec-graph/scripts/rebuild.sh`.
 
 ---
 
@@ -196,5 +199,14 @@ Use this workflow when the user provides a description of additions, deletions, 
 - Do not commit `instance/installed/06-spec-graph/graphrag/output/`, `instance/installed/06-spec-graph/graphrag/cache/`, `instance/installed/06-spec-graph/graphrag/.venv/`, `instance/installed/06-spec-graph/cognee/.venv/`, `instance/installed/06-spec-graph/cognee/.cognee/`,
   `.env`, or any file containing API keys or passwords.
 - Never edit generated output under `instance/installed/06-spec-graph/graphrag/output/`.
-- Rebuilding the Spec Graph: `bash instance/scripts/spec-graph-rebuild.sh`
+- Implementation script placement: scripts that implement a specific adapter
+  must live with that adapter under
+  `instance/installed/<component>/<adapter>/scripts/`.
+- `instance/scripts/` is a legacy compatibility area for repo-level
+  orchestration shims and git hook helpers only; do not add new
+  adapter-specific implementation scripts there.
+- Troubleshooting scratchpad: use `scratchpad/` (repo root) for ad-hoc test
+  artifacts, logs, and proto-test data. This directory is gitignored. Do not
+  use `instance/scripts/` as a scratchpad.
+- Rebuilding the Spec Graph: `bash instance/installed/06-spec-graph/scripts/rebuild.sh`
   (requires `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `NEO4J_PASSWORD`).
