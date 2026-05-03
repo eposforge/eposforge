@@ -58,4 +58,5 @@ $env:NEO4J_USERNAME = $Neo4jUsername
 $env:NEO4J_PASSWORD = $Neo4jPassword
 
 Write-Host "Starting local Cognee MCP server over stdio..."
-& uvx cognee-mcp
+$wrapperScript = Join-Path $PSScriptRoot "cognee-mcp-win-wrapper.py"
+& uv run --with "cognee[fastembed]" --with cognee-mcp python $wrapperScript

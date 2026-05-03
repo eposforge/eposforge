@@ -18,8 +18,7 @@
 #   bash instance/installed/06-spec-graph/graphrag/scripts/import.sh
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
-GRAPHRAG_DIR="${REPO_ROOT}/installed/06-spec-graph/graphrag"
+GRAPHRAG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VENV="${GRAPHRAG_DIR}/.venv"
 PYTHON="${VENV}/bin/python"
 OUTPUT_DIR="${GRAPHRAG_DIR}/output"

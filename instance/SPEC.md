@@ -51,7 +51,7 @@ and [../01-architecture/02-components/06-spec-graph.md](../01-architecture/02-co
 |---|---|
 | `name` | `cognee-neo4j` |
 | `component` | `06-spec-graph` |
-| `version` | `0.1.0` |
+| `version` | `0.1.1` |
 | `privacy_posture` | `local` (Neo4j) / `vendor-default` (inference during indexing) |
 | `cost_hint` | free (Neo4j CE) + metered (Anthropic/OpenAI APIs for indexing) |
 | `capabilities` | ontology-grounded-extraction, entity-normalization, graph-query |
@@ -110,6 +110,22 @@ source_of_truth: yes
 
 ---
 
+## Script placement convention
+
+Adapter implementation scripts must be colocated with the adapter they
+implement under:
+
+`instance/installed/<component>/<adapter>/scripts/`
+
+`instance/scripts/` is a legacy compatibility area for repo-level orchestration
+entrypoints and git hook helpers only. Do not add new adapter-specific
+implementation scripts there.
+
+This convention is enforced in CI by
+`instance/installed/09-source-control-ci/github-and-actions/scripts/check-doc-classification.py`.
+
+---
+
 ## Observable behavior
 
 1. **Trigger:** operator runs `bash instance/scripts/spec-graph-rebuild.sh` (or
@@ -148,6 +164,12 @@ source_of_truth: yes
   `instance/installed/06-spec-graph/.needs-rebuild` when doc files change. This is a
    non-blocking reminder; it does not trigger the rebuild itself.
 
+7. **Layout/policy enforcement in CI:**
+   - The doc lint checker validates adapter folder layout under
+     `instance/installed/`.
+   - The checker enforces script placement so adapter implementation scripts
+     live in adapter-local `scripts/` folders.
+
 ---
 
 ## Inputs / outputs
@@ -157,7 +179,8 @@ source_of_truth: yes
 | Input | Description | Bounds |
 |---|---|---|
 | Markdown files | `*.md` in 4 docs directories | Any valid Markdown |
-| `ANTHROPIC_API_KEY` | Anthropic API key for extraction | Required for default Cognee path and GraphRAG fallback |
+| `LLM_API_KEY` | Generic LLM API key used by Cognee MCP/runtime | Required for Cognee MCP retrieval and accepted by local Cognee scripts |
+| `ANTHROPIC_API_KEY` | Anthropic API key for extraction | Required for default Cognee path and GraphRAG fallback when `LLM_API_KEY` is not set |
 | `OPENAI_API_KEY` | OpenAI API key for embeddings | Required for GraphRAG fallback (`--graphrag`) only |
 | `NEO4J_URI` | Neo4j bolt URI | Default: `bolt://localhost:7688` |
 | `NEO4J_USERNAME` | Neo4j username | Default: `neo4j` |
@@ -237,10 +260,10 @@ Changes to the following files require updating this `SPEC.md` in the
 same commit:
 
 - `instance/installed/06-spec-graph/graphrag/settings.yaml` (any key that changes observable behavior)
-- `instance/scripts/spec-graph-index.sh`
-- `instance/scripts/spec-graph-import.sh`
-- `instance/scripts/spec-graph-rebuild.sh`
-- `instance/scripts/spec-graph-cognee.py`
+- `instance/installed/06-spec-graph/scripts/rebuild.sh`
+- `instance/installed/06-spec-graph/graphrag/scripts/index.sh`
+- `instance/installed/06-spec-graph/graphrag/scripts/import.sh`
+- `instance/installed/06-spec-graph/cognee/scripts/cognee.py`
 - `instance/installed/09-source-control-ci/github-and-actions/scripts/check-doc-classification.py` (regulated directories, exempt patterns, or required fields)
 - `instance/installed/09-source-control-ci/github-and-actions/scripts/generate-installed-index.py` (adapter crawl logic or index schema)
 - `.github/workflows/doc-lint.yml` (trigger paths or job behaviour)

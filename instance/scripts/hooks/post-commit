@@ -20,5 +20,5 @@ CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null \
 
 if [[ -n "${CHANGED}" ]]; then
   touch "${FLAG}" 2>/dev/null || true
-  echo "spec-graph: Markdown docs changed. Run instance/scripts/spec-graph-rebuild.sh to update the Spec Graph."
+  echo "spec-graph: Markdown docs changed. Run instance/installed/06-spec-graph/scripts/rebuild.sh to update the Spec Graph."
 fi
