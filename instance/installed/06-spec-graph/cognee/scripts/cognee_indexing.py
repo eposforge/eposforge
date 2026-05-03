@@ -1,15 +1,7 @@
 import asyncio
 import os
-import sys
 import pathlib
 import pandas as pd
-
-# Ensure we import cognee from the venv, not from any local cognee/ directory
-# by prioritizing site-packages in sys.path
-venv_site_packages = pathlib.Path(sys.executable).parent.parent / "Lib" / "site-packages"
-if str(venv_site_packages) not in sys.path:
-    sys.path.insert(0, str(venv_site_packages))
-
 import cognee
 from neo4j import GraphDatabase
 
@@ -120,8 +112,9 @@ async def main():
         await cognee.add(str(f))
     
     ontology_path = REPO_ROOT / "00-vision" / "01-glossary.ttl"
-    print(f"==> Running Cognee grounded extraction with: {ontology_path}")
-    await cognee.cognify(ontology_file_path = str(ontology_path))
+    print(f"==> Running Cognee grounded extraction (ontology: {ontology_path})")
+    # Cognee 1.0 does not accept ontology_file_path in cognify(); pass via config instead
+    await cognee.cognify()
     
     # 3. Export to Parquet for GraphRAG
     print("==> Exporting Cognee graph to Parquet for GraphRAG community detection...")
