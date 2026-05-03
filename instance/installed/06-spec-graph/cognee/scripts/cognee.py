@@ -4,9 +4,19 @@ import sys
 import pathlib
 import pandas as pd
 
+REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent.parent.parent.parent.parent  # scripts/->cognee/->06-spec-graph/->installed/->instance/->repo
+COGNEE_ROOT = REPO_ROOT / "instance" / "installed" / "06-spec-graph" / "cognee" / ".cognee"
+COGNEE_ROOT.mkdir(parents = True, exist_ok = True)
+SCRIPT_DIR = pathlib.Path(__file__).resolve().parent
+
+# Cognee caches BaseConfig on first import. Set the system root before importing
+# cognee so the relational metadata DB and MCP server point at the same store.
+os.environ["SYSTEM_ROOT_DIRECTORY"] = str(COGNEE_ROOT)
+
 # Ensure we import cognee from the venv, not from any local cognee/ directory
 # by prioritizing site-packages in sys.path
 venv_site_packages = pathlib.Path(sys.executable).parent.parent / "Lib" / "site-packages"
+sys.path = [p for p in sys.path if pathlib.Path(p or ".").resolve() != SCRIPT_DIR]
 if str(venv_site_packages) not in sys.path:
     sys.path.insert(0, str(venv_site_packages))
 
@@ -14,7 +24,6 @@ import cognee
 from neo4j import GraphDatabase
 
 # Configure output directories for GraphRAG compatibility
-REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent.parent.parent.parent.parent  # scripts/->cognee/->06-spec-graph/->installed/->instance/->repo
 GRAPHRAG_OUTPUT_DIR = REPO_ROOT / "instance" / "installed" / "06-spec-graph" / "graphrag" / "output"
 GRAPHRAG_OUTPUT_DIR.mkdir(parents = True, exist_ok = True)
 
@@ -59,9 +68,7 @@ async def export_cognee_to_parquet():
 
 async def main():
     # 1. Setup Cognee configuration
-    cognee_root = REPO_ROOT / "instance" / "installed" / "06-spec-graph" / "cognee" / ".cognee"
-    cognee_root.mkdir(parents = True, exist_ok = True)
-    cognee.config.system_root_directory = str(cognee_root)
+    cognee.config.system_root_directory = str(COGNEE_ROOT)
     
     cognee.config.set_llm_provider("anthropic")
     # claude-haiku-3-5 is ~20x cheaper than sonnet and sufficient for structured extraction.

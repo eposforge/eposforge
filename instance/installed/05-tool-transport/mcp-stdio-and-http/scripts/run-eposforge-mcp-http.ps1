@@ -57,6 +57,13 @@ $env:NEO4J_URI = $Neo4jUri
 $env:NEO4J_USERNAME = $Neo4jUsername
 $env:NEO4J_PASSWORD = $Neo4jPassword
 
+# Point Cognee at the same SQLite metadata DB used during indexing.
+# The indexing script (cognee.py) sets system_root_directory to this path;
+# the MCP server must read from the same location or list_data returns nothing.
+$cogneeRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..\06-spec-graph\cognee\.cognee")).Path
+$env:SYSTEM_ROOT_DIRECTORY = $cogneeRoot
+Write-Host "Cognee root: $cogneeRoot"
+
 Write-Host "Starting local Cognee MCP server over stdio..."
 $wrapperScript = Join-Path $PSScriptRoot "cognee-mcp-win-wrapper.py"
 & uv run --with "cognee[fastembed]" --with cognee-mcp python $wrapperScript

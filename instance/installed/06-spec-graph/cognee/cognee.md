@@ -90,11 +90,11 @@ venv path (`instance/installed/06-spec-graph/cognee/.venv`) may exceed this
 limit during `pip install`. Use a short path instead:
 
 ```powershell
-python -m venv C:\cognee-venv
-C:\cognee-venv\Scripts\pip install cognee fastembed neo4j pandas pyarrow
+python -m venv D:\venv\cognee
+D:\venv\cognee\Scripts\pip install cognee fastembed neo4j pandas pyarrow
 ```
 
-Then set `COGNEE_VENV=C:\cognee-venv` when running the rebuild script, or
+Then set `COGNEE_VENV=D:\venv\cognee` when running the rebuild script, or
 enable long paths via Group Policy / registry (`LongPathsEnabled = 1`).
 
 ---

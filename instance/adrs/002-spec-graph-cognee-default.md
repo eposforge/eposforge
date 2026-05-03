@@ -84,7 +84,7 @@ separately. Incremental update is not yet validated.
 **Rebuild command:**
 ```sh
 # Default (Cognee):
-COGNEE_VENV=C:\cognee-venv COGNEE_SKIP_CONNECTION_TEST=true \
+COGNEE_VENV=D:\venv\cognee COGNEE_SKIP_CONNECTION_TEST=true \
 ENABLE_BACKEND_ACCESS_CONTROL=false \
 instance/scripts/spec-graph-rebuild.sh
 
@@ -164,7 +164,7 @@ Addressed and ruled out in ADR 001. The structural query requirement
   venv until a stable release is declared.
 - **Negative:** Windows long-path limit (260 chars) prevents venv
   installation in the repo's deep `instance/installed/06-spec-graph/cognee/.venv`
-  path. Use `COGNEE_VENV=C:\cognee-venv` as a workaround until the
+  path. Use `COGNEE_VENV=D:\venv\cognee` as a workaround until the
   repo is relocated to a shorter path or Windows long-path support is
   enabled system-wide.
 - **Negative:** `COGNEE_SKIP_CONNECTION_TEST=true` and
