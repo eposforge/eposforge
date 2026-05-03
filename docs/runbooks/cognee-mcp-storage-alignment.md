@@ -15,7 +15,7 @@ directories:
 | Context | `SYSTEM_ROOT_DIRECTORY` |
 |---|---|
 | `spec-graph-rebuild.sh` / `spec-graph-cognee.py` | `<repo>/instance/installed/06-spec-graph/cognee/.cognee` |
-| MCP server (`.mcp.json`, no override set) | `C:\cognee-venv\Lib\site-packages\cognee\.cognee_system` |
+| MCP server (`.mcp.json`, no override set) | `D:\venv\cognee\Lib\site-packages\cognee\.cognee_system` |
 
 `list_data` reads Cognee's dataset registry from `SYSTEM_ROOT_DIRECTORY`.
 Because the MCP server uses a different root, it sees no datasets.
@@ -82,7 +82,7 @@ OpenAI embedding model:
 
 ```powershell
 $env:NEO4J_URI = "bolt://<neo4j-host-or-ip>:7688"
-$env:COGNEE_VENV = "C:\cognee-venv"
+$env:COGNEE_VENV = "D:\venv\cognee"
 $env:COGNEE_SKIP_CONNECTION_TEST = "true"
 $env:ENABLE_BACKEND_ACCESS_CONTROL = "false"
 $env:OPENAI_API_KEY = "<your-key>"
@@ -111,7 +111,7 @@ works.
 ## Notes
 
 - `.mcp.json` is gitignored and contains live API keys. Keep it that way.
-- The `C:\cognee-venv` venv patches (kwargs filter, `max_tokens` inject,
+- The `D:\venv\cognee` venv patches (kwargs filter, `max_tokens` inject,
   `http2=False`) apply only to the rebuild context. The MCP server runs via
   `uv run` in a separate venv and has its own copy of `adapter.py`.
 - The fastembed deadlock on Windows is documented in

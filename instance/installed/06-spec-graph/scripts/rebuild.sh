@@ -12,7 +12,7 @@
 #   NEO4J_PASSWORD    — Neo4j password
 #   COGNEE_VENV       — Optional: override Cognee venv path.
 #                       On Windows (long-path disabled) use a short path:
-#                       e.g. COGNEE_VENV=C:\cognee-venv
+#                       e.g. COGNEE_VENV=D:\venv\cognee
 #
 # Usage:
 #   ANTHROPIC_API_KEY=xxx NEO4J_PASSWORD=zzz bash instance/installed/06-spec-graph/scripts/rebuild.sh [--graphrag]
@@ -39,7 +39,13 @@ if [[ -z "${NEO4J_PASSWORD:-}" ]]; then
   exit 1
 fi
 
-COGNEE_VENV="${COGNEE_VENV:-${REPO_ROOT}/installed/06-spec-graph/cognee/.venv}"
+DEFAULT_COGNEE_VENV="${REPO_ROOT}/installed/06-spec-graph/cognee/.venv"
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+  # Keep Windows default short to avoid long-path issues under deep repo roots.
+  DEFAULT_COGNEE_VENV="D:/venv/cognee"
+fi
+
+COGNEE_VENV="${COGNEE_VENV:-${DEFAULT_COGNEE_VENV}}"
 GRAPHRAG_VENV="${REPO_ROOT}/installed/06-spec-graph/graphrag/.venv"
 GRAPHRAG_OUTPUT_DIR="${REPO_ROOT}/installed/06-spec-graph/graphrag/output"
 GRAPHRAG_CACHE_DIR="${REPO_ROOT}/installed/06-spec-graph/graphrag/cache"
@@ -120,7 +126,13 @@ if [ "$USE_GRAPHRAG" = true ]; then
   bash "${SCRIPTS_DIR}/../graphrag/scripts/import.sh"
 else
   if [[ ! -f "${COGNEE_PYTHON}" ]]; then
-    echo "ERROR: Cognee venv not found at ${COGNEE_VENV}. Run: cd instance/installed/06-spec-graph/cognee && python -m venv .venv && pip install cognee fastembed neo4j pandas pyarrow" >&2
+    if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+      echo "ERROR: Cognee venv not found at ${COGNEE_VENV}." >&2
+      echo "Run: python -m venv D:/venv/cognee && D:/venv/cognee/Scripts/pip install cognee fastembed neo4j pandas pyarrow" >&2
+      echo "Or set COGNEE_VENV to your installed path." >&2
+    else
+      echo "ERROR: Cognee venv not found at ${COGNEE_VENV}. Run: cd instance/installed/06-spec-graph/cognee && python -m venv .venv && pip install cognee fastembed neo4j pandas pyarrow" >&2
+    fi
     exit 1
   fi
   echo "==> Running Cognee indexing..."
