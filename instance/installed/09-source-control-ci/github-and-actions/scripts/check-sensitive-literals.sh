@@ -42,16 +42,15 @@ should_skip_file() {
   return 1
 }
 
-scan_blob() {
-  local label="$1"
-  local content
-  content=$(cat)
+scan_file() {
+  local file_path="$1"
+  local label="$2"
 
-  if printf '%s' "${content}" | grep -Iq .; then
+  if grep -Iq . "${file_path}"; then
     local ip_hits
     local path_hits
-    ip_hits=$(printf '%s' "${content}" | grep -nE "${PRIVATE_IP_PATTERN}" || true)
-    path_hits=$(printf '%s' "${content}" | grep -nE "${LOCAL_PATH_PATTERN}" || true)
+    ip_hits=$(grep -nE "${PRIVATE_IP_PATTERN}" "${file_path}" || true)
+    path_hits=$(grep -nE "${LOCAL_PATH_PATTERN}" "${file_path}" || true)
 
     if [[ -n "${ip_hits}" || -n "${path_hits}" ]]; then
       has_errors=1
@@ -70,6 +69,8 @@ scan_blob() {
 }
 
 if [[ "${MODE}" == "staged" ]]; then
+  tmp_file=$(mktemp)
+  trap 'rm -f "${tmp_file}"' EXIT
   while IFS= read -r -d '' file; do
     if should_skip_file "${file}"; then
       continue
@@ -78,7 +79,8 @@ if [[ "${MODE}" == "staged" ]]; then
     if ! git cat-file -e ":${file}" 2>/dev/null; then
       continue
     fi
-    git show ":${file}" | scan_blob "${file} (staged)"
+    git show ":${file}" > "${tmp_file}"
+    scan_file "${tmp_file}" "${file} (staged)"
   done < <(git diff --cached --name-only --diff-filter=ACMR -z)
 elif [[ "${MODE}" == "changed" ]]; then
   while IFS= read -r -d '' file; do
@@ -88,7 +90,7 @@ elif [[ "${MODE}" == "changed" ]]; then
     if [[ ! -f "${file}" ]]; then
       continue
     fi
-    cat "${file}" | scan_blob "${file} (changed against ${BASE_REF})"
+    scan_file "${file}" "${file} (changed against ${BASE_REF})"
   done < <(git diff --name-only --diff-filter=ACMR -z "${BASE_REF}...HEAD")
 else
   while IFS= read -r -d '' file; do
@@ -98,7 +100,7 @@ else
     if [[ ! -f "${file}" ]]; then
       continue
     fi
-    cat "${file}" | scan_blob "${file}"
+    scan_file "${file}" "${file}"
   done < <(git ls-files -z)
 fi
 
