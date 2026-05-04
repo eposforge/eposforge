@@ -4,6 +4,9 @@ import sys
 import pathlib
 import pandas as pd
 
+# Recommended invocation (secrets resolved automatically):
+#   python instance/installed/12-secrets-key-management/bin/epos-secrets -- python instance/installed/06-spec-graph/cognee/scripts/cognee.py
+
 REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent.parent.parent.parent.parent  # scripts/->cognee/->06-spec-graph/->installed/->instance/->repo
 COGNEE_ROOT = REPO_ROOT / "instance" / "installed" / "06-spec-graph" / "cognee" / ".cognee"
 COGNEE_ROOT.mkdir(parents = True, exist_ok = True)

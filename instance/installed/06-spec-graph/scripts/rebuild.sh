@@ -14,7 +14,10 @@
 #                       On Windows (long-path disabled) use a short path:
 #                       e.g. COGNEE_VENV=D:\venv\cognee
 #
-# Usage:
+# Recommended invocation (secrets resolved automatically):
+#   python instance/installed/12-secrets-key-management/bin/epos-secrets -- bash instance/installed/06-spec-graph/scripts/rebuild.sh [--graphrag]
+#
+# Legacy invocation (manual env export):
 #   ANTHROPIC_API_KEY=xxx NEO4J_PASSWORD=zzz bash instance/installed/06-spec-graph/scripts/rebuild.sh [--graphrag]
 set -euo pipefail
 

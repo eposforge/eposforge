@@ -1,0 +1,52 @@
+schema_version = "1"
+# Canonical MCP server declarations for this repo instance.
+# This is the source of truth — DO NOT edit .mcp.json or .vscode/mcp.json directly.
+#
+# After editing this file, regenerate the two JSON config files:
+#   python instance/installed/05-tool-transport/mcp-stdio-and-http/scripts/sync-mcp.py
+#
+# To check for drift:
+#   python instance/installed/05-tool-transport/mcp-stdio-and-http/scripts/sync-mcp.py --check
+
+[[server]]
+name         = "cognee"
+transport    = "stdio"
+command      = "uv"
+args         = [
+  "run",
+  "--with", "cognee[fastembed]",
+  "--with", "cognee-mcp",
+  "python",
+  "instance/installed/05-tool-transport/mcp-stdio-and-http/scripts/cognee-mcp-win-wrapper.py",
+]
+uses_secrets = ["anthropic_api_key", "openai_api_key", "neo4j_password"]
+
+[server.non_secret_env]
+LLM_API_KEY                     = "${ANTHROPIC_API_KEY}"
+LLM_PROVIDER                    = "anthropic"
+LLM_MODEL                       = "claude-haiku-4-5-20251001"
+NEO4J_URI                       = "bolt://<neo4j-host-or-ip>:7688"
+NEO4J_USERNAME                  = "neo4j"
+EMBEDDING_PROVIDER              = "openai"
+EMBEDDING_API_KEY               = "${OPENAI_API_KEY}"
+EMBEDDING_MODEL                 = "openai/text-embedding-3-small"
+EMBEDDING_DIMENSIONS            = "1536"
+VECTOR_DB_PROVIDER              = "lancedb"
+VECTOR_DATASET_DATABASE_HANDLER = "lancedb"
+COGNEE_SKIP_CONNECTION_TEST     = "true"
+ENABLE_BACKEND_ACCESS_CONTROL   = "false"
+SYSTEM_ROOT_DIRECTORY           = "${REPO_ROOT}/instance/installed/06-spec-graph/cognee/.cognee"
+
+[[server]]
+name         = "github"
+transport    = "stdio"
+command      = "npx"
+args         = ["-y", "@modelcontextprotocol/server-github"]
+uses_secrets = ["github_pat_operator_dev"]
+
+[server.non_secret_env]
+
+[[server]]
+name      = "ms-docs"
+transport = "http"
+url       = "https://learn.microsoft.com/api/mcp"

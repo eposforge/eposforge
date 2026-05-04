@@ -4,6 +4,8 @@ param(
     [string]$Neo4jUsername,
     [string]$Neo4jPassword
 )
+# Recommended invocation (secrets resolved automatically):
+#   python instance/installed/12-secrets-key-management/bin/epos-secrets -- pwsh instance/installed/05-tool-transport/mcp-stdio-and-http/scripts/run-eposforge-mcp-http.ps1
 
 $ErrorActionPreference = "Stop"
 
