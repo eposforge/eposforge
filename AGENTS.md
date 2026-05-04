@@ -208,5 +208,6 @@ Use this workflow when the user provides a description of additions, deletions, 
 - Troubleshooting scratchpad: use `scratchpad/` (repo root) for ad-hoc test
   artifacts, logs, and proto-test data. This directory is gitignored. Do not
   use `instance/scripts/` as a scratchpad.
-- Rebuilding the Spec Graph: `bash instance/installed/06-spec-graph/scripts/rebuild.sh`
-  (requires `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `NEO4J_PASSWORD`).
+- Rebuilding the Spec Graph: `python instance/installed/12-secrets-key-management/bin/epos-secrets -- bash instance/installed/06-spec-graph/scripts/rebuild.sh`
+  (secrets are declared in [instance/installed/12-secrets-key-management/sops-age/secrets.toml](instance/installed/12-secrets-key-management/sops-age/secrets.toml);
+  runtime invocation is `epos-secrets -- bash instance/installed/06-spec-graph/scripts/rebuild.sh`).

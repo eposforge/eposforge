@@ -1,0 +1,5 @@
+creation_rules:
+  - path_regex: (instance/installed/12-secrets-key-management/sops-age/)?secrets\.enc\.yaml$
+    age: >-
+      age1quy7wlle4crmepgzqv0p9n5nltdumrnpg4wy5tq7hjvuqunms5xqtjm9v4
+    encrypted_regex: '^(.*)$'
