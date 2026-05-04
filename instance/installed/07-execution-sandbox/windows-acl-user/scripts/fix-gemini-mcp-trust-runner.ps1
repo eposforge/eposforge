@@ -1,4 +1,5 @@
 $p = 'C:\Users\gemini-runner\.gemini\settings.json'
+$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..\..')).Path.Replace('\\', '/')
 $newConfig = @"
 {
 	"mcpServers": {
@@ -21,7 +22,7 @@ $newConfig = @"
 		}
 	},
 	"directoryFilteringOptions": {
-		"allowedDirectories": ["<abs-path-to-repo-root>"]
+		"allowedDirectories": ["$repoRoot"]
 	},
 	"autoAccept": true
 }

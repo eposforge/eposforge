@@ -1,0 +1,33 @@
+name: Sensitive Literal Guard
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  scan-sensitive-literals:
+    name: Scan for local paths and private endpoints
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Select diff base
+        id: base
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "ref=${{ github.event.pull_request.base.sha }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=${{ github.event.before }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run sensitive literal guard
+        run: bash instance/installed/09-source-control-ci/github-and-actions/scripts/check-sensitive-literals.sh --changed-against "${{ steps.base.outputs.ref }}"

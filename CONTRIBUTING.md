@@ -10,8 +10,14 @@ research catalogs, reference adapters, and tooling are all welcome.
    anything non-trivial. Vision and component-contract changes especially
    benefit from a discussion first.
 2. Fork the repo, create a topic branch, make your change.
-3. Sign your commits with `git commit -s` (see DCO below).
-4. Open a pull request against `main`.
+3. Install repo hooks so local commits run safety checks:
+
+```bash
+bash instance/scripts/hooks/install-hooks.sh
+```
+
+4. Sign your commits with `git commit -s` (see DCO below).
+5. Open a pull request against `main`.
 
 ## Developer Certificate of Origin (DCO)
 
