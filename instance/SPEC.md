@@ -55,7 +55,7 @@ and [../01-architecture/02-components/06-spec-graph.md](../01-architecture/02-co
 | `privacy_posture` | `local` (Neo4j) / `vendor-default` (inference during indexing) |
 | `cost_hint` | free (Neo4j CE) + metered (Anthropic/OpenAI APIs for indexing) |
 | `capabilities` | ontology-grounded-extraction, entity-normalization, graph-query |
-| `invocation_surface` | CLI scripts (`instance/scripts/spec-graph-rebuild.sh`) |
+| `invocation_surface` | CLI scripts (`instance/installed/06-spec-graph/cognee/scripts/ingest_dual_container.sh`) |
 | `status` | `experimental` |
 | `query_languages` | Cypher (via Neo4j); natural language (via Neo4j MCP) |
 | `projection_format` | hybrid (graph nodes/edges + embeddings) |
@@ -70,9 +70,9 @@ Single source of truth for Component 6 adapter status in this repository.
 
 | Adapter | FULFILLS_SLOT | Status | Invocation surface | Notes |
 |---|---|---|---|---|
-| `cognee-ontology-preprocessor` | `SPEC_GRAPH` | implemented, default, experimental | `bash instance/scripts/spec-graph-rebuild.sh` | Default ontology-grounded extraction path |
-| `neo4j-ce` | `SPEC_GRAPH` | implemented, active, experimental | `instance/scripts/spec-graph-import.sh` + Neo4j MCP | Query store and Cypher/vector surface |
-| `microsoft-graphrag` | `SPEC_GRAPH` | implemented, installed-fallback, experimental | `bash instance/scripts/spec-graph-rebuild.sh --graphrag` | Opt-in GraphRAG extraction and import path |
+| `cognee-ontology-preprocessor` | `SPEC_GRAPH` | implemented, default, experimental | `bash instance/installed/06-spec-graph/cognee/scripts/ingest_dual_container.sh` | Default ontology-grounded extraction path (dual-container HTTP API) |
+| `neo4j-ce` | `SPEC_GRAPH` | implemented, active, experimental | `instance/installed/06-spec-graph/graphrag/scripts/import.sh` + Neo4j MCP | Query store and Cypher/vector surface |
+| `microsoft-graphrag` | `SPEC_GRAPH` | implemented, installed-fallback, experimental | `bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` | Opt-in GraphRAG extraction and import path |
 
 Candidate adapters remain cataloged in
 `../03-research/06-spec-graph/spec-graph.md` and are non-normative until listed
@@ -128,8 +128,8 @@ This convention is enforced in CI by
 
 ## Observable behavior
 
-1. **Trigger:** operator runs `bash instance/scripts/spec-graph-rebuild.sh` (or
-  `bash instance/scripts/spec-graph-rebuild.sh --graphrag`) or CI runs it on a
+1. **Trigger:** operator runs `bash instance/installed/06-spec-graph/cognee/scripts/ingest_dual_container.sh` (or
+  `bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` for the GraphRAG fallback) or CI runs it on a
    schedule / after significant doc batches.
 
 2. **Wipe stage:**
@@ -260,7 +260,8 @@ Changes to the following files require updating this `SPEC.md` in the
 same commit:
 
 - `instance/installed/06-spec-graph/graphrag/settings.yaml` (any key that changes observable behavior)
-- `instance/installed/06-spec-graph/scripts/rebuild.sh`
+- `instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh`
+- `instance/installed/06-spec-graph/cognee/scripts/ingest_dual_container.sh`
 - `instance/installed/06-spec-graph/graphrag/scripts/index.sh`
 - `instance/installed/06-spec-graph/graphrag/scripts/import.sh`
 - `instance/installed/06-spec-graph/cognee/scripts/cognee.py`

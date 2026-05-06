@@ -148,9 +148,8 @@ instance/           Self-host implementation for this repo
 instance/installed/06-spec-graph/graphrag/  GraphRAG project (settings, prompts, output/)
 instance/installed/06-spec-graph/cognee/    Cognee ontology-grounded extraction adapter
 instance/scripts/   hooks/ (git hook helpers only)
-instance/installed/06-spec-graph/scripts/  rebuild.sh and other Spec Graph orchestration
-instance/installed/06-spec-graph/cognee/scripts/  Cognee adapter scripts
-instance/installed/06-spec-graph/graphrag/scripts/ GraphRAG adapter scripts
+instance/installed/06-spec-graph/cognee/scripts/  Cognee adapter scripts (ingest_dual_container.sh)
+instance/installed/06-spec-graph/graphrag/scripts/ GraphRAG adapter scripts (rebuild.sh, index.sh, import.sh)
 instance/SPEC.md    Living Spec for this repo's Spec Graph adapter (Component 6)
 ```
 
@@ -183,7 +182,9 @@ Use this workflow when the user provides a description of additions, deletions, 
   *   **Living Spec Contract:** If creating or updating a spec (e.g., `instance/SPEC.md` or `01-architecture/02-components/*.md`), ensure it contains: Purpose, Observable Behavior, Inputs/Outputs, Dependencies, Non-functional Bounds (Metadata Table), and Versioning Policy.
   *   **Metadata Tables:** Ensure every Adapter and Component doc includes a machine-readable metadata table per the [Adapter Pattern](01-architecture/00-adapter-pattern.md).
 4.  **Validate & Rebuild:**
-  *   Once files are updated, offer to perform the required steps to rebuild the Spec Graph: `bash instance/installed/06-spec-graph/scripts/rebuild.sh`.
+  *   Once files are updated, offer to perform the required steps to rebuild the Spec Graph:
+      - Cognee (default): `bash instance/installed/06-spec-graph/cognee/scripts/ingest_dual_container.sh`
+      - GraphRAG (fallback): `bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh`
 
 ---
 
@@ -208,6 +209,6 @@ Use this workflow when the user provides a description of additions, deletions, 
 - Troubleshooting scratchpad: use `scratchpad/` (repo root) for ad-hoc test
   artifacts, logs, and proto-test data. This directory is gitignored. Do not
   use `instance/scripts/` as a scratchpad.
-- Rebuilding the Spec Graph: `python instance/installed/12-secrets-key-management/bin/epos-secrets -- bash instance/installed/06-spec-graph/scripts/rebuild.sh`
-  (secrets are declared in [instance/installed/12-secrets-key-management/sops-age/secrets.toml](instance/installed/12-secrets-key-management/sops-age/secrets.toml);
-  runtime invocation is `epos-secrets -- bash instance/installed/06-spec-graph/scripts/rebuild.sh`).
+- Rebuilding the Spec Graph (Cognee, default): `bash instance/installed/06-spec-graph/cognee/scripts/ingest_dual_container.sh`
+- Rebuilding the Spec Graph (GraphRAG, fallback): `python instance/installed/12-secrets-key-management/bin/epos-secrets -- bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh`
+  (secrets are declared in [instance/installed/12-secrets-key-management/sops-age/secrets.toml](instance/installed/12-secrets-key-management/sops-age/secrets.toml)).
