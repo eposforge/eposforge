@@ -1,6 +1,6 @@
-# Contributing to DarkForge
+# Contributing to EposForge
 
-Thanks for your interest in contributing. DarkForge is an open, vendor-agnostic
+Thanks for your interest in contributing. EposForge is an open, vendor-agnostic
 dark-factory pattern. Contributions of vision refinement, component contracts,
 research catalogs, reference adapters, and tooling are all welcome.
 
@@ -61,7 +61,7 @@ PRs without sign-off will be asked to amend. We do not merge unsigned commits.
 
 **Probably out of scope:**
 
-- "DarkForge should require X" changes that lock the project to a specific
+- "EposForge should require X" changes that lock the project to a specific
   vendor or protocol. The project is vendor-agnostic by design.
 - Code that lives more naturally as an adapter in someone's instance repo.
 

@@ -15,7 +15,7 @@ Products are the factory's hands. Concrete product choices are
 instance-specific.
 
 The Router selects a Dev Product Adapter per sub-task based on its
-declared metadata (capabilities, privacy posture, cost). DarkForge
+declared metadata (capabilities, privacy posture, cost). EposForge
 expects multiple Dev Product Adapters to be installed simultaneously;
 the factory chooses among them per task.
 

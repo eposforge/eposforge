@@ -7,7 +7,7 @@ source_of_truth: yes
 
 # Reference Architecture
 
-System-level view of a DarkForge instance. Shows how the twelve
+System-level view of a EposForge instance. Shows how the twelve
 components and the universal Adapter Pattern fit together. Concrete
 hardware, networks, hostnames, and tooling choices are out of scope —
 those are instance decisions.
@@ -61,7 +61,7 @@ those are instance decisions.
 └───────────────────────────────────────────────────────────────────┘
 ```
 
-The operator tier and the external tier are open: DarkForge does not
+The operator tier and the external tier are open: EposForge does not
 constrain how the operator works or which vendors are used, only how
 they're plugged in.
 
