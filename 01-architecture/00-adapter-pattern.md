@@ -9,7 +9,7 @@ source_of_truth: yes
 
 ## Why this exists once, here
 
-DarkForge defines twelve **components** — architectural slots every dark
+EposForge defines twelve **components** — architectural slots every dark
 factory needs (Spec Input, Living Spec, Dev Product, Router, Tool
 Transport, Spec Graph, Execution Sandbox, Agent Policy, Source Control +
 CI, Inference Layer, Audit & Observability, Secrets & Key Management).
@@ -79,9 +79,9 @@ audit channel).
 
 - **Not a transport spec.** How Adapters are physically distributed
   (npm package, Docker image, Python wheel, plain script, MCP server) is
-  out of scope. DarkForge cares about what an Adapter declares and does,
+  out of scope. EposForge cares about what an Adapter declares and does,
   not how it ships.
-- **Not a marketplace.** DarkForge does not run a registry service. The
+- **Not a marketplace.** EposForge does not run a registry service. The
   research folder ([../03-research/](../03-research/)) catalogs known
   Adapters per slot; instances install what they want.
 - **Not a sandbox.** Execution isolation for Adapter invocation is the

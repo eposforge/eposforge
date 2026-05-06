@@ -67,7 +67,7 @@ ef:Guardrail rdf:type owl:Class ;
 
 ef:Operator rdf:type owl:Class ;
     rdfs:label "Operator" ;
-    rdfs:comment "The human in charge of a DarkForge instance." .
+    rdfs:comment "The human in charge of a EposForge instance." .
 
 ef:DevProduct rdf:type owl:Class ;
     rdfs:label "Dev Product" ;

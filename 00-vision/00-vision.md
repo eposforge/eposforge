@@ -5,11 +5,11 @@ maturity: draft
 source_of_truth: yes
 ---
 
-# DarkForge — Vision
+# EposForge — Vision
 
 ## Mission
 
-DarkForge is the open, vendor-agnostic pattern for a **dark factory**: a
+EposForge is the open, vendor-agnostic pattern for a **dark factory**: a
 fully agentic software, platform, and (eventually) physical-execution
 factory driven by declarative intent. The operator declares what should
 exist; the factory builds, deploys, and operates it.
@@ -22,7 +22,7 @@ expressions of the same idea: machines executing human intent.
 A dark factory is not an island. Every artifact it produces — Living
 Specs, Adapters, components, research catalog entries — is publishable
 to open-source platforms in a form other dark factories (including other
-DarkForge instances) can discover, audit, and reuse on demand. The
+EposForge instances) can discover, audit, and reuse on demand. The
 endgame is **dynamic, on-demand software**: when a factory needs a
 capability, it first asks the shared corpus whether something already
 exists; only if nothing fits does it build new. Each factory's output
@@ -34,7 +34,7 @@ expands the substrate every other factory builds from.
 
 A dark factory runs on top of a managed substrate: containers and
 networking today, robotic actuators and physical workflows tomorrow.
-DarkForge does not pick the substrate. The Platform Factory matures the
+EposForge does not pick the substrate. The Platform Factory matures the
 operator's chosen substrate from "humans configure everything" to
 "agents observe, propose, execute, optimize." The pattern is the same
 whether the substrate is a single server, a colo cluster, a Kubernetes
@@ -46,7 +46,7 @@ AI is the foundation, not a feature. Every workflow assumes agentic
 execution. The factory progresses toward full autonomy: declarations
 in, production artifacts out, minimal human touchpoints.
 
-DarkForge defines the **components** of this AI factory and the
+EposForge defines the **components** of this AI factory and the
 **Adapter Pattern** that plugs concrete products (Claude Code, Cursor,
 Goose, Aider, Copilot, MCP servers, graph stores, sandboxes, etc.) into
 those components without locking the factory to any one vendor.
@@ -148,7 +148,7 @@ orchestration spine.
 
 The factory's outputs are first-class open-source artifacts, not
 internal byproducts. Every Living Spec, Adapter, component, and research
-catalog entry a DarkForge instance produces is structured to be
+catalog entry a EposForge instance produces is structured to be
 **publishable, discoverable, and reusable** by any other dark factory.
 
 This unlocks a qualitatively different mode of software production:
@@ -164,7 +164,7 @@ This unlocks a qualitatively different mode of software production:
 - **Compounding corpus.** Every factory that ships also publishes.
   The shared substrate of reusable specs and adapters grows with each
   deliverable across the ecosystem — including eposforge consuming
-  artifacts produced by other DarkForge instances, and vice versa.
+  artifacts produced by other EposForge instances, and vice versa.
 - **On-demand assembly.** At maturity, "needing software" looks less
   like a build project and more like a query: declare the intent, let
   the factory compose existing published pieces, and only generate the
@@ -178,26 +178,26 @@ collapses the cost of software for everyone.
 
 A complete dark factory should be packageable as a turnkey appliance
 (self-hosted on commodity hardware, racks of accelerators, or vendor
-reference platforms). DarkForge stays distribution-agnostic so any
+reference platforms). EposForge stays distribution-agnostic so any
 hardware partner can ship a factory in a box.
 
 ### Bootstrap progression
 
-Early in any DarkForge instance, most components don't yet exist. The
+Early in any EposForge instance, most components don't yet exist. The
 operator uses existing commercial products (Claude Code, Copilot, etc.)
 manually to build the first components. As each component ships, the
 factory increasingly uses *itself* to build the next one. The factory
 builds the factory. This recursive bootstrap is the natural maturity
 path; instances should plan for it explicitly.
 
-## What DarkForge Is Not
+## What EposForge Is Not
 
-- **Not a product.** No binary to install. DarkForge is a pattern,
+- **Not a product.** No binary to install. EposForge is a pattern,
   contracts, and a research catalog.
 - **Not opinionated about implementation.** Tool Transport doesn't
   require MCP. Spec Graph doesn't require Neo4j. Router doesn't require
   any particular agent framework. Pick your Adapters.
-- **Not a workflow engine.** DarkForge describes *what components a
+- **Not a workflow engine.** EposForge describes *what components a
   dark factory consists of*, not *how to script a particular factory's
   internal workflow*. Workflow choices are instance-level.
 

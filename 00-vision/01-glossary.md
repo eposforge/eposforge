@@ -7,7 +7,7 @@ source_of_truth: yes
 
 # Glossary and Taxonomy
 
-Shared vocabulary for DarkForge. Every other doc in this repo — and any
+Shared vocabulary for EposForge. Every other doc in this repo — and any
 agent operating against it — should use these terms as defined here. If a
 concept is missing, add it here first, then use it elsewhere.
 
@@ -69,7 +69,7 @@ A–F. The endpoint of each ladder is full autonomy within its domain.
 **Component** — An architectural slot in a dark factory (Spec Input,
 Living Spec, Dev Product, Router, Tool Transport, Spec Graph, Execution
 Sandbox, Agent Policy, Source Control + CI, Inference Layer, Audit &
-Observability, Secrets & Key Management). DarkForge defines twelve
+Observability, Secrets & Key Management). EposForge defines twelve
 components and the contract each must satisfy. See
 [../01-architecture/02-components/](../01-architecture/02-components/).
 
@@ -79,7 +79,7 @@ cost hints, invocation surface) and conform to their component's
 contract. The set of installed Adapters is queryable; the Router uses
 Adapter metadata to make routing decisions.
 
-**Adapter Pattern** — DarkForge's universal plug-in pattern. Applies
+**Adapter Pattern** — EposForge's universal plug-in pattern. Applies
 uniformly across all twelve components. See
 [../01-architecture/00-adapter-pattern.md](../01-architecture/00-adapter-pattern.md).
 
@@ -102,7 +102,7 @@ may do (e.g., "Platform agents may not touch application containers").
 (signed commits, protected branches, secret access controls, cost
 budgets, production-merge approval).
 
-**Operator** — The human in charge of a DarkForge instance. In a mature
+**Operator** — The human in charge of a EposForge instance. In a mature
 factory, the operator declares capabilities, sets policy, and approves
 final gates; they do not write code or configure services directly.
 
@@ -120,7 +120,7 @@ Tool Transport, evaluates results, iterates. The Router is the factory's
 
 **Tool Transport** — The protocol/contract by which Dev Products
 consume capabilities (git, file ops, browser, shell, graph queries,
-etc.). DarkForge defines the required capability set; specific
+etc.). EposForge defines the required capability set; specific
 transports (e.g., MCP) are Adapters.
 
 **Living Spec** — A canonical spec document (commonly `SPEC.md`) that
@@ -160,7 +160,7 @@ When the phrase specifically means software authoring, tighten to
 **Product Factory**. When it specifically means autonomous ops, tighten
 to **Platform Factory**.
 
-**"Registry"** is not a DarkForge component. Earlier framings used "Dev
+**"Registry"** is not a EposForge component. Earlier framings used "Dev
 Product Registry" as a slot; the current model treats the catalog as
 emergent from installed Adapters per the universal Adapter Pattern.
 

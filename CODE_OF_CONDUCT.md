@@ -2,7 +2,7 @@
 
 This project adopts the [Contributor Covenant, version 2.1](https://www.contributor-covenant.org/version/2/1/code_of_conduct/)
 as its Code of Conduct. All contributors, maintainers, and participants
-in DarkForge community spaces are expected to abide by it.
+in EposForge community spaces are expected to abide by it.
 
 ## Reporting
 
