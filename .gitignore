@@ -38,3 +38,10 @@ instance/installed/06-spec-graph/cognee/.cognee/
 
 # Troubleshooting scratchpad — never commit
 scratchpad/
+
+# Python runtime cache artifacts
+**/__pycache__/
+**/*.pyc
+
+# Generated machine authorization request artifact
+epos-machine-request.json
