@@ -140,7 +140,12 @@ def _set_age_recipients(sops_yaml: pathlib.Path, recipients: Iterable[str]) -> N
     lines = _load_yaml_lines(sops_yaml)
     body_start, body_end, body_indent, _ = _parse_age_recipients(lines)
 
-    new_body = [f"{body_indent}{key}\n" for key in deduped]
+    # .sops.yaml stores age recipients in a folded scalar. Separate items with
+    # commas so the folded YAML value stays parseable by sops after line folding.
+    new_body = [
+        f"{body_indent}{key}{',' if index < len(deduped) - 1 else ''}\n"
+        for index, key in enumerate(deduped)
+    ]
     new_lines = lines[:body_start] + new_body + lines[body_end:]
     sops_yaml.write_text("".join(new_lines), encoding="utf-8")
 
@@ -267,6 +272,10 @@ def _authorize_cmd(args: argparse.Namespace) -> int:
             return 1
 
         _set_age_recipients(sops_yaml, existing + [pubkey])
+
+    # Normalize the serialized recipient block before invoking sops. This keeps
+    # folded YAML from collapsing multiple keys into one malformed recipient.
+    _set_age_recipients(sops_yaml, existing)
 
     # Change to sops-age directory for sops updatekeys to find .sops.yaml
     sops_dir = sops_yaml.parent
