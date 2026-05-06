@@ -25,7 +25,7 @@ AGE_PUBKEY_RE = re.compile(r"^age1[0-9a-z]{58}$")
 
 def _repo_root() -> pathlib.Path:
     # setup_core.py -> scripts -> sops-age -> 12-secrets-key-management -> installed -> instance -> repo
-    return pathlib.Path(__file__).resolve().parents[6]
+    return pathlib.Path(__file__).resolve().parents[5]
 
 
 def _default_key_path() -> pathlib.Path:
@@ -126,7 +126,7 @@ def _parse_age_recipients(lines: list[str]) -> tuple[int, int, str, list[str]]:
             continue
         break
 
-    body_values = "".join(line.strip() for line in lines[body_start:body_end]).strip()
+    body_values = " ".join(line.strip() for line in lines[body_start:body_end]).strip()
     recipients = [token for token in re.split(r"[\s,]+", body_values) if token]
 
     return body_start, body_end, body_indent, recipients
@@ -150,11 +150,14 @@ def _request_cmd(args: argparse.Namespace) -> int:
     pubkey = _ensure_age_key(key_path)
     _validate_pubkey(pubkey)
 
+    hostname = args.hostname or socket.gethostname()
+    fingerprint = _fingerprint(pubkey)
+
     payload = {
         "schema_version": "1",
-        "hostname": args.hostname or socket.gethostname(),
+        "hostname": hostname,
         "public_key": pubkey,
-        "fingerprint": _fingerprint(pubkey),
+        "fingerprint": fingerprint,
         "created_at": dt.datetime.now(dt.timezone.utc).isoformat(),
         "key_path": str(key_path),
     }
@@ -162,31 +165,63 @@ def _request_cmd(args: argparse.Namespace) -> int:
     output = pathlib.Path(args.output) if args.output else pathlib.Path.cwd() / "epos-machine-request.json"
     output.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
-    print(f"[OK] Wrote machine request to {output}")
+    # Interactive mode: display everything and prompt to save private key
+    print("\n" + "=" * 70)
+    print("MACHINE AUTHORIZATION REQUEST")
+    print("=" * 70)
+    print(f"\nMachine:    {hostname}")
+    print(f"Fingerprint: {fingerprint}")
     print(f"Public key: {pubkey}")
-    print(f"Fingerprint: {payload['fingerprint']}")
-    print("Share the request JSON and fingerprint with the approving operator out-of-band.")
+    print(f"\n⚠️  SAVE THIS PRIVATE KEY TO YOUR SECRETS VAULT:")
+    print("\nPrivate key (copy entire file):")
+    print("-" * 70)
+    print(key_path.read_text(encoding="utf-8"), end="")
+    print("-" * 70)
+    print(f"\n✅ Once saved, press Enter to proceed...")
+    saved = input()
+
+    print(f"\n📋 Share the following with your approver to authorize this machine:")
+    print(f"\n   epos-authorize {hostname} {fingerprint} {pubkey}")
+    print()
     return 0
 
 
 def _authorize_cmd(args: argparse.Namespace) -> int:
     _require_tool("sops")
+    _require_tool("git")
 
     repo_root = pathlib.Path(args.repo_root) if args.repo_root else _repo_root()
     sops_yaml = repo_root / "instance" / "installed" / "12-secrets-key-management" / "sops-age" / ".sops.yaml"
     enc_yaml = repo_root / "instance" / "installed" / "12-secrets-key-management" / "sops-age" / "secrets.enc.yaml"
 
+    # Debug output
+    # print(f"DEBUG: machine={args.machine!r}, fingerprint={args.fingerprint!r}, pubkey={getattr(args, 'pubkey', None)!r}, public_key={args.public_key!r}", file=sys.stderr)
+
+    # Support multiple input modes:
+    # 1. Request file (backward compat)
+    # 2. Three positional args: machine fingerprint pubkey (from request output)
+    # 3. Flags + positional: --public-key with machine/fingerprint
+    # 4. Interactive mode
     if args.request_file:
         request_data = json.loads(pathlib.Path(args.request_file).read_text(encoding="utf-8"))
         pubkey = request_data["public_key"]
         claimed_fingerprint = request_data.get("fingerprint")
         hostname = request_data.get("hostname", "unknown")
-    else:
-        if not args.public_key:
-            raise RuntimeError("Either --request-file or --public-key is required")
+    elif args.machine and args.fingerprint and getattr(args, 'pubkey', None):
+        # All three positional args provided
+        pubkey = args.pubkey.strip()
+        claimed_fingerprint = args.fingerprint
+        hostname = args.machine
+    elif args.machine and args.fingerprint and args.public_key:
+        # Backward compat: --public-key flag with machine/fingerprint
         pubkey = args.public_key.strip()
         claimed_fingerprint = args.fingerprint
-        hostname = args.hostname or "unknown"
+        hostname = args.machine
+    else:
+        # Interactive mode: prompt for machine name and fingerprint
+        hostname = args.machine or input("Machine name: ").strip()
+        claimed_fingerprint = args.fingerprint or input("Fingerprint (from requesting machine): ").strip()
+        pubkey = getattr(args, 'pubkey', None) or args.public_key or input("Public key (age1...): ").strip()
 
     _validate_pubkey(pubkey)
     computed = _fingerprint(pubkey)
@@ -204,18 +239,45 @@ def _authorize_cmd(args: argparse.Namespace) -> int:
         print(f"Fingerprint: {computed}")
         return 0
 
-    if not args.yes:
-        print("Authorize recipient:")
-        print(f"  Hostname: {hostname}")
-        print(f"  Public key: {pubkey}")
-        print(f"  Fingerprint: {computed}")
-        answer = input("Type the fingerprint to confirm authorization: ").strip()
-        if answer != computed:
-            raise RuntimeError("Fingerprint confirmation failed; aborting")
+    # Interactive approval
+    print("\n" + "=" * 70)
+    print("AUTHORIZATION CONFIRMATION")
+    print("=" * 70)
+    print(f"\nMachine:    {hostname}")
+    print(f"Fingerprint: {computed}")
+    answer = input("\nApprove this machine? (y/n): ").strip().lower()
+    if answer != "y":
+        print("Authorization cancelled.")
+        return 1
 
     _set_age_recipients(sops_yaml, existing + [pubkey])
 
-    _run(["sops", "updatekeys", str(enc_yaml)], check=True)
+    # Change to sops-age directory for sops updatekeys to find .sops.yaml
+    sops_dir = sops_yaml.parent
+    old_cwd = os.getcwd()
+    try:
+        os.chdir(sops_dir)
+        _run(["sops", "updatekeys", str(enc_yaml)], check=True)
+    finally:
+        os.chdir(old_cwd)
+
+    # Auto-commit
+    os.chdir(repo_root)
+    _run(["git", "add", str(sops_yaml), str(enc_yaml)], check=True)
+    commit_msg = f"sops: authorize machine {hostname} ({computed})"
+    _run(["git", "commit", "-m", commit_msg], check=True)
+
+    print("\n✅ Authorization complete!")
+    print(f"\nNext steps on {hostname}:")
+    print(f"  1. git pull")
+    print(f"  2. epos-secrets --check")
+    print(f"\n")
+
+    # Offer to push
+    push = input("Push changes now? (y/n): ").strip().lower()
+    if push == "y":
+        _run(["git", "push"], check=True)
+        print(f"✅ Pushed. Run 'git pull' on {hostname} to receive updates.")
 
     audit = {
         "ts": dt.datetime.now(dt.timezone.utc).isoformat(),
@@ -225,7 +287,6 @@ def _authorize_cmd(args: argparse.Namespace) -> int:
         "fingerprint": computed,
     }
     print(json.dumps(audit))
-    print("[OK] Recipient authorized and secrets.enc.yaml re-keyed. Commit .sops.yaml and secrets.enc.yaml.")
     return 0
 
 
@@ -240,12 +301,14 @@ def _build_parser() -> argparse.ArgumentParser:
     req.set_defaults(func=_request_cmd)
 
     auth = sub.add_parser("authorize", help="Authorize a machine recipient and re-key secrets")
+    auth.add_argument("machine", nargs="?", help="Machine name to authorize")
+    auth.add_argument("fingerprint", nargs="?", help="Fingerprint from requesting machine")
+    auth.add_argument("pubkey", nargs="?", help="Public key (age1...) from requesting machine")
     auth.add_argument("--repo-root", help="Override repository root path")
     auth.add_argument("--request-file", help="Path to machine request JSON")
     auth.add_argument("--public-key", help="Age public key when request-file is not used")
-    auth.add_argument("--fingerprint", help="Claimed short fingerprint for public key")
-    auth.add_argument("--hostname", help="Hostname for audit output when not using request-file")
-    auth.add_argument("-y", "--yes", action="store_true", help="Skip interactive fingerprint prompt")
+    auth.add_argument("--hostname", help="Hostname for audit output (deprecated; use positional machine)")
+    auth.add_argument("-y", "--yes", action="store_true", help="Skip interactive prompt")
     auth.set_defaults(func=_authorize_cmd)
 
     return parser
