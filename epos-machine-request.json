@@ -1,8 +1,0 @@
-{
-  "schema_version": "1",
-  "hostname": "test-linux",
-  "public_key": "age15rktdsez8gdphuz2htk0l8yd2fzysq4t0s55qmn35s42kzmyvv6sh0c6jk",
-  "fingerprint": "3eb687d82dc8c048",
-  "created_at": "2026-05-06T03:00:41.311683+00:00",
-  "key_path": "/home/cdfadmin/.config/sops/age/keys.txt"
-}
