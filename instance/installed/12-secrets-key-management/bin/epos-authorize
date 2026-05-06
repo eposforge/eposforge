@@ -13,7 +13,7 @@ import sys
 
 
 def main() -> int:
-    repo_root = pathlib.Path(__file__).resolve().parents[5]
+    repo_root = pathlib.Path(__file__).resolve().parents[4]
     core = repo_root / "instance" / "installed" / "12-secrets-key-management" / "sops-age" / "scripts" / "setup_core.py"
     cmd = [sys.executable, str(core), "authorize", *sys.argv[1:]]
     return subprocess.call(cmd)
