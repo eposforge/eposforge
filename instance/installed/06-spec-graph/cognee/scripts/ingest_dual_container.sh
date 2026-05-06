@@ -147,21 +147,42 @@ fi
 
 docker exec "${API_CONTAINER}" python - <<PY
 import asyncio
+import os
 import cognee
 
 CORPUS_DIR = "${CORPUS_CONTAINER_DIR}"
 DO_PRUNE = ${PRUNE_FLAG}
+
+LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "anthropic")
+LLM_MODEL = os.environ.get("LLM_MODEL", "claude-haiku-4-5-20251001")
+LLM_API_KEY = os.environ.get("LLM_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")
+
+if not LLM_API_KEY:
+    raise RuntimeError("Missing LLM API key. Set LLM_API_KEY or ANTHROPIC_API_KEY in container env.")
+
+cognee.config.set_llm_provider(LLM_PROVIDER)
+cognee.config.set_llm_model(LLM_MODEL)
+cognee.config.set_llm_api_key(LLM_API_KEY)
+
+# Keep embeddings local and deterministic for this deployment.
+cognee.config.set_embedding_provider("fastembed")
+cognee.config.set_embedding_model("BAAI/bge-small-en-v1.5")
 
 async def run() -> None:
     if DO_PRUNE:
         print("Pruning existing Cognee state...")
         cognee.prune()
 
+    print(f"LLM provider: {LLM_PROVIDER}")
+    print(f"LLM model: {LLM_MODEL}")
+    print("Embedding provider: fastembed")
     print(f"Adding corpus from {CORPUS_DIR} ...")
     await cognee.add(CORPUS_DIR)
+    print("ADD_OK")
 
     print("Running cognify...")
     await cognee.cognify()
+    print("COGNIFY_OK")
 
     print("Ingestion complete.")
 
