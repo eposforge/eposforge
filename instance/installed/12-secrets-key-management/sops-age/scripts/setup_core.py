@@ -145,6 +145,14 @@ def _set_age_recipients(sops_yaml: pathlib.Path, recipients: Iterable[str]) -> N
     sops_yaml.write_text("".join(new_lines), encoding="utf-8")
 
 
+def _parse_encrypted_recipients(enc_yaml: pathlib.Path) -> list[str]:
+    text = enc_yaml.read_text(encoding="utf-8")
+    recipients = re.findall(r"^\s*- recipient:\s+(age1[0-9a-z]{58})\s*$", text, flags=re.MULTILINE)
+    for key in recipients:
+        _validate_pubkey(key)
+    return recipients
+
+
 def _request_cmd(args: argparse.Namespace) -> int:
     key_path = pathlib.Path(args.key_path) if args.key_path else _default_key_path()
     pubkey = _ensure_age_key(key_path)
@@ -234,23 +242,31 @@ def _authorize_cmd(args: argparse.Namespace) -> int:
     lines = _load_yaml_lines(sops_yaml)
     _, _, _, existing = _parse_age_recipients(lines)
 
-    if pubkey in existing:
-        print("[SKIP] Recipient already present in .sops.yaml")
+    enc_recipients = _parse_encrypted_recipients(enc_yaml)
+
+    if pubkey in existing and pubkey in enc_recipients:
+        print("[SKIP] Recipient already present in .sops.yaml and secrets.enc.yaml")
         print(f"Fingerprint: {computed}")
         return 0
 
-    # Interactive approval
-    print("\n" + "=" * 70)
-    print("AUTHORIZATION CONFIRMATION")
-    print("=" * 70)
-    print(f"\nMachine:    {hostname}")
-    print(f"Fingerprint: {computed}")
-    answer = input("\nApprove this machine? (y/n): ").strip().lower()
-    if answer != "y":
-        print("Authorization cancelled.")
-        return 1
+    needs_rekey_only = pubkey in existing and pubkey not in enc_recipients
 
-    _set_age_recipients(sops_yaml, existing + [pubkey])
+    if needs_rekey_only:
+        print("[REPAIR] Recipient already present in .sops.yaml but missing from secrets.enc.yaml")
+        print(f"Fingerprint: {computed}")
+    else:
+        # Interactive approval
+        print("\n" + "=" * 70)
+        print("AUTHORIZATION CONFIRMATION")
+        print("=" * 70)
+        print(f"\nMachine:    {hostname}")
+        print(f"Fingerprint: {computed}")
+        answer = "y" if args.yes else input("\nApprove this machine? (y/n): ").strip().lower()
+        if answer != "y":
+            print("Authorization cancelled.")
+            return 1
+
+        _set_age_recipients(sops_yaml, existing + [pubkey])
 
     # Change to sops-age directory for sops updatekeys to find .sops.yaml
     sops_dir = sops_yaml.parent
@@ -264,7 +280,11 @@ def _authorize_cmd(args: argparse.Namespace) -> int:
     # Auto-commit
     os.chdir(repo_root)
     _run(["git", "add", str(sops_yaml), str(enc_yaml)], check=True)
-    commit_msg = f"sops: authorize machine {hostname} ({computed})"
+    commit_msg = (
+        f"sops: repair machine recipient {hostname} ({computed})"
+        if needs_rekey_only
+        else f"sops: authorize machine {hostname} ({computed})"
+    )
     _run(["git", "commit", "-m", commit_msg], check=True)
 
     print("\n✅ Authorization complete!")
