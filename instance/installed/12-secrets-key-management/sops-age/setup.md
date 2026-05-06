@@ -10,6 +10,9 @@ Install `age` and `sops` (Windows):
 winget install FiloSottile.age Mozilla.SOPS
 ```
 
+Linux installs are currently manual (no package-manager-agnostic installer script yet).
+Install `age`, install `sops`, and ensure both are on `PATH`.
+
 ## First-time setup
 
 Run from the **repo root**:
@@ -18,39 +21,18 @@ Run from the **repo root**:
 pwsh instance/installed/12-secrets-key-management/sops-age/setup.ps1
 ```
 
-The script:
-1. Refreshes `PATH` so winget-installed binaries are visible in the current session
-2. Generates an age keypair at `%APPDATA%\sops\age\keys.txt` (skips if one already exists)
-3. Patches `.sops.yaml` with your real age public key (replaces the `age1<operator-pubkey>` placeholder)
-4. Opens `secrets.plaintext.yaml` in Notepad — fill in your values, File → Save, close Notepad
-5. Encrypts the plaintext to `secrets.enc.yaml` and deletes the plaintext file immediately
+Linux machine request flow (repo root):
 
-After running, commit `.sops.yaml` and `secrets.enc.yaml`.
-
-## What to put in the plaintext file
-
-```yaml
-anthropic_api_key: sk-ant-...
-openai_api_key: sk-proj-...
-neo4j_password: your-neo4j-password
-github_pat_operator_dev: ghp_...
-# gemini_api_key is optional — uncomment if you have one
-# gemini_api_key: AIza...
+```bash
+bash instance/installed/12-secrets-key-management/sops-age/setup.sh
 ```
 
-Key names must match the `logical_name` fields in [secrets.toml](secrets.toml). Do not rename them.
+Both wrappers call the same Python core and perform the same flow:
+1. Ensure an age key exists for this machine.
+2. Emit `epos-machine-request.json` with hostname, public key, and short fingerprint.
+3. Print the fingerprint for out-of-band verification.
 
-## Changing, adding, or removing secrets
-
-Re-run the setup script:
-
-```powershell
-pwsh instance/installed/12-secrets-key-management/sops-age/setup.ps1
-```
-
-Because `secrets.enc.yaml` already exists, the script decrypts it to plaintext, opens it in Notepad, and re-encrypts after you save and close. The plaintext file is deleted immediately after encryption.
-
-If you add or remove a key, also update [secrets.toml](secrets.toml) to match — that's where the resolver learns what to inject and what to validate.
+After running, send `epos-machine-request.json` and the fingerprint to the approving operator.
 
 ## Verifying secrets are resolved correctly
 
@@ -80,18 +62,28 @@ python instance/installed/12-secrets-key-management/bin/epos-secrets --only ANTH
 
 The MCP servers (cognee, github) are already configured to use the resolver via the generated `.mcp.json` and `.vscode/mcp.json`. After running setup, reload your IDE.
 
+## Editing encrypted secret values (operator)
+
+Machine setup does not edit `secrets.enc.yaml`. To add or rotate secret values, use `sops` directly from this directory:
+
+```sh
+sops secrets.enc.yaml
+```
+
+If you add or remove keys, update [secrets.toml](secrets.toml) to match the `logical_name` manifest.
+
 ## Adding a second machine (Linux or Windows)
 
-1. Generate a new age keypair on the new machine:
-   - Linux: `age-keygen -o ~/.config/sops/age/keys.txt`
-   - Windows: `age-keygen -o "$env:APPDATA\sops\age\keys.txt"`
-2. Send the printed public key (`age1...`) to the operator
-3. Operator adds it to `.sops.yaml` recipients and runs:
+1. On the new machine, generate a request payload:
+   - Linux: `bash instance/installed/12-secrets-key-management/sops-age/setup.sh`
+   - Windows: `python instance/installed/12-secrets-key-management/bin/epos-machine-request`
+2. Send `epos-machine-request.json` and the printed fingerprint to the operator out-of-band.
+3. On an already-authorized operator machine, approve it:
    ```sh
-   sops updatekeys instance/installed/12-secrets-key-management/sops-age/secrets.enc.yaml
+   python instance/installed/12-secrets-key-management/bin/epos-authorize --request-file epos-machine-request.json
    ```
-4. Commit and push `.sops.yaml` and the re-keyed `secrets.enc.yaml`
-5. Pull on the new machine, then run `epos-secrets --check` to verify
+4. Commit and push `.sops.yaml` and `secrets.enc.yaml`.
+5. Pull on the new machine, then run `python instance/installed/12-secrets-key-management/bin/epos-secrets --check`.
 
 ## Key storage
 

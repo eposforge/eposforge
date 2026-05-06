@@ -52,7 +52,7 @@ mechanism and is GOVERNED_BY the no-plaintext-on-disk principle in this repo's c
 | `sops_config` | `.sops.yaml` (this directory) |
 | `age_key_path_linux` | `~/.config/sops/age/keys.txt` |
 | `age_key_path_windows` | `%APPDATA%\sops\age\keys.txt` |
-| `age_key_source_of_truth` | `operator-password-vault:eposforge/age-private-key` |
+| `age_key_source_of_truth` | `operator-password-vault:eposforge/age-private-key/<hostname>` |
 | `manifest_file` | `secrets.toml` (this directory) |
 | `resolver` | `instance/installed/12-secrets-key-management/bin/epos-secrets` |
 
@@ -91,20 +91,38 @@ user's GitHub PAT (`github_pat_sandbox`) is a separate token stored in the
 sudo apt install age sops          # or: brew install age sops
 age-keygen -o ~/.config/sops/age/keys.txt && chmod 600 ~/.config/sops/age/keys.txt
 ```
-Send the printed public key to the operator. Operator adds it as a recipient in
-`.sops.yaml` and runs:
+Or use the machine request helper:
+
 ```sh
-sops updatekeys instance/installed/12-secrets-key-management/sops-age/secrets.enc.yaml
+bash instance/installed/12-secrets-key-management/sops-age/setup.sh
 ```
-Commit and pull. Then copy the matching private key from the operator password vault into
-`~/.config/sops/age/keys.txt`.
+
+This writes `epos-machine-request.json` and prints a short fingerprint for out-of-band
+approval.
 
 ### Windows
 
 ```powershell
 winget install FiloSottile.age Mozilla.SOPS
 ```
-Copy age private key from password vault into `%APPDATA%\sops\age\keys.txt`.
+
+Then generate a machine request payload:
+
+```powershell
+python instance/installed/12-secrets-key-management/bin/epos-machine-request
+```
+
+Operator-side approval (Linux or Windows):
+
+```sh
+python instance/installed/12-secrets-key-management/bin/epos-authorize --request-file epos-machine-request.json
+```
+
+After the approval commit is pulled, verify on the target machine:
+
+```sh
+python instance/installed/12-secrets-key-management/bin/epos-secrets --check
+```
 
 ### Initializing a fresh encrypted file
 

@@ -1,0 +1,17 @@
+#!/usr/bin/env python3
+"""Generate a machine authorization request for sops-age recipients."""
+
+import pathlib
+import subprocess
+import sys
+
+
+def main() -> int:
+    repo_root = pathlib.Path(__file__).resolve().parents[3]
+    core = repo_root / "instance" / "installed" / "12-secrets-key-management" / "sops-age" / "scripts" / "setup_core.py"
+    cmd = [sys.executable, str(core), "request", *sys.argv[1:]]
+    return subprocess.call(cmd)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
