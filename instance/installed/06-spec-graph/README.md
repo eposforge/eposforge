@@ -45,7 +45,7 @@ export NEO4J_PASSWORD=your-neo4j-password
 
 # 5. Run the GraphRAG fallback path explicitly
 cd ../../..                         # repo root
-bash instance/scripts/spec-graph-rebuild.sh --graphrag
+bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh
 ```
 
 > **Note:** The first index run creates `output/lancedb/` (the vector
@@ -136,7 +136,7 @@ ORDER BY score DESC LIMIT 5;
 
 ## Verification
 
-After a full rebuild (`bash instance/installed/06-spec-graph/scripts/rebuild.sh`), confirm
+After a full rebuild (`bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh`), confirm
 the vector indexes are online and fully populated:
 
 ```bash
