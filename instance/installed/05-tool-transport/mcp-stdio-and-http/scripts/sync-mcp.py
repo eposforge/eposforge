@@ -163,7 +163,7 @@ def _generate_mcp_json(servers: list[dict], runtime_map: dict[str, str]) -> dict
         name = server["name"]
         transport = server["transport"]
 
-        if transport == "http":
+        if transport in ("http", "sse"):
             mcp_servers[name] = {"url": server["url"]}
         elif transport == "stdio":
             wrapped_cmd, env_block = _wrap_with_epos_secrets(server, runtime_map)
@@ -193,9 +193,9 @@ def _generate_vscode_mcp_json(servers: list[dict], runtime_map: dict[str, str]) 
         name = server["name"]
         transport = server["transport"]
 
-        if transport == "http":
+        if transport in ("http", "sse"):
             vscode_servers[name] = {
-                "type": "http",
+                "type": transport,
                 "url": server["url"],
             }
         elif transport == "stdio":

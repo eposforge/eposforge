@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
-"""Generate a machine authorization request for sops-age recipients."""
+"""Generate a machine authorization request for sops-age recipients.
+
+Usage:
+  epos-machine-request
+
+This script generates an age key pair, displays the private key with
+instructions to save it to your secrets vault, and waits for confirmation.
+
+Share the displayed fingerprint with your approver, who will then run:
+  epos-authorize <machine> <fingerprint> <pubkey>
+"""
 
 import pathlib
 import subprocess
@@ -7,7 +17,7 @@ import sys
 
 
 def main() -> int:
-    repo_root = pathlib.Path(__file__).resolve().parents[3]
+    repo_root = pathlib.Path(__file__).resolve().parents[5]
     core = repo_root / "instance" / "installed" / "12-secrets-key-management" / "sops-age" / "scripts" / "setup_core.py"
     cmd = [sys.executable, str(core), "request", *sys.argv[1:]]
     return subprocess.call(cmd)
