@@ -1,15 +1,32 @@
 #!/usr/bin/env bash
 # Ingest the EposForge markdown corpus into Cognee using the running dual-container stack.
 #
+# This script uses the Cognee HTTP REST API — it does NOT exec Python inside the
+# running API container.  Using docker-exec Python while the API server is running
+# causes Ladybug embedded-graph DB lock conflicts.
+#
 # Target containers:
-#   - dkr-cgnee-api (Cognee backend/API)
-#   - dkr-neo4j-01 (graph database)
+#   - dkr-cgnee-api (Cognee backend/API, must be running and healthy)
 #
 # Usage:
 #   bash instance/installed/06-spec-graph/cognee/scripts/ingest_dual_container.sh
 #   bash instance/installed/06-spec-graph/cognee/scripts/ingest_dual_container.sh --skip-prune
 #   bash instance/installed/06-spec-graph/cognee/scripts/ingest_dual_container.sh --smoke
 #   bash instance/installed/06-spec-graph/cognee/scripts/ingest_dual_container.sh --smoke --max-files 8
+#
+# Prune behaviour:
+#   By default (no --skip-prune), the script performs a full reset before ingest:
+#     1. Stops dkr-cgnee-api and dkr-cgnee-mcp
+#     2. Wipes ./data/cognee_system/databases/ using a temporary Alpine container
+#     3. Restarts the stack and waits for healthy
+#   This ensures a clean slate and avoids vector-dimension mismatches when
+#   the embedding provider or model has changed since the last run.
+#
+# Requirements:
+#   - docker and rsync on PATH
+#   - dkr-cgnee-api is running and healthy (or will be after prune+restart)
+#   - COGNEE_COMPOSE_DIR env var (default: /mnt/raid-storage/docker-volume-mounts/cognee)
+#   - COGNEE_DATA_DIR env var (default: ${COGNEE_COMPOSE_DIR}/data/cognee_system)
 
 set -euo pipefail
 
@@ -17,12 +34,17 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../../../../.." && pwd)"
 
 API_CONTAINER="dkr-cgnee-api"
+DATASET_NAME="eposforge"
 CORPUS_HOST_DIR="$(mktemp -d /tmp/eposforge-corpus.XXXXXX)"
 CORPUS_CONTAINER_DIR="/tmp/eposforge-corpus"
+COGNEE_COMPOSE_DIR="${COGNEE_COMPOSE_DIR:-/mnt/raid-storage/docker-volume-mounts/cognee}"
+COGNEE_DB_DIR="${COGNEE_DATA_DIR:-${COGNEE_COMPOSE_DIR}/data/cognee_system}"
+
 SKIP_PRUNE=false
 SKIP_PRUNE_SET=false
 SMOKE=false
 MAX_FILES=0
+BATCH_SIZE=50   # max files per /api/v1/add POST
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -69,21 +91,73 @@ cleanup() {
 }
 trap cleanup EXIT
 
-if ! command -v docker >/dev/null 2>&1; then
-  echo "ERROR: docker is not available on PATH." >&2
-  exit 1
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+api_curl() {
+  # Run a curl command inside the API container (avoids publishing port 8000).
+  # Usage: api_curl [curl-args...]
+  docker exec "${API_CONTAINER}" sh -c "curl -s $*"
+}
+
+wait_healthy() {
+  local container="$1"
+  local max_wait="${2:-120}"
+  local elapsed=0
+  echo "    Waiting for ${container} to become healthy (max ${max_wait}s)..."
+  while true; do
+    local status
+    status="$(docker inspect --format='{{.State.Health.Status}}' "${container}" 2>/dev/null || echo "missing")"
+    if [[ "${status}" == "healthy" ]]; then
+      echo "    ${container} is healthy."
+      return 0
+    fi
+    if [[ "${elapsed}" -ge "${max_wait}" ]]; then
+      echo "ERROR: ${container} did not become healthy within ${max_wait}s (status: ${status})." >&2
+      return 1
+    fi
+    sleep 5
+    elapsed=$((elapsed + 5))
+  done
+}
+
+# ---------------------------------------------------------------------------
+# Pre-flight
+# ---------------------------------------------------------------------------
+for cmd in docker rsync; do
+  if ! command -v "${cmd}" >/dev/null 2>&1; then
+    echo "ERROR: '${cmd}' is not available on PATH." >&2
+    exit 1
+  fi
+done
+
+# ---------------------------------------------------------------------------
+# Prune: stop stack, wipe databases, restart
+# ---------------------------------------------------------------------------
+if [[ "${SKIP_PRUNE}" == "false" ]]; then
+  echo "==> Pruning: stopping Cognee stack and wiping databases..."
+  (cd "${COGNEE_COMPOSE_DIR}" && docker compose stop dkr-cgnee-api dkr-cgnee-mcp 2>/dev/null) || true
+
+  echo "    Wiping ${COGNEE_DB_DIR}/databases/ ..."
+  docker run --rm \
+    -v "${COGNEE_DB_DIR}:/cognee_system" \
+    alpine sh -c "rm -rf /cognee_system/databases && mkdir /cognee_system/databases"
+
+  echo "    Restarting stack..."
+  (cd "${COGNEE_COMPOSE_DIR}" && docker compose up -d dkr-cgnee-api dkr-cgnee-mcp)
+  wait_healthy "${API_CONTAINER}"
+else
+  # Verify the container is already running when skipping prune.
+  if ! docker ps --format '{{.Names}}' | grep -qx "${API_CONTAINER}"; then
+    echo "ERROR: Container '${API_CONTAINER}' is not running (required when --skip-prune is set)." >&2
+    exit 1
+  fi
+  wait_healthy "${API_CONTAINER}"
 fi
 
-if ! command -v tar >/dev/null 2>&1; then
-  echo "ERROR: tar is not available on PATH." >&2
-  exit 1
-fi
-
-if ! docker ps --format '{{.Names}}' | grep -qx "${API_CONTAINER}"; then
-  echo "ERROR: Container '${API_CONTAINER}' is not running." >&2
-  exit 1
-fi
-
+# ---------------------------------------------------------------------------
+# Build corpus snapshot
+# ---------------------------------------------------------------------------
 echo "==> Building markdown/ttl corpus snapshot from repo..."
 search_roots=(
   "00-vision"
@@ -122,7 +196,7 @@ if [[ "${MAX_FILES}" -gt 0 ]]; then
     for file_path in "${corpus_files[@]:${MAX_FILES}}"; do
       rm -f "${file_path}"
     done
-      find "${CORPUS_HOST_DIR}" -mindepth 1 -type d -empty -delete
+    find "${CORPUS_HOST_DIR}" -mindepth 1 -type d -empty -delete
   fi
   doc_count="$(find "${CORPUS_HOST_DIR}" -type f \( -name '*.md' -o -name '*.ttl' \) | wc -l | tr -d ' ')"
   echo "    Limited corpus to ${doc_count} documents (max-files=${MAX_FILES})"
@@ -134,59 +208,74 @@ else
   echo "    Mode: full"
 fi
 
+# ---------------------------------------------------------------------------
+# Copy corpus into container
+# ---------------------------------------------------------------------------
 echo "==> Copying corpus into ${API_CONTAINER}:${CORPUS_CONTAINER_DIR}"
-docker exec "${API_CONTAINER}" sh -lc "rm -rf '${CORPUS_CONTAINER_DIR}' && mkdir -p '${CORPUS_CONTAINER_DIR}'"
+docker exec "${API_CONTAINER}" sh -c "rm -rf '${CORPUS_CONTAINER_DIR}' && mkdir -p '${CORPUS_CONTAINER_DIR}'"
 tar -C "${CORPUS_HOST_DIR}" -cf - . | docker exec -i "${API_CONTAINER}" tar -C "${CORPUS_CONTAINER_DIR}" -xf -
 
-echo "==> Running Cognee ingestion inside ${API_CONTAINER}"
-if [[ "${SKIP_PRUNE}" == "true" ]]; then
-  PRUNE_FLAG="false"
-else
-  PRUNE_FLAG="true"
+# ---------------------------------------------------------------------------
+# Add: upload corpus via HTTP API in batches
+# ---------------------------------------------------------------------------
+echo "==> Uploading corpus to Cognee via POST /api/v1/add (dataset=${DATASET_NAME}, batch_size=${BATCH_SIZE})..."
+mapfile -t all_files < <(docker exec "${API_CONTAINER}" find "${CORPUS_CONTAINER_DIR}" -type f \( -name '*.md' -o -name '*.ttl' \) | sort)
+total="${#all_files[@]}"
+batch_num=0
+offset=0
+
+while [[ "${offset}" -lt "${total}" ]]; do
+  batch=("${all_files[@]:${offset}:${BATCH_SIZE}}")
+  batch_num=$((batch_num + 1))
+  batch_end=$((offset + ${#batch[@]}))
+  echo "    Batch ${batch_num}: files ${offset+1}-${batch_end} of ${total}"
+
+  # Build the -F args for this batch
+  form_args="-F 'datasetName=${DATASET_NAME}'"
+  for f in "${batch[@]}"; do
+    form_args="${form_args} -F 'data=@${f}'"
+  done
+
+  add_resp=$(docker exec "${API_CONTAINER}" sh -c "curl -s -X POST http://localhost:8000/api/v1/add ${form_args}")
+  add_status=$(echo "${add_resp}" | python3 -c "import sys,json; r=json.load(sys.stdin); print(r.get('status','?'))" 2>/dev/null || echo "parse_error")
+
+  if [[ "${add_status}" != "PipelineRunCompleted" ]]; then
+    echo "ERROR: /api/v1/add batch ${batch_num} failed. Status: ${add_status}" >&2
+    echo "Response: ${add_resp}" >&2
+    exit 1
+  fi
+  echo "    Batch ${batch_num}: ADD_OK"
+  offset=$((offset + ${#batch[@]}))
+done
+
+# ---------------------------------------------------------------------------
+# Cognify: build knowledge graph
+# ---------------------------------------------------------------------------
+echo "==> Running cognify via POST /api/v1/cognify (dataset=${DATASET_NAME})..."
+cog_resp=$(api_curl "-X POST http://localhost:8000/api/v1/cognify \
+  -H 'Content-Type: application/json' \
+  -d '{\"datasets\":[\"${DATASET_NAME}\"]}'")
+
+# Response is a dict keyed by dataset_id; check every entry for status
+cog_ok=$(echo "${cog_resp}" | python3 -c "
+import sys, json
+r = json.load(sys.stdin)
+if isinstance(r, dict) and 'error' in r:
+    print('error')
+    raise SystemExit(1)
+statuses = [v.get('status','?') for v in r.values()] if isinstance(r, dict) else [r.get('status','?')]
+all_ok = all(s == 'PipelineRunCompleted' for s in statuses)
+print('ok' if all_ok else 'error')
+for s in statuses:
+    print(' ', s, file=sys.stderr)
+" 2>/dev/null || echo "parse_error")
+
+if [[ "${cog_ok}" != "ok" ]]; then
+  echo "ERROR: /api/v1/cognify failed." >&2
+  echo "Response: ${cog_resp}" >&2
+  exit 1
 fi
 
-docker exec "${API_CONTAINER}" python - <<PY
-import asyncio
-import os
-import cognee
+echo "COGNIFY_OK"
+echo "==> Ingestion complete. Validate: curl -fsS https://cognee-mcp.grace.lan/health"
 
-CORPUS_DIR = "${CORPUS_CONTAINER_DIR}"
-DO_PRUNE = ${PRUNE_FLAG}
-
-LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "anthropic")
-LLM_MODEL = os.environ.get("LLM_MODEL", "claude-haiku-4-5-20251001")
-LLM_API_KEY = os.environ.get("LLM_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")
-
-if not LLM_API_KEY:
-    raise RuntimeError("Missing LLM API key. Set LLM_API_KEY or ANTHROPIC_API_KEY in container env.")
-
-cognee.config.set_llm_provider(LLM_PROVIDER)
-cognee.config.set_llm_model(LLM_MODEL)
-cognee.config.set_llm_api_key(LLM_API_KEY)
-
-# Keep embeddings local and deterministic for this deployment.
-cognee.config.set_embedding_provider("fastembed")
-cognee.config.set_embedding_model("BAAI/bge-small-en-v1.5")
-
-async def run() -> None:
-    if DO_PRUNE:
-        print("Pruning existing Cognee state...")
-        cognee.prune()
-
-    print(f"LLM provider: {LLM_PROVIDER}")
-    print(f"LLM model: {LLM_MODEL}")
-    print("Embedding provider: fastembed")
-    print(f"Adding corpus from {CORPUS_DIR} ...")
-    await cognee.add(CORPUS_DIR)
-    print("ADD_OK")
-
-    print("Running cognify...")
-    await cognee.cognify()
-    print("COGNIFY_OK")
-
-    print("Ingestion complete.")
-
-asyncio.run(run())
-PY
-
-echo "==> Done. Validate health via: curl -fsS https://cognee-mcp.grace.lan/health"
