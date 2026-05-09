@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import uuid
 from collections.abc import Callable, Generator
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -225,3 +226,23 @@ def two_doc_dataset(
         return dataset_id, data_id_a, data_id_b
 
     yield _factory
+
+
+# ---------------------------------------------------------------------------
+# Phase 4 fixtures
+# ---------------------------------------------------------------------------
+
+_FIXTURES_DIR = Path(__file__).parent / "fixtures"
+
+
+@pytest.fixture(scope="session")
+def uploaded_ontology(client: CogneeClient) -> Generator[str, None, None]:
+    """Upload the Phase 4 test ontology once per session; delete on teardown.
+
+    Yields the ``ontology_key`` string used to reference it in ``cognify`` calls.
+    """
+    key = f"eposforge-phase4-{uuid.uuid4().hex[:8]}"
+    content = (_FIXTURES_DIR / "phase4.ttl").read_text(encoding="utf-8")
+    client.upload_ontology(key, content, description="Phase 4 test ontology")
+    yield key
+    client.delete_ontology(key)

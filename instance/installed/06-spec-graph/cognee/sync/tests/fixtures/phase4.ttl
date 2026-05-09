@@ -1,0 +1,13 @@
+@prefix epos: <https://eposforge.example/ontology#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<https://eposforge.example/ontology> a owl:Ontology .
+
+epos:PhaseTestEntity a owl:Class ;
+    rdfs:label "Phase Test Entity" .
+
+epos:PhaseTestRelation a owl:ObjectProperty ;
+    rdfs:label "phase test relation" ;
+    rdfs:domain epos:PhaseTestEntity ;
+    rdfs:range epos:PhaseTestEntity .

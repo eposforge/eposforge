@@ -217,6 +217,34 @@ All file-level assertions confirmed via `list_documents`:
   is correct; whether deleted documents leave orphaned KG nodes is an open
   question. Phase 4 or a dedicated KG-inspection approach is needed to answer it.
 
+### Phase 4 findings — graph structure and ontology anchoring
+
+**`GET /api/v1/datasets/{dataset_id}/graph` returns the global instance graph.**
+The `dataset_id` path parameter does not scope the result to a single dataset —
+all nodes and edges from the entire Cognee instance are returned. Node schema:
+`{id, label, properties, type}`. Node types observed: `TextSummary`, `Entity`,
+`EntityType`, `DocumentChunk`. Properties include `source_content_hash`,
+`source_pipeline`, `source_task`, `ontology_valid`, `text`.
+
+**Graph node IDs are stable across delete + re-add of identical content.**
+The full set of 50 instance node UUIDs was identical before and after a
+delete + re-add cycle. Phase 5 downstream KG consumers will not see entity ID
+churn from sync operations on unchanged content.
+
+**Ontology upload requires `.owl` file extension.** The endpoint
+`POST /api/v1/ontologies` validates the filename extension and rejects anything
+that is not `.owl`. Turtle/N-Triples content is accepted if the filename ends
+in `.owl`. The `ontology_key` field is the user-defined identifier referenced
+via the `ontologyKey` parameter on `POST /api/v1/cognify`.
+
+**Ontology-anchored cognify produces `PhaseTestEntity`-referencing nodes.**
+After `cognify(datasets=[name], ontologyKey=[key])`, nodes referencing the
+ontology label appear in the graph: a `TextSummary` node with summarised text
+mentioning the entity, and a `DocumentChunk` node with the raw document text.
+`ontology_valid: False` on all observed nodes — the ontology influences
+extraction but the `ontology_valid` flag is not set to `True` for matched
+entities (possibly a Cognee version behaviour).
+
 ### Windows encoding note
 
 `GRAPH_COMPLETION` results and string print statements may contain non-ASCII
