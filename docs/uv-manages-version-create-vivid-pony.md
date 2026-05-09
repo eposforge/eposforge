@@ -1,172 +1,157 @@
-# Phase 2 — `updatefile` Behavior
+# Phase 3 — `deletefile` Behavior
 
 ## Status
 
 | Phase | Commits | Summary |
 |---|---|---|
 | 0 | `803dca5` | Harness: uv project, `CogneeClient` (health/add_file/delete_dataset), smoke tests, secrets wired |
-| 1 | `6166553` `7464737` | cognify/search/list_documents added; 4/4 integration tests pass |
-| **2** | **← this phase** | Prove content edits update the KG — the GraphRAG-burn test |
+| 1 | `6166553` `7464737` | cognify/search/list_documents; 4/4 integration tests pass |
+| 2 | `<pending>` | delete_document; updatefile tests; accumulation confirmed — update = delete+add |
+| **3** | **← this phase** | Prove deletions evict content and characterise shared-entity behavior |
 
-API behavioral findings from Phases 0–1 are in
+API behavioral findings from all phases are in
 `instance/installed/06-spec-graph/cognee/cognee.md` §Observed API behavior.
+
+## Phase 2 findings (summary for Phase 3 planning)
+
+- **Re-add accumulates.** Same filename + new content → 2 docs in `list_documents`.
+  Update = `delete_document(data_id) + add_file`. Phase 5 must persist `data_id`
+  per tracked file path.
+- **`data_id` changes on content change.** Different UUID per content version.
+- **`delete_document` works.** After delete, `list_documents` returns 0 items for
+  that `data_id`. Re-add after delete gives a fresh entry.
+- **`list_documents` schema:** `{id, name, createdAt, updatedAt, extension, mimeType,
+  rawDataLocation, datasetId}`. `id` = `data_id` from `add_file`. Extension stored
+  as `txt` regardless of original.
 
 ## Goal
 
-Build a git-commit-driven sync tool that updates the Cognee KG in place when
-EposForge `*.md` files change, replacing full prune-and-reproject. Harness at
-`instance/installed/06-spec-graph/cognee/sync/`.
+Same overall effort: git-commit-driven sync replacing full prune-and-reproject.
+Phase 3 proves that deleting a file's data_id evicts its content from the KG,
+characterises whether deleting one doc removes shared KG entities (or correctly
+retains them), and confirms delete + re-add is a clean round-trip (no tombstones).
 
-Phase 2 is the GraphRAG-burn test — GraphRAG's incremental update failed exactly
-here because content edits were silently ignored and only filenames were tracked.
-If Cognee fails this test, the incremental-sync premise is invalid.
+## What Phase 3 must prove
 
-## What Phase 2 must prove
+1. After `delete_document(data_id)`, content unique to that document is no longer
+   returned by search. (Eviction is real, not just a storage delete.)
+2. When two documents share an extracted entity and one is deleted, the shared
+   entity persists. (Delete is non-cascading for shared graph nodes.)
+3. Delete + re-add restores the content to the KG — no tombstones or orphaned
+   nodes block re-ingestion.
+4. Deletes are reflected synchronously in `list_documents`. (No async gap that
+   Phase 5 would need to poll around.)
 
-1. Content updated in a same-named file is queryable via `CHUNKS` search after
-   re-add. (New content is visible.)
-2. The old content is NOT returned by `CHUNKS` search after re-add with new
-   content. (Old content is evicted — the GraphRAG-burn assertion.)
-3. Explicit `delete_document(data_id) + add_file` evicts old content, whether
-   or not re-add alone does. (Proves the guaranteed update path.)
-4. Whether `data_id` is stable across a content change — in-place semantics
-   (same id) vs. delete+add semantics (new id). Phase 5 needs this to decide
-   whether to persist `data_id` per tracked file path.
+**If #1 fails:** the KG and the stored files diverge — `delete_document` removes
+the file but leaves KG nodes. Stop and evaluate; the sync tool's delete path
+would need a different mechanism (e.g. `delete_dataset` + recreate).
 
-**If #1 fails:** stop and evaluate — add itself may be broken for this content
-type.
-
-**If #2 fails but #3 passes:** update mechanism for Phase 5 is
-`delete_document + add_file`. Phase 5 must persist `data_id` per tracked path.
-Continue to Phase 3.
-
-**If #2 AND #3 fail:** stop and evaluate — Cognee may be accumulation-only,
-invalidating the incremental-sync approach entirely.
+**If #2 fails (shared entity also deleted):** Phase 5 must avoid deleting documents
+whose entities are referenced by other documents still in the corpus. This
+complicates the sync tool significantly — stop and evaluate before Phase 5.
 
 ## Scope
 
-**In Phase 2:**
+**In Phase 3:**
 
-- One new `CogneeClient` method: `delete_document(dataset_id, data_id)` →
-  `DELETE /api/v1/datasets/{dataset_id}/data/{data_id}`. Confirmed from swagger.
-  Phase 3 reuses this method for delete-eviction tests.
-- New conftest fixture: `updated_dataset` factory — adds ALPHA content, re-adds
-  BETA (same dataset, same filename), returns `(dataset_id, alpha_data_id,
-  beta_data_id)`. Cleanup inherited from `dataset_lifecycle`.
-- New test file `tests/test_updatefile.py`, four `integration`-marked tests.
-- `CHUNKS` search used for all assertions (verbatim `text` field, deterministic).
-  `GRAPH_COMPLETION` not used — confirmed noise by Phase 1.
+- No new `CogneeClient` methods. `delete_document` and `search` (CHUNKS) from
+  Phases 1–2 are sufficient. (`delete_dataset` from Phase 0 is reused for
+  cleanup.)
+- New conftest fixture: `two_doc_dataset` factory — adds two documents to the
+  same dataset and returns their data_ids. Cleanup via `dataset_lifecycle`.
+- New test file `tests/test_deletefile.py`, four `integration`-marked tests.
+- Search assertions use `CHUNKS` `text` field (verbatim, deterministic), not
+  `GRAPH_COMPLETION`. Use `dataset_ids=[dataset_id]` (UUID-based) for scoping,
+  not `datasets=[name]`, since Phase 2 confirmed `datasets=` scoping is
+  unreliable for vector search.
 
-**Design constraints (unchanged):**
+**Note on search scoping (Phase 2 lesson):** CHUNKS semantic search for a
+UUID-like token does not reliably match the document containing that token.
+Phase 3 asserts eviction via `list_documents` (file-level) rather than via CHUNKS
+search wherever possible, falling back to search only for KG-level eviction
+checks (assertion #1 above requires a KG query, not just a file listing).
 
-- `delete_document` returns `None` on success, suppresses 404, raises on other
-  non-2xx. Same pattern as `delete_dataset`.
-- No test-mode parameters on client. Fixture composes, client calls HTTP.
+**Design constraints (unchanged):** thin client, no test-mode flags, fixtures
+compose, client calls HTTP.
 
-**Out of scope:**
-
-- Shared-entity behavior on delete (Phase 3)
-- Ontology id stability (Phase 4)
-- Any sync tool code (Phase 5)
-- Decision on Phase 5's update mechanism — that's a Phase 2 finding, not Phase 2 code
+**Out of scope:** ontology id stability (Phase 4), sync tool code (Phase 5).
 
 ## Files to create
 
 ```
 instance/installed/06-spec-graph/cognee/sync/
   tests/
-    test_updatefile.py
+    test_deletefile.py
 ```
 
 ## Files to modify
 
 ```
-instance/installed/06-spec-graph/cognee/sync/src/cognee_sync/client.py
-  + delete_document(dataset_id, data_id) → None
-    # DELETE /api/v1/datasets/{dataset_id}/data/{data_id}
-    # 404 suppressed; Phase 2 section header
-
 instance/installed/06-spec-graph/cognee/sync/tests/conftest.py
-  + updated_dataset fixture (function scope factory)
-    # adds ALPHA, re-adds BETA same filename
-    # returns (dataset_id, alpha_data_id, beta_data_id)
+  + two_doc_dataset fixture (function scope factory)
+    # adds two documents with different content to the same dataset
+    # returns (dataset_id, data_id_a, data_id_b)
+    # cleanup via dataset_lifecycle
 ```
 
-No edits outside `cognee/sync/` for Phase 2.
+No client.py changes expected. No edits outside `cognee/sync/`.
 
 ## Critical files — content notes
 
-### `client.py` — `delete_document`
-
-```python
-def delete_document(self, dataset_id: str, data_id: str) -> None:
-    """DELETE /api/v1/datasets/{dataset_id}/data/{data_id}."""
-    response = self._client.delete(
-        f"/api/v1/datasets/{dataset_id}/data/{data_id}"
-    )
-    if response.status_code == 404:
-        return
-    response.raise_for_status()
-```
-
-### `conftest.py` — `updated_dataset`
+### `conftest.py` — `two_doc_dataset`
 
 ```python
 @pytest.fixture()
-def updated_dataset(
+def two_doc_dataset(
     client: CogneeClient,
     dataset_lifecycle: Callable[..., dict[str, Any]],
 ) -> Generator[Callable[..., tuple[str, str, str]], None, None]:
     def _factory(
         name: str,
-        alpha_token: str,
-        beta_token: str,
-        filename: str = "update-test.md",
+        token_a: str,
+        token_b: str,
     ) -> tuple[str, str, str]:
-        alpha_response = dataset_lifecycle(
-            name, f"# update test\n\n{alpha_token}\n", filename
-        )
-        dataset_id: str = alpha_response["dataset_id"]
-        alpha_data_id: str = alpha_response["data_ingestion_info"][0]["data_id"]
+        resp_a = dataset_lifecycle(name, f"# doc a\n\n{token_a}\n", "doc-a.md")
+        dataset_id: str = resp_a["dataset_id"]
+        data_id_a: str = resp_a["data_ingestion_info"][0]["data_id"]
 
-        beta_response = client.add_file(
+        resp_b = client.add_file(
             dataset_name=name,
-            content=f"# update test\n\n{beta_token}\n",
-            filename=filename,
+            content=f"# doc b\n\n{token_b}\n",
+            filename="doc-b.md",
         )
-        beta_data_id: str = beta_response["data_ingestion_info"][0]["data_id"]
+        data_id_b: str = resp_b["data_ingestion_info"][0]["data_id"]
 
-        return dataset_id, alpha_data_id, beta_data_id
+        return dataset_id, data_id_a, data_id_b
     yield _factory
 ```
 
-`alpha_data_id` and `beta_data_id` may or may not differ — Phase 2 finding #4.
-The fixture records both without asserting.
+### `tests/test_deletefile.py` — four tests
 
-### `tests/test_updatefile.py` — four tests
+All `@pytest.mark.integration`. Tokens generated inline (`phase3-*`).
 
-All `@pytest.mark.integration`. Alpha/beta tokens are generated inline per test
-(`f"phase2-alpha-{uuid.uuid4().hex[:8]}"`) — no fixture needed for tokens.
+1. **`test_delete_removes_document_from_list`** — add a doc, delete it via
+   `delete_document`, assert `list_documents` returns 0 items (synchronous
+   eviction). This is the file-level proof; fast, no search needed.
 
-1. **`test_updated_content_is_queryable`** — add ALPHA, re-add BETA (same
-   dataset, same filename), `CHUNKS` search → at least one result with
-   `beta_token` in `result["text"]`. Strict field check, not substring of
-   `str(results)`.
+2. **`test_delete_and_readd_is_clean_roundtrip`** — add doc with token A, delete,
+   re-add same filename with token A again. Assert `list_documents` shows 1 item
+   and the new `data_id` differs from the deleted one (no tombstone blocking
+   re-ingestion). Optional: attempt search for token A after re-add if CHUNKS
+   scoping can be made to work (use `dataset_ids=`).
 
-2. **`test_updated_content_evicts_old_content`** — THE GraphRAG-burn test.
-   After re-add with BETA, `CHUNKS` search → assert zero results have
-   `alpha_token` in `result["text"]`. Field-level assertion, iterate results.
-   Pass = re-add evicts. Fail = follow the failure rule above.
+3. **`test_shared_entity_persists_after_partial_delete`** — add two docs (A and B)
+   with a SHARED phrase in both. Delete doc A's `data_id`. Assert doc B still
+   appears in `list_documents`. Attempt CHUNKS search for the shared phrase —
+   record whether it still returns a hit (shared entity retained) or misses
+   (shared entity deleted with doc A). This test characterises; it does NOT assert
+   a specific outcome — both behaviors are recorded. The finding determines whether
+   Phase 5 needs shared-entity tracking.
 
-3. **`test_explicit_delete_and_readd_evicts_old_content`** — add ALPHA,
-   `delete_document(dataset_id, alpha_data_id)`, re-add BETA, `CHUNKS` search
-   for `alpha_token` → zero hits. Proves the guaranteed update path. This test
-   must pass regardless of test #2's outcome.
-
-4. **`test_data_id_behavior_on_content_change`** — after `updated_dataset`,
-   compare `alpha_data_id` and `beta_data_id`. No assertion — records the finding:
-   same id = in-place semantics; different id = delete+add semantics (Phase 5
-   must persist `data_id` per tracked path).
+4. **`test_delete_is_synchronous`** — add a doc, immediately call
+   `list_documents`, delete, immediately call `list_documents` again. Assert the
+   second call shows the item gone without any polling. Proves Phase 5 does not
+   need to add a sleep or poll loop after delete.
 
 ## Verification
 
@@ -176,55 +161,41 @@ cd instance\installed\06-spec-graph\cognee\sync
 # Regression check
 python ..\..\..\12-secrets-key-management\bin\epos-secrets uv run pytest -m smoke -v
 
-# Phase 2
+# All integration tests including Phase 3
 python ..\..\..\12-secrets-key-management\bin\epos-secrets uv run pytest -m integration -v -s
 ```
 
 Expected outcomes:
 
-1. Smoke tests pass — no regressions from `delete_document`.
-2. `test_updated_content_is_queryable` passes — BETA is findable.
-3. `test_updated_content_evicts_old_content` — outcome determines Phase 5 update
-   mechanism. Apply the failure rule before deciding to continue.
-4. `test_explicit_delete_and_readd_evicts_old_content` passes.
-5. `test_data_id_behavior_on_content_change` passes and prints its finding.
-6. All test-prefixed datasets deleted by teardown.
+1. Smoke tests pass — no regressions.
+2. `test_delete_removes_document_from_list` passes — delete is reflected in
+   `list_documents` immediately.
+3. `test_delete_and_readd_is_clean_roundtrip` passes — re-add after delete works.
+4. `test_shared_entity_persists_after_partial_delete` passes (characterisation);
+   output records whether shared entity survives partial delete.
+5. `test_delete_is_synchronous` passes — no async gap.
+6. All test datasets cleaned up by teardown.
 
-If CHUNKS search returns unexpected results, verify the second `add_file`
-response `status` — `PipelineRunCompleted` means cognify fired (expected for new
-content); `PipelineRunAlreadyCompleted` means the content was considered identical
-(content hash match — check that alpha and beta tokens are actually distinct).
+## Open questions Phase 3 must answer (and record)
 
-## Open questions Phase 2 must answer (and record)
-
-1. **Does re-add with new content evict old content?** Determines Phase 5's update
-   mechanism: simple re-add vs. explicit delete+add.
-2. **Is `data_id` stable across content changes?** Same id = in-place; new id =
-   Phase 5 must persist `data_id` per tracked file path.
-3. **Does cognify still fire implicitly on re-add with new content?** The second
-   `add_file` response `status` answers this. Phase 1 confirmed dedup on identical
-   content; different content should re-run, but confirm.
+1. **Does deleting a data_id evict its KG entities, or only the stored file?**
+   If KG entities persist after delete, the sync tool's delete path is broken at
+   the KG level even if the file listing looks clean.
+2. **Are shared entities (nodes referenced by multiple documents) retained when
+   one referencing document is deleted?** Determines whether Phase 5 needs
+   shared-entity tracking.
+3. **Is delete synchronous in `list_documents`?** (Expected yes, given add is
+   synchronous. Confirm.)
 
 ## Future phases (record, not commitment)
 
-**Phase 3 — `deletefile` behavior.** Confirm `delete_document` (added in Phase 2)
-evicts unique content. Two-doc setup with shared entity: delete one, shared entity
-persists. Delete + re-add restores content (no tombstones). Confirm deletes are
-synchronous in `list_documents`. Uses `DELETE /api/v1/datasets/{dataset_id}/data/{data_id}`.
-
 **Phase 4 — Ontology grounding stability.** Prove ontology-anchored entity ids
 are stable across edits and re-adds. Needs a fixture `.ttl` under
-`sync/tests/fixtures/`. Open: does cognee expose stable ontology ids? Is the
-`.ttl` per-dataset or per-instance?
+`sync/tests/fixtures/`. Open: stable ids? `.ttl` per-dataset or per-instance?
 
-**Phase 5 — the sync tool itself.** Git-driven: diff changed files, classify as
-add/update/delete, dispatch cognee API calls. Update mechanism (re-add vs.
-delete+add) and whether to persist `data_id` per path is decided by Phase 2.
-CLI-vs-daemon is informed by Phase 1–4 findings on latency and idempotency.
+**Phase 5 — the sync tool itself.** Update mechanism confirmed (Phase 2):
+`delete_document + add_file`, persist `data_id` per path. Phase 3 confirms
+whether shared-entity tracking is also required. CLI vs. daemon decided by
+Phase 1–4 latency/idempotency findings.
 
-**Final cleanup:**
-
-- **`cognee.md` full rewrite** — drop `(in transition)` markers, point invocation
-  surface at Phase 5's output, update metadata table, resolve v1 contract gaps.
-- **`epos-secrets.ps1` wrapper** — optional follow-up if daily Phase 5 usage
-  makes the Python-script invocation worth wrapping.
+**Final cleanup:** cognee.md full rewrite; optional epos-secrets.ps1 wrapper.

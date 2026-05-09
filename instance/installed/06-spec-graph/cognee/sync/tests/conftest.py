@@ -141,3 +141,46 @@ def cognified_dataset(
         return dataset_id, add_response
 
     yield _factory
+
+
+# ---------------------------------------------------------------------------
+# Phase 2 fixtures
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture()
+def updated_dataset(
+    client: CogneeClient,
+    dataset_lifecycle: Callable[..., dict[str, Any]],
+) -> Generator[Callable[..., tuple[str, str, str]], None, None]:
+    """Factory that adds ALPHA content then re-adds BETA content to the same dataset.
+
+    Returns ``(dataset_id, alpha_data_id, beta_data_id)``.
+    Cleanup (dataset deletion) is inherited from ``dataset_lifecycle``.
+    ``alpha_data_id`` and ``beta_data_id`` may or may not differ — Phase 2
+    finding #4 records the answer.
+    """
+    def _factory(
+        name: str,
+        alpha_token: str,
+        beta_token: str,
+        filename: str = "update-test.md",
+    ) -> tuple[str, str, str]:
+        alpha_response = dataset_lifecycle(
+            name,
+            f"# update test\n\n{alpha_token}\n",
+            filename,
+        )
+        dataset_id: str = alpha_response["dataset_id"]
+        alpha_data_id: str = alpha_response["data_ingestion_info"][0]["data_id"]
+
+        beta_response = client.add_file(
+            dataset_name=name,
+            content=f"# update test\n\n{beta_token}\n",
+            filename=filename,
+        )
+        beta_data_id: str = beta_response["data_ingestion_info"][0]["data_id"]
+
+        return dataset_id, alpha_data_id, beta_data_id
+
+    yield _factory
