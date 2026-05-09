@@ -42,7 +42,7 @@ def test_added_file_is_queryable_via_search(
     result_text = str(result)
 
     print(f"\n[Phase 1] search result type: {type(result)}")
-    print(f"[Phase 1] search result: {result!r}")
+    print(f"[Phase 1] search result: {ascii(result)}")
 
     assert unique_token in result_text, (
         f"Token {unique_token!r} not found in search response.\n"
@@ -135,10 +135,10 @@ def test_search_response_shape_discovery(
                 print(f"  list length: {len(result)}")
                 if result and isinstance(result[0], dict):
                     print(f"  first item keys: {sorted(result[0].keys())}")
-                    print(f"  first item: {result[0]!r}")
+                    print(f"  first item: {ascii(result[0])}")
             elif isinstance(result, dict):
                 print(f"  keys: {sorted(result.keys())}")
-                print(f"  value: {result!r}")
+                print(f"  value: {ascii(result)}")
             else:
                 print(f"  value: {result!r}")
         except Exception as exc:

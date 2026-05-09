@@ -382,32 +382,59 @@ adjust against the live swagger at https://cognee.grace.lan/docs.
 Discovering the actual surface is part of Phase 1's value, exactly as it
 was in Phase 0.
 
-## Open questions Phase 1 must answer (and record)
+## Phase 1 findings (answers recorded from test run)
 
-These are the questions whose answers Phases 2–5 depend on. The Phase 1
-PR description should explicitly list each with its observed answer:
+All four integration tests passed. Answers to the open questions, for
+Phases 2–5 to build on:
 
-1. **Is cognify implicit on add, explicit, or async-with-job-id?**
-   Determines whether `wait_for_cognify` ships and whether the sync tool's
-   per-commit dispatch needs back-pressure.
-2. **What is the search response shape for the search type we picked?**
-   Encoded in `test_search_response_shape_discovery`'s output; Phase 2
-   strict assertions read from this.
-3. **What is cognee's dedup behavior on identical re-add?**
-   Determines whether the Phase 5 sync tool can be lazy and re-emit add
-   on retry, or must track which docs are already in the KG.
-4. ~~**What is the exact field name carrying `dataset_id` in `add_file`'s
-   response?**~~ **Resolved before Phase 1 started: field is `dataset_id`.**
-   Fallback chain collapsed. Also observed: `data_ingestion_info[0]["data_id"]`
-   carries the per-document id — note for Phase 3 delete tests.
-5. **Does cognee expose a per-dataset documents-list endpoint?** Swagger
-   shows `GET /api/v1/datasets` but no obvious `…/{id}/data` equivalent.
-   First Phase 1 task is to confirm; result determines whether
-   `list_documents` ships in Phase 1 or is deferred to Phase 3.
-6. **`add_file` accepts `node_set` and `run_in_background` per swagger.**
-   Out-of-scope to *use*, in-scope to *notice* — a one-line note in the
-   PR is sufficient. `node_set` is relevant for Phase 4 ontology-grounding
-   work; `run_in_background` may simplify Phase 5's daemon design.
+1. **Cognify is implicit on add — confirmed.** `add_file` returns
+   `status: "PipelineRunCompleted"` and the content is immediately
+   queryable without calling `cognify` explicitly. The explicit
+   `POST /api/v1/cognify` endpoint also accepts calls successfully (returns
+   `PipelineRunCompleted`) but appears to re-run extraction rather than
+   being required. `wait_for_cognify` is not needed — neither add nor
+   explicit cognify is async. Phase 5 does not need back-pressure on
+   per-commit dispatches for the add path.
+
+2. **Search response shapes confirmed:**
+   - `GRAPH_COMPLETION` → `list[str]` (LLM-generated completions drawing
+     on the KG). Length 1 per query.
+   - `SUMMARIES` and `CHUNKS` → `list[dict]` — each item is an
+     `IndexSchema` object with keys: `id`, `text`, `type`, `created_at`,
+     `updated_at`, `ontology_valid`, `version`, `topological_rank`,
+     `belongs_to_set`, `source_pipeline`, `source_task`, `source_node_set`,
+     `source_user`, `source_content_hash`, `feedback_weight`,
+     `importance_weight`. `CHUNKS` returns raw document text in `text`;
+     `SUMMARIES` returns LLM-generated summaries.
+   - **Phase 2 strict assertions should key on `CHUNKS` `text` fields** —
+     they contain verbatim document content, not LLM interpretation, making
+     ALPHA-gone / BETA-present checks deterministic. `GRAPH_COMPLETION`
+     passes the unique-token check only because the LLM echoes the token
+     name in its response, which is semantically noise.
+
+3. **Re-add is dedup — confirmed, safe to retry adds.** Second add with
+   identical content returns `status: "PipelineRunAlreadyCompleted"` and
+   `list_documents` shows 1 doc. Phase 5 can re-emit adds on retry without
+   risking duplicate KG entries.
+
+4. ~~**dataset_id field**~~ **Resolved pre-Phase 1.** Field is `dataset_id`.
+   Also: `data_ingestion_info[0]["data_id"]` is the per-document id
+   (stable UUID); Phase 3 delete tests will use
+   `DELETE /api/v1/datasets/{dataset_id}/data/{data_id}`.
+
+5. **Per-dataset documents endpoint confirmed.** `GET /api/v1/datasets/{dataset_id}/data`
+   works; `list_documents` ships in Phase 1.
+
+6. **`cognify` response shape is a dict keyed by dataset_id**, not a flat
+   status dict: `{<dataset_uuid>: {status, pipeline_run_id, dataset_id, …}}`.
+   Phase 2 must not assume a flat response when calling `cognify` after
+   an update.
+
+7. **Windows cp1252 terminal encoding caveat.** LLM-generated search
+   results can contain non-ASCII characters (e.g. `→` U+2192). Print
+   statements that render search results must use `ascii()` not `!r`/`str`.
+   Fixed in `test_addfile.py` — applies to any future test that prints
+   `GRAPH_COMPLETION` results.
 
 ## Future phases (record, not commitment)
 
