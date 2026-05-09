@@ -1,0 +1,38 @@
+[project]
+name = "cognee-sync"
+version = "0.1.0"
+description = "Incremental-sync tool for keeping the Cognee Spec Graph up-to-date with EposForge Markdown changes."
+requires-python = ">=3.13"
+dependencies = [
+    "httpx>=0.27",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cognee_sync"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-randomly>=3.15",
+]
+
+[tool.cognee_sync]
+dataset_prefix = "eposforge-sync-tests"
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+select = ["E", "F", "I", "UP", "B", "SIM", "ANN"]
+ignore = ["ANN101", "ANN102"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = [
+    "smoke: lightweight connectivity checks (run first; fast)",
+    "integration: full behavioral assertions against the live Cognee API",
+]

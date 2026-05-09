@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """sync-mcp.py — Generate .mcp.json and .vscode/mcp.json from mcp.servers.toml.
 
-This script is the canonical generator for the two MCP configuration files used
+This script is the canonical generator for the MCP configuration files used
 by Claude Code (.mcp.json) and VS Code / Copilot (.vscode/mcp.json).
 
-Neither generated file ever contains a secret. Stdio server launch commands are
+The generated file never contains a secret. Stdio server launch commands are
 wrapped with `epos-secrets --only <RUNTIME_NAMES> --` so secrets are injected
 at runtime via the resolver.
 
@@ -163,11 +163,15 @@ def _generate_mcp_json(servers: list[dict], runtime_map: dict[str, str]) -> dict
         name = server["name"]
         transport = server["transport"]
 
-        if transport in ("http", "sse"):
-            mcp_servers[name] = {"url": server["url"]}
+        if transport == "http":
+            mcp_servers[name] = {
+                "type": "http",
+                "url": server["url"],
+            }
         elif transport == "stdio":
             wrapped_cmd, env_block = _wrap_with_epos_secrets(server, runtime_map)
             entry: dict = {
+                "type": "stdio",
                 "command": wrapped_cmd[0],
                 "args": wrapped_cmd[1:],
             }
@@ -193,9 +197,9 @@ def _generate_vscode_mcp_json(servers: list[dict], runtime_map: dict[str, str]) 
         name = server["name"]
         transport = server["transport"]
 
-        if transport in ("http", "sse"):
+        if transport == "http":
             vscode_servers[name] = {
-                "type": transport,
+                "type": "http",
                 "url": server["url"],
             }
         elif transport == "stdio":
@@ -273,10 +277,7 @@ def main() -> int:
             (vscode_mcp_json_path, vscode_mcp_json_data),
         ]:
             generated = json.dumps(data, indent=2) + "\n"
-            if path.exists():
-                existing = path.read_text(encoding="utf-8")
-            else:
-                existing = ""
+            existing = path.read_text(encoding="utf-8") if path.exists() else ""
             if generated != existing:
                 drift = True
                 diff = difflib.unified_diff(
