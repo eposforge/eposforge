@@ -95,18 +95,49 @@ def dataset_lifecycle(
             content=content,
             filename=filename,
         )
-        # Record whatever id field the response exposes so teardown can clean up.
-        # Phase 0 discovers the exact field name; we try common candidates.
-        dataset_id: str | None = (
-            response.get("dataset_id")
-            or response.get("datasetId")
-            or response.get("id")
-        )
-        if dataset_id:
-            recorded_ids.append(str(dataset_id))
+        dataset_id: str = response["dataset_id"]
+        recorded_ids.append(dataset_id)
         return response
 
     yield _add_and_track
 
     for dataset_id in recorded_ids:
         client.delete_dataset(dataset_id)
+
+
+# ---------------------------------------------------------------------------
+# Phase 1 fixtures
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture()
+def unique_token() -> str:
+    """A short hex string guaranteed not to appear in real EposForge corpus content."""
+    return f"phase1-canary-{uuid.uuid4().hex[:12]}"
+
+
+@pytest.fixture()
+def cognified_dataset(
+    client: CogneeClient,
+    dataset_lifecycle: Callable[..., dict[str, Any]],
+) -> Generator[Callable[..., tuple[str, dict[str, Any]]], None, None]:
+    """Factory that adds a file, calls cognify, and returns (dataset_id, add_response).
+
+    Cleanup is inherited from dataset_lifecycle — every dataset created here
+    is deleted on teardown via the same proven mechanism.
+
+    Note: add_file appears to run cognify implicitly (Phase 0 smoke showed
+    status="PipelineRunCompleted" on add). The explicit cognify call here is
+    belt-and-suspenders until Phase 1 confirms the implicit behavior.
+    """
+    def _factory(
+        name: str,
+        content: str | bytes = "# canary\nspec graph test\n",
+        filename: str = "canary.md",
+    ) -> tuple[str, dict[str, Any]]:
+        add_response = dataset_lifecycle(name, content, filename)
+        dataset_id: str = add_response["dataset_id"]
+        client.cognify(datasets=[name])
+        return dataset_id, add_response
+
+    yield _factory

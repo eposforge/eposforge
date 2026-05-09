@@ -26,17 +26,24 @@ changes into add / update / delete calls.
 - `instance/SPEC.md` lists `cognee-sync` as in-progress; `cognee.md` carries
   the in-revision banner and surgical edits
 
-**Phase 0 discovery to lock in before Phase 1 work begins.** The smoke test
-prints the field set returned by `POST /api/v1/add` (see
-`tests/test_smoke.py:65`), but the captured stdout was *not* persisted —
-`.pytest_cache` only stores last-failed/nodeids, no log file exists, and the
-swagger schema for the add response is genuinely undefined
-(`additionalProperties: true, type: object`), so swagger cannot answer the
-question for us. Before Phase 1 starts, re-run the Phase 0 smoke and
-capture the `[Phase 0 discovery]` line, then collapse the
-`dataset_lifecycle` factory's three-candidate fallback at
-`tests/conftest.py:100` to the real key. Carrying the fallback into Phase 1
-hides the answer Phase 0 was supposed to surface.
+**Phase 0 discovery — resolved.** Re-ran smoke before starting Phase 1.
+The `POST /api/v1/add` response field is **`dataset_id`**. Full response
+shape observed:
+```
+{
+  "status": "PipelineRunCompleted",
+  "pipeline_run_id": "<uuid>",
+  "dataset_id": "<uuid>",
+  "dataset_name": "<name>",
+  "payload": null,
+  "data_ingestion_info": [{"run_info": {...}, "data_id": "<uuid>"}]
+}
+```
+`status: "PipelineRunCompleted"` on the add response strongly suggests
+cognify is implicit on add — Phase 1's load-bearing test confirms or
+refutes this. The three-candidate fallback in `dataset_lifecycle` has been
+collapsed to `response["dataset_id"]`. Phase 0 changes are committed as
+`803dca5`.
 
 **This is Phase 1.** It proves the load-bearing premise that an added file's
 content is actually extracted into the KG and queryable. Until Phase 1
@@ -44,6 +51,26 @@ passes, every later phase is built on a guess. Phase 2 (update), Phase 3
 (delete), Phase 4 (ontology stability), and Phase 5 (the sync tool itself)
 are summarized in **Future phases** below — kept for planning continuity,
 not committed to in detail until Phase 1's findings inform them.
+
+**If Phase 1's load-bearing test fails, stop and evaluate.** Do not
+proceed to Phase 2 on the hope that update will somehow fix what add
+couldn't do. Pause, capture observations, and reassess the approach
+(different cognee version, different search type, different ingestion
+shape, or revisit whether incremental sync is the right strategy at all)
+before any further code changes.
+
+**Preconditions for starting Phase 1:**
+
+- Phase 0's working-tree changes are committed to `main`. As of writing,
+  `git status` still shows pending edits on `instance/SPEC.md`,
+  `instance/installed/06-spec-graph/cognee/cognee.md`,
+  `instance/installed/12-secrets-key-management/sops-age/secrets.toml`,
+  `secrets.enc.yaml`, `.sops.yaml`, and untracked `sync/`. Commit before
+  Phase 1.
+- The Phase 0 smoke re-run from open question #4 has been executed and
+  the dataset-id field name captured. The conftest fallback chain is
+  collapsed in the same commit (or as the first Phase 1 commit) — Phase 1
+  does not start with the fallback still in place.
 
 ## What Phase 1 must prove
 
@@ -369,11 +396,10 @@ PR description should explicitly list each with its observed answer:
 3. **What is cognee's dedup behavior on identical re-add?**
    Determines whether the Phase 5 sync tool can be lazy and re-emit add
    on retry, or must track which docs are already in the KG.
-4. **What is the exact field name carrying `dataset_id` in `add_file`'s
-   response?** Phase 0 was supposed to print this, but stdout wasn't
-   persisted and swagger declares the response `additionalProperties:
-   true` (no schema). Re-run smoke and capture before Phase 1 starts;
-   then collapse the fallback chain.
+4. ~~**What is the exact field name carrying `dataset_id` in `add_file`'s
+   response?**~~ **Resolved before Phase 1 started: field is `dataset_id`.**
+   Fallback chain collapsed. Also observed: `data_ingestion_info[0]["data_id"]`
+   carries the per-document id — note for Phase 3 delete tests.
 5. **Does cognee expose a per-dataset documents-list endpoint?** Swagger
    shows `GET /api/v1/datasets` but no obvious `…/{id}/data` equivalent.
    First Phase 1 task is to confirm; result determines whether
