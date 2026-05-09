@@ -148,6 +148,7 @@ def cognified_dataset(
 # ---------------------------------------------------------------------------
 
 
+
 @pytest.fixture()
 def updated_dataset(
     client: CogneeClient,
@@ -182,5 +183,45 @@ def updated_dataset(
         beta_data_id: str = beta_response["data_ingestion_info"][0]["data_id"]
 
         return dataset_id, alpha_data_id, beta_data_id
+
+    yield _factory
+
+
+# ---------------------------------------------------------------------------
+# Phase 3 fixtures
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture()
+def two_doc_dataset(
+    client: CogneeClient,
+    dataset_lifecycle: Callable[..., dict[str, Any]],
+) -> Generator[Callable[..., tuple[str, str, str]], None, None]:
+    """Factory that adds two distinct documents to the same dataset.
+
+    Returns ``(dataset_id, data_id_a, data_id_b)``.
+    Cleanup inherited from ``dataset_lifecycle``.
+    """
+    def _factory(
+        name: str,
+        token_a: str,
+        token_b: str,
+    ) -> tuple[str, str, str]:
+        resp_a = dataset_lifecycle(
+            name,
+            f"# doc a\n\n{token_a}\n",
+            "doc-a.md",
+        )
+        dataset_id: str = resp_a["dataset_id"]
+        data_id_a: str = resp_a["data_ingestion_info"][0]["data_id"]
+
+        resp_b = client.add_file(
+            dataset_name=name,
+            content=f"# doc b\n\n{token_b}\n",
+            filename="doc-b.md",
+        )
+        data_id_b: str = resp_b["data_ingestion_info"][0]["data_id"]
+
+        return dataset_id, data_id_a, data_id_b
 
     yield _factory

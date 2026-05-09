@@ -196,6 +196,27 @@ explicit delete before re-adding updated content.
 `delete_document` confirmed to work: after `DELETE /api/v1/datasets/{dataset_id}/data/{data_id}`,
 `list_documents` shows 0 items for that data_id. Re-add then adds fresh content with a new `id`.
 
+### Phase 3 findings — delete behavior
+
+All file-level assertions confirmed via `list_documents`:
+
+- **`delete_document` is synchronous.** `list_documents` reflects the removal
+  immediately after the call returns. Phase 5 does not need to poll after delete.
+- **Partial delete in a two-document dataset is non-cascading at the file level.**
+  Deleting doc A leaves doc B in `list_documents`. Phase 5 can safely issue
+  per-document deletes without affecting sibling documents in the same dataset.
+- **Delete + re-add of identical content assigns the same `data_id`.** Content-hash
+  dedup is active even when the document was previously deleted — the pipeline
+  reruns (`status: "PipelineRunCompleted"`, not `"PipelineRunAlreadyCompleted"`)
+  but the same UUID is assigned. Implication for Phase 5: if a tracked file is
+  deleted and then its content is restored unchanged, the sync tool will re-issue
+  the same `data_id` and may not need to update its sidecar.
+- **KG-level eviction after delete: unconfirmed.** CHUNKS semantic search for
+  UUID-like tokens is unreliable (all advisory probes returned `found=False`
+  regardless of whether content should have been present). The file-level behavior
+  is correct; whether deleted documents leave orphaned KG nodes is an open
+  question. Phase 4 or a dedicated KG-inspection approach is needed to answer it.
+
 ### Windows encoding note
 
 `GRAPH_COMPLETION` results and string print statements may contain non-ASCII
