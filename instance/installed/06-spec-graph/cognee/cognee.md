@@ -245,6 +245,35 @@ mentioning the entity, and a `DocumentChunk` node with the raw document text.
 extraction but the `ontology_valid` flag is not set to `True` for matched
 entities (possibly a Cognee version behaviour).
 
+### Phase 5 — sync tool design (confirmed)
+
+The incremental sync tool (`cognee-sync` CLI) ships as part of this package.
+Invocation requires `epos-secrets` for secret injection:
+
+```powershell
+# On push, compute diff and sync:
+epos-secrets uv run cognee-sync `
+    --added   path/new.md `
+    --modified path/changed.md `
+    --deleted  path/removed.md
+
+# Inspect tracked state:
+epos-secrets uv run cognee-sync --status
+
+# Dry-run (no API calls):
+epos-secrets uv run cognee-sync --dry-run --added path/new.md
+```
+
+| Env var | Default | Purpose |
+|---|---|---|
+| `COGNEE_DATASET_NAME` | `eposforge-sync` | Cognee dataset that all tracked files go into |
+| `COGNEE_STATE_DB` | `.cognee-state.db` | SQLite state store path (`file_path -> data_id`) |
+
+**Update mechanism confirmed (Phase 2):** update = `delete_document(old_data_id)` + `add_file`.
+The state store persists the `data_id` per tracked file path so the correct entry
+can be deleted before re-add. Identical content is a no-op (content-hash check
+skips the API call).
+
 ### Windows encoding note
 
 `GRAPH_COMPLETION` results and string print statements may contain non-ASCII
