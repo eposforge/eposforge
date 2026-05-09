@@ -76,6 +76,97 @@ See `./sync/README.md` for the current bootstrapping and test instructions.
 
 ---
 
+## Observed API behavior (Phases 0–1 findings)
+
+Behavioral observations from Phase 0 smoke tests and Phase 1 integration tests
+against the running `dkr-cgnee-api` container. Observations against the live
+deployment — not the upstream Cognee spec — and may change with container updates.
+
+### Confirmed endpoints
+
+| Method | Path | Notes |
+|---|---|---|
+| `POST` | `/api/v1/add` | Add files to a dataset; creates dataset if absent |
+| `POST` | `/api/v1/cognify` | Explicit KG extraction (normally implicit — see below) |
+| `POST` | `/api/v1/search` | Query the KG; `search_type` required |
+| `GET` | `/api/v1/datasets` | List all datasets |
+| `GET` | `/api/v1/datasets/{dataset_id}/data` | List data items in a dataset |
+| `DELETE` | `/api/v1/datasets/{dataset_id}` | Delete a dataset |
+| `DELETE` | `/api/v1/datasets/{dataset_id}/data/{data_id}` | Delete one data item |
+
+### `POST /api/v1/add` — response shape
+
+```json
+{
+  "status": "PipelineRunCompleted",
+  "pipeline_run_id": "<uuid>",
+  "dataset_id": "<uuid>",
+  "dataset_name": "<name>",
+  "payload": null,
+  "data_ingestion_info": [
+    {
+      "run_info": { "status": "...", "pipeline_run_id": "...", "..." : "..." },
+      "data_id": "<uuid>"
+    }
+  ]
+}
+```
+
+`data_ingestion_info[0]["data_id"]` is the per-document UUID. Required for
+`DELETE /api/v1/datasets/{dataset_id}/data/{data_id}` in update and delete flows.
+
+### Pipeline behavior
+
+- **Cognify is implicit on `add_file`.** The full KG-extraction pipeline runs
+  synchronously during `POST /api/v1/add`. Content is queryable immediately after
+  the call returns. `POST /api/v1/cognify` is accepted but re-runs extraction;
+  it is not required.
+- **No async / polling.** Neither `add` nor explicit `cognify` returns a job id
+  to poll. No `wait_for_cognify` is needed.
+- **Re-add deduplicates on identical content.** Same content re-added to the same
+  dataset returns `status: "PipelineRunAlreadyCompleted"` and the same `data_id`.
+  `list_documents` shows 1 doc. Safe to retry adds on the same content.
+
+### `POST /api/v1/cognify` — response shape
+
+Keyed by dataset UUID, not a flat status dict:
+
+```json
+{
+  "<dataset_uuid>": {
+    "status": "PipelineRunCompleted",
+    "pipeline_run_id": "<uuid>",
+    "dataset_id": "<uuid>",
+    "dataset_name": "<name>",
+    "payload": null,
+    "data_ingestion_info": [{ "..." : "..." }]
+  }
+}
+```
+
+### `POST /api/v1/search` — response shapes by `search_type`
+
+| `search_type` | Response type | `text` field | Use for |
+|---|---|---|---|
+| `GRAPH_COMPLETION` | `list[str]` | LLM-generated completion (non-verbatim) | Exploratory queries only |
+| `SUMMARIES` | `list[IndexSchema]` | LLM-generated summary | — |
+| `CHUNKS` | `list[IndexSchema]` | Verbatim document text chunk | Content-presence assertions |
+
+**Use `CHUNKS` for deterministic content assertions in tests.** `GRAPH_COMPLETION`
+may echo a token name in LLM prose even when the token is not present in the KG.
+
+`IndexSchema` dict keys: `id`, `text`, `type` (`"IndexSchema"`), `created_at`
+(epoch ms), `updated_at`, `ontology_valid`, `version`, `topological_rank`,
+`belongs_to_set`, `source_pipeline`, `source_task`, `source_node_set`,
+`source_user`, `source_content_hash`, `feedback_weight`, `importance_weight`.
+
+### Windows encoding note
+
+`GRAPH_COMPLETION` results may contain non-ASCII Unicode (e.g. `→` U+2192).
+Use `ascii(result)` not `repr(result)` when printing to a cp1252 terminal.
+
+---
+
 ## Environment variables
 
 | Variable | Required | Notes |
