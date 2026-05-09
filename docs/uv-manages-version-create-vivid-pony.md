@@ -1,184 +1,183 @@
-# Phase 4 — Ontology Grounding Stability
+# Phase 5 — The Sync Tool
 
 ## Status
 
 | Phase | Commits | Summary |
 |---|---|---|
-| 0 | `803dca5` | Harness, CogneeClient (health/add\_file/delete\_dataset), smoke tests, secrets wired |
-| 1 | `6166553` `7464737` | cognify/search/list\_documents; 4/4 integration tests pass |
-| 2 | `2a0e01b` | delete\_document; accumulation confirmed — update = delete+add; data\_id must be persisted |
-| 3 | `<pending>` | deletefile tests; delete synchronous; partial delete non-cascading; same data\_id on delete+readd of identical content |
-| **4** | **<- this phase** | Prove ontology-anchored entity IDs are stable across document edits |
+| 0 | `803dca5` | Harness, CogneeClient, smoke tests, secrets wired |
+| 1 | `6166553` `7464737` | cognify/search/list\_documents; cognify implicit on add; CHUNKS for assertions |
+| 2 | `2a0e01b` | delete\_document; re-add accumulates; update = delete+add; data\_id must be persisted |
+| 3 | `5f688d1` | deletefile tests; delete synchronous; partial delete non-cascading; same data\_id on delete+readd of identical content |
+| 4 | `<pending>` | upload\_ontology/delete\_ontology/get\_graph; graph is global (not dataset-scoped); node IDs stable; ontology anchoring works; `.owl` extension required |
+| **5** | **<- this phase** | The sync tool itself |
 
 API behavioral findings from all phases are in
 `instance/installed/06-spec-graph/cognee/cognee.md` §Observed API behavior.
 
-## Phase 3 findings (summary for Phase 4 planning)
+## Phase 4 findings (summary for Phase 5 design)
 
-- **Delete is synchronous** — no polling needed by Phase 5.
-- **Partial delete is non-cascading at the file level** — deleting doc A leaves
-  doc B in `list_documents`.
-- **Delete + re-add of identical content → same `data_id`** — content-hash dedup
-  active even after delete. Phase 5: if a file reverts to a previous version,
-  re-adding produces the same data\_id.
-- **KG-level eviction after delete: unconfirmed.** CHUNKS search for UUID tokens
-  is unreliable. Orphaned KG nodes after delete remain an open question.
+- **Graph is global, not dataset-scoped.** `GET /api/v1/datasets/{id}/graph`
+  returns the full instance graph regardless of dataset_id. 50 nodes / 105 edges
+  from the pre-ingested EposForge corpus are always present.
+- **Node IDs are stable** across delete+re-add of identical content. Phase 5
+  downstream consumers will not see entity ID churn from sync cycles.
+- **Ontology upload:** requires `.owl` filename extension (Turtle content accepted).
+  Referenced by string key in `cognify(ontologyKey=[key])`.
+- **Ontology-anchored extraction works** — `PhaseTestEntity`-referencing nodes
+  appear after explicit cognify with ontologyKey. `ontology_valid` flag stays
+  `False` regardless (Cognee version behavior; does not affect functionality).
 
-## Goal
+## Confirmed sync tool design (from Phases 1–4)
 
-Same overall effort: git-commit-driven sync replacing full prune-and-reproject.
-Phase 4 proves that Cognee's ontology-anchored entity extraction produces stable
-entity IDs across document edits and re-adds. If entity IDs churn on every
-update, downstream consumers (KG queries, cross-document references) break on
-every sync cycle regardless of whether the sync tool's file-level operations
-are correct.
+| Operation | Mechanism | Notes |
+|---|---|---|
+| **Add file** | `add_file(dataset_name, content, filename)` | Cognify implicit, synchronous |
+| **Update file** | `delete_document(dataset_id, old_data_id)` + `add_file(...)` | Must persist `data_id` per tracked path |
+| **Delete file** | `delete_document(dataset_id, data_id)` | Synchronous; partial delete non-cascading |
+| **State store** | `file_path -> data_id` mapping | Required for update path; SQLite sidecar or similar |
+| **Dataset** | One dataset per sync scope (e.g. per repo or per directory) | All files in one dataset; dataset_id stable |
 
-Phase 4 is also the phase best positioned to probe KG-level eviction — by
-tracking a known entity ID before and after delete, we can see whether the
-entity disappears from the KG or persists as an orphan.
+## What Phase 5 must deliver
 
-## What Phase 4 must prove
-
-1. An ontology-anchored entity extracted from a document has a stable ID that
-   survives an edit to that document (delete old data\_id + re-add updated content).
-2. The same entity extracted from a re-added document maps to the same ontology
-   node (not a duplicate). Phase 5 needs this to know whether downstream consumers
-   accumulate duplicate entity nodes across sync cycles.
-3. (Advisory) After `delete_document`, the entity extracted from that document
-   disappears from the KG — confirming KG-level eviction, the question Phase 3
-   could not answer with UUID token search.
-
-**If #1 fails (entity IDs not stable):** the sync tool is correct at the file
-level but incorrect at the KG level — every update churns entity IDs. Evaluate
-whether Cognee's ontology key mechanism (`ontologyKey` param on cognify, per
-swagger) stabilises IDs before proceeding to Phase 5.
-
-**If #2 fails (duplicate entities on re-add):** downstream queries accumulate
-noise nodes. Same evaluation as above.
+1. A CLI command `cognee-sync [--diff <base-ref>]` that:
+   - Computes the set of changed files since `base-ref` (or full re-sync if omitted)
+   - Classifies each changed file as add / update / delete
+   - Dispatches the correct Cognee API calls per the table above
+   - Updates the state store on success; rolls back no-op on failure
+2. A state store (SQLite at `sync/.cognee-state.db` or configurable path)
+   with schema: `(file_path TEXT PRIMARY KEY, dataset_id TEXT, data_id TEXT,
+   content_hash TEXT, synced_at TEXT)`
+3. A Gitea Actions workflow (or post-receive hook) that invokes `cognee-sync`
+   on push to trigger incremental updates automatically
 
 ## Scope
 
-**In Phase 4:**
+**In Phase 5:**
 
-- No new `CogneeClient` methods unless Phase 4 discovers a needed endpoint
-  (e.g. a KG graph inspection endpoint — `GET /api/v1/datasets/{id}/graph`
-  exists per swagger and may be needed for entity ID extraction).
-- A small fixture TTL under `sync/tests/fixtures/phase4.ttl` containing a
-  single well-known class definition (e.g. `epos:TestEntity`) for the ontology
-  anchor.
-- New conftest fixture: `ontology_dataset` — loads a doc that references a
-  known ontology term, returns `(dataset_id, data_id)`. The ontology key is
-  passed to `add_file` or `cognify` via the `ontologyKey` swagger parameter
-  (exact mechanism TBV from swagger before writing).
-- New test file `tests/test_ontology.py`, three `integration`-marked tests.
+- New module `src/cognee_sync/sync.py` — the sync engine: diff computation,
+  classify, dispatch, state store CRUD.
+- New module `src/cognee_sync/state.py` — SQLite-backed state store with
+  typed read/write/delete for the `file_path -> (dataset_id, data_id,
+  content_hash)` mapping.
+- New CLI entry point wired in `pyproject.toml` (`[project.scripts]`):
+  `cognee-sync = "cognee_sync.cli:main"` — thin argument parser, calls
+  `sync.py`.
+- New test file `tests/test_sync.py` — integration tests for full add/update/
+  delete round-trips via the CLI entry point against the live API.
+- `sqlite3` (stdlib) for the state store — no new runtime dependencies unless
+  Phase 5 implementation reveals a need.
 
-**Critical pre-work before writing any code:**
+**Design constraints:**
 
-- Fetch `GET /api/v1/datasets/{dataset_id}/graph` schema from the live swagger
-  to understand how entity IDs are exposed (or determine an alternative path).
-- Understand how `ontologyKey` is set on cognify: does it accept an inline TTL
-  string, a file path in the container, or a separately uploaded artifact? Check
-  swagger and/or the live API before writing the fixture.
+- The sync engine is idempotent: re-running on the same diff produces the same
+  Cognee state. Identical content → `PipelineRunAlreadyCompleted` (dedup),
+  same `data_id` — state store does not change.
+- State store writes are committed only after the Cognee API call succeeds.
+  Partial failure (API success, state write failure) is recoverable by re-running
+  the sync.
+- The CLI is invokable via `epos-secrets cognee-sync` for local use and via
+  `uv run cognee-sync` inside CI.
 
-**Design constraints (unchanged):** thin client, no test-mode flags.
+**Out of scope for Phase 5:**
 
-**Out of scope:** the sync tool itself (Phase 5), cognee.md full rewrite (final).
+- Ontology-anchored sync (Phase 4 proved it works; integrate when the repo's
+  glossary TTL is stable enough to use as an anchor)
+- Cross-dataset entity dedup (single dataset for now)
+- `cognee.md` full rewrite (last step, after Phase 5 ships)
 
 ## Files to create
 
 ```
 instance/installed/06-spec-graph/cognee/sync/
+  src/cognee_sync/
+    sync.py           # diff computation, classify, dispatch, state store CRUD
+    state.py          # SQLite-backed file_path -> (dataset_id, data_id, hash)
+    cli.py            # thin argparse entry point
   tests/
-    fixtures/
-      phase4.ttl          # minimal ontology fixture (single class definition)
-    test_ontology.py      # three integration tests
+    test_sync.py      # integration tests: add/update/delete round-trips
 ```
 
 ## Files to modify
 
 ```
-instance/installed/06-spec-graph/cognee/sync/tests/conftest.py
-  + ontology_dataset fixture (function scope factory) — TBD once ontologyKey
-    mechanism is confirmed from swagger
+instance/installed/06-spec-graph/cognee/sync/pyproject.toml
+  + [project.scripts]: cognee-sync = "cognee_sync.cli:main"
 
-instance/installed/06-spec-graph/cognee/sync/src/cognee_sync/client.py
-  + get_graph(dataset_id) — ONLY IF GET /api/v1/datasets/{dataset_id}/graph
-    is needed for entity ID extraction and swagger confirms the schema
+instance/installed/06-spec-graph/cognee/sync/README.md
+  + Phase 5 invocation section
 ```
 
 ## Critical files — content notes
 
-### `tests/fixtures/phase4.ttl`
+### `state.py`
 
-Minimal OWL/RDF file. One class definition is sufficient — the goal is to give
-Cognee an ontology anchor, not to model anything real:
-
-```turtle
-@prefix epos: <https://eposforge.example/ontology#> .
-@prefix owl: <http://www.w3.org/2002/07/owl#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-type#> .
-
-epos:PhaseTestEntity a owl:Class ;
-    rdfs:label "Phase Test Entity" .
+```python
+# Schema: file_path (PK), dataset_id, data_id, content_hash, synced_at
+# Operations: upsert(path, dataset_id, data_id, hash), get(path), delete(path), list_all()
+# DB path: configurable via COGNEE_STATE_DB env var, default sync/.cognee-state.db
 ```
 
-The label `"Phase Test Entity"` is what tests embed in document content to
-trigger ontology-anchored extraction. The class IRI `epos:PhaseTestEntity`
-is what tests check for stability.
+`content_hash` is the SHA-256 of the file content (hex). Used to detect
+identical content on re-add so `data_id` can be reused without an API call.
 
-### `tests/test_ontology.py` — three tests
+### `sync.py`
 
-All `@pytest.mark.integration`. All depend on the ontology mechanism being
-understood from swagger before implementation.
+Three entry-point functions called by `cli.py`:
 
-1. **`test_entity_id_stable_across_edit`** — add a doc referencing
-   `PhaseTestEntity`, capture the entity's graph ID, delete + re-add with
-   minor edit (e.g. added sentence), capture the entity's graph ID again.
-   Assert IDs match. Uses `get_graph` or equivalent.
+- `sync_add(client, state, dataset_id, file_path, content)` — call `add_file`,
+  write state. If state already has this path with the same hash, skip (idempotent).
+- `sync_update(client, state, dataset_id, file_path, content)` — read old
+  `data_id` from state, call `delete_document`, call `add_file`, write new state.
+- `sync_delete(client, state, dataset_id, file_path)` — read `data_id` from
+  state, call `delete_document`, delete state row.
+- `sync_diff(client, state, config, base_ref)` — compute git diff, classify
+  files, dispatch to the three functions above.
 
-2. **`test_entity_not_duplicated_on_readd`** — after delete + re-add, assert
-   only one node with the ontology class IRI exists in the dataset graph
-   (not two). Proves the sync tool won't accumulate duplicate nodes across
-   update cycles.
+### `tests/test_sync.py`
 
-3. **`test_delete_evicts_entity_from_graph`** (advisory) — add a doc, capture
-   entity ID, delete doc, query graph, record whether entity persists or is
-   gone. The finding resolves Phase 3's open KG-eviction question.
+Four `integration`-marked tests:
+
+1. **`test_sync_add`** — `sync_add` a file; assert state row created with correct
+   `data_id`; assert `list_documents` shows the file.
+2. **`test_sync_update`** — `sync_add` then `sync_update` with new content; assert
+   state row updated with new `data_id`; assert old `data_id` gone from
+   `list_documents`.
+3. **`test_sync_delete`** — `sync_add` then `sync_delete`; assert state row
+   deleted; assert `list_documents` empty.
+4. **`test_sync_idempotent`** — `sync_add` twice with identical content; assert
+   second call is a no-op (same `data_id`, no duplicate API call).
 
 ## Verification
 
 ```powershell
 cd instance\installed\06-spec-graph\cognee\sync
 
+# Regression
 python ..\..\..\12-secrets-key-management\bin\epos-secrets uv run pytest -m smoke -v
+
+# All integration tests
 python ..\..\..\12-secrets-key-management\bin\epos-secrets uv run pytest -m integration -v -s
+
+# CLI smoke (once CLI is wired)
+python ..\..\..\12-secrets-key-management\bin\epos-secrets uv run cognee-sync --help
 ```
 
-## Open questions Phase 4 must answer before writing code
+## Open questions Phase 5 must answer (and record)
 
-1. **How is `ontologyKey` set?** The swagger shows `cognify` accepts
-   `ontologyKey: list[str]`. Does this reference a pre-uploaded TTL artifact,
-   an inline string, or a container-local path? Check the live swagger and/or
-   the Cognee source before writing any fixture code.
-2. **How are entity IDs exposed?** `GET /api/v1/datasets/{dataset_id}/graph`
-   exists per swagger. Does its response include node IDs mapped to ontology
-   class IRIs? Fetch and inspect before writing the tests.
-3. **Does the `phase4.ttl` fixture need to be uploaded to Cognee before use,
-   or can it be passed inline?** Determines whether a pre-test setup step
-   (upload TTL) is needed in the fixture.
+1. **Dataset naming strategy.** One dataset per repo? One per directory subtree?
+   One per file? Given accumulation behavior (Phase 2), a single dataset with
+   per-file `data_id` tracking is simplest. Confirm before wiring the state store.
+2. **What to do when state store has a `data_id` that no longer exists in Cognee**
+   (e.g. after a manual `delete_dataset` or Cognee wipe)? Re-add? Error? Define
+   the reconciliation path.
+3. **Full re-sync path.** When `--diff` is omitted, walk the corpus roots and
+   `sync_add` every file. If a file already exists in state with the same hash,
+   skip. This covers the cold-start case.
 
-**If the ontology mechanism turns out to be too opaque to test reliably:**
-record that finding and proceed to Phase 5 — ontology ID stability is a
-nice-to-have characterisation, not a prerequisite for the basic sync tool.
+## Final cleanup (after Phase 5 ships)
 
-## Future phases (record, not commitment)
-
-**Phase 5 — the sync tool itself.** Confirmed design from Phases 1–3:
-- Add: `add_file` (cognify implicit, synchronous)
-- Update: `delete_document(old_data_id) + add_file` (must persist `data_id`
-  per tracked file path — sidecar required)
-- Delete: `delete_document(data_id)` (synchronous)
-- State store: SQLite or similar mapping `file_path -> data_id`
-- Trigger: git post-receive hook or Gitea Actions on push
-
-**Final cleanup:** cognee.md full rewrite; optional epos-secrets.ps1 wrapper.
+- **`cognee.md` full rewrite** — drop `(in transition)` markers, set
+  `invocation_surface` to `cognee-sync`, set `incremental_update: true`,
+  resolve v1 contract gaps.
+- **`epos-secrets.ps1` wrapper** — optional; only if daily sync invocation
+  friction justifies it.

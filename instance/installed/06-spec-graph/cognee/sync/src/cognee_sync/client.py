@@ -220,6 +220,44 @@ class CogneeClient:
     # Phase 2 methods
     # ------------------------------------------------------------------
 
+    # ------------------------------------------------------------------
+    # Phase 4 methods
+    # ------------------------------------------------------------------
+
+    def upload_ontology(
+        self,
+        ontology_key: str,
+        content: str | bytes,
+        description: str = "",
+    ) -> dict[str, Any]:
+        """POST /api/v1/ontologies — upload an ontology file (OWL/Turtle).
+
+        ``ontology_key`` is the user-defined identifier referenced later via
+        the ``ontologyKey`` parameter on ``cognify``.
+        """
+        if isinstance(content, str):
+            content = content.encode("utf-8")
+        files = {"ontology_file": (f"{ontology_key}.owl", content, "application/octet-stream")}
+        data: dict[str, str] = {"ontology_key": ontology_key}
+        if description:
+            data["description"] = description
+        response = self._client.post("/api/v1/ontologies", files=files, data=data)
+        response.raise_for_status()
+        return response.json()
+
+    def delete_ontology(self, ontology_key: str) -> None:
+        """DELETE /api/v1/ontologies/{ontology_key} — remove an uploaded ontology."""
+        response = self._client.delete(f"/api/v1/ontologies/{ontology_key}")
+        if response.status_code == 404:
+            return
+        response.raise_for_status()
+
+    def get_graph(self, dataset_id: str) -> dict[str, Any]:
+        """GET /api/v1/datasets/{dataset_id}/graph — retrieve the knowledge graph."""
+        response = self._client.get(f"/api/v1/datasets/{dataset_id}/graph")
+        response.raise_for_status()
+        return response.json()
+
     def delete_document(self, dataset_id: str, data_id: str) -> None:
         """DELETE /api/v1/datasets/{dataset_id}/data/{data_id} — remove one data item.
 
