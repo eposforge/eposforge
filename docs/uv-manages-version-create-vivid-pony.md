@@ -57,19 +57,16 @@ The workflow must run on a self-hosted runner that has:
 - The age key present (for `epos-secrets` to decrypt `secrets.enc.yaml`)
 - Network access to `cognee.grace.lan`
 
-### 3. `COGNEE_STATE_DB` persistence between runs
+### 3. `COGNEE_STATE_DB` persistence between runs — **decided**
 
-The state store at `.cognee-state.db` must persist between workflow runs.
-Options:
-- **Commit the DB to the repo** (simplest, but binary in git)
-- **Runner-local path** (survives between runs if the runner is persistent)
-- **External store** (S3, NFS mount — correct for distributed runners)
+State DB lives at `instance/installed/06-spec-graph/cognee/sync/.cognee-state.db`,
+committed to source. Default is hardcoded in `cli.py` relative to `__file__`
+so it resolves correctly regardless of working directory. Override with
+`COGNEE_STATE_DB` if needed.
 
-For EposForge with a single persistent self-hosted runner: runner-local path
-(a runner-local path set via `COGNEE_STATE_DB` env var)
-is the right default. If the runner is ever wiped, a `--full-sync` command
-(currently a `cognee-sync` enhancement — not yet implemented) would re-sync all
-tracked files from scratch.
+Committing a SQLite binary to git is acceptable: single-operator repo,
+single Cognee instance, no concurrent writers. DB is small and grows
+incrementally (one row per tracked file).
 
 ### 4. `--full-sync` command (optional enhancement)
 
