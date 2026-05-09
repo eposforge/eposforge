@@ -5,7 +5,7 @@ maturity: experimental
 source_of_truth: yes
 ---
 
-# cognee-sync — Incremental Sync Tool (Phase 0)
+# cognee-sync — Incremental Sync Tool (Phase 1)
 
 Phase 0 of a multi-phase project to replace EposForge's full prune-and-reproject
 Cognee ingestion with a git-commit-driven incremental sync. This directory contains
@@ -16,16 +16,17 @@ Phases 1–5.
 
 ## What this is
 
-- **Phase 0 (this directory):** Python project (`uv`-managed, Python 3.13) providing:
-  - `cognee_sync.client.CogneeClient` — httpx-based HTTP client for the Cognee API.
-    This is the same client that the eventual sync daemon will import; no separate
-    test-only client exists.
-  - `cognee_sync.config.Config` / `load_config()` — reads `COGNEE_API_URL` and
-    `COGNEE_API_TOKEN` from environment variables injected by the `epos-secrets` shim.
-  - `tests/` — pytest harness with smoke tests for connectivity and dataset lifecycle.
+- **Phase 0 (done):** Python project (`uv`-managed, Python 3.13) providing
+  `CogneeClient` (`health`, `add_file`, `delete_dataset`), `Config` / `load_config()`,
+  and smoke tests for connectivity and dataset lifecycle.
 
-- **Phases 1–5 (future):** addfile/updatefile/deletefile behavioral tests and the
-  sync tool itself. All build on the client and harness scaffolded here.
+- **Phase 1 (this directory):** Proves a file added to Cognee is extractable and
+  queryable. Extends `CogneeClient` with `cognify`, `search`, `list_documents`.
+  Integration tests record cognify-implicit/explicit behavior, dedup behavior, and
+  search response shapes for Phases 2–4.
+
+- **Phases 2–5 (future):** updatefile/deletefile behavioral tests, ontology stability,
+  and the sync tool itself. All build on the client and harness scaffolded here.
 
 ---
 
@@ -77,8 +78,11 @@ uv sync
 # Smoke tests only (fast, connectivity check):
 ... epos-secrets uv run pytest -m smoke -v
 
-# All tests (once Phases 1–4 are implemented):
-... epos-secrets uv run pytest -v
+# Phase 1 integration tests (addfile behavior):
+... epos-secrets uv run pytest -m integration -v -s
+
+# All tests:
+... epos-secrets uv run pytest -v -s
 ```
 
 ---
@@ -99,8 +103,9 @@ sync/
       client.py           httpx-based Cognee HTTP client
   tests/
     __init__.py
-    conftest.py           fixtures: config, client, ephemeral dataset lifecycle
+    conftest.py           fixtures: config, client, dataset lifecycle, cognified_dataset
     test_smoke.py         Phase 0 smoke tests
+    test_addfile.py       Phase 1 integration tests (addfile behavior)
 ```
 
 ---
