@@ -1,225 +1,435 @@
-# Phase 0 — Cognee Sync Test Harness Scaffolding
+# Phase 1 — `addfile` Behavior
 
 ## Context
 
-Goal: build a git-commit-driven sync tool that updates the cognee knowledge graph in place when EposForge `*.md` files change, replacing the current full prune-and-reproject ingestion. Cognee assigns each document a stable id and exposes file-level CRUD via its HTTP API (swagger at https://cognee.grace.lan/docs); the sync tool will translate file changes into add/update/delete calls.
+Goal (overall effort): a git-commit-driven sync tool that updates the cognee
+knowledge graph in place when EposForge `*.md` files change, replacing the
+current full prune-and-reproject ingestion. Cognee assigns each document a
+stable id and exposes file-level CRUD via its HTTP API
+(swagger at https://cognee.grace.lan/docs); the sync tool will translate file
+changes into add / update / delete calls.
 
-Before building the sync tool, we need a test harness that verifies cognee's actual behavior against our assumptions — particularly that content edits to a same-named file produce a re-extracted graph (the trap that bit GraphRAG, where updates were filename-only and edits weren't detected). This is **Phase 0**: the harness only, with one connectivity smoke test. Phases 1–4 (addfile / updatefile / deletefile / ontology stability tests) and the eventual sync tool come later.
+**Phase 0 — done.** The test harness lives at
+`instance/installed/06-spec-graph/cognee/sync/`:
 
-**Primary dev box: Windows** (`ws-dev-w`). The harness must run natively on Windows from day one — not as a "cross-platform-friendly Linux project." Linux/macOS still need to work cleanly for the future docker-compose distribution, but Windows is the current target and primary verification surface.
+- `cognee-sync` `uv` project, Python 3.13 pinned, `httpx` runtime dep,
+  `pytest` + `pytest-randomly` dev deps
+- `CogneeClient` with `health()`, `add_file()`, `delete_dataset()` —
+  context-manager, bearer-auth, lenient JSON return
+- `Config` reads `COGNEE_API_URL`, `COGNEE_API_TOKEN` (optional → anonymous),
+  and `COGNEE_TLS_VERIFY` from the env injected by `epos-secrets`
+- Session-scoped `client` fixture; function-scoped `dataset_name` and
+  `dataset_lifecycle` factory; cleanup proven by `test_dataset_lifecycle_roundtrip`
+- Two pytest markers registered: `smoke`, `integration`
+- Secrets wired in the central manifest: `cognee_api_url`, `cognee_tls_verify`
+  (plus `cognee_api_token` reserved); stale `cognee/scripts/` consumers pruned
+- `instance/SPEC.md` lists `cognee-sync` as in-progress; `cognee.md` carries
+  the in-revision banner and surgical edits
+
+**Phase 0 discovery to lock in before Phase 1 work begins.** The smoke test
+prints the field set returned by `POST /api/v1/add` (see
+`tests/test_smoke.py:65`), but the captured stdout was *not* persisted —
+`.pytest_cache` only stores last-failed/nodeids, no log file exists, and the
+swagger schema for the add response is genuinely undefined
+(`additionalProperties: true, type: object`), so swagger cannot answer the
+question for us. Before Phase 1 starts, re-run the Phase 0 smoke and
+capture the `[Phase 0 discovery]` line, then collapse the
+`dataset_lifecycle` factory's three-candidate fallback at
+`tests/conftest.py:100` to the real key. Carrying the fallback into Phase 1
+hides the answer Phase 0 was supposed to surface.
+
+**This is Phase 1.** It proves the load-bearing premise that an added file's
+content is actually extracted into the KG and queryable. Until Phase 1
+passes, every later phase is built on a guess. Phase 2 (update), Phase 3
+(delete), Phase 4 (ontology stability), and Phase 5 (the sync tool itself)
+are summarized in **Future phases** below — kept for planning continuity,
+not committed to in detail until Phase 1's findings inform them.
+
+## What Phase 1 must prove
+
+1. A file added via `POST /api/v1/add` becomes part of the dataset's KG
+   such that a query for content unique to that file returns a hit.
+2. The mechanism by which extraction happens is understood and codified —
+   either cognify is implicit on add, or it is an explicit follow-up call,
+   or it is a job that must be polled to completion. We pick one model and
+   document it; we do not paper over uncertainty.
+3. Re-adding the same file (same dataset, same filename, identical content)
+   has a known, documented behavior — dedup, replace, or duplicate. Phase 5
+   needs this answer to decide whether the sync tool can safely re-emit
+   adds on retry.
+4. The dataset id field name from `add_file`'s response is finalized, and
+   the conftest fallback removed.
+
+These are the only assertions Phase 1 carries. Behavioral edges around
+*update* and *delete* are explicitly out of scope — they belong to Phases 2
+and 3 and conflating them here costs us focus.
 
 ## Scope
 
-**In Phase 0:**
-- New `cognee/sync/` Python project, managed by `uv`, Python 3.13 pinned
-- Integration with the existing `sops-age` adapter at `instance/installed/12-secrets-key-management/sops-age/` — secrets are added to the central manifest (`secrets.toml`) and central encrypted file (`secrets.enc.yaml`), not stored locally in `cognee/sync/`
-- Tests invoked via the existing `epos-secrets` resolver shim, which decrypts once, sets env vars, and execs the child process
-- pytest harness with conftest fixtures: per-run dataset naming (UUID-suffixed), id-tracking lifecycle factory that cleans up every dataset it creates via `DELETE /api/v1/datasets/{id}`
-- Cognee HTTP client (`httpx`-based) with three Phase 0 methods — `health()`, `add_file()`, `delete_dataset()` — endpoint paths sourced from the swagger doc at https://cognee.grace.lan/docs, not assumed. **This is the same client that grows into the production sync tool's client through Phases 1–5** — there is no separate "test client." Tests import it from `cognee_sync.client`; Phase 5's CLI/daemon will import it from the same place. That has design consequences: no test-mode toggles, no scaffold-quality shortcuts, no test-only helpers leaking into the client surface — fixtures wrap it, they don't replace it
-- Two smoke tests: one health/auth check, and one **lifecycle smoke** that actually creates + auto-deletes a dataset, so the cleanup mechanism is exercised rather than just declared
+**In Phase 1:**
 
-**Forward-looking Phase 0 design constraints** (so we don't paint ourselves into a corner that Phases 1–4 have to undo):
-- `CogneeClient` should be easy to extend with `cognify`, `search`, `list_documents`, `update_file`, `delete_document`, ontology methods — keep it thin, no premature abstractions
-- Response parsing should be lenient (return parsed JSON dicts, not strict typed models) until Phases 1–4 reveal the actual shapes
-- Marker convention (`@pytest.mark.smoke`, `@pytest.mark.integration`) is set up now so future phases reuse it
-- Fixture scopes: don't lock everything to function scope; Phase 4 will need a session-scoped ontology fixture, so the `client` fixture being session-scoped already accommodates that
+- Three new methods on `CogneeClient` (extending, not replacing, the Phase 0
+  surface): `cognify`, `search`, `list_documents`. Endpoint paths and
+  payload shapes sourced from the live swagger at
+  https://cognee.grace.lan/docs — never assumed.
+- A `wait_for_cognify` helper (client-level, not test-only) **iff** cognify
+  proves to be asynchronous. If cognify is synchronous, this helper is not
+  added; we do not write speculative code.
+- New conftest fixtures: `unique_token` (function scope, generates a
+  collision-free canary string for query assertions) and
+  `cognified_dataset` (function scope factory, layers add → cognify →
+  ready-wait on top of the existing `dataset_lifecycle` factory so tests
+  read as one call).
+- New test file `tests/test_addfile.py` with three `integration`-marked
+  tests covering the three assertions above, plus a fourth
+  `Phase 1 discovery` test that records the search response shape so
+  Phase 2/3 can write strict assertions against it.
+- Pin down the dataset-id field in `add_file`'s response; collapse the
+  three-candidate fallback in `dataset_lifecycle` to the real key.
 
-The detail of the later phases lives in the **Future phases** section below — only enough to plan when the time comes, not enough to commit to specifics that swagger or Phase 0 findings may overturn.
+**Forward-looking design constraints** (carry-overs from Phase 0, restated
+because every new method is an opportunity to violate them):
+
+- `CogneeClient` stays thin. New methods return parsed JSON dicts. No
+  pydantic models, no response wrappers, no typed envelopes — Phase 4
+  decides if/when typing pays for itself.
+- No `_for_test` parameters. If a test needs different behavior, the
+  fixture composes it; the client does not branch on caller identity.
+- `wait_for_cognify` (if added) takes timeout + poll-interval as parameters
+  with sane defaults — not pulled from a test config singleton. Production
+  daemon callers will pass their own values.
+- `search` accepts a `search_type` parameter even if Phase 1 only exercises
+  one type, because cognee's swagger exposes a search-type taxonomy and
+  Phase 4 will need others. One parameter now, no refactor later.
+
+**Out of scope for Phase 1** (deferred):
+
+- Update/edit semantics (Phase 2)
+- Delete and shared-entity behavior (Phase 3)
+- Ontology-anchored id stability (Phase 4)
+- Any file-watching, git-diffing, or daemon code (Phase 5)
+- Strict response-shape typing — Phases 1–3 record actual shapes; Phase 4
+  may introduce typed models if churn justifies it
+- Concurrency / parallel-test execution. Phase 1 stays serial; the lifecycle
+  factory's per-test UUID prefix already lets us parallelize later if needed
 
 ## Files to create
 
 ```
 instance/installed/06-spec-graph/cognee/sync/
-  pyproject.toml                     # project metadata, deps, ruff config
-  uv.lock                            # committed, generated by `uv sync`
-  .python-version                    # contains: 3.13
-  .gitignore                         # ignores .venv/
-  README.md                          # frontmatter-classified per AGENTS.md
-  src/
-    cognee_sync/                     # production package — same code path tests and the future sync tool import
-      __init__.py
-      config.py                      # tiny — reads os.environ
-      client.py                      # httpx-based cognee HTTP client (grows through Phases 1–5)
   tests/
-    __init__.py
-    conftest.py                      # fixtures: config, client, ephemeral dataset
-    test_smoke.py                    # connectivity + auth assertion
+    test_addfile.py          # four integration tests (see §Critical files below)
 ```
+
+That is the entire create list. Phase 0 already built the project skeleton;
+Phase 1 adds tests and extends existing modules. New files are the smell
+to avoid here — every Phase 1 capability fits inside the harness already in
+place.
 
 ## Files to modify
 
 ```
-instance/installed/12-secrets-key-management/sops-age/secrets.toml
-  + add [[secret]] block for cognee_api_url   (logical_name → COGNEE_API_URL)
-  + add [[secret]] block for cognee_api_token (logical_name → COGNEE_API_TOKEN)
-    Both list instance/installed/06-spec-graph/cognee/sync/ as consumer.
+instance/installed/06-spec-graph/cognee/sync/src/cognee_sync/client.py
+  + cognify(dataset_name_or_id) → dict          # POST /api/v1/cognify (path TBV from swagger)
+  + search(query, search_type, dataset_ids=None) → dict
+                                                # POST /api/v1/search (path TBV from swagger)
+  + list_documents(dataset_id) → list[dict]     # GET path TBV from swagger
+  + wait_for_cognify(...)  ONLY IF cognify is async
+                                                # poll list_documents or job status until ready
 
-  - prune stale consumer entries (start with integrity, not drift):
-      anthropic_api_key.consumers — remove:
-        instance/installed/06-spec-graph/cognee/scripts/ingest_dual_container.sh
-        instance/installed/06-spec-graph/cognee/scripts/cognee.py
-        instance/installed/06-spec-graph/cognee/scripts/cognee_indexing.py
-      openai_api_key.consumers — remove same three.
-      neo4j_password.consumers — remove:
-        instance/installed/06-spec-graph/cognee/scripts/cognee.py
-        instance/installed/06-spec-graph/cognee/scripts/cognee_indexing.py
-    All three scripts confirmed deleted (`cognee/scripts/` is empty).
-    Other listed consumers (graphrag/scripts/rebuild.sh, MCP scripts) verified
-    extant; not touched.
+  No changes to existing methods. No reorganization. New methods grouped
+  in a "# Phase 1 methods" section header below the Phase 0 block.
 
-instance/installed/12-secrets-key-management/sops-age/secrets.enc.yaml
-  + add cognee_api_url and cognee_api_token via interactive `sops secrets.enc.yaml`
-    (the URL goes through the encrypted store too — AGENTS.md prohibits committing
-    hostnames in plaintext, and one mechanism beats two)
+instance/installed/06-spec-graph/cognee/sync/tests/conftest.py
+  + unique_token fixture (function scope) — short hex token guaranteed
+    not to appear in canonical EposForge content; used as the canary
+    string in add+search assertions.
+  + cognified_dataset fixture (function scope) — composes
+    dataset_lifecycle + cognify + readiness wait into a single factory.
+    Returns (dataset_id, response_from_add) so tests don't have to
+    re-derive the id. Cleanup is inherited from dataset_lifecycle.
+  ~ Collapse the three-candidate id-extraction in dataset_lifecycle
+    (lines 100–104) to the actual field name observed in Phase 0.
 
-instance/SPEC.md
-  + register cognee/sync/ as a new artifact under the spec-graph component
-    (paired-change rule from AGENTS.md)
+instance/installed/06-spec-graph/cognee/sync/pyproject.toml
+  No changes expected. If swagger reveals cognee uses a non-standard
+  payload encoding (e.g., msgpack) we'd add a dep here, but JSON is the
+  expected case.
+
+instance/installed/06-spec-graph/cognee/sync/README.md
+  + one-line update under the Phase 0 invocation note:
+    "Phase 1 integration tests: `epos-secrets uv run pytest -m integration -v`"
 ```
 
-**Surgically edited in Phase 0** (not a full rewrite — that stays last):
-
-```
-instance/installed/06-spec-graph/cognee/cognee.md
-  Targeted "harm-reduction" edits to prevent AI agents from following stale
-  instructions toward a deleted script. Specifics:
-
-  1. Add a status banner immediately after the frontmatter:
-     "> STATUS: in revision. Incremental-sync development is underway in
-     >  ./sync/. Sections below that describe `ingest_dual_container.sh`
-     >  refer to a deleted artifact and should not be followed; treat
-     >  ./sync/README.md as the current authority for invocation."
-
-  2. Replace the `invocation_surface` value (line 29) — which points at the
-     deleted ingest_dual_container.sh — with:
-     `in revision (see ./sync/ for in-flight implementation)`.
-
-  3. Replace the `script` repo-specific field (line 44) the same way.
-
-  4. Mark the `incremental_update` field (line 38) as
-     `false (in transition — see ./sync/)` so the v1 contract gap on
-     line 155 is visibly in flight rather than open-ended.
-
-  5. Remove the "Dual-container ingestion (production stack)" section
-     (lines 66–120) — it walks readers through running the deleted
-     script. Replace with a one-paragraph stub: "Active ingestion path is
-     being rewritten under ./sync/. Until Phase 5 lands, manual ingestion
-     is performed by the operator outside this adapter spec."
-
-  6. Remove the "Windows setup note" section (lines 133–145) — the
-     `D:\venv\cognee` workaround is obsolete since the dual-container
-     switch. The new sync/ directory documents the current Windows
-     bootstrap (uv + LongPathsEnabled).
-
-  Untouched: the metadata table structure, "Role in the Runtime Pipeline"
-  conceptual content, "Environment variables" section, and "Contract gaps"
-  table. Those align with the full rewrite's eventual shape and surgically
-  editing them now risks doing the rewrite twice.
-```
-
-The full content rewrite — including updating the metadata table to reflect Phase 5's invocation surface, dropping the `incremental_update: false` declaration once it's no longer true, and resolving the v1 contract gaps — remains the last step of the overall plan, after Phases 1–5.
+No edits expected outside `cognee/sync/` for Phase 1. The cognee.md
+surgical edits and SPEC.md registration happened in Phase 0; the *full*
+cognee.md rewrite still waits for Phase 5.
 
 ## Critical files — content notes
 
-### `sync/pyproject.toml`
-- `[project]` with `name = "cognee-sync"`, `requires-python = ">=3.13"`
-- Runtime deps: `httpx`
-- Dev deps (under `[dependency-groups].dev`): `pytest`, `pytest-randomly`
-- `[tool.ruff]` block: line-length 100, target Python 3.13, sensible default rule set
-- `[tool.pytest.ini_options]`: `testpaths = ["tests"]`, `addopts = "-ra"`, marker registration for `smoke` / `integration`. Also a `dataset_prefix` constant: `eposforge-sync-tests` (this is config, not a secret — lives in pyproject as `[tool.cognee_sync].dataset_prefix` or as a module constant)
+### `client.py` — new methods
 
-### `sync/src/cognee_sync/config.py`
-- `Config` frozen dataclass: `api_url`, `api_token`, `dataset_prefix`
-- `load_config()` reads `os.environ["COGNEE_API_URL"]` and `os.environ["COGNEE_API_TOKEN"]` (set by `epos-secrets`); pulls `dataset_prefix` from a module constant or pyproject metadata
-- Raises a clear error if the env vars are missing, with a hint to invoke via `epos-secrets`
-- **No sops subprocess, no decryption code** — that's the resolver's job
+**`cognify(dataset_name_or_id, *, run_in_background=False)`**
 
-### `sync/src/cognee_sync/client.py`
-- `CogneeClient(base_url, token, timeout=180)` class with `httpx.Client` underneath. Production-grade from day one — this is the same class that Phases 1–5 will extend and that the sync tool will import directly
-- Bearer auth header injected once at construction; default timeout matches the existing `COGNEE_TEST_STEP_TIMEOUT=180s` convention from [instance/installed/05-tool-transport/mcp-stdio-and-http/scripts/cognee-mcp-test.py](mnt/raid-storage/src/git/gh/eposforge/instance/installed/05-tool-transport/mcp-stdio-and-http/scripts/cognee-mcp-test.py)
-- Phase 0 methods: `health()`, `add_file(dataset_name, content, filename="canary.md")`, `delete_dataset(dataset_id)` — exact paths from swagger
-- `add_file` returns the response dict (containing the cognee-assigned `dataset_id` — exact field name to be verified against swagger)
-- Context-manager support so tests can `with CogneeClient(...) as c:`
-- No test-mode flags, no mock toggles, no `_for_test` methods. Test convenience lives in fixtures (`conftest.py`), never in the client
+- Path **confirmed** from swagger: `POST /api/v1/cognify`. Body shape
+  (field name `datasets` vs `dataset_ids`, etc.) — confirm against the
+  live spec before writing; swagger summary suggests both are accepted on
+  related endpoints.
+- Accept either the dataset *name* or the *id*. Cognee's `add` accepts
+  both via separate fields (`datasetName` / `datasetId`); cognify likely
+  does too. Pick whichever the swagger documents as canonical; do not
+  silently overload our parameter — if both are needed, expose two
+  arguments.
+- Returns the parsed response dict. If cognify is async and returns a
+  job id / pipeline run id, return the dict as-is; the *caller* (or
+  `wait_for_cognify`) decides what to do with it. Do not hide async
+  behavior behind a synchronous-looking method.
 
-### `sync/tests/conftest.py`
-- `config` fixture (session scope): `load_config()`
-- `client` fixture (session scope): `CogneeClient` from config
-- `dataset_name` fixture (function scope): yields `f"{prefix}-{uuid.uuid4().hex[:8]}"` — name only, no API call
-- `dataset_lifecycle` fixture (function scope): factory that wraps `client.add_file`, recording every returned `dataset_id` in a list; on teardown iterates the list and calls `client.delete_dataset(...)`, suppressing 404 so partial-failure cleanup is robust
+**`search(query, *, search_type, dataset_ids=None, datasets=None, top_k=None)`**
 
-### `sync/tests/test_smoke.py`
-Two tests, both marked `@pytest.mark.smoke`:
-- `test_api_reachable_and_authenticated` — `client.health()` returns 2xx. Fast pre-flight; runs first via `pytest-randomly` ordering or explicit ordering, so a misconfigured token surfaces with a single clean failure rather than as part of the lifecycle test.
-- `test_dataset_lifecycle_roundtrip` — uses `dataset_lifecycle` factory to add a tiny canary md (`# canary\nspec graph test\n`) under a UUID-suffixed dataset name; asserts the response contains a `dataset_id`; teardown deletes it. The verification this gives us: (a) auth works end-to-end including write paths, (b) cognee accepts our payload shape, (c) the cleanup fixture actually fires and successfully removes what it created. Phase 1+ then layer behavioral assertions on top of this proven lifecycle.
+- Path **confirmed** from swagger: `POST /api/v1/search`. Body accepts
+  `datasets` (list of names) **or** `dataset_ids` (list of UUIDs) for
+  scoping — confirmed via swagger. Expose both parameters; pick whichever
+  is more natural at the call site.
+- `search_type` is required (no default). Cognee exposes multiple search
+  types (graph completion, summaries, chunks, code, etc.); Phase 1 picks
+  one — most likely `GRAPH_COMPLETION` or `CHUNKS` depending on what
+  reliably surfaces a unique token from a freshly-added doc. Document the
+  choice in a one-line code comment when we know which works.
+- Returns the parsed JSON dict. The Phase 1 test that asserts a hit reads
+  this dict by stringifying and substring-matching on the unique token —
+  not by indexing into a hypothesized field shape. Phase 2+ tighten the
+  assertion once the shape is observed.
+- Note: `GET /api/v1/search` exists too (search history). Out of scope
+  for Phase 1; flag for Phase 5 if the sync tool ever needs it.
 
-### `sync/README.md`
-Frontmatter required by AGENTS.md doc-classification rule:
-```yaml
----
-doc_kind: developer-guide
-scope: repo-instance
-maturity: experimental
-source_of_truth: yes
----
+**`list_documents(dataset_id)`**
+
+- **Swagger has no per-dataset documents endpoint** in the surface we
+  inspected — only `GET /api/v1/datasets` (list datasets, top-level).
+  Phase 1's first task on this method is to recheck the live swagger for
+  a `/api/v1/datasets/{id}/data` or similar; if absent, decide between
+  (a) skipping `list_documents` for Phase 1 and using the `search`
+  round-trip alone as the readiness signal, or (b) inferring document
+  presence from a different endpoint cognee exposes. Do **not** invent a
+  path that returns 404 just to satisfy the plan.
+- If a path is found: returns the parsed response (list or dict containing
+  a list). Used by `wait_for_cognify` (if async) and by Phase 3
+  delete-eviction tests.
+- If no path is found: drop `list_documents` from Phase 1 entirely; the
+  search-token round-trip is sufficient evidence that the doc is in the
+  KG, and Phase 3 can solve its own visibility problem when it gets
+  there.
+
+**`wait_for_cognify(dataset_name_or_id, *, timeout=180.0, interval=2.0)`**
+*(only if Phase 1 finds cognify is async)*
+
+- Polls whatever endpoint cognee exposes for pipeline status. If cognee
+  has no status endpoint, polls `list_documents` and waits for an
+  observable readiness signal (`status == "ready"` or similar — TBV).
+- Raises `TimeoutError` (stdlib) on timeout, with the last-observed
+  status in the message so failures are diagnosable.
+- Default 180s timeout matches the Phase 0 client default and the
+  existing `COGNEE_TEST_STEP_TIMEOUT` convention.
+
+### `conftest.py` — new fixtures
+
+**`unique_token`**
+```python
+@pytest.fixture()
+def unique_token() -> str:
+    """A short hex string vanishingly unlikely to appear in real corpus content."""
+    return f"phase1-canary-{uuid.uuid4().hex[:12]}"
 ```
-Body: bootstrap instructions for **Windows first, Linux second** (`uv sync`, then `epos-secrets uv run pytest -m smoke`); Windows long-paths note (`LongPathsEnabled = 1` registry / Group Policy); explanation that this is Phase 0 of a multi-phase incremental-sync effort.
+Tests embed this token in canary content and assert that searching for it
+returns a hit. The `phase1-canary-` prefix makes test pollution easy to
+spot if cleanup ever fails.
+
+**`cognified_dataset`**
+
+Factory fixture. Wraps `dataset_lifecycle` so the common path
+(add → cognify → wait) is one call, and so the Phase 1 readiness model is
+codified in *one* place — not duplicated across tests:
+
+```python
+@pytest.fixture()
+def cognified_dataset(client, dataset_lifecycle):
+    def _factory(name, content, filename="canary.md"):
+        add_response = dataset_lifecycle(name, content, filename)
+        dataset_id = add_response[<the-real-key>]
+        cognify_response = client.cognify(name)  # or dataset_id, per swagger
+        if <cognify-is-async>:
+            client.wait_for_cognify(name)
+        return dataset_id, add_response
+    return _factory
+```
+Both branches of the `<cognify-is-async>` decision are wired by Phase 1's
+first test; once the answer is in, the placeholder collapses to the
+chosen path. We do not ship the conditional.
+
+### `tests/test_addfile.py` — four integration tests
+
+All marked `@pytest.mark.integration`. Run with
+`epos-secrets uv run pytest -m integration -v`.
+
+1. **`test_added_file_is_queryable_via_search`** — the load-bearing one.
+   Add a doc whose body contains `unique_token`; cognify; search for the
+   token; assert the token appears in the stringified response. Failure
+   here invalidates the entire incremental-sync premise; passing
+   establishes the baseline every later phase builds on.
+
+2. **`test_cognify_completes_within_timeout`** — calls `cognify` directly
+   on a freshly added doc and asserts it returns successfully (sync) or
+   `wait_for_cognify` returns within `timeout=180s` (async). This test's
+   *real* job is to lock in which model cognee uses; the assertion is the
+   excuse to exercise the path. Add an `xfail`-strict marker if cognee's
+   behavior changes between versions, so a regression surfaces loudly.
+
+3. **`test_re_add_identical_content_is_idempotent_or_documented`** — add
+   the same file twice (same dataset name, same filename, same content);
+   capture both responses; assert that the second call does not raise and
+   that `list_documents(dataset_id)` returns a count consistent with the
+   observed behavior (1 = dedup, 2 = duplicate). The assertion records
+   what cognee *actually* does so Phase 5 can pick a strategy. Includes
+   a one-line print recording the observed dedup behavior for the
+   Phase 1 changelog.
+
+4. **`test_search_response_shape_discovery`** *(diagnostic, not
+   load-bearing)* — issues one search and prints the top-level keys and
+   nested structure of the response, the way Phase 0's lifecycle test
+   prints `add_file` response keys. Phase 2/3 use this to write strict
+   assertions; Phase 1 uses it to confirm we understood the shape before
+   moving on. May be removed in Phase 4 once the shape is encoded in
+   typed models.
 
 ### Existing automation reused, not re-implemented
-- [instance/installed/12-secrets-key-management/bin/epos-secrets](mnt/raid-storage/src/git/gh/eposforge/instance/installed/12-secrets-key-management/bin/epos-secrets) — runtime resolver shim. Decrypts `secrets.enc.yaml` once, sets env vars by `runtime_name`, then `execvp`s the child. We invoke it; we do not duplicate it.
-- [instance/installed/12-secrets-key-management/sops-age/scripts/setup_core.py](mnt/raid-storage/src/git/gh/eposforge/instance/installed/12-secrets-key-management/sops-age/scripts/setup_core.py) — already handles cross-platform age-key bootstrap and `.sops.yaml` recipient management. The new dev box (or freshly-cloned existing one) goes through `epos-machine-request` → operator-side `epos-authorize` per [sops-age.md](mnt/raid-storage/src/git/gh/eposforge/instance/installed/12-secrets-key-management/sops-age/sops-age.md) before secrets resolve. No bespoke logic for `cognee/sync/`.
+
+- `epos-secrets` resolver shim — already injects `COGNEE_API_URL` /
+  `COGNEE_API_TOKEN` / `COGNEE_TLS_VERIFY`. Phase 1 needs nothing new.
+- `dataset_lifecycle` factory — Phase 1's `cognified_dataset` *wraps*
+  it, inheriting the proven cleanup machinery. Cleanup is therefore
+  unchanged: every dataset created in Phase 1 is deleted by the same
+  teardown loop that proved itself in Phase 0.
 
 ## Verification
 
-Bootstrap (Windows-primary path):
-
 ```powershell
-# One-time per machine: ensure age key is present, recipient is authorized in .sops.yaml,
-# and the central secrets.enc.yaml has cognee_api_url + cognee_api_token populated.
-# (Operator runs `sops secrets.enc.yaml` to add the new keys interactively.)
-
 cd instance\installed\06-spec-graph\cognee\sync
-uv sync                                  # downloads Python 3.13 if absent, materializes .venv
 
-# Run the smoke test through the resolver:
+# Sanity: Phase 0 smoke still passes (regressions show up first here)
 python ..\..\..\12-secrets-key-management\bin\epos-secrets uv run pytest -m smoke -v
+
+# Phase 1 itself
+python ..\..\..\12-secrets-key-management\bin\epos-secrets uv run pytest -m integration -v
 ```
 
-Bootstrap (Linux equivalent):
-
-```sh
-cd instance/installed/06-spec-graph/cognee/sync
-uv sync
-../../../12-secrets-key-management/bin/epos-secrets uv run pytest -m smoke -v
-```
+Linux equivalent — same invocation with forward slashes; no behavioral
+difference.
 
 Expected outcomes:
-1. `uv sync` completes cleanly on first run; `.venv/` is gitignored
-2. `epos-secrets` decrypts the central `secrets.enc.yaml`, populates `COGNEE_API_URL` + `COGNEE_API_TOKEN`, and execs `uv run pytest`
-3. `test_api_reachable_and_authenticated` passes against the live `dkr-cgnee-api` container
-4. `test_dataset_lifecycle_roundtrip` passes: a UUID-named dataset is created, then deleted by the fixture teardown. After the run completes, listing datasets via the cognee API shows zero entries with the test prefix — proving the cleanup fixture works end-to-end, not just in code
-5. Running the lifecycle test twice in succession leaves no residual datasets between runs (same listing check)
-6. `git status` after a clean `uv sync` shows no untracked artifacts inside `sync/`
-7. `secret.accessed` audit lines for `cognee_api_url` and `cognee_api_token` appear at `instance/.audit/secret-access.jsonl` (or `$EPOS_AUDIT_SINK` if set), matching the existing audit pattern
 
-If any of `health()`, `add_file()`, or `delete_dataset()` fails because the assumed endpoint shape doesn't match the running container, adjust against the swagger at https://cognee.grace.lan/docs — discovering the actual surface is part of Phase 0's value, and is the only place in the plan where observed-not-assumed behavior matters.
+1. Phase 0 smoke tests still pass — no regressions from extending the
+   client.
+2. `test_added_file_is_queryable_via_search` passes: the canary token
+   round-trips through add → cognify → search.
+3. `test_cognify_completes_within_timeout` passes; the test source code
+   reflects the observed sync/async model (one path, not a conditional).
+4. `test_re_add_identical_content_is_idempotent_or_documented` passes
+   and prints the observed re-add behavior. Whatever cognee does is
+   acceptable — the test exists to *characterize*, not to enforce.
+5. `test_search_response_shape_discovery` passes and prints the response
+   structure. Output is captured in the run log and used to write Phase
+   2's strict assertions.
+6. After every test, listing datasets via the cognee API shows zero
+   entries with the `eposforge-sync-tests-` prefix — confirming Phase 1
+   inherits Phase 0's clean teardown unchanged.
+7. `dataset_lifecycle`'s id-extraction in `conftest.py:100` is a single
+   field access, not a fallback chain — the Phase 0 discovery has been
+   acted on.
+8. `git status` after a clean run shows no untracked artifacts inside
+   `sync/` (no debug dumps, no swagger snapshots committed by accident).
+
+If any of `cognify`, `search`, or `list_documents` fails because the
+swagger-derived endpoint shape doesn't match the running container,
+adjust against the live swagger at https://cognee.grace.lan/docs.
+Discovering the actual surface is part of Phase 1's value, exactly as it
+was in Phase 0.
+
+## Open questions Phase 1 must answer (and record)
+
+These are the questions whose answers Phases 2–5 depend on. The Phase 1
+PR description should explicitly list each with its observed answer:
+
+1. **Is cognify implicit on add, explicit, or async-with-job-id?**
+   Determines whether `wait_for_cognify` ships and whether the sync tool's
+   per-commit dispatch needs back-pressure.
+2. **What is the search response shape for the search type we picked?**
+   Encoded in `test_search_response_shape_discovery`'s output; Phase 2
+   strict assertions read from this.
+3. **What is cognee's dedup behavior on identical re-add?**
+   Determines whether the Phase 5 sync tool can be lazy and re-emit add
+   on retry, or must track which docs are already in the KG.
+4. **What is the exact field name carrying `dataset_id` in `add_file`'s
+   response?** Phase 0 was supposed to print this, but stdout wasn't
+   persisted and swagger declares the response `additionalProperties:
+   true` (no schema). Re-run smoke and capture before Phase 1 starts;
+   then collapse the fallback chain.
+5. **Does cognee expose a per-dataset documents-list endpoint?** Swagger
+   shows `GET /api/v1/datasets` but no obvious `…/{id}/data` equivalent.
+   First Phase 1 task is to confirm; result determines whether
+   `list_documents` ships in Phase 1 or is deferred to Phase 3.
+6. **`add_file` accepts `node_set` and `run_in_background` per swagger.**
+   Out-of-scope to *use*, in-scope to *notice* — a one-line note in the
+   PR is sufficient. `node_set` is relevant for Phase 4 ontology-grounding
+   work; `run_in_background` may simplify Phase 5's daemon design.
 
 ## Future phases (record, not commitment)
 
-These are out of scope for Phase 0 implementation but kept here so we can plan them when the time comes and so Phase 0 design choices stay compatible with where we're heading. Each phase adds tests and client methods on top of the same harness; no harness redesign expected.
+These are out of scope for Phase 1 and remain notional. Each phase adds
+tests and client methods on top of the same harness; no harness redesign
+expected.
 
-**Phase 1 — `addfile` behavior.** Prove an added file's content is extracted into the KG and queryable. Add a canary with a unique token, run cognify if it isn't implicit on add, query and assert hit. Open questions: is cognify implicit on add? what's the search/query endpoint shape? what's cognee's dedup behavior on re-add of identical content? Adds `cognify`, `search`, `list_documents` to the client.
+**Phase 2 — `updatefile` behavior (the GraphRAG-burn test).** Prove edits
+to a same-named file actually update the KG, rather than no-op-ing on
+filename or content hash. Add file with token ALPHA, update same path to
+BETA, assert BETA queryable AND ALPHA gone. Capture whether `document_id`
+survives updates (in-place vs. delete+add semantics) — Phase 5 needs the
+answer. Open question: does cognee have an explicit update endpoint, or is
+update = delete + add?
 
-**Phase 2 — `updatefile` behavior (the load-bearing phase).** Prove edits to a same-named file actually update the KG, rather than no-op-ing on filename or content hash. This is the GraphRAG-burn test — if it fails, the entire incremental-sync premise is invalid. Add file with token ALPHA, update same path to BETA, assert BETA queryable AND ALPHA gone. Also: capture whether document_id survives updates (in-place vs. delete+add semantics) — Phase 5 needs the answer. Open question: does cognee have an explicit update endpoint, or is update = delete + add?
+**Phase 3 — `deletefile` behavior.** Prove deletes evict KG content and
+characterize shared-entity behavior. Single-doc delete = unique-content
+gone. Two-doc setup with shared entity, delete one = shared entity
+persists. Delete + re-add restores content (no tombstones). Open
+questions: does delete cascade, or correctly retain shared entities? Are
+deletes synchronous in the doc list?
 
-**Phase 3 — `deletefile` behavior.** Prove deletes evict KG content, and characterize shared-entity behavior. Single-doc delete = unique-content gone. Two-doc setup with shared entity, delete one = shared entity persists. Delete + re-add restores content (no tombstones). Open questions: does delete cascade, or correctly retain shared entities? are deletes synchronous in the doc list?
+**Phase 4 — Ontology grounding stability.** Prove ontology-anchored
+entities keep canonical ids across edits to documents that reference them.
+Load a known ontology term into a doc, capture its id, edit the doc,
+capture the id again, assert match. Stricter variant: same but with
+delete + re-add. Likely needs a small fixture `.ttl` under
+`sync/tests/fixtures/`. Open questions: does cognee expose stable
+ontology-anchored ids? Is the `.ttl` per-dataset or per-instance?
 
-**Phase 4 — Ontology grounding stability.** Prove ontology-anchored entities keep canonical ids across edits to documents that reference them — without this, downstream consumers see entity churn. Load a known ontology term into a doc, capture its id, edit the doc, capture the id again, assert match. Stricter variant: same but with delete + re-add. Open questions: does cognee expose stable ontology-anchored ids? is the `.ttl` per-dataset or per-instance? Likely needs a small fixture `.ttl` under `sync/tests/fixtures/`.
-
-**Phase 5 — the sync tool itself.** A git-driven process that, on commit (or Gitea pre-receive hook), diffs changed files, classifies each as add/update/delete, and dispatches the corresponding cognee API calls. CLI-invoked-by-Gitea-Actions vs. long-running watcher is a design choice informed by Phase 1–4 findings on update latency and idempotency.
+**Phase 5 — the sync tool itself.** A git-driven process that, on commit
+(or Gitea pre-receive hook), diffs changed files, classifies each as
+add/update/delete, and dispatches the corresponding cognee API calls.
+CLI-invoked-by-Gitea-Actions vs. long-running watcher is a design choice
+informed by Phase 1–4 findings on update latency and idempotency.
 
 **Final cleanup steps (last in the overall plan):**
-- **Cognee.md full rewrite** at [instance/installed/06-spec-graph/cognee/cognee.md](mnt/raid-storage/src/git/gh/eposforge/instance/installed/06-spec-graph/cognee/cognee.md). Phase 0 already does the surgical harm-reduction edits (status banner, deletes the misleading invocation/Windows sections). The final rewrite drops the `(in transition)` markers, points the invocation surface at whatever Phase 5 ships, updates the metadata table to reflect actual incremental-update behavior verified by Phases 1–4, and resolves the v1 contract gaps that closed along the way.
-- **`epos-secrets.ps1` wrapper.** The sops-age adapter at [instance/installed/12-secrets-key-management/sops-age/](mnt/raid-storage/src/git/gh/eposforge/instance/installed/12-secrets-key-management/sops-age/) ships `epos-secrets` as a Python script only — unlike its sibling shims `epos-authorize.ps1` and `epos-machine-request.ps1`. Windows invocation therefore goes via `python …\epos-secrets …`. If that friction becomes annoying in daily use once Phase 5's sync tool is running regularly, adding a `.ps1` wrapper would be a small follow-up change against the sops-age adapter. **Not Phase 0** — only listed here so we remember the option exists.
 
-(The previously-noted "stale consumer cleanup in secrets.toml" is now folded into Phase 0's edits above — done upfront rather than deferred.)
+- **Cognee.md full rewrite** at
+  [instance/installed/06-spec-graph/cognee/cognee.md](mnt/raid-storage/src/git/gh/eposforge/instance/installed/06-spec-graph/cognee/cognee.md).
+  Phase 0 did the surgical harm-reduction edits. The final rewrite drops
+  the `(in transition)` markers, points the invocation surface at whatever
+  Phase 5 ships, updates the metadata table to reflect actual
+  incremental-update behavior verified by Phases 1–4, and resolves the v1
+  contract gaps that closed along the way.
+- **`epos-secrets.ps1` wrapper.** The sops-age adapter ships
+  `epos-secrets` as a Python script only — unlike its sibling
+  `epos-authorize.ps1` and `epos-machine-request.ps1` shims. Adding a
+  `.ps1` wrapper is a small follow-up against the sops-age adapter if
+  daily Windows usage of the Phase 5 sync tool makes the friction worth
+  fixing. Not Phase 1.

@@ -55,7 +55,7 @@ and [../01-architecture/02-components/06-spec-graph.md](../01-architecture/02-co
 | `privacy_posture` | `local` (Neo4j) / `vendor-default` (inference during indexing) |
 | `cost_hint` | free (Neo4j CE) + metered (Anthropic/OpenAI APIs for indexing) |
 | `capabilities` | ontology-grounded-extraction, entity-normalization, graph-query |
-| `invocation_surface` | CLI scripts (`instance/installed/06-spec-graph/cognee/scripts/ingest_dual_container.sh`) |
+| `invocation_surface` | CLI scripts (`instance/installed/06-spec-graph/cognee/scripts/ingest_dual_container.sh`); incremental sync under development at `instance/installed/06-spec-graph/cognee/sync/` |
 | `status` | `experimental` |
 | `query_languages` | Cypher (via Neo4j); natural language (via Neo4j MCP) |
 | `projection_format` | hybrid (graph nodes/edges + embeddings) |
@@ -71,6 +71,7 @@ Single source of truth for Component 6 adapter status in this repository.
 | Adapter | FULFILLS_SLOT | Status | Invocation surface | Notes |
 |---|---|---|---|---|
 | `cognee-ontology-preprocessor` | `SPEC_GRAPH` | implemented, default, experimental | `bash instance/installed/06-spec-graph/cognee/scripts/ingest_dual_container.sh` | Default ontology-grounded extraction path (dual-container HTTP API) |
+| `cognee-sync` | `SPEC_GRAPH` | in-progress, experimental | `uv run pytest -m smoke` (Phase 0 harness); sync tool in Phases 1–5 | Incremental git-commit-driven sync — replaces full prune-and-reproject |
 | `neo4j-ce` | `SPEC_GRAPH` | implemented, active, experimental | `instance/installed/06-spec-graph/graphrag/scripts/import.sh` + Neo4j MCP | Query store and Cypher/vector surface |
 | `microsoft-graphrag` | `SPEC_GRAPH` | implemented, installed-fallback, experimental | `bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` | Opt-in GraphRAG extraction and import path |
 
