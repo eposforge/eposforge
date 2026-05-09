@@ -160,10 +160,47 @@ may echo a token name in LLM prose even when the token is not present in the KG.
 `belongs_to_set`, `source_pipeline`, `source_task`, `source_node_set`,
 `source_user`, `source_content_hash`, `feedback_weight`, `importance_weight`.
 
+### `GET /api/v1/datasets/{dataset_id}/data` — response shape
+
+Returns a list of data item objects. Confirmed schema:
+
+```json
+[
+  {
+    "id": "<uuid>",
+    "name": "<filename-without-extension>",
+    "createdAt": "2026-05-09T20:02:04.461122",
+    "updatedAt": "2026-05-09T20:02:05.063778",
+    "extension": "txt",
+    "mimeType": "text/plain",
+    "rawDataLocation": "file:///app/cognee/.data_storage/text_<hash>.txt",
+    "datasetId": "<dataset-uuid>"
+  }
+]
+```
+
+`id` matches `data_ingestion_info[0]["data_id"]` from `add_file`. Files are stored
+as `txt` regardless of the original extension (`.md` → stored as `txt`). `name`
+is the filename without extension.
+
+### Re-add with new content — accumulation behavior (Phase 2 finding)
+
+Re-adding a file with the **same filename but different content** to an existing
+dataset **accumulates** — both the old and new entries persist. `list_documents`
+returns 2 items with the same `name` but different `id` values.
+
+Consequence for the sync tool (Phase 5): **update = `delete_document` + `add_file`**.
+The sync tool must persist `data_id` per tracked file path so it can issue the
+explicit delete before re-adding updated content.
+
+`delete_document` confirmed to work: after `DELETE /api/v1/datasets/{dataset_id}/data/{data_id}`,
+`list_documents` shows 0 items for that data_id. Re-add then adds fresh content with a new `id`.
+
 ### Windows encoding note
 
-`GRAPH_COMPLETION` results may contain non-ASCII Unicode (e.g. `→` U+2192).
-Use `ascii(result)` not `repr(result)` when printing to a cp1252 terminal.
+`GRAPH_COMPLETION` results and string print statements may contain non-ASCII
+Unicode (e.g. `→` U+2192). Use `ascii(result)` not `repr(result)`, and avoid
+Unicode literals in print strings in test files, when targeting a cp1252 terminal.
 
 ---
 

@@ -215,3 +215,20 @@ class CogneeClient:
         response.raise_for_status()
         result = response.json()
         return result if isinstance(result, list) else [result]
+
+    # ------------------------------------------------------------------
+    # Phase 2 methods
+    # ------------------------------------------------------------------
+
+    def delete_document(self, dataset_id: str, data_id: str) -> None:
+        """DELETE /api/v1/datasets/{dataset_id}/data/{data_id} — remove one data item.
+
+        404 is suppressed (item may already be deleted).
+        Any other non-2xx raises ``httpx.HTTPStatusError``.
+        """
+        response = self._client.delete(
+            f"/api/v1/datasets/{dataset_id}/data/{data_id}"
+        )
+        if response.status_code == 404:
+            return
+        response.raise_for_status()
