@@ -1,201 +1,184 @@
-# Phase 3 — `deletefile` Behavior
+# Phase 4 — Ontology Grounding Stability
 
 ## Status
 
 | Phase | Commits | Summary |
 |---|---|---|
-| 0 | `803dca5` | Harness: uv project, `CogneeClient` (health/add_file/delete_dataset), smoke tests, secrets wired |
-| 1 | `6166553` `7464737` | cognify/search/list_documents; 4/4 integration tests pass |
-| 2 | `<pending>` | delete_document; updatefile tests; accumulation confirmed — update = delete+add |
-| **3** | **← this phase** | Prove deletions evict content and characterise shared-entity behavior |
+| 0 | `803dca5` | Harness, CogneeClient (health/add\_file/delete\_dataset), smoke tests, secrets wired |
+| 1 | `6166553` `7464737` | cognify/search/list\_documents; 4/4 integration tests pass |
+| 2 | `2a0e01b` | delete\_document; accumulation confirmed — update = delete+add; data\_id must be persisted |
+| 3 | `<pending>` | deletefile tests; delete synchronous; partial delete non-cascading; same data\_id on delete+readd of identical content |
+| **4** | **<- this phase** | Prove ontology-anchored entity IDs are stable across document edits |
 
 API behavioral findings from all phases are in
 `instance/installed/06-spec-graph/cognee/cognee.md` §Observed API behavior.
 
-## Phase 2 findings (summary for Phase 3 planning)
+## Phase 3 findings (summary for Phase 4 planning)
 
-- **Re-add accumulates.** Same filename + new content → 2 docs in `list_documents`.
-  Update = `delete_document(data_id) + add_file`. Phase 5 must persist `data_id`
-  per tracked file path.
-- **`data_id` changes on content change.** Different UUID per content version.
-- **`delete_document` works.** After delete, `list_documents` returns 0 items for
-  that `data_id`. Re-add after delete gives a fresh entry.
-- **`list_documents` schema:** `{id, name, createdAt, updatedAt, extension, mimeType,
-  rawDataLocation, datasetId}`. `id` = `data_id` from `add_file`. Extension stored
-  as `txt` regardless of original.
+- **Delete is synchronous** — no polling needed by Phase 5.
+- **Partial delete is non-cascading at the file level** — deleting doc A leaves
+  doc B in `list_documents`.
+- **Delete + re-add of identical content → same `data_id`** — content-hash dedup
+  active even after delete. Phase 5: if a file reverts to a previous version,
+  re-adding produces the same data\_id.
+- **KG-level eviction after delete: unconfirmed.** CHUNKS search for UUID tokens
+  is unreliable. Orphaned KG nodes after delete remain an open question.
 
 ## Goal
 
 Same overall effort: git-commit-driven sync replacing full prune-and-reproject.
-Phase 3 proves that deleting a file's data_id evicts its content from the KG,
-characterises whether deleting one doc removes shared KG entities (or correctly
-retains them), and confirms delete + re-add is a clean round-trip (no tombstones).
+Phase 4 proves that Cognee's ontology-anchored entity extraction produces stable
+entity IDs across document edits and re-adds. If entity IDs churn on every
+update, downstream consumers (KG queries, cross-document references) break on
+every sync cycle regardless of whether the sync tool's file-level operations
+are correct.
 
-## What Phase 3 must prove
+Phase 4 is also the phase best positioned to probe KG-level eviction — by
+tracking a known entity ID before and after delete, we can see whether the
+entity disappears from the KG or persists as an orphan.
 
-1. After `delete_document(data_id)`, content unique to that document is no longer
-   returned by search. (Eviction is real, not just a storage delete.)
-2. When two documents share an extracted entity and one is deleted, the shared
-   entity persists. (Delete is non-cascading for shared graph nodes.)
-3. Delete + re-add restores the content to the KG — no tombstones or orphaned
-   nodes block re-ingestion.
-4. Deletes are reflected synchronously in `list_documents`. (No async gap that
-   Phase 5 would need to poll around.)
+## What Phase 4 must prove
 
-**If #1 fails:** the KG and the stored files diverge — `delete_document` removes
-the file but leaves KG nodes. Stop and evaluate; the sync tool's delete path
-would need a different mechanism (e.g. `delete_dataset` + recreate).
+1. An ontology-anchored entity extracted from a document has a stable ID that
+   survives an edit to that document (delete old data\_id + re-add updated content).
+2. The same entity extracted from a re-added document maps to the same ontology
+   node (not a duplicate). Phase 5 needs this to know whether downstream consumers
+   accumulate duplicate entity nodes across sync cycles.
+3. (Advisory) After `delete_document`, the entity extracted from that document
+   disappears from the KG — confirming KG-level eviction, the question Phase 3
+   could not answer with UUID token search.
 
-**If #2 fails (shared entity also deleted):** Phase 5 must avoid deleting documents
-whose entities are referenced by other documents still in the corpus. This
-complicates the sync tool significantly — stop and evaluate before Phase 5.
+**If #1 fails (entity IDs not stable):** the sync tool is correct at the file
+level but incorrect at the KG level — every update churns entity IDs. Evaluate
+whether Cognee's ontology key mechanism (`ontologyKey` param on cognify, per
+swagger) stabilises IDs before proceeding to Phase 5.
+
+**If #2 fails (duplicate entities on re-add):** downstream queries accumulate
+noise nodes. Same evaluation as above.
 
 ## Scope
 
-**In Phase 3:**
+**In Phase 4:**
 
-- No new `CogneeClient` methods. `delete_document` and `search` (CHUNKS) from
-  Phases 1–2 are sufficient. (`delete_dataset` from Phase 0 is reused for
-  cleanup.)
-- New conftest fixture: `two_doc_dataset` factory — adds two documents to the
-  same dataset and returns their data_ids. Cleanup via `dataset_lifecycle`.
-- New test file `tests/test_deletefile.py`, four `integration`-marked tests.
-- Search assertions use `CHUNKS` `text` field (verbatim, deterministic), not
-  `GRAPH_COMPLETION`. Use `dataset_ids=[dataset_id]` (UUID-based) for scoping,
-  not `datasets=[name]`, since Phase 2 confirmed `datasets=` scoping is
-  unreliable for vector search.
+- No new `CogneeClient` methods unless Phase 4 discovers a needed endpoint
+  (e.g. a KG graph inspection endpoint — `GET /api/v1/datasets/{id}/graph`
+  exists per swagger and may be needed for entity ID extraction).
+- A small fixture TTL under `sync/tests/fixtures/phase4.ttl` containing a
+  single well-known class definition (e.g. `epos:TestEntity`) for the ontology
+  anchor.
+- New conftest fixture: `ontology_dataset` — loads a doc that references a
+  known ontology term, returns `(dataset_id, data_id)`. The ontology key is
+  passed to `add_file` or `cognify` via the `ontologyKey` swagger parameter
+  (exact mechanism TBV from swagger before writing).
+- New test file `tests/test_ontology.py`, three `integration`-marked tests.
 
-**Note on search scoping (Phase 2 lesson):** CHUNKS semantic search for a
-UUID-like token does not reliably match the document containing that token.
-Phase 3 asserts eviction via `list_documents` (file-level) rather than via CHUNKS
-search wherever possible, falling back to search only for KG-level eviction
-checks (assertion #1 above requires a KG query, not just a file listing).
+**Critical pre-work before writing any code:**
 
-**Design constraints (unchanged):** thin client, no test-mode flags, fixtures
-compose, client calls HTTP.
+- Fetch `GET /api/v1/datasets/{dataset_id}/graph` schema from the live swagger
+  to understand how entity IDs are exposed (or determine an alternative path).
+- Understand how `ontologyKey` is set on cognify: does it accept an inline TTL
+  string, a file path in the container, or a separately uploaded artifact? Check
+  swagger and/or the live API before writing the fixture.
 
-**Out of scope:** ontology id stability (Phase 4), sync tool code (Phase 5).
+**Design constraints (unchanged):** thin client, no test-mode flags.
+
+**Out of scope:** the sync tool itself (Phase 5), cognee.md full rewrite (final).
 
 ## Files to create
 
 ```
 instance/installed/06-spec-graph/cognee/sync/
   tests/
-    test_deletefile.py
+    fixtures/
+      phase4.ttl          # minimal ontology fixture (single class definition)
+    test_ontology.py      # three integration tests
 ```
 
 ## Files to modify
 
 ```
 instance/installed/06-spec-graph/cognee/sync/tests/conftest.py
-  + two_doc_dataset fixture (function scope factory)
-    # adds two documents with different content to the same dataset
-    # returns (dataset_id, data_id_a, data_id_b)
-    # cleanup via dataset_lifecycle
-```
+  + ontology_dataset fixture (function scope factory) — TBD once ontologyKey
+    mechanism is confirmed from swagger
 
-No client.py changes expected. No edits outside `cognee/sync/`.
+instance/installed/06-spec-graph/cognee/sync/src/cognee_sync/client.py
+  + get_graph(dataset_id) — ONLY IF GET /api/v1/datasets/{dataset_id}/graph
+    is needed for entity ID extraction and swagger confirms the schema
+```
 
 ## Critical files — content notes
 
-### `conftest.py` — `two_doc_dataset`
+### `tests/fixtures/phase4.ttl`
 
-```python
-@pytest.fixture()
-def two_doc_dataset(
-    client: CogneeClient,
-    dataset_lifecycle: Callable[..., dict[str, Any]],
-) -> Generator[Callable[..., tuple[str, str, str]], None, None]:
-    def _factory(
-        name: str,
-        token_a: str,
-        token_b: str,
-    ) -> tuple[str, str, str]:
-        resp_a = dataset_lifecycle(name, f"# doc a\n\n{token_a}\n", "doc-a.md")
-        dataset_id: str = resp_a["dataset_id"]
-        data_id_a: str = resp_a["data_ingestion_info"][0]["data_id"]
+Minimal OWL/RDF file. One class definition is sufficient — the goal is to give
+Cognee an ontology anchor, not to model anything real:
 
-        resp_b = client.add_file(
-            dataset_name=name,
-            content=f"# doc b\n\n{token_b}\n",
-            filename="doc-b.md",
-        )
-        data_id_b: str = resp_b["data_ingestion_info"][0]["data_id"]
+```turtle
+@prefix epos: <https://eposforge.example/ontology#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-type#> .
 
-        return dataset_id, data_id_a, data_id_b
-    yield _factory
+epos:PhaseTestEntity a owl:Class ;
+    rdfs:label "Phase Test Entity" .
 ```
 
-### `tests/test_deletefile.py` — four tests
+The label `"Phase Test Entity"` is what tests embed in document content to
+trigger ontology-anchored extraction. The class IRI `epos:PhaseTestEntity`
+is what tests check for stability.
 
-All `@pytest.mark.integration`. Tokens generated inline (`phase3-*`).
+### `tests/test_ontology.py` — three tests
 
-1. **`test_delete_removes_document_from_list`** — add a doc, delete it via
-   `delete_document`, assert `list_documents` returns 0 items (synchronous
-   eviction). This is the file-level proof; fast, no search needed.
+All `@pytest.mark.integration`. All depend on the ontology mechanism being
+understood from swagger before implementation.
 
-2. **`test_delete_and_readd_is_clean_roundtrip`** — add doc with token A, delete,
-   re-add same filename with token A again. Assert `list_documents` shows 1 item
-   and the new `data_id` differs from the deleted one (no tombstone blocking
-   re-ingestion). Optional: attempt search for token A after re-add if CHUNKS
-   scoping can be made to work (use `dataset_ids=`).
+1. **`test_entity_id_stable_across_edit`** — add a doc referencing
+   `PhaseTestEntity`, capture the entity's graph ID, delete + re-add with
+   minor edit (e.g. added sentence), capture the entity's graph ID again.
+   Assert IDs match. Uses `get_graph` or equivalent.
 
-3. **`test_shared_entity_persists_after_partial_delete`** — add two docs (A and B)
-   with a SHARED phrase in both. Delete doc A's `data_id`. Assert doc B still
-   appears in `list_documents`. Attempt CHUNKS search for the shared phrase —
-   record whether it still returns a hit (shared entity retained) or misses
-   (shared entity deleted with doc A). This test characterises; it does NOT assert
-   a specific outcome — both behaviors are recorded. The finding determines whether
-   Phase 5 needs shared-entity tracking.
+2. **`test_entity_not_duplicated_on_readd`** — after delete + re-add, assert
+   only one node with the ontology class IRI exists in the dataset graph
+   (not two). Proves the sync tool won't accumulate duplicate nodes across
+   update cycles.
 
-4. **`test_delete_is_synchronous`** — add a doc, immediately call
-   `list_documents`, delete, immediately call `list_documents` again. Assert the
-   second call shows the item gone without any polling. Proves Phase 5 does not
-   need to add a sleep or poll loop after delete.
+3. **`test_delete_evicts_entity_from_graph`** (advisory) — add a doc, capture
+   entity ID, delete doc, query graph, record whether entity persists or is
+   gone. The finding resolves Phase 3's open KG-eviction question.
 
 ## Verification
 
 ```powershell
 cd instance\installed\06-spec-graph\cognee\sync
 
-# Regression check
 python ..\..\..\12-secrets-key-management\bin\epos-secrets uv run pytest -m smoke -v
-
-# All integration tests including Phase 3
 python ..\..\..\12-secrets-key-management\bin\epos-secrets uv run pytest -m integration -v -s
 ```
 
-Expected outcomes:
+## Open questions Phase 4 must answer before writing code
 
-1. Smoke tests pass — no regressions.
-2. `test_delete_removes_document_from_list` passes — delete is reflected in
-   `list_documents` immediately.
-3. `test_delete_and_readd_is_clean_roundtrip` passes — re-add after delete works.
-4. `test_shared_entity_persists_after_partial_delete` passes (characterisation);
-   output records whether shared entity survives partial delete.
-5. `test_delete_is_synchronous` passes — no async gap.
-6. All test datasets cleaned up by teardown.
+1. **How is `ontologyKey` set?** The swagger shows `cognify` accepts
+   `ontologyKey: list[str]`. Does this reference a pre-uploaded TTL artifact,
+   an inline string, or a container-local path? Check the live swagger and/or
+   the Cognee source before writing any fixture code.
+2. **How are entity IDs exposed?** `GET /api/v1/datasets/{dataset_id}/graph`
+   exists per swagger. Does its response include node IDs mapped to ontology
+   class IRIs? Fetch and inspect before writing the tests.
+3. **Does the `phase4.ttl` fixture need to be uploaded to Cognee before use,
+   or can it be passed inline?** Determines whether a pre-test setup step
+   (upload TTL) is needed in the fixture.
 
-## Open questions Phase 3 must answer (and record)
-
-1. **Does deleting a data_id evict its KG entities, or only the stored file?**
-   If KG entities persist after delete, the sync tool's delete path is broken at
-   the KG level even if the file listing looks clean.
-2. **Are shared entities (nodes referenced by multiple documents) retained when
-   one referencing document is deleted?** Determines whether Phase 5 needs
-   shared-entity tracking.
-3. **Is delete synchronous in `list_documents`?** (Expected yes, given add is
-   synchronous. Confirm.)
+**If the ontology mechanism turns out to be too opaque to test reliably:**
+record that finding and proceed to Phase 5 — ontology ID stability is a
+nice-to-have characterisation, not a prerequisite for the basic sync tool.
 
 ## Future phases (record, not commitment)
 
-**Phase 4 — Ontology grounding stability.** Prove ontology-anchored entity ids
-are stable across edits and re-adds. Needs a fixture `.ttl` under
-`sync/tests/fixtures/`. Open: stable ids? `.ttl` per-dataset or per-instance?
-
-**Phase 5 — the sync tool itself.** Update mechanism confirmed (Phase 2):
-`delete_document + add_file`, persist `data_id` per path. Phase 3 confirms
-whether shared-entity tracking is also required. CLI vs. daemon decided by
-Phase 1–4 latency/idempotency findings.
+**Phase 5 — the sync tool itself.** Confirmed design from Phases 1–3:
+- Add: `add_file` (cognify implicit, synchronous)
+- Update: `delete_document(old_data_id) + add_file` (must persist `data_id`
+  per tracked file path — sidecar required)
+- Delete: `delete_document(data_id)` (synchronous)
+- State store: SQLite or similar mapping `file_path -> data_id`
+- Trigger: git post-receive hook or Gitea Actions on push
 
 **Final cleanup:** cognee.md full rewrite; optional epos-secrets.ps1 wrapper.
