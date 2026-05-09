@@ -37,9 +37,13 @@ from .config import load_config
 from .state import StateStore
 from . import sync as _sync
 
+# Default state DB lives alongside the sync project itself, committed to source.
+# cli.py is at src/cognee_sync/cli.py; three parents up = sync/
+_DEFAULT_STATE_DB = str(Path(__file__).parent.parent.parent / ".cognee-state.db")
+
 
 def _state_store(args: argparse.Namespace) -> StateStore:
-    db_path = args.db or os.environ.get("COGNEE_STATE_DB", ".cognee-state.db")
+    db_path = args.db or os.environ.get("COGNEE_STATE_DB", _DEFAULT_STATE_DB)
     return StateStore(db_path)
 
 
