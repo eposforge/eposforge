@@ -78,12 +78,20 @@ Repo-local conventions (customizable per adopting repo):
 
 ## Documentation maintenance (Spec Graph)
 
-This repo implements its own Spec Graph (Component 6) using Microsoft
-GraphRAG + Neo4j CE. See [instance/SPEC.md](./instance/SPEC.md) for the
-Living Spec and [instance/installed/06-spec-graph/graphrag/README.md](./instance/installed/06-spec-graph/graphrag/README.md)
-for setup instructions. Run `bash instance/scripts/spec-graph-rebuild.sh`
-after significant doc batches
-to refresh the knowledge graph.
+This repo implements its own Spec Graph (Component 6) with two
+adapters: **Cognee** (default) performs ontology-grounded extraction
+from the Markdown corpus and writes normalized entities and
+relationships into **Neo4j CE**, and **Microsoft GraphRAG** remains
+installed as an opt-in fallback path for extraction and community
+detection. Any MCP-compatible client (Claude Code, Gemini CLI,
+Cursor, Goose, etc.) connects to Neo4j via the Neo4j MCP extension
+and gains graph-augmented memory of the full architecture for
+spec generation, ADR authoring, and consistency checks.
+
+See [instance/SPEC.md](./instance/SPEC.md) for the Living Spec and
+adapter registry, [instance/installed/06-spec-graph/cognee/cognee.md](./instance/installed/06-spec-graph/cognee/cognee.md)
+for the default adapter, and [instance/installed/06-spec-graph/graphrag/README.md](./instance/installed/06-spec-graph/graphrag/README.md)
+for the fallback adapter and current invocation surface.
 
 ## Status
 
