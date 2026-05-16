@@ -9,7 +9,7 @@ source_of_truth: yes
 
 > Living Spec for the process-environment secrets adapter.
 > Slot contract: [../../../../01-architecture/02-components/12-secrets-key-management.md](../../../../01-architecture/02-components/12-secrets-key-management.md)
-> Candidate catalog: [../../../../03-research/12-secrets-key-management/secrets-key-management.md](../../../../03-research/12-secrets-key-management/secrets-key-management.md)
+> Candidate catalog: [../../../../03-research/01-architecture/02-components/12-secrets-key-management/secrets-key-management.md](../../../../03-research/01-architecture/02-components/12-secrets-key-management/secrets-key-management.md)
 
 This adapter fulfills the Component 12 (Secrets & Key Management) slot using process
 environment variables as the store backend. It is the lowest-common-denominator bootstrap

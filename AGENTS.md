@@ -15,125 +15,20 @@ docs, architecture decision records, component contracts, and research.
 There is no application code; the artefacts are Markdown files.
 
 This repo has two layers that must stay explicit:
-- **Spec layer**: `00-vision/`, `01-architecture/`, `02-roadmap/`, `03-research/`.
+
+- **Spec layer**: `00-vision/`, `01-architecture/`, `02-roadmap/`, `03-research/`, `04-standards/`.
 - **Self-host layer**: `instance/` (the concrete adapter choices for this repo).
 
 ---
 
-## Vocabulary — use these terms exactly
+## Standards
 
-| Term | Meaning |
-|---|---|
-| **Component** | An architectural slot (e.g. Spec Graph, Router, Dev Product). Twelve components defined in `01-architecture/02-components/`. |
-| **Adapter** | A concrete implementation plugged into a component slot. Self-declares `capabilities`, `privacy_posture`, `cost_hint`, `invocation_surface`. |
-| **FULFILLS_SLOT** | Relationship: an Adapter fulfills a component slot. |
-| **DEPENDS_ON** | Relationship: one entity depends on another. |
-| **MATURES_TO** | Relationship: an entity reaches maturity at a phase. |
-| **GOVERNED_BY** | Relationship: an entity is governed by a policy or principle. |
-| **IMPLEMENTS** | Relationship: an entity is an implementation of another. |
-| **Phase 0–4** | Platform Factory maturity ladder (Foundation → Full Autonomy). |
-| **Phase A–F** | Product Factory maturity ladder (Registry → Level 5 gate). |
-| **Living Spec** | A machine-readable spec that travels with an artifact and drives agent behavior. |
-| **Spec Graph** | Component 6: the queryable knowledge graph of this repo's corpus. |
+Normative cross-cutting standards are defined under `04-standards/`.
 
----
-
-## Authoritative-docs MCPs — MCP-FIRST POLICY
-
-Before answering from training data or routing to external-LLM research,
-query the relevant authoritative MCP. These are expected to be available
-to any agent working in this repo (configured user-scope or via a
-repo-pinned `.mcp.json`):
-
-| MCP server | Use for |
-|---|---|
-| `cognee` | This repo's architecture, components, adapters, principles, phases, and research surveys via Cognee's graph-query interface. See policy below. |
-| `github` | Open-source repos and their issues, PRs, commits, releases, labels — anything hosted on github.com. |
-| `microsoft.docs` | Azure, .NET, and the broader Microsoft platform via Microsoft Learn. |
-| Hugging Face Hub *(optional)* | ML models, datasets, papers, Hub metadata. Use when extending the Inference component (10) or evaluating model adapters. |
-
-These MCPs are THIS repo's Tool Transport choices in `instance/`; other
-instances choose their own adapters.
-
-Prefer the MCP over `WebFetch` or `WebSearch` against the same source —
-MCP results are structured, citation-aware, and avoid stale verbatim
-recall from training data. If a question spans multiple MCPs (e.g.
-"which Azure SDK does adapter X depend on, and is that SDK still
-maintained?"), chain the calls: `cognee` → `github` → `microsoft.docs`.
-
-For Cognee documentation and Cognee source-code lookups, use the `github` MCP
-against `topoteretes/cognee` (and related integration repositories) first.
-Do not route Cognee docs/source searches through the `cognee` MCP server.
-Do not use `WebFetch`/`WebSearch` for Cognee docs/source lookups unless the
-`github` MCP is unavailable; if fallback is required, state that explicitly.
-
-### Spec Graph MCP (`cognee`) rules
-
-The `cognee` MCP server exposes the Neo4j Spec Graph via Cognee's graph-query
-and semantic-search tools. It is the authoritative interface for architecture
-knowledge in this repo.
-
-You MUST query `cognee` before reading Markdown when the prompt
-mentions any of: adapter, component, slot, contract, FULFILLS_SLOT,
-DEPENDS_ON, MATURES_TO, GOVERNED_BY, IMPLEMENTS, phase, principle, ADR,
-Living Spec, Spec Graph, dark factory, Router, Dev Product, Tool
-Transport, Execution Sandbox, Agent Policy, Inference, Audit, Secrets,
-Spec Input, vocabulary, or any of the twelve component names.
-
-Anti-pattern (outside fallback cases): do not open
-`01-architecture/02-components/*.md` or grep the corpus to answer
-"what adapters fulfill the X slot?" — a single `graph_query` call against
-`cognee` returns the canonical answer with cross-references intact.
-
-Example question: *"Which adapters fulfill the Inference slot?"*
-Correct first action — call `cognee`'s `graph_query` with:
-~~~cypher
-MATCH (a:Entity {type:'ADAPTER'})-[:FULFILLS_SLOT]->(s:Entity {name:'INFERENCE'})
-RETURN a.name, a.description ORDER BY a.name;
-~~~
-
-For semantic/conceptual questions, prefer `cognee`'s `search` tool with a
-natural-language query; use `graph_query` for relationship traversal.
-
-Fall back to Markdown only if (a) the MCP server is unreachable,
-(b) the question is about prose/wording rather than structure, or
-(c) the graph returns zero results and you need to verify the corpus.
-When fallback is needed, targeted repo-file reads and searches are allowed.
-
-### Graph schema
-
-Cognee extracts entities and relationships from the documentation corpus
-and writes them to Neo4j. The primary node label is `Entity`; relationships
-are labelled by the extracted predicate. Use `CALL db.labels()` and
-`CALL db.relationshipTypes()` to enumerate the live schema.
-
-Key entity properties: `id`, `name`, `description`, `type`.
-Key relationship properties vary by predicate; `description` is common.
-
-### Vector indexes
-
-Cognee creates its own vector indexes (fastembed `BAAI/bge-small-en-v1.5`,
-384 dims). Prefer the `search` MCP tool for semantic similarity queries
-rather than constructing raw vector Cypher.
-
-### Query patterns
-
-**Structural — use `graph_query` when the question is about relationships:**
-```cypher
-MATCH (a:Entity {type: 'ADAPTER'})-[:FULFILLS_SLOT]->(s:Entity {name: 'SPEC_GRAPH'})
-RETURN a.name, a.description;
-```
-
-**Semantic — use `search` with a natural-language query:**
-```
-cognee.search("Which adapters fulfill the Spec Graph slot?")
-```
-
-**Exploratory — list entity types and relationship types:**
-```cypher
-CALL db.labels() YIELD label RETURN label;
-CALL db.relationshipTypes() YIELD relationshipType RETURN relationshipType;
-```
+- Vocabulary: `04-standards/02-vocabulary/` (until that lands, use `00-vision/01-glossary.md`)
+- MCP-first and canonical source policy: `04-standards/05-canonical-doc-sources/` and `04-standards/04-mcp/`
+- Naming and documentation hygiene: `04-standards/01-naming-conventions/naming-conventions.md`
+- Refactoring discipline for mirrored research paths: `04-standards/06-research-mirror/research-mirror.md`
 
 ---
 
@@ -172,7 +67,7 @@ Use this workflow when the user provides a description of additions, deletions, 
 2.  **Clarify:**
   *   Prompt the user for clarification if the intent is ambiguous (e.g., if a new entity should be a `component` or an `adapter`, or which `phase` it matures to).
 3.  **Implement (Graph-Influence Checklist):**
-  *   **Reserved Vocabulary:** Use exactly the terms from the [Vocabulary](#vocabulary--use-these-terms-exactly) section (`component`, `adapter`, `phase`, `pillar`, `principle`, `factory`, `deliverable`, `constraint`) as entity types.
+  *   **Reserved Vocabulary:** Use exactly the terms from `00-vision/01-glossary.md` until `04-standards/02-vocabulary/` lands (`component`, `adapter`, `phase`, `pillar`, `principle`, `factory`, `deliverable`, `constraint`) as entity types.
   *   **Relationship Keywords:** Explicitly use keywords to ensure the `spec-graph-import.sh` script maps edges correctly:
     *   `FULFILLS_SLOT`: "fulfills", "fills slot", "candidate adapter".
     *   `DEPENDS_ON`: "depends on", "dependency", "requires".
@@ -190,13 +85,13 @@ Use this workflow when the user provides a description of additions, deletions, 
 
 ## Conventions
 
-- All docs use American English.
-- File and heading names are lowercase-hyphenated.
-- Never commit internal environment identifiers in docs: private IP
-  addresses, internal hostnames, internal DNS zones, machine names,
-  VPN details, or user-specific network topology.
-- When examples require endpoints, use placeholders like
-  `https://<service-host>` and `bolt://<neo4j-host-or-ip>:7688`.
+Conventions are standardized under `04-standards/`.
+
+- Naming and doc hygiene: `04-standards/01-naming-conventions/naming-conventions.md`
+- Research path refactor discipline: `04-standards/06-research-mirror/research-mirror.md`
+
+Operational conventions retained here:
+
 - Do not commit `instance/installed/06-spec-graph/graphrag/output/`, `instance/installed/06-spec-graph/graphrag/cache/`, `instance/installed/06-spec-graph/graphrag/.venv/`, `instance/installed/06-spec-graph/cognee/.venv/`, `instance/installed/06-spec-graph/cognee/.cognee/`,
   `.env`, or any file containing API keys or passwords.
 - Never edit generated output under `instance/installed/06-spec-graph/graphrag/output/`.

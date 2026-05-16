@@ -37,7 +37,8 @@ Adapter:
   metered, n/a).
 - `capabilities` — set of capability tags relevant to its component.
 - `invocation_surface` — how the Adapter is invoked (CLI, HTTP, library,
-  process, etc.).
+  process, etc.). Invocation-surface conventions are standardized under
+  `04-standards/04-mcp/` and `04-standards/03-agent-skills/` once adopted.
 - `status` — `experimental` | `approved` | `deprecated`.
 
 Components may add their own required metadata fields. Adapters MUST

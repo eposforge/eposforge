@@ -38,7 +38,7 @@ repo itself. This is one of many possible Spec Graph implementations;
 the slot contract is defined in
 [../01-architecture/02-components/06-spec-graph.md](../01-architecture/02-components/06-spec-graph.md).
 It is a concrete reference implementation of the pattern documented in
-[../03-research/06-spec-graph/graphrag-neo4j-integration.md](../03-research/06-spec-graph/graphrag-neo4j-integration.md).
+[../03-research/01-architecture/02-components/06-spec-graph/graphrag-neo4j-integration.md](../03-research/01-architecture/02-components/06-spec-graph/graphrag-neo4j-integration.md).
 
 ---
 
@@ -76,10 +76,10 @@ Single source of truth for Component 6 adapter status in this repository.
 | `microsoft-graphrag` | `SPEC_GRAPH` | implemented, installed-fallback, experimental | `bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` | Opt-in GraphRAG extraction and import path |
 
 Candidate adapters remain cataloged in
-`../03-research/06-spec-graph/spec-graph.md` and are non-normative until listed
+`../03-research/01-architecture/02-components/06-spec-graph/spec-graph.md` and are non-normative until listed
 here as implemented.
 These adapters fill Component 6 for THIS repo only. Other instances will pick
-differently; see `../03-research/06-spec-graph/spec-graph.md` for the candidate catalog.
+differently; see `../03-research/01-architecture/02-components/06-spec-graph/spec-graph.md` for the candidate catalog.
 
 ---
 

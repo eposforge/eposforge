@@ -36,6 +36,7 @@ EposForge does not pick implementations. Instances pick implementations.
 01-architecture/   # Adapter pattern, reference architecture, component contracts
 02-roadmap/        # Maturity phases for Platform and Product factories
 03-research/       # Surveys of products that can fill each component slot
+04-standards/      # Adopted cross-cutting standards and conformance rules
 ```
 
 This repo is docs-first. Code lands as components mature.
@@ -47,8 +48,9 @@ reviews, and docs so it is always clear what is normative architecture and
 what is a concrete local implementation.
 
 | Layer | Paths | Meaning | Portability |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Architecture definition | `00-vision/`, `01-architecture/`, `02-roadmap/` | Normative EposForge pattern, contracts, and maturity models | Reused across adopting repos |
+| Standards definition | `04-standards/` | Adopted cross-cutting standards and conformance requirements | Reused across adopting repos |
 | Implementation for this repo instance | `instance/`, `docs/runbooks/` | Concrete implementation choices used by this repository | Varies by repo |
 | Research and candidates | `03-research/` | Candidate adapters, comparative analysis, and implementation options | Reused as reference, non-normative |
 

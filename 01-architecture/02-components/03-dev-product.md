@@ -64,7 +64,7 @@ In addition to the universal fields in
 
 ## Reference implementations
 
-See [../../03-research/03-dev-product/dev-products.md](../../03-research/03-dev-product/dev-products.md)
+See [../../03-research/01-architecture/02-components/03-dev-product/dev-products.md](../../03-research/01-architecture/02-components/03-dev-product/dev-products.md)
 for the candidate catalog and [../../instance/installed/03-dev-product/](../../instance/installed/03-dev-product/)
 for what THIS repo installs.
 
