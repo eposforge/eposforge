@@ -7,6 +7,8 @@ on:
       - "01-architecture/**"
       - "02-roadmap/**"
       - "03-research/**"
+      - "03-research/01-architecture/**"
+      - "04-standards/**"
       - "instance/**"
 
 permissions:

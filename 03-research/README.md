@@ -7,26 +7,32 @@ source_of_truth: no
 
 # Research
 
-Research materials organized by architecture component.
+Research materials organized as a need-based mirror of source document paths.
 
 ## Organization
 
-Each subdirectory corresponds to a component in [01-architecture/02-components/](../01-architecture/02-components/) and contains supporting research, competitive analysis, design patterns, and implementation notes for that component.
+Research paths mirror source paths.
 
-| Folder | Component | Purpose |
-|--------|-----------|---------|
-| [01-spec-input](01-spec-input/) | Spec Input | Research on specification input handling and formats |
-| [02-living-spec](02-living-spec/) | Living Spec | Research on evolving specifications and change management |
-| [03-dev-product](03-dev-product/) | Dev Product | Research on product development workflows and tooling |
-| [04-router](04-router/) | Router | Research on request routing, orchestration, and dispatch strategies |
-| [05-tool-transport](05-tool-transport/) | Tool Transport | Research on tool communication protocols and integration patterns |
-| [06-spec-graph](06-spec-graph/) | Spec Graph | Research on specification graphs, dependency management, and relationships |
-| [07-execution-sandbox](07-execution-sandbox/) | Execution Sandbox | Research on isolated execution environments and containment |
-| [08-agent-policy](08-agent-policy/) | Agent Policy | Research on agent behavior policies and constraints |
-| [09-source-control-ci](09-source-control-ci/) | Source Control & CI | Research on version control and continuous integration patterns |
-| [10-inference](10-inference/) | Inference | Research on inference engines and decision-making models |
-| [11-audit-observability](11-audit-observability/) | Audit & Observability | Research on logging, monitoring, and audit trails |
-| [12-secrets-key-management](12-secrets-key-management/) | Secrets & Key Management | Research on credential storage, rotation, and access control |
+- Research for `<path>.md` lives at `03-research/<path>/`.
+- The mirror is need-based: folders exist only when research exists.
+- Cross-cutting root files (`README.md`, `landscape.md`) stay at `03-research/` root.
+- Normative rule: [../04-standards/06-research-mirror/research-mirror.md](../04-standards/06-research-mirror/research-mirror.md).
+
+Currently populated mirrored paths:
+
+- [01-architecture/02-components/01-spec-input/](01-architecture/02-components/01-spec-input/)
+- [01-architecture/02-components/02-living-spec/](01-architecture/02-components/02-living-spec/)
+- [01-architecture/02-components/03-dev-product/](01-architecture/02-components/03-dev-product/)
+- [01-architecture/02-components/04-router/](01-architecture/02-components/04-router/)
+- [01-architecture/02-components/05-tool-transport/](01-architecture/02-components/05-tool-transport/)
+- [01-architecture/02-components/06-spec-graph/](01-architecture/02-components/06-spec-graph/)
+- [01-architecture/02-components/07-execution-sandbox/](01-architecture/02-components/07-execution-sandbox/)
+- [01-architecture/02-components/09-source-control-ci/](01-architecture/02-components/09-source-control-ci/)
+- [01-architecture/02-components/10-inference/](01-architecture/02-components/10-inference/)
+- [01-architecture/02-components/11-audit-observability/](01-architecture/02-components/11-audit-observability/)
+- [01-architecture/02-components/12-secrets-key-management/](01-architecture/02-components/12-secrets-key-management/)
+- [04-standards/01-naming-conventions/](04-standards/01-naming-conventions/)
+- [04-standards/06-research-mirror/](04-standards/06-research-mirror/)
 
 ## Cross-Cutting Research
 
@@ -40,8 +46,8 @@ Competitive and adjacent technology landscape scan. Updated periodically to trac
 
 When adding new research materials:
 
-1. **Identify the component** it relates to from the list above
-2. **Place files in the appropriate subdirectory**
+1. **Identify the source markdown file** the research supports
+2. **Place research in the mirrored folder** at `03-research/<path-to-source-without-.md>/`
 3. **Name files descriptively** (e.g., `design-patterns.md`, `competitive-analysis.md`)
-4. **Link from component docs** in [01-architecture/02-components/](../01-architecture/02-components/) where relevant
+4. **Link from the source doc** where relevant
 
