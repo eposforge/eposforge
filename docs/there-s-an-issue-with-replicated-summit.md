@@ -127,11 +127,11 @@ Use `git mv` to preserve history.
 
 ## Files to edit
 
-- [AGENTS.md](d:\src\git\gh\eposforge\eposforge\AGENTS.md) — collapse §Vocabulary (lines 23–38), §Authoritative-docs MCPs (lines 41–137), §Conventions (lines 191–215) into a single `## Standards` H2 with bullet pointers to `04-standards/`. Add one line pointing at `04-standards/06-research-mirror/` under a refactoring-discipline note.
-- [03-research/README.md](d:\src\git\gh\eposforge\eposforge\03-research\README.md) — rewrite the Organization section. Replace "Each subdirectory corresponds to a component" with the mirror rule: "Research paths mirror source paths. Research for `<path>.md` lives at `03-research/<path>/`. The mirror is need-based — folders exist only when populated. See `04-standards/06-research-mirror/` for the normative rule." Replace the per-component table with a generated/illustrative listing of currently-populated paths.
-- [README.md](d:\src\git\gh\eposforge\eposforge\README.md) — add `04-standards/` row to the §How to read code block (line 38) and to the §Repository Layers table (line 51).
-- [00-vision/01-glossary.md](d:\src\git\gh\eposforge\eposforge\00-vision\01-glossary.md) — add header note pointing at `04-standards/02-vocabulary/` when that standard lands.
-- [01-architecture/00-adapter-pattern.md](d:\src\git\gh\eposforge\eposforge\01-architecture\00-adapter-pattern.md) — `invocation_surface` bullet gains "see `04-standards/04-mcp/` and `04-standards/03-agent-skills/`" once those land.
+- `AGENTS.md` — collapse §Vocabulary, §Authoritative-docs MCPs, §Conventions into a single `## Standards` H2 with bullet pointers to `04-standards/`. Add one line pointing at `04-standards/06-research-mirror/` under a refactoring-discipline note.
+- `03-research/README.md` — rewrite the Organization section. Replace "Each subdirectory corresponds to a component" with the mirror rule: "Research paths mirror source paths. Research for `<path>.md` lives at `03-research/<path>/`. The mirror is need-based — folders exist only when populated. See `04-standards/06-research-mirror/` for the normative rule." Replace the per-component table with a generated/illustrative listing of currently-populated paths.
+- `README.md` — add `04-standards/` row to the §How to read code block and to the §Repository Layers table.
+- `00-vision/01-glossary.md` — add header note pointing at `04-standards/02-vocabulary/` when that standard lands.
+- `01-architecture/00-adapter-pattern.md` — `invocation_surface` bullet gains "see `04-standards/04-mcp/` and `04-standards/03-agent-skills/`" once those land.
 - `.github/workflows/doc-lint.yml` — extend glob from `03-research/**` to also cover `04-standards/**` and the new `03-research/01-architecture/**` deep paths.
 - Update internal cross-references to moved research files. Search pattern: `03-research/<old-component-folder>` across the entire repo.
 
