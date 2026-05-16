@@ -7,6 +7,8 @@ source_of_truth: yes
 
 # Glossary and Taxonomy
 
+> Standards note: vocabulary governance is moving to `04-standards/02-vocabulary/` when that standard lands. Until then, this glossary remains authoritative.
+
 Shared vocabulary for EposForge. Every other doc in this repo — and any
 agent operating against it — should use these terms as defined here. If a
 concept is missing, add it here first, then use it elsewhere.

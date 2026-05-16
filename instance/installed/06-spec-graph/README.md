@@ -12,7 +12,7 @@ installed fallback adapter for Component 6 (Spec Graph). The default
 path now runs Cognee-first extraction; use this GraphRAG workspace only
 for explicit fallback runs.
 
-See [03-research/06-spec-graph/graphrag-neo4j-integration.md](../../../03-research/06-spec-graph/graphrag-neo4j-integration.md)
+See [03-research/01-architecture/02-components/06-spec-graph/graphrag-neo4j-integration.md](../../../03-research/01-architecture/02-components/06-spec-graph/graphrag-neo4j-integration.md)
 for the full architecture and setup walkthrough.
 
 ---
