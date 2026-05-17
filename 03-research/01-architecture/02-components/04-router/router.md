@@ -31,6 +31,23 @@ Each entry includes (where known):
 
 ---
 
+## Orchestration shapes this slot can implement
+
+The Router slot is orchestration-pattern agnostic. Common shapes are:
+
+- **Hierarchical lead + sub-agents:** one lead agent decomposes,
+  delegates to worker agents, evaluates results, and returns final
+  output.
+- **Deterministic workflow / graph:** an explicit node-edge workflow
+  with fixed transitions and bounded branching.
+- **Hybrid:** deterministic outer workflow with LLM-driven decomposition
+  inside selected nodes.
+
+In all three shapes, the Router remains the orchestrator; worker
+executors belong to the Dev Product slot.
+
+---
+
 ## Candidates
 
 ### Microsoft Agent Framework

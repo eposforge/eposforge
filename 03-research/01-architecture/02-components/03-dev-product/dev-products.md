@@ -275,6 +275,10 @@ A product is a strong Dev Product candidate if it:
 Some products have full entries in the Candidates section above but
 primarily fit a different factory slot:
 
+In hierarchical orchestration mode, these products typically act as
+delegated workers in the Dev Product slot unless the operator
+explicitly installs one as the Router.
+
 - **Microsoft Agent Framework** is primarily a Router candidate; it
   can also dispatch in ways that resemble a Dev Product for some tasks.
 - **Blitzy / Harness AIDA / Autonomy AI** are full-platform candidates;
