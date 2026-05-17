@@ -1,14 +1,11 @@
 #!/usr/bin/env bash
-# post-commit — Non-blocking Spec Graph rebuild flag.
+# post-commit fragment owned by 06-spec-graph.
+# Sets instance/installed/06-spec-graph/.needs-rebuild when any *.md files in
+# the tracked docs directories are modified. Non-blocking reminder; it does
+# NOT trigger a sync automatically.
 #
-# Sets instance/installed/06-spec-graph/.needs-rebuild when any *.md files in the vision or
-# architecture directories are modified. The flag is a reminder to run
-# instance/installed/06-spec-graph/scripts/rebuild.sh; it does NOT trigger the rebuild
-# automatically (GraphRAG indexing takes ~10 min and is not suitable
-# for a blocking commit hook).
-#
-# Install via:
-#   bash instance/installed/06-spec-graph/scripts/hooks/install-hooks.sh
+# Composed into .git/hooks/post-commit by:
+#   bash instance/installed/09-source-control-ci/github-and-actions/scripts/install-hooks.sh
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 FLAG="${REPO_ROOT}/instance/installed/06-spec-graph/.needs-rebuild"
@@ -20,5 +17,6 @@ CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null \
 
 if [[ -n "${CHANGED}" ]]; then
   touch "${FLAG}" 2>/dev/null || true
-  echo "spec-graph: Markdown docs changed. Run instance/installed/06-spec-graph/scripts/rebuild.sh to update the Spec Graph."
+  echo "spec-graph: Markdown docs changed; the Spec Graph is now out of date."
+  echo "  See instance/installed/06-spec-graph/cognee/sync/README.md to sync."
 fi

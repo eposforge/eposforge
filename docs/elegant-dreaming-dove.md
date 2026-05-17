@@ -1,0 +1,265 @@
+# Plan: EposForge Component 13 — Backlog
+
+## Context
+
+The OutreachAssistant repo uses a three-file `issue-findings` system that works
+well for AI context-window management but has six identified problems: resolved
+issues pile up in the active file; IDs are non-unique across repos; schema drifts
+in the archive; the archive is unsearchable; dependency links are unstructured prose;
+and the active file has no live open issues when sweeping is skipped. The user also
+wants multi-repo aggregation: in VS Code multi-root workspaces (or Claude Code
+multi-dir sessions), all repos with a backlog should contribute to a single planning
+view. This work creates a first-class EposForge component contract for the pattern
+and an installed instance in eposforge, fixing all six problems, then migrates
+OutreachAssistant.
+
+---
+
+## Phase 1 — Component contract
+
+**File:** `01-architecture/02-components/13-backlog.md`
+
+Component 13 is the next free slot. The contract covers:
+
+- **Purpose:** Structured, load-rule-aware work-item tracker optimized for
+  AI-augmented workflows. Agents aggregate across repos, plan iterations, and
+  identify regression causes by cross-referencing history.
+- **Contract** — an adapter must:
+  - Provide durable, uniquely-identified work items with stable cross-repo IDs
+    (`<PREFIX>-<NNN>` format, prefix declared per repo).
+  - Support ≥ 3 states: active (open / in-progress / blocked), deferred (slated),
+    resolved (archived).
+  - Enforce a machine-readable schema with effort sizing, fix-surface
+    classification, dependency links, and verification criteria.
+  - Implement load-rule-based file split so AI context windows load only what is
+    needed (active / slated / archive as separate files with documented load rules).
+  - Provide cross-repo aggregation: when multiple repos implement this slot, a
+    single invocation returns a unified work queue with repo-scoped IDs.
+  - Support dependency-graph traversal: `Depends on` and `Blocks` links must use
+    stable IDs resolvable at aggregate time.
+  - Provide lint/validate suitable for pre-commit and CI; never require a hosted
+    service.
+- **Required adapter metadata fields:**
+  - `repo_prefix` — short uppercase label for this repo's IDs (e.g. `EF`, `OA`)
+  - `discovery_method` — how cross-repo peers are found: `workspace-file` |
+    `env-var` | `explicit-roots` (default: `workspace-file` with `env-var`
+    fallback)
+  - `archive_format` — `single-file-with-index` (default)
+- **Boundaries:** is structured work-item tracking; is not a project-management
+  tool (no sprints, velocity) and not a substitute for public GH Issues.
+
+---
+
+## Phase 2 — Adapter Living Spec
+
+**File:** `instance/installed/13-backlog/file-based-backlog/file-based-backlog.md`
+
+Declares all universal and component-specific metadata fields. Key repo-specific
+fields for this instance:
+
+| Field | Value |
+|---|---|
+| `repo_prefix` | `EF` |
+| `discovery_method` | `workspace-file` with `BACKLOG_ROOTS` env fallback |
+| `fix_surfaces` | `eposforge-pattern` \| `repo-instance` \| `infrastructure` \| `process` |
+
+Sections: adapter metadata, file layout, schema reference, multi-repo pattern
+description, operator commands, cross-host portability note, contract gaps.
+
+---
+
+## Phase 3 — Schema doc
+
+**File:** `instance/installed/13-backlog/file-based-backlog/docs/schema.md`
+
+Defines the canonical field set (solves schema-drift problem):
+
+**Required on every issue:**
+
+| Field | Values | Notes |
+|---|---|---|
+| `ID:` | `<PREFIX>-<NNN>` | auto-assigned, immutable |
+| `Title:` | one-line string | |
+| `Date:` | ISO-8601 | date discovered |
+| `Status:` | `open \| in-progress \| blocked \| slated \| resolved` | |
+| `Effort:` | `S \| M \| L \| XL` | |
+| `Fix surface:` | per-repo enum (see config.toml) | which layer is affected |
+| `Verify with:` | one-line observable signal | |
+
+**Conditional fields:**
+
+| Field | Required when | Notes |
+|---|---|---|
+| `Depends on:` | dependencies exist | comma-separated IDs |
+| `Blocks:` | cross-links exist | comma-separated IDs |
+| `Bundle hint:` | co-scheduling intent | omit if none |
+| `Validation:` | Status = resolved | summary of confirmation |
+| `Resolved:` | Status = resolved | ISO-8601 date |
+| `Slated:` | Status = slated | ISO-8601 date |
+| `Re-evaluate by:` | Status = slated | ISO-8601 date — mandatory, no graveyard |
+
+Every section header: `## Issue <ID> — <Title>` (uniform across active, slated,
+archive — eliminates archive schema drift).
+
+---
+
+## Phase 4 — File layout at repo root
+
+```
+backlog/
+  config.toml              # prefix = "EF"; fix_surfaces list
+  backlog.md               # active: open, in-progress, blocked
+  backlog-slated.md        # deferred; Re-evaluate by mandatory
+  backlog-archive.md       # resolved; year-month section headers
+  backlog-archive-index.md # auto-generated; do not edit manually
+```
+
+`backlog-archive-index.md` is a table: ID | Title | Surface | Resolved | one-line
+summary. Regenerated by `sweep-resolved.sh` every sweep. Makes "was this fixed
+before?" answerable without loading 1,300+ lines.
+
+---
+
+## Phase 5 — Scripts
+
+All scripts: `#!/usr/bin/env bash`, derive REPO_ROOT via `git rev-parse
+--show-toplevel`, run on Linux (srv-docker-hp) and Git Bash (ws-dev-1).
+
+### `new-issue.sh`
+- Reads `backlog/config.toml` for prefix.
+- Finds highest existing ID across backlog.md + slated + archive, increments.
+- Appends an empty-field template to `backlog.md` with the next `PREFIX-NNN` ID,
+  today's date, `Status: open`.
+- Prints the new ID.
+
+### `sweep-resolved.sh`
+- Reads all `## Issue PREFIX-NNN` entries in `backlog.md` with `Status: resolved`.
+- Requires `Validation:` and `Resolved:` fields to be present (lint check
+  before sweep).
+- Appends moved entries under the appropriate `## YYYY-MM` section in
+  `backlog-archive.md` (creates section if absent).
+- Removes swept entries from `backlog.md`.
+- Regenerates `backlog-archive-index.md` by scanning all archive entries.
+- **This is the sole mechanism that moves entries; no manual editing needed.**
+
+### `lint-backlog.sh`
+- Checks `backlog.md` and `backlog-slated.md` for:
+  - All required fields present on every issue.
+  - Valid Status values.
+  - `Re-evaluate by:` present on every slated entry.
+  - `Depends on:` / `Blocks:` IDs resolvable (exist in active, slated, or archive
+    of any repo in the discovery set).
+  - `Resolved:` and `Validation:` present on any `Status: resolved` entry (also
+    warns to run sweep-resolved.sh).
+- Accepts `--staged` flag for pre-commit use (only checks staged backlog files).
+- Exit 0 = all clear; exit 1 = violations printed with field-level messages.
+
+### `aggregate.sh`
+Solves multi-repo problem. Discovery order:
+1. `$VSCODE_WORKSPACE_FILE` or `$WORKSPACE_FILE` → parse `folders` array from
+   `.code-workspace` JSON (using `python3 -c` for JSON, no external deps).
+2. `$BACKLOG_ROOTS` env var → colon-separated paths.
+3. `--roots path1 path2 ...` CLI arg.
+4. Current repo only (fallback).
+
+For each discovered root with `backlog/config.toml`:
+- Reads prefix, active issues, and slated issues.
+- Outputs a unified planning view: open/in-progress/blocked table sorted by
+  effort, then a dependency-aware ordering note if any `Depends on:` links cross
+  repos.
+
+Output modes:
+- `--plan` (default) — planning view: unified active + slated-due tables
+- `--regressions <keyword>` — searches archive across all repos for resolved
+  issues matching keyword (for regression research)
+- `--graph` — ASCII dependency graph for active issues
+
+### `hooks/pre-commit` (fragment)
+Runs `lint-backlog.sh --staged` only when `backlog/backlog.md` or
+`backlog/backlog-slated.md` are staged. Discovered by the install-hooks.sh
+composer at:
+`instance/installed/13-backlog/file-based-backlog/scripts/hooks/pre-commit`
+(depth 6 from `instance/installed` — within the 4–6 range the composer scans).
+
+---
+
+## Phase 6 — eposforge backlog seed
+
+`backlog/config.toml`:
+```toml
+prefix = "EF"
+fix_surfaces = ["eposforge-pattern", "repo-instance", "infrastructure", "process"]
+```
+
+`backlog/backlog.md` seeded with the 4 open strangler-fig items from memory:
+- `EF-001` — Initial corpus seed via `cognee-sync` against live backend
+- `EF-002` — Git-based authoritative sync (server-side post-receive or CI workflow)
+- `EF-003` — `--reconcile-from-disk` mode on cognee-sync CLI
+- `EF-004` — Ontology re-upload (.owl extension requirement; CLI doesn't drive it yet)
+
+---
+
+## Phase 7 — AGENTS.md + SPEC.md updates
+
+**AGENTS.md:** Add `## Backlog management` section after Conventions:
+- Load rules for each file (mirrors OutreachAssistant's load-rule pattern)
+- Cross-repo instruction: "when multiple working directories are present, run
+  `aggregate.sh` before planning the next iteration"
+- Operator commands: new-issue, sweep-resolved, lint, aggregate
+
+**instance/SPEC.md:** Add `13-backlog` row to adapter registry table.
+
+---
+
+## Phase 8 — OutreachAssistant migration (deferred)
+
+OA migration is out of scope for this session. The adapter scripts produced in
+Phase 5 are written to be repo-agnostic (driven by `backlog/config.toml`), so
+migration to OutreachAssistant is a mechanical follow-up:
+
+1. `cp -r instance/installed/13-backlog/file-based-backlog/scripts/ <OA-repo>/instance/installed/13-backlog/file-based-backlog/scripts/`
+2. Create `<OA-repo>/backlog/config.toml` with `prefix = "OA"`.
+3. Rename `issue-findings*.md` → `backlog/backlog*.md`, add `OA-` prefixes,
+   uniform headers, year-month archive sections.
+4. Update OA `AGENTS.md` load rules.
+5. Run `lint-backlog.sh`.
+
+---
+
+## Verification
+
+- `lint-backlog.sh` exits 0 on the eposforge backlog seed (EF-001 through EF-004).
+- `lint-backlog.sh` exits 0 on the migrated OutreachAssistant backlog.
+- `aggregate.sh` with both repos' roots in `$BACKLOG_ROOTS` produces a unified
+  active-issue table with `EF-` and `OA-` prefixed rows.
+- `aggregate.sh --regressions "jq"` finds OA-043 in the archive (jq errors were
+  fixed in that issue).
+- Pre-commit hook blocks a commit that adds an issue with missing `Verify with:`
+  field.
+- `sweep-resolved.sh` moves a manually-set `Status: resolved` entry from
+  `backlog.md` to `backlog-archive.md` and regenerates the index.
+
+---
+
+## Files created / modified (summary)
+
+**New files — eposforge:**
+- `01-architecture/02-components/13-backlog.md`
+- `instance/installed/13-backlog/file-based-backlog/file-based-backlog.md`
+- `instance/installed/13-backlog/file-based-backlog/docs/schema.md`
+- `instance/installed/13-backlog/file-based-backlog/scripts/new-issue.sh`
+- `instance/installed/13-backlog/file-based-backlog/scripts/sweep-resolved.sh`
+- `instance/installed/13-backlog/file-based-backlog/scripts/lint-backlog.sh`
+- `instance/installed/13-backlog/file-based-backlog/scripts/aggregate.sh`
+- `instance/installed/13-backlog/file-based-backlog/scripts/hooks/pre-commit`
+- `backlog/config.toml`
+- `backlog/backlog.md` (seeded with EF-001 through EF-004)
+- `backlog/backlog-slated.md` (empty template)
+- `backlog/backlog-archive.md` (empty template)
+- `backlog/backlog-archive-index.md` (generated empty)
+
+**Modified — eposforge:**
+- `AGENTS.md` (add backlog section)
+- `instance/SPEC.md` (add 13-backlog to adapter registry)
+
+**OutreachAssistant migration:** deferred — see Phase 8 notes above.

@@ -9,7 +9,7 @@ source_of_truth: yes
 
 > Living Spec for Component 6 (Spec Graph) as implemented in this repo.
 > Per the paired-change rule: any change to the tooling behavior in
-> `instance/installed/06-spec-graph/` or `instance/scripts/` must update this file in the same commit.
+> `instance/installed/06-spec-graph/` must update this file in the same commit.
 
 ---
 
@@ -55,25 +55,26 @@ and [../01-architecture/02-components/06-spec-graph.md](../01-architecture/02-co
 | `privacy_posture` | `local` (Neo4j) / `vendor-default` (inference during indexing) |
 | `cost_hint` | free (Neo4j CE) + metered (Anthropic/OpenAI APIs for indexing) |
 | `capabilities` | ontology-grounded-extraction, entity-normalization, graph-query |
-| `invocation_surface` | CLI scripts (`instance/installed/06-spec-graph/cognee/scripts/ingest_dual_container.sh`); incremental sync under development at `instance/installed/06-spec-graph/cognee/sync/` |
+| `invocation_surface` | `cognee-sync` CLI at `instance/installed/06-spec-graph/cognee/sync/` (incremental); GraphRAG fallback at `instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` |
 | `status` | `experimental` |
 | `query_languages` | Cypher (via Neo4j); natural language (via Neo4j MCP) |
 | `projection_format` | hybrid (graph nodes/edges + embeddings) |
-| `rebuild_target` | 15 minutes |
-| `incremental_update` | false — full nuke-and-reproject |
+| `rebuild_target` | 15 minutes (GraphRAG fallback); per-file via cognee-sync |
+| `incremental_update` | true — `cognee-sync` provides git-diff-driven incremental sync |
 
 ---
 
 ## Adapter registry (repo instance)
 
-Single source of truth for Component 6 adapter status in this repository.
+Single source of truth for installed adapter status tracked in this repository.
 
 | Adapter | FULFILLS_SLOT | Status | Invocation surface | Notes |
 |---|---|---|---|---|
-| `cognee-ontology-preprocessor` | `SPEC_GRAPH` | implemented, default, experimental | `bash instance/installed/06-spec-graph/cognee/scripts/ingest_dual_container.sh` | Default ontology-grounded extraction path (dual-container HTTP API) |
-| `cognee-sync` | `SPEC_GRAPH` | in-progress, experimental | `uv run pytest -m smoke` (Phase 0 harness); sync tool in Phases 1–5 | Incremental git-commit-driven sync — replaces full prune-and-reproject |
+| `cognee-ontology-preprocessor` | `SPEC_GRAPH` | implemented, default, experimental | `epos-secrets uv run cognee-sync --added <files>` (see `cognee/sync/README.md`) | Default ontology-grounded extraction path (dual-container HTTP API, incremental) |
+| `cognee-sync` | `SPEC_GRAPH` | implemented, experimental | `epos-secrets uv run cognee-sync --added/--modified/--deleted <files>` | Incremental git-diff-driven sync CLI (Phases 0–5 complete) |
 | `neo4j-ce` | `SPEC_GRAPH` | implemented, active, experimental | `instance/installed/06-spec-graph/graphrag/scripts/import.sh` + Neo4j MCP | Query store and Cypher/vector surface |
 | `microsoft-graphrag` | `SPEC_GRAPH` | implemented, installed-fallback, experimental | `bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` | Opt-in GraphRAG extraction and import path |
+| `file-based-backlog` | `BACKLOG` | implemented, experimental | `bash instance/installed/13-backlog/file-based-backlog/scripts/{new-issue,lint-backlog,sweep-resolved,aggregate}.sh` | Local markdown backlog adapter with cross-repo aggregation and archive indexing |
 
 Candidate adapters remain cataloged in
 `../03-research/01-architecture/02-components/06-spec-graph/spec-graph.md` and are non-normative until listed
@@ -113,25 +114,32 @@ source_of_truth: yes
 
 ## Script placement convention
 
-Adapter implementation scripts must be colocated with the adapter they
-implement under:
+Adapter scripts — hooks, runners, helpers — must live under:
+
+`instance/installed/<component>/scripts/`
+
+or, when a component has multiple adapters, under:
 
 `instance/installed/<component>/<adapter>/scripts/`
 
-`instance/scripts/` is a legacy compatibility area for repo-level orchestration
-entrypoints and git hook helpers only. Do not add new adapter-specific
-implementation scripts there.
+The flat `instance/scripts/` directory is not permitted; nothing may live
+there. This convention is enforced by
+`instance/installed/09-source-control-ci/github-and-actions/scripts/check-installed-scripts-layout.sh`,
+which runs from the `pre-commit` hook fragment owned by `09-source-control-ci`
+and from the `installed-scripts-layout` GitHub Actions workflow.
 
-This convention is enforced in CI by
-`instance/installed/09-source-control-ci/github-and-actions/scripts/check-doc-classification.py`.
+Git hooks themselves follow the same rule: each adapter places per-hook
+fragments at
+`instance/installed/<component>/scripts/hooks/<git-hook-name>` and a single
+composer at
+`instance/installed/09-source-control-ci/github-and-actions/scripts/install-hooks.sh`
+discovers them and writes dispatchers into `.git/hooks/`.
 
 ---
 
 ## Observable behavior
 
-1. **Trigger:** operator runs `bash instance/installed/06-spec-graph/cognee/scripts/ingest_dual_container.sh` (or
-  `bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` for the GraphRAG fallback) or CI runs it on a
-   schedule / after significant doc batches.
+1. **Trigger:** operator runs `epos-secrets uv run cognee-sync --added/--modified/--deleted <files>` (default Cognee incremental sync, from `instance/installed/06-spec-graph/cognee/sync/`) or `bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` (GraphRAG full-rebuild fallback), or CI triggers the sync via a scheduled post-receive job.
 
 2. **Wipe stage:**
    - The rebuild script clears Neo4j graph projection state, prunes Cognee
@@ -161,9 +169,11 @@ This convention is enforced in CI by
    - "List all principles that govern the Router component."
    - "Generate a new ADR for adding a second Dev Product Adapter."
 
-6. **Rebuild flag:** The `instance/scripts/hooks/post-commit` hook writes
-  `instance/installed/06-spec-graph/.needs-rebuild` when doc files change. This is a
-   non-blocking reminder; it does not trigger the rebuild itself.
+6. **Rebuild flag:** The `instance/installed/06-spec-graph/scripts/hooks/post-commit`
+   hook fragment (composed into `.git/hooks/post-commit` by the SCM/CI adapter's
+   `install-hooks.sh`) writes `instance/installed/06-spec-graph/.needs-rebuild`
+   when doc files change. This is a non-blocking reminder; it does not trigger
+   the rebuild itself.
 
 7. **Layout/policy enforcement in CI:**
    - The doc lint checker validates adapter folder layout under
@@ -245,10 +255,10 @@ from this spec without reading implementation code:
 | Partition | Input | Expected outcome |
 |---|---|---|
 | Happy path | All env vars set, Neo4j running, valid Markdown | Graph imported; exit 0 |
-| Missing extraction key | `ANTHROPIC_API_KEY` unset | `spec-graph-index.sh` exits 1 with error message |
-| Missing embeddings key | `OPENAI_API_KEY` unset | `spec-graph-index.sh` exits 1 with error message |
-| Missing Neo4j vars | `NEO4J_PASSWORD` unset | `spec-graph-import.sh` exits 1 with error message |
-| No output dir | `instance/installed/06-spec-graph/graphrag/output/` absent | `spec-graph-import.sh` exits 1 with error message |
+| Missing extraction key | `ANTHROPIC_API_KEY` unset | cognee-sync exits 1; GraphRAG fallback `index.sh` exits 1 with error message |
+| Missing embeddings key | `OPENAI_API_KEY` unset | GraphRAG fallback `index.sh` exits 1 with error message (Cognee uses fastembed locally) |
+| Missing Neo4j vars | `NEO4J_PASSWORD` unset | GraphRAG fallback `import.sh` exits 1 with error message |
+| No output dir | `instance/installed/06-spec-graph/graphrag/output/` absent | GraphRAG fallback `import.sh` exits 1 with error message |
 | No venv | `instance/installed/06-spec-graph/graphrag/.venv/` absent | Index/import scripts exit 1 with setup instructions |
 | Zero matching files | All docs dirs empty | GraphRAG produces empty Parquet; Neo4j graph has 0 entities |
 | Large corpus | > 500 Markdown files | Completes within `rebuild_target` (15 min) |
@@ -262,12 +272,12 @@ same commit:
 
 - `instance/installed/06-spec-graph/graphrag/settings.yaml` (any key that changes observable behavior)
 - `instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh`
-- `instance/installed/06-spec-graph/cognee/scripts/ingest_dual_container.sh`
+- `instance/installed/06-spec-graph/cognee/sync/src/cognee_sync/` (cognee-sync CLI core)
 - `instance/installed/06-spec-graph/graphrag/scripts/index.sh`
 - `instance/installed/06-spec-graph/graphrag/scripts/import.sh`
 - `instance/installed/06-spec-graph/cognee/scripts/cognee.py`
 - `instance/installed/09-source-control-ci/github-and-actions/scripts/check-doc-classification.py` (regulated directories, exempt patterns, or required fields)
 - `instance/installed/09-source-control-ci/github-and-actions/scripts/generate-installed-index.py` (adapter crawl logic or index schema)
 - `.github/workflows/doc-lint.yml` (trigger paths or job behaviour)
-- `instance/scripts/hooks/post-commit`
+- `instance/installed/06-spec-graph/scripts/hooks/post-commit`
 

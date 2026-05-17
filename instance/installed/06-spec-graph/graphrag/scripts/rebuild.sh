@@ -2,8 +2,9 @@
 # rebuild.sh — Full nuke-and-reproject of the Spec Graph using GraphRAG.
 #
 # This is the GraphRAG adapter's rebuild entrypoint. For the default
-# Cognee dual-container path, use:
-#   bash instance/installed/06-spec-graph/cognee/scripts/ingest_dual_container.sh
+# Cognee incremental sync path, use cognee-sync:
+#   cd instance/installed/06-spec-graph/cognee/sync
+#   epos-secrets uv run cognee-sync --added/--modified/--deleted <files>
 #
 # Required environment variables:
 #   ANTHROPIC_API_KEY — Anthropic API key (claude-sonnet-4-6)
