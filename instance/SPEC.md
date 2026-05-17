@@ -70,10 +70,10 @@ Single source of truth for installed adapter status tracked in this repository.
 
 | Adapter | FULFILLS_SLOT | Status | Invocation surface | Notes |
 |---|---|---|---|---|
-| `cognee-ontology-preprocessor` | `SPEC_GRAPH` | implemented, default, experimental | `epos-secrets uv run cognee-sync --added <files>` (see `cognee/sync/README.md`) | Default ontology-grounded extraction path (dual-container HTTP API, incremental) |
-| `cognee-sync` | `SPEC_GRAPH` | implemented, experimental | `epos-secrets uv run cognee-sync --added/--modified/--deleted <files>` | Incremental git-diff-driven sync CLI (Phases 0–5 complete) |
-| `neo4j-ce` | `SPEC_GRAPH` | implemented, active, experimental | `instance/installed/06-spec-graph/graphrag/scripts/import.sh` + Neo4j MCP | Query store and Cypher/vector surface |
-| `microsoft-graphrag` | `SPEC_GRAPH` | implemented, installed-fallback, experimental | `bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` | Opt-in GraphRAG extraction and import path |
+| `cognee-ontology-preprocessor` | `SPEC_GRAPH` | experimental | `epos-secrets uv run cognee-sync --added <files>` (see `cognee/sync/README.md`) | Default ontology-grounded extraction path (dual-container HTTP API, incremental) |
+| `cognee-sync` | `SPEC_GRAPH` | experimental | `epos-secrets uv run cognee-sync --added/--modified/--deleted <files>` | Incremental git-diff-driven sync CLI (Phases 0–5 complete) |
+| `neo4j-ce` | `SPEC_GRAPH` | experimental | `instance/installed/06-spec-graph/graphrag/scripts/import.sh` + Neo4j MCP | Query store and Cypher/vector surface |
+| `microsoft-graphrag` | `SPEC_GRAPH` | shelved | `bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` | Opt-in GraphRAG extraction and import path |
 | `file-based-backlog` | `BACKLOG` | implemented, experimental | `bash instance/installed/13-backlog/file-based-backlog/scripts/{new-issue,lint-backlog,sweep-resolved,aggregate}.sh` | Local markdown backlog adapter with cross-repo aggregation and archive indexing |
 
 Candidate adapters remain cataloged in
