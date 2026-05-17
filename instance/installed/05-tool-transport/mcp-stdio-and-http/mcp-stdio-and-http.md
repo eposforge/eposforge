@@ -4,10 +4,10 @@ scope: repo-instance
 maturity: experimental
 source_of_truth: yes
 ---
-
 # Installed Adapter: mcp-stdio-and-http -> Tool Transport (Component 5)
 
 > Living Spec for the Tool Transport Adapter installed in this repo.
+| `status` | `approved` |
 > Slot contract: [../../../../01-architecture/02-components/05-tool-transport.md](../../../../01-architecture/02-components/05-tool-transport.md)
 
 ## Adapter metadata

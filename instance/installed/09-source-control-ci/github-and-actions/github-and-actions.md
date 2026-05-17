@@ -4,10 +4,10 @@ scope: repo-instance
 maturity: experimental
 source_of_truth: yes
 ---
-
 # Installed Adapter: github-and-actions -> Source Control / CI (Component 9)
 
 > Living Spec for Source Control / CI in this repo instance.
+| `status` | `approved` |
 > Slot contract: [../../../../01-architecture/02-components/09-source-control-ci.md](../../../../01-architecture/02-components/09-source-control-ci.md)
 
 ## Adapter metadata

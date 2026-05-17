@@ -22,7 +22,7 @@ source_of_truth: yes
 | `name` | `graphrag` |
 | `component` | `06-spec-graph` |
 | `version` | `graphrag==3.0.9` (pinned) |
-| `status` | `implemented, installed-fallback, experimental` |
+| `status` | `shelved` |
 | `privacy_posture` | `vendor-default` (OpenAI for embeddings and LLM extraction) |
 | `cost_hint` | `metered` (OpenAI API for indexing; Neo4j self-hosted) |
 | `capabilities` | `entity-extraction`, `community-detection`, `global-search`, `neo4j-write`, `vector-index` |

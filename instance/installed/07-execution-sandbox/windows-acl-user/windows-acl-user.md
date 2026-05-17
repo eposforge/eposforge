@@ -4,10 +4,10 @@ scope: repo-instance
 maturity: experimental
 source_of_truth: yes
 ---
-
 # Installed Adapter: windows-acl-user → Execution Sandbox (Component 7)
 
 > Living Spec for the Windows OS-user + NTFS-ACL Execution Sandbox
+| `status` | `approved` |
 > Adapter installed in this repo. Per
 > [../../../../01-architecture/00-adapter-pattern.md](../../../../01-architecture/00-adapter-pattern.md), all
 > required universal and component-specific fields are declared here.
@@ -42,7 +42,7 @@ source_of_truth: yes
 
 | Field | Value |
 |---|---|
-| `workspace_root` | `D:\src\git\gh\eposforge\eposforge` |
+| `workspace_root` | `<abs-path-to-repo-root>` |
 | `runner_principal` | `gemini-runner` (local Windows standard account, non-admin) |
 | `outbound_network` | open — required for Gemini inference, GitHub MCP, Microsoft Docs MCP, and loopback `eposforge-graph` MCP |
 | `teardown` | manual (no per-sub-task teardown; ephemeral workspace not implemented in v1) |
@@ -58,7 +58,7 @@ idempotent and performs:
 1. Creates local standard user `gemini-runner` (non-admin, no interactive
    logon session required outside of `runas`).
 2. Grants Modify on `workspace_root` to `gemini-runner` via NTFS ACL.
-3. Denies read on the operator's profile directory (`C:\Users\<operator>`)
+3. Denies read on the operator's profile directory (`<operator-profile-dir>`)
    to `gemini-runner` — defense-in-depth atop default cross-user denial.
 4. Installs Gemini CLI under the `gemini-runner` profile.
 5. Stages `.gemini/settings.json` from `.gemini/settings.json.example`.
@@ -72,8 +72,8 @@ idempotent and performs:
 
 | Path | Permission | Principal |
 |---|---|---|
-| `D:\src\git\gh\eposforge\eposforge` | Modify (OI)(CI) | `gemini-runner` |
-| `C:\Users\<operator>` | Read — DENY (OI)(CI) | `gemini-runner` |
+| `<abs-path-to-repo-root>` | Modify (OI)(CI) | `gemini-runner` |
+| `<operator-profile-dir>` | Read — DENY (OI)(CI) | `gemini-runner` |
 
 ---
 

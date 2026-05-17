@@ -1,8 +1,6 @@
 ---
-doc_kind: reference-implementation
-scope: repo-instance
-maturity: experimental
-source_of_truth: yes
+adapter: cognee-sync
+status: active
 ---
 
 # GraphRAG workspace — EposForge Spec Graph (installed fallback)
@@ -179,3 +177,40 @@ acceptable. For private Living Spec content in a factory instance,
 use a `vendor-no-training` API key or substitute Ollama as the
 backend by updating `api_base` in `settings.yaml`.
 
+### Updated Instructions for Regenerating Ontology and Graph DB
+
+#### Primary Path: `cognee-sync`
+1. **What is `cognee-sync`?**
+   - `cognee-sync` is the default incremental sync tool for the Cognee knowledge graph. It handles per-file add, update, and delete operations via the Cognee HTTP API.
+
+2. **Prerequisites**:
+   - Ensure the following environment variables are set:
+     - `COGNEE_API_URL`: Base URL of the Cognee HTTP API.
+     - `COGNEE_API_TOKEN`: Optional bearer token.
+     - `COGNEE_DATASET_NAME`: Defaults to `eposforge-sync`.
+
+3. **Usage**:
+   - Navigate to the `cognee/sync` directory:
+     ```bash
+     cd instance/installed/06-spec-graph/cognee/sync
+     ```
+   - Run the `cognee-sync` command with the appropriate flags:
+     - **Add new files**:
+       ```bash
+       epos-secrets uv run cognee-sync --added path/to/file.md
+       ```
+     - **Modify existing files**:
+       ```bash
+       epos-secrets uv run cognee-sync --modified path/a.md path/b.md
+       ```
+     - **Delete files**:
+       ```bash
+       epos-secrets uv run cognee-sync --deleted path/old.md
+       ```
+     - **Check status**:
+       ```bash
+       epos-secrets uv run cognee-sync --status
+       ```
+
+4. **Validation**:
+   - Ensure the ontology files (e.g., `01-glossary.ttl`) are up-to-date and consistent with the graph.

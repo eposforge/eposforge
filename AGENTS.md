@@ -1,3 +1,10 @@
+## Agent Workflows
+
+### `/modifyef` — Reconcile and apply design changes
+Use this workflow when the user provides a description of additions, deletions, or edits to the EposForge architecture.
+
+3. **Implement (Graph-Influence Checklist):**
+  *   **Adapter status enforcement:** Agents MUST NOT select or invoke adapters whose status is `shelved`. Only adapters with status `experimental`, `approved`, or `deprecated` may be considered for use. Adapters marked `shelved` are retained for possible future work but are not eligible for selection or invocation by agents.
 # Agent Instructions — EposForge
 
 Shared instructions for AI coding assistants (GitHub Copilot, Claude Code,
@@ -154,3 +161,64 @@ Operational conventions retained here:
   - `bash instance/installed/13-backlog/file-based-backlog/scripts/aggregate.sh --plan`
   - `bash instance/installed/13-backlog/file-based-backlog/scripts/aggregate.sh --regressions <keyword>`
   - `bash instance/installed/13-backlog/file-based-backlog/scripts/aggregate.sh --graph`
+
+---
+
+adapter: cognee-sync
+status: active
+
+### Updated Instructions for Regenerating Graph DB
+
+#### Primary Path: `cognee-sync`
+
+**Overview:** `cognee-sync` is the default incremental sync tool for the Cognee knowledge graph. It handles per-file add, update, and delete operations via the Cognee HTTP API. The process involves three sequential steps: updating the ontology, running the sync, and validating results.
+
+---
+
+1. **Update/Verify Ontology (Prerequisite)**:
+   - The ontology file (`00-vision/01-glossary.ttl`) must be updated **before** running cognee-sync.
+   - The ontology is uploaded to Cognee and used to ground entity extraction during cognify—ensuring extracted entities align with your defined class IRIs and relationships.
+   - If you have modified glossary terms, added new entity types, or changed relationships in `00-vision/01-glossary.md`, ensure the corresponding changes are reflected in `00-vision/01-glossary.ttl` (OWL/Turtle format).
+   - Verify the ontology is syntactically valid before proceeding (use an RDF validator or Protégé).
+
+2. **Prerequisites (Environment)**:
+   - Ensure the following environment variables are set:
+     - `COGNEE_API_URL`: Base URL of the Cognee HTTP API.
+     - `COGNEE_API_TOKEN`: Optional bearer token.
+     - `COGNEE_DATASET_NAME`: Defaults to `eposforge-sync`.
+   - The `dkr-cgnee-api` container must be running and reachable.
+
+3. **Run cognee-sync**:
+   - Navigate to the `cognee/sync` directory:
+     ```bash
+     cd instance/installed/06-spec-graph/cognee/sync
+     ```
+   - Always include the ontology file when adding or modifying files:
+     - **Add new files and ontology**:
+       ```bash
+       epos-secrets uv run cognee-sync --added 00-vision/01-glossary.ttl path/to/file.md
+       ```
+     - **Modify existing files and update ontology**:
+       ```bash
+       epos-secrets uv run cognee-sync --modified 00-vision/01-glossary.ttl path/a.md path/b.md
+       ```
+     - **Delete files**:
+       ```bash
+       epos-secrets uv run cognee-sync --deleted path/old.md
+       ```
+     - **Check sync status**:
+       ```bash
+       epos-secrets uv run cognee-sync --status
+       ```
+
+4. **Validation**:
+   - After sync completes, verify that:
+     - The knowledge graph reflects the new or updated ontology classes and relationships.
+     - Entity nodes are anchored to the ontology IRIs (discoverable via `/api/v1/datasets/{dataset_id}/graph` endpoint).
+     - Search queries return results aligned with the updated ontology structure.
+   - If discrepancies appear, check the ontology for syntax errors or missing relationships and re-sync.
+
+---
+
+#### Note on `graphrag`
+- `graphrag` is a legacy fallback adapter for regenerating the Spec Graph. It is no longer the active implementation and should only be used for historical reference or specific fallback scenarios.

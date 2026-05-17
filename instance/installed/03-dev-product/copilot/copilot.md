@@ -4,10 +4,10 @@ scope: repo-instance
 maturity: experimental
 source_of_truth: yes
 ---
-
 # Installed Adapter: copilot → Dev Product (Component 3)
 
 > Living Spec for the GitHub Copilot Dev Product Adapter installed in
+| `status` | `approved` |
 > this repo. Per [../../../../01-architecture/00-adapter-pattern.md](../../../../01-architecture/00-adapter-pattern.md),
 > all required universal and component-specific fields are declared here.
 
