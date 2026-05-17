@@ -26,11 +26,14 @@ This repo has two layers that must stay explicit:
 |---|---|
 | **Component** | An architectural slot (e.g. Spec Graph, Router, Dev Product). Twelve components defined in `01-architecture/02-components/`. |
 | **Adapter** | A concrete implementation plugged into a component slot. Self-declares `capabilities`, `privacy_posture`, `cost_hint`, `invocation_surface`. |
+| **Migration** | A named, in-flight transition between two coexisting architectural shapes (legacy and target) within an instance, with a stated completion commitment. Defined in `00-vision/01-glossary.md`; used by `02-roadmap/adoption-strategy.md`. |
 | **FULFILLS_SLOT** | Relationship: an Adapter fulfills a component slot. |
 | **DEPENDS_ON** | Relationship: one entity depends on another. |
 | **MATURES_TO** | Relationship: an entity reaches maturity at a phase. |
 | **GOVERNED_BY** | Relationship: an entity is governed by a policy or principle. |
 | **IMPLEMENTS** | Relationship: an entity is an implementation of another. |
+| **LEGACY_SHAPE_OF** | Relationship: an entity is on the legacy side of a Migration. |
+| **TARGET_SHAPE_OF** | Relationship: an entity is on the target side of a Migration. |
 | **Phase 0–4** | Platform Factory maturity ladder (Foundation → Full Autonomy). |
 | **Phase A–F** | Product Factory maturity ladder (Registry → Level 5 gate). |
 | **Living Spec** | A machine-readable spec that travels with an artifact and drives agent behavior. |
