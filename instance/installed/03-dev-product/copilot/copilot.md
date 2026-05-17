@@ -44,6 +44,7 @@ source_of_truth: yes
 | `mcp_wiring` | `.vscode/mcp.json` (gitignored; derive from `.vscode/mcp.json.example`) |
 | `enforcement_surface` | `AGENTS.md only` |
 | `instruction_file` | `.github/copilot-instructions.md` |
+| `orchestration_role` | `delegated-worker` |
 | `execution_sandbox` | none declared (runs in VS Code host process; see Contract gaps) |
 
 ---

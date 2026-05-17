@@ -44,6 +44,7 @@ source_of_truth: yes
 | `mcp_wiring` | `.mcp.json` (gitignored; derive from `.mcp.json.example`) |
 | `enforcement_surface` | `UserPromptSubmit hook (.claude/settings.json) + AGENTS.md` |
 | `instruction_file` | `CLAUDE.md` |
+| `orchestration_role` | `delegated-worker` |
 | `execution_sandbox` | none declared (runs in operator's shell session; see Contract gaps) |
 
 ---

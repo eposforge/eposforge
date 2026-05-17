@@ -44,6 +44,7 @@ source_of_truth: yes
 | `mcp_wiring` | `.gemini/settings.json` (gitignored; derive from `.gemini/settings.json.example`) |
 | `enforcement_surface` | `AGENTS.md only` |
 | `instruction_file` | `GEMINI.md` |
+| `orchestration_role` | `delegated-worker` |
 | `execution_sandbox` | `windows-acl-user` (see [../../../07-execution-sandbox/windows-acl-user/windows-acl-user.md](../../../07-execution-sandbox/windows-acl-user/windows-acl-user.md)) |
 
 ---
