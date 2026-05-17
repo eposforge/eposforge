@@ -114,7 +114,7 @@ implementation for documentation and examples.
 ## Decision: Automation — Non-blocking post-commit flag + manual rebuild
 
 **Chosen:** post-commit hook writes `instance/installed/06-spec-graph/.needs-rebuild` flag;
-operator runs `instance/scripts/spec-graph-rebuild.sh` after significant batches.
+operator runs `instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` after significant batches.
 
 **Rationale:**
 
@@ -123,11 +123,15 @@ operator runs `instance/scripts/spec-graph-rebuild.sh` after significant batches
 - A CI-triggered rebuild (optional extension) adds complexity that is
   not yet warranted for a single-operator repo. It can be added by
   adding a scheduled workflow job that runs
-  `instance/scripts/spec-graph-rebuild.sh` on the CI host.
+  `instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` on the CI host.
 - The non-blocking flag preserves the reminder without blocking
   developer flow. The post-commit hook is installed manually via
-  `instance/scripts/hooks/install-hooks.sh` rather than forced on all
-  contributors; this respects the DCO-based contribution model.
+  `instance/installed/09-source-control-ci/github-and-actions/scripts/install-hooks.sh`
+  rather than forced on all contributors; this respects the DCO-based
+  contribution model.
+  **Note:** this ADR is superseded by ADR 002, which replaces GraphRAG with Cognee
+  as the default engine. The rebuild script referenced here now lives at
+  `instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh`.
 
 ---
 
@@ -172,7 +176,7 @@ Deferred: acceptable for a future scale-out option; see
   grounded in the actual documented structure.
 - **Positive:** native Neo4j vector indexes (three: `entity_embedding`,
   `text_unit_embedding`, `community_report_embedding`) are created by
-  `instance/scripts/spec-graph-import.sh` using embeddings sourced from LanceDB
+  `instance/installed/06-spec-graph/graphrag/scripts/import.sh` using embeddings sourced from LanceDB
   (`instance/installed/06-spec-graph/graphrag/output/lancedb`). Hybrid Cypher queries that combine
   structural traversal with semantic similarity are supported without
   any MCP-layer changes. See `instance/installed/06-spec-graph/graphrag/README.md` for example queries.

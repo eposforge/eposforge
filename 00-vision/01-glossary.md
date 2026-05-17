@@ -97,6 +97,16 @@ code.
 **Phase** — A stage of factory maturity. Sequential; each phase's
 verification criteria gate the next.
 
+**Migration** — A named, in-flight transition between two coexisting
+architectural shapes (legacy and target) within an instance. Each
+Migration has a stated completion commitment. Entities in the Spec
+Graph declare which side they are on via `LEGACY_SHAPE_OF` or
+`TARGET_SHAPE_OF`. The mechanism backing obligation 3 of
+[adoption strategy](../02-roadmap/adoption-strategy.md): remaining
+migration debt is mechanically visible rather than
+memory-dependent. How an instance populates the relationships
+(frontmatter markers, manifest, lint rules) is an instance choice.
+
 **Policy** — A machine-enforceable rule that constrains what an agent
 may do (e.g., "Platform agents may not touch application containers").
 

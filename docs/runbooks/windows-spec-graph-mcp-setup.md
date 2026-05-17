@@ -40,7 +40,7 @@ pip install graphrag==3.0.9 neo4j pandas pyarrow lancedb
 ```
 
 If you plan to run the rebuild scripts from Windows, use Git Bash or WSL.
-The repo's rebuild helpers in `instance/scripts/` are shell scripts.
+The repo's rebuild helpers live under `instance/installed/06-spec-graph/graphrag/scripts/` (GraphRAG fallback) — they are shell scripts.
 
 ## 3. Neo4j endpoint assumptions
 

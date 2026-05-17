@@ -10,10 +10,13 @@ research catalogs, reference adapters, and tooling are all welcome.
    anything non-trivial. Vision and component-contract changes especially
    benefit from a discussion first.
 2. Fork the repo, create a topic branch, make your change.
-3. Install repo hooks so local commits run safety checks:
+3. Install repo hooks so local commits run safety checks. This composes all
+   per-component hook fragments (see AGENTS.md §Conventions) into
+   `.git/hooks/`. Run once per clone, per host (Linux and Windows Git Bash
+   both work):
 
 ```bash
-bash instance/scripts/hooks/install-hooks.sh
+bash instance/installed/09-source-control-ci/github-and-actions/scripts/install-hooks.sh
 ```
 
 4. Sign your commits with `git commit -s` (see DCO below).

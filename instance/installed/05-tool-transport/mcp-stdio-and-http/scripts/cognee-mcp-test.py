@@ -1,6 +1,6 @@
 """
 Cognee MCP smoke test — runs directly via Python, no MCP server needed.
-Usage: uv run --with "cognee[fastembed]" --with openai python instance/scripts/cognee-mcp-test.py
+Usage: uv run --with "cognee[fastembed]" --with openai python instance/installed/05-tool-transport/mcp-stdio-and-http/scripts/cognee-mcp-test.py
 
 Tests:
   1. Permanent ingest + graph recall (LLM + embedding path)
@@ -17,7 +17,7 @@ import time
 # ---------------------------------------------------------------------------
 # Load config from .mcp.json so tests use the exact same settings as the server
 # ---------------------------------------------------------------------------
-REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
+REPO_ROOT = pathlib.Path(__file__).resolve().parents[5]
 MCP_JSON = REPO_ROOT / ".mcp.json"
 
 def load_env_from_mcp_json():

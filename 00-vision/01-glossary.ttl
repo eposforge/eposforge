@@ -89,6 +89,10 @@ ef:ExecutionSandbox rdf:type owl:Class ;
     rdfs:label "Execution Sandbox" ;
     rdfs:comment "The isolated runtime in which dispatched Dev Product work executes." .
 
+ef:Migration rdf:type owl:Class ;
+    rdfs:label "Migration" ;
+    rdfs:comment "A named, in-flight transition between two coexisting architectural shapes (legacy and target) within an instance, with a stated completion commitment." .
+
 ### Object Properties (Relationships)
 
 ef:fulfillsSlot rdf:type owl:ObjectProperty ;
@@ -115,6 +119,14 @@ ef:supersedes rdf:type owl:ObjectProperty ;
 
 ef:partOf rdf:type owl:ObjectProperty ;
     rdfs:label "PART_OF" .
+
+ef:legacyShapeOf rdf:type owl:ObjectProperty ;
+    rdfs:label "LEGACY_SHAPE_OF" ;
+    rdfs:range ef:Migration .
+
+ef:targetShapeOf rdf:type owl:ObjectProperty ;
+    rdfs:label "TARGET_SHAPE_OF" ;
+    rdfs:range ef:Migration .
 
 ### Individuals (The 12 Core Components)
 

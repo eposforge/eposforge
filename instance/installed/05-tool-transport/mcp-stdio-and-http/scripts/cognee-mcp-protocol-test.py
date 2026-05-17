@@ -7,7 +7,7 @@ connection.  Run it any time to validate the server without agent intervention.
 
 Usage:
     uv run --with "cognee[fastembed]" --with cognee-mcp --with mcp --with openai --with anthropic --with neo4j \
-        python instance/scripts/cognee-mcp-protocol-test.py
+        python instance/installed/05-tool-transport/mcp-stdio-and-http/scripts/cognee-mcp-protocol-test.py
 """
 import asyncio
 import json
@@ -19,7 +19,7 @@ import time
 # ---------------------------------------------------------------------------
 # Load env from .mcp.json so the spawned server gets identical settings
 # ---------------------------------------------------------------------------
-REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
+REPO_ROOT = pathlib.Path(__file__).resolve().parents[5]
 MCP_JSON = REPO_ROOT / ".mcp.json"
 
 def load_env_from_mcp_json():
