@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# pre-commit fragment owned by 09-source-control-ci.
+# Runs the checks this component is responsible for. Composed into
+# .git/hooks/pre-commit by:
+#   bash instance/installed/09-source-control-ci/github-and-actions/scripts/install-hooks.sh
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+SCRIPTS_DIR="${REPO_ROOT}/instance/installed/09-source-control-ci/github-and-actions/scripts"
+
+SENSITIVE_LITERALS="${SCRIPTS_DIR}/check-sensitive-literals.sh"
+LAYOUT_CHECK="${SCRIPTS_DIR}/check-installed-scripts-layout.sh"
+
+status=0
+for script in "$SENSITIVE_LITERALS" "$LAYOUT_CHECK"; do
+  if [[ ! -x "$script" ]]; then
+    echo "ERROR: checker script is missing or not executable: $script" >&2
+    status=1
+    continue
+  fi
+done
+[ "$status" -eq 0 ] || exit "$status"
+
+"$SENSITIVE_LITERALS" --staged || status=$?
+"$LAYOUT_CHECK"                || status=$?
+
+exit "$status"

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""check-doc-classification.py — Validate EposForge doc classification metadata,
-installed-adapter folder structure, and script placement conventions.
+"""check-doc-classification.py — Validate EposForge doc classification metadata
+and installed-adapter folder structure.
 
 Two checks are performed:
 
@@ -17,12 +17,10 @@ Two checks are performed:
      intentional _index.md files, README.md, and component-level specs
      explicitly named the same as the component folder).
 
-3. Script placement convention check (--check-layout / CI always):
-     - Implementation scripts must live with the adapter they implement under
-         instance/installed/<component>/<adapter>/scripts/.
-     - instance/scripts/ is reserved for repo-level orchestration shims,
-         compatibility wrappers, and git hook installers only.
-     - New implementation scripts directly under instance/scripts/ are rejected.
+The adapter-script placement convention (no files permitted under
+instance/scripts/) is enforced separately by check-installed-scripts-layout.sh,
+which is run from the pre-commit hook fragment and the
+installed-scripts-layout GitHub Actions workflow.
 
 Behaviour
 ---------
@@ -100,12 +98,6 @@ COMPONENT_LEVEL_SKIP_DIRS = {"scripts", "hooks", "docs", "examples"}
 
 # Permitted direct subdirectories within an adapter folder.
 PERMITTED_ADAPTER_SUBDIRS = {"scripts", "docs", "examples", "tests", "prompts"}
-
-# instance/scripts/ is a legacy compatibility area. Implementation scripts must
-# live under adapter-local scripts/ folders in instance/installed/... .
-# The only permitted content is the hooks/ subtree.
-INSTANCE_SCRIPTS_ALLOWED_DIRS = {"hooks"}
-INSTANCE_SCRIPTS_ALLOWED_FILES: set[str] = set()
 
 
 # ---------------------------------------------------------------------------
@@ -261,46 +253,6 @@ def check_installed_layout() -> list[str]:
     return violations
 
 
-def check_instance_scripts_convention() -> list[str]:
-    """Validate that instance/scripts only contains approved legacy shims.
-
-    Returns a list of human-readable violation strings (empty = no violations).
-    """
-    violations: list[str] = []
-    scripts_dir = REPO_ROOT / "instance" / "scripts"
-
-    if not scripts_dir.exists():
-        return violations
-
-    for path in sorted(scripts_dir.rglob("*")):
-        rel_from_scripts = path.relative_to(scripts_dir).as_posix()
-        rel_from_repo = path.relative_to(REPO_ROOT).as_posix()
-
-        # Allow designated repo-level utility subtrees.
-        if any(
-            rel_from_scripts == allowed_dir
-            or rel_from_scripts.startswith(f"{allowed_dir}/")
-            for allowed_dir in INSTANCE_SCRIPTS_ALLOWED_DIRS
-        ):
-            continue
-
-        # Only evaluate files for the allowlist check.
-        if path.is_dir():
-            violations.append(
-                "SCRIPT-PLACEMENT: unexpected directory under instance/scripts/: "
-                f"{rel_from_repo} (implementation assets must be adapter-local)"
-            )
-            continue
-
-        if rel_from_scripts not in INSTANCE_SCRIPTS_ALLOWED_FILES:
-            violations.append(
-                "SCRIPT-PLACEMENT: implementation script outside adapter folder: "
-                f"{rel_from_repo} (move to instance/installed/<component>/<adapter>/scripts/)"
-            )
-
-    return violations
-
-
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -344,19 +296,6 @@ def main() -> int:
     else:
         print("installed-layout: all adapter folders OK.")
 
-    script_placement_violations = check_instance_scripts_convention()
-    if script_placement_violations:
-        print("FAIL — script placement convention violations:")
-        for v in script_placement_violations:
-            print(f"  {v}")
-        print()
-        print("Convention: adapter implementation scripts must live in")
-        print("  instance/installed/<component>/<adapter>/scripts/")
-        print("Reserved for repo-level shims only:")
-        print("  instance/scripts/ (legacy allowlist + hooks/)")
-        exit_code = 1
-    else:
-        print("script-placement: instance/scripts convention OK.")
 
     if args.check_layout_only:
         return exit_code
