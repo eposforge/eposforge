@@ -42,6 +42,54 @@ source_of_truth: yes
 | `dco_policy` | commit sign-off required (DCO) per README contributing section |
 | `branch_protection` | required on main for review + checks (repo setting) |
 | `doc_lint_workflow` | `.github/workflows/doc-lint.yml` |
+| `layout_workflow` | `.github/workflows/installed-scripts-layout.yml` |
+| `hook_composer` | `scripts/install-hooks.sh` |
+| `layout_check` | `scripts/check-installed-scripts-layout.sh` |
+
+## Git hooks — component-owned, composed
+
+This adapter owns repo-wide Git hook composition. Each installed adapter that
+needs hook behaviour drops a fragment at
+`instance/installed/<component>/scripts/hooks/<git-hook-name>` (or
+`<component>/<adapter>/scripts/hooks/<git-hook-name>`). The composer at
+`scripts/install-hooks.sh` discovers all fragments and writes a single
+dispatcher into `.git/hooks/<name>` that runs every fragment in order. The
+dispatcher exits with the highest non-zero status seen, so blocking hooks
+(`pre-commit`, `pre-push`, …) still block when any fragment fails.
+
+### Operator commands
+
+```sh
+# Install or refresh dispatchers (run once per clone, per host)
+bash instance/installed/09-source-control-ci/github-and-actions/scripts/install-hooks.sh
+
+# Verify dispatchers are up to date with discovered fragments
+bash instance/installed/09-source-control-ci/github-and-actions/scripts/install-hooks.sh --check
+
+# Remove all managed dispatchers
+bash instance/installed/09-source-control-ci/github-and-actions/scripts/install-hooks.sh --uninstall
+```
+
+### Cross-host portability
+
+Hook fragments and the composer are `#!/usr/bin/env bash`. They run on
+Linux (srv-docker-hp) natively and on Windows (ws-dev-1) via Git Bash. No
+host-absolute paths are committed — fragments derive the repo root from
+`git rev-parse --show-toplevel`.
+
+### Fragments currently owned by this adapter
+
+| Hook | Fragment | Purpose |
+|---|---|---|
+| `pre-commit` | `scripts/hooks/pre-commit` | Run `check-sensitive-literals.sh --staged` and `check-installed-scripts-layout.sh` |
+
+### Adapter-script layout enforcement
+
+`scripts/check-installed-scripts-layout.sh` fails the commit (and the CI job)
+if any files exist under `instance/scripts/`. The rule is: adapter scripts
+must live under `instance/installed/<component>/scripts/`. The same check is
+run in CI by `.github/workflows/installed-scripts-layout.yml`, catching
+direct pushes from clones that have not installed the local hooks.
 
 ## Contract gaps (v1)
 

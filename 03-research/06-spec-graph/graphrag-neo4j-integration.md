@@ -43,7 +43,7 @@ Markdown corpus (00-vision/, 01-architecture/, 02-roadmap/,
   └── Indexing output (Parquet files in output/)
         │
         ▼
-  Neo4j import (spec-graph-import.sh)
+  Neo4j import (graphrag/scripts/import.sh)
   └── Nodes: Entity, Relationship, Community, TextUnit
   └── Vector indexes on entity + community embeddings
         │
@@ -136,7 +136,7 @@ graphrag init --root .   # generates default prompts; custom prompts
 ### Indexing
 
 ```bash
-bash instance/scripts/spec-graph-index.sh
+bash instance/installed/06-spec-graph/graphrag/scripts/index.sh
 ```
 
 This runs GraphRAG over all Markdown files in `00-vision/`,
@@ -147,7 +147,7 @@ Output Parquet files land in `instance/installed/06-spec-graph/graphrag/output/`
 ### Import into Neo4j
 
 ```bash
-bash instance/scripts/spec-graph-import.sh
+bash instance/installed/06-spec-graph/graphrag/scripts/import.sh
 ```
 
 Reads the Parquet output and batch-imports all Entity, Relationship,
@@ -157,18 +157,18 @@ for hybrid graph + semantic search.
 ### Full rebuild (index + import)
 
 ```bash
-bash instance/scripts/spec-graph-rebuild.sh
+bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh
 ```
 
 ### Git post-commit hook (optional)
 
 ```bash
-bash instance/scripts/hooks/install-hooks.sh
+bash instance/installed/09-source-control-ci/github-and-actions/scripts/install-hooks.sh
 ```
 
 Sets a non-blocking `.needs-rebuild` flag when `*.md` files in the
 vision/architecture directories change. Run
-`instance/scripts/spec-graph-rebuild.sh` after significant doc batches.
+`instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` after significant doc batches.
 
 ---
 
@@ -197,10 +197,10 @@ RETURN dep.name, dep.type;
 
 ## Maintenance recommendations
 
-- Re-run `spec-graph-rebuild.sh` whenever more than a handful of docs
-  change. GraphRAG does not support incremental update; nuke-and-
-  reproject is the rebuild contract per the Spec Graph component
-  contract.
+- Re-run `instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` whenever more than a
+  handful of docs change (GraphRAG fallback path only). The default Spec Graph
+  adapter (Cognee) uses incremental sync via `cognee-sync` — see
+  `instance/installed/06-spec-graph/cognee/sync/README.md`.
 - Keep custom prompt files under `instance/installed/06-spec-graph/graphrag/prompts/` in version
   control. They encode the extraction vocabulary for the factory.
 - Keep Neo4j local. Scale to Neo4j Aura only if graph sharing
@@ -234,7 +234,7 @@ the Ollama OpenAI-compatible endpoint and `api_key` to any string).
 |---|---|
 | [`instance/installed/06-spec-graph/graphrag/settings.yaml`](../../instance/installed/06-spec-graph/graphrag/settings.yaml) | GraphRAG project config |
 | [`instance/installed/06-spec-graph/graphrag/prompts/`](../../instance/installed/06-spec-graph/graphrag/prompts/) | Custom entity/relationship extraction prompts |
-| [`instance/scripts/spec-graph-rebuild.sh`](../../instance/scripts/spec-graph-rebuild.sh) | Index + import in one command |
+| [`instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh`](../../instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh) | Index + import in one command (GraphRAG fallback) |
 | [`instance/SPEC.md`](../../instance/SPEC.md) | Living Spec for this tooling (Component 2 contract) |
 | [`instance/adrs/001-spec-graph-graphrag-neo4j.md`](../../instance/adrs/001-spec-graph-graphrag-neo4j.md) | ADR recording adapter decisions |
 

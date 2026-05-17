@@ -1,0 +1,19 @@
+name: installed-scripts-layout
+
+on:
+  pull_request:
+    paths:
+      - 'instance/scripts/**'
+      - 'instance/installed/**'
+      - 'instance/installed/09-source-control-ci/github-and-actions/scripts/check-installed-scripts-layout.sh'
+      - '.github/workflows/installed-scripts-layout.yml'
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enforce adapter-script placement convention
+        run: bash instance/installed/09-source-control-ci/github-and-actions/scripts/check-installed-scripts-layout.sh
