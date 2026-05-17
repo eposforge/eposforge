@@ -60,7 +60,7 @@ emerged:
 
 **Chosen:** Cognee 1.0 as the default Spec Graph extraction engine;
 Microsoft GraphRAG retained as an opt-in fallback via
-`instance/scripts/spec-graph-rebuild.sh --graphrag`.
+`instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh`.
 
 **Rationale:**
 
@@ -81,15 +81,22 @@ Microsoft GraphRAG retained as an opt-in fallback via
 `prune()` wipes the vector and relational stores; Neo4j is cleared
 separately. Incremental update is not yet validated.
 
-**Rebuild command:**
+**Sync command (Cognee default — incremental):**
 ```sh
-# Default (Cognee):
-COGNEE_VENV=D:\venv\cognee COGNEE_SKIP_CONNECTION_TEST=true \
-ENABLE_BACKEND_ACCESS_CONTROL=false \
-instance/scripts/spec-graph-rebuild.sh
+# From instance/installed/06-spec-graph/cognee/sync:
+epos-secrets uv run cognee-sync --added <new-files>
+epos-secrets uv run cognee-sync --modified <changed-files>
+epos-secrets uv run cognee-sync --deleted <removed-files>
 
-# Fallback (GraphRAG):
-instance/scripts/spec-graph-rebuild.sh --graphrag
+# Full-corpus seed (all tracked .md files, Linux/macOS):
+cd instance/installed/06-spec-graph/cognee/sync
+epos-secrets uv run cognee-sync --added $(git -C ../../../.. ls-files '*.md')
+```
+See `instance/installed/06-spec-graph/cognee/sync/README.md` for setup and secrets.
+
+**Rebuild command (GraphRAG fallback — full nuke-and-reproject):**
+```sh
+bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh
 ```
 
 **Required environment variables (never committed):**

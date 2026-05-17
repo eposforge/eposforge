@@ -26,7 +26,7 @@ source_of_truth: yes
 | `privacy_posture` | `vendor-default` (OpenAI for embeddings and LLM extraction) |
 | `cost_hint` | `metered` (OpenAI API for indexing; Neo4j self-hosted) |
 | `capabilities` | `entity-extraction`, `community-detection`, `global-search`, `neo4j-write`, `vector-index` |
-| `invocation_surface` | `CLI script (instance/scripts/spec-graph-rebuild.sh --graphrag)` |
+| `invocation_surface` | `CLI script (instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh)` |
 
 ### Component-6-specific fields
 
@@ -68,7 +68,7 @@ export NEO4J_PASSWORD=your-neo4j-password
 
 # 5. Run GraphRAG fallback path explicitly
 cd ../../../..                      # repo root
-bash instance/scripts/spec-graph-rebuild.sh --graphrag
+bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh
 ```
 
 > **Note:** The first index run creates `output/lancedb/` (the vector
@@ -159,7 +159,7 @@ ORDER BY score DESC LIMIT 5;
 
 ## Verification
 
-After a GraphRAG fallback rebuild (`bash instance/scripts/spec-graph-rebuild.sh --graphrag`), confirm
+After a GraphRAG fallback rebuild (`bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh`), confirm
 the vector indexes are online and fully populated:
 
 ```bash
