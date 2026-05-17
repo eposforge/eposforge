@@ -39,7 +39,14 @@ Adapter:
 - `invocation_surface` — how the Adapter is invoked (CLI, HTTP, library,
   process, etc.). Invocation-surface conventions are standardized under
   `04-standards/04-mcp/` and `04-standards/03-agent-skills/` once adopted.
-- `status` — `experimental` | `approved` | `deprecated`.
+- `status` — `experimental` | `approved` | `deprecated` | `shelved`.
+
+**Status values:**
+
+- `experimental`: Adapter is under active development or evaluation.
+- `approved`: Adapter is production-ready and recommended for use.
+- `deprecated`: Adapter is no longer recommended and may be removed.
+- `shelved`: Adapter is not being worked on but may be resumed in the future (retained for possible reactivation).
 
 Components may add their own required metadata fields. Adapters MUST
 declare all required fields for their component plus the global fields

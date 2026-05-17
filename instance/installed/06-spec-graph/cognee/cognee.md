@@ -27,7 +27,7 @@ source_of_truth: yes
 | `name` | `cognee-ontology-preprocessor` |
 | `component` | `06-spec-graph` |
 | `version` | `unpinned` (latest `cognee` release) |
-| `status` | `implemented, default, experimental` |
+| `status` | `experimental` |
 | `privacy_posture` | `vendor-default` (Anthropic for LLM; OpenAI for embeddings during indexing) |
 | `cost_hint` | metered (Anthropic + OpenAI APIs for indexing) |
 | `capabilities` | `ontology-grounded-extraction`, `entity-normalization`, `synonym-collapse`, `embedded-graph-write` |
