@@ -37,5 +37,5 @@ This standard does not govern external product naming conventions used by adapte
 ## Related
 
 - [../../AGENTS.md](../../AGENTS.md)
-- [../../00-vision/01-glossary.md](../../00-vision/01-glossary.md)
+- [../../00-vision/01-ontology.ttl](../../00-vision/01-ontology.ttl)
 - [../../../03-research/04-standards/01-naming-conventions/case-and-prefix-options.md](../../../03-research/04-standards/01-naming-conventions/case-and-prefix-options.md)

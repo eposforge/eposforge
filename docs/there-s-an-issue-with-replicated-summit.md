@@ -2,7 +2,7 @@
 
 ## Context
 
-EposForge needs a top-level home for cross-cutting **adopted standards** (Agent Skills, MCP, naming conventions, vocabulary, canonical doc sources). Today these rules are scattered through `AGENTS.md` and `00-vision/01-glossary.md` with no single normative location.
+EposForge needs a top-level home for cross-cutting **adopted standards** (Agent Skills, MCP, naming conventions, vocabulary, canonical doc sources). Today these rules are scattered through `AGENTS.md` and `00-vision/01-ontology.ttl` with no single normative location.
 
 Adding the new section exposed a deeper structural issue: `03-research/` previously used a flat per-component layout that did **not** mirror where the architecture content actually lives (`01-architecture/02-components/01-spec-input.md`). The research catalog and the thing it's research *for* had drifted out of structural alignment.
 
@@ -130,7 +130,7 @@ Use `git mv` to preserve history.
 - `AGENTS.md` — collapse §Vocabulary, §Authoritative-docs MCPs, §Conventions into a single `## Standards` H2 with bullet pointers to `04-standards/`. Add one line pointing at `04-standards/06-research-mirror/` under a refactoring-discipline note.
 - `03-research/README.md` — rewrite the Organization section. Replace "Each subdirectory corresponds to a component" with the mirror rule: "Research paths mirror source paths. Research for `<path>.md` lives at `03-research/<path>/`. The mirror is need-based — folders exist only when populated. See `04-standards/06-research-mirror/` for the normative rule." Replace the per-component table with a generated/illustrative listing of currently-populated paths.
 - `README.md` — add `04-standards/` row to the §How to read code block and to the §Repository Layers table.
-- `00-vision/01-glossary.md` — add header note pointing at `04-standards/02-vocabulary/` when that standard lands.
+- `00-vision/01-ontology.ttl` — add guidance note pointing at `04-standards/02-vocabulary/` when that standard lands.
 - `01-architecture/00-adapter-pattern.md` — `invocation_surface` bullet gains "see `04-standards/04-mcp/` and `04-standards/03-agent-skills/`" once those land.
 - `.github/workflows/doc-lint.yml` — extend glob from `03-research/**` to also cover `04-standards/**` and the new `03-research/01-architecture/**` deep paths.
 - Update internal cross-references to moved research files. Search pattern: `03-research/<old-component-folder>` across the entire repo.
@@ -139,7 +139,7 @@ Use `git mv` to preserve history.
 
 1. **PR 1 — Mirror standard + research refactor.** Create `04-standards/06-research-mirror/research-mirror.md`, its declined-alternatives counterpart, and the meta-standard (`00-standards-meta`). Move all 11 component research folders into `01-architecture/02-components/` via `git mv`. Update `03-research/README.md` and any internal links. Status: mirror is adopted and the existing research is already conformant.
 2. **PR 2 — Naming conventions.** Create `04-standards/01-naming-conventions/`, lift from AGENTS.md, replace AGENTS.md §Conventions with a pointer.
-3. **PR 3 — Vocabulary.** Same shape; dedupe against `00-vision/01-glossary.md`.
+3. **PR 3 — Vocabulary.** Same shape; dedupe against `00-vision/01-ontology.ttl`.
 4. **PR 4 — Canonical doc sources.** Lift AGENTS.md §Authoritative-docs MCPs.
 5. **PR 5 — MCP standard.** Needs research-side justification.
 6. **PR 6 — Agent Skills standard.** Most external-spec citation work.

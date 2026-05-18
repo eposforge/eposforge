@@ -201,5 +201,5 @@ path; instances should plan for it explicitly.
   dark factory consists of*, not *how to script a particular factory's
   internal workflow*. Workflow choices are instance-level.
 
-See [01-glossary.md](./01-glossary.md) for shared vocabulary.
+See [01-ontology.ttl](./01-ontology.ttl) for shared vocabulary.
 

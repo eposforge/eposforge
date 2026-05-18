@@ -1,6 +1,6 @@
 ---
 name: maintain-ontology
-description: Synchronizes 00-vision/01-glossary.ttl with the EposForge markdown corpus. Use when updating the ontology after doc changes, auditing for missing classes or relationships, or getting coaching on how to model a new term in OWL/Turtle.
+description: Keeps 00-vision/01-ontology.ttl well-formed, internally consistent, and aligned with adapter cards under instance/installed/. Use when updating the ontology after doc changes, auditing for missing classes or relationships, or getting coaching on how to model a new term in OWL/Turtle.
 ---
 
 Thin wrapper for the canonical repo-level skill.

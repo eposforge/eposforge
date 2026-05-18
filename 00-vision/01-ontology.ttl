@@ -6,13 +6,13 @@
 
 ef:Ontology rdf:type owl:Ontology ;
     rdfs:label "EposForge Dark Factory Ontology" ;
-    rdfs:comment "Formal terminology and taxonomy for the EposForge dark factory pattern." .
+    rdfs:comment "Formal vocabulary, taxonomy, and relationships for the EposForge dark factory pattern. Source of truth: this file. To add a term, declare it here; use it elsewhere by reference. See the maintain-ontology skill for editorial workflow." .
 
 ### Classes
 
 ef:DarkFactory rdf:type owl:Class ;
     rdfs:label "Dark Factory" ;
-    rdfs:comment "A system where the operator declares desired capabilities and AI agents build, deploy, and operate them with minimal supervision." .
+    rdfs:comment "A system where the operator declares desired capabilities and AI agents build, deploy, and operate them with minimal supervision. When the phrase 'dark factory' specifically means software authoring, tighten to ef:ProductFactory; when it specifically means autonomous operations, tighten to ef:PlatformFactory." .
 
 ef:Factory rdf:type owl:Class ;
     rdfs:label "Factory" ;
@@ -32,19 +32,24 @@ ef:ProductFactory rdf:type owl:Class ;
 
 ef:Platform rdf:type owl:Class ;
     rdfs:label "Platform" ;
-    rdfs:comment "The operational substrate: hardware, network, operating systems, etc." .
+    rdfs:comment "The operational substrate: hardware, network, operating systems, etc. The term 'Infrastructure' is avoided as a top-level organizing term in EposForge; use Platform instead." .
 
 ef:Product rdf:type owl:Class ;
     rdfs:label "Product" ;
-    rdfs:comment "Software (or physical workflow) authored by the operator." .
+    rdfs:comment "Software (or physical workflow) authored by the operator. The term 'Software' is avoided as a top-level term because it cannot cleanly distinguish operator-authored applications (Product) from third-party server apps (Platform)." .
 
 ef:Component rdf:type owl:Class ;
     rdfs:label "Component" ;
-    rdfs:comment "An architectural slot in a dark factory." .
+    rdfs:comment "An architectural slot in a dark factory. Earlier framings used 'Dev Product Registry' as a component slot; the current model treats the catalog as emergent from installed Adapters per the universal Adapter Pattern." .
 
 ef:Adapter rdf:type owl:Class ;
     rdfs:label "Adapter" ;
     rdfs:comment "A concrete implementation that plugs into a component slot. Every Adapter carries a status (experimental, approved, deprecated, or shelved)." .
+
+ef:ReferenceImplementation rdf:type owl:Class ;
+    rdfs:subClassOf ef:Adapter ;
+    rdfs:label "Reference Implementation" ;
+    rdfs:comment "An Adapter published by the canonical EposForge instance as a worked example for Adopters' agents to consume and adapt. Distinguished from a private repo-instance adapter by being intentionally exposed via MCP. The frontmatter `doc_kind: reference-implementation` on an adapter card is the document-level projection of membership in this class." .
 
 ef:AdapterPattern rdf:type owl:Class ;
     rdfs:label "Adapter Pattern" ;
@@ -103,23 +108,32 @@ ef:Operator rdf:type owl:Class ;
     rdfs:label "Operator" ;
     rdfs:comment "The human in charge of a EposForge instance." .
 
+ef:Adopter rdf:type owl:Class ;
+    rdfs:label "Adopter" ;
+    rdfs:comment "An external party (organization, team, or individual) that adopts the EposForge pattern in their own instance, consuming the ontology and reference implementations via the EposForge MCP. Peer concept to ef:Operator: an Adopter is org-level; an Operator is the human-level role within an Adopter's instance." .
+
 ef:DevProduct rdf:type owl:Class ;
+    rdfs:subClassOf ef:Adapter ;
     rdfs:label "Dev Product" ;
     rdfs:comment "A third-party AI coding tool consumed as an executor." .
 
 ef:Router rdf:type owl:Class ;
+    rdfs:subClassOf ef:Adapter ;
     rdfs:label "Router" ;
     rdfs:comment "The decomposition and dispatch layer of the Product Factory." .
 
 ef:ToolTransport rdf:type owl:Class ;
+    rdfs:subClassOf ef:Adapter ;
     rdfs:label "Tool Transport" ;
     rdfs:comment "The protocol/contract by which Dev Products consume capabilities." .
 
 ef:SpecGraph rdf:type owl:Class ;
+    rdfs:subClassOf ef:Adapter ;
     rdfs:label "Spec Graph" ;
     rdfs:comment "A queryable projection of every Living Spec across the factory." .
 
 ef:ExecutionSandbox rdf:type owl:Class ;
+    rdfs:subClassOf ef:Adapter ;
     rdfs:label "Execution Sandbox" ;
     rdfs:comment "The isolated runtime in which dispatched Dev Product work executes." .
 
@@ -269,6 +283,58 @@ ef:AdapterStatusDeprecated rdf:type ef:AdapterStatus ;
 ef:AdapterStatusShelved rdf:type ef:AdapterStatus ;
     rdfs:label "shelved" ;
     rdfs:comment "Adapter is not being worked on but retained for possible future reactivation. Agents MUST NOT select or invoke shelved adapters." .
+
+### Platform Factory Phase Individuals
+
+ef:PlatformPhase0 rdf:type ef:Phase ;
+    rdfs:label "Phase 0: Foundation" ;
+    rdfs:comment "Everything-as-Code plus observability." ;
+    ef:maturesTo ef:PlatformPhase1 .
+
+ef:PlatformPhase1 rdf:type ef:Phase ;
+    rdfs:label "Phase 1: Agent Observation" ;
+    rdfs:comment "Agents query, propose, wait." ;
+    ef:maturesTo ef:PlatformPhase2 .
+
+ef:PlatformPhase2 rdf:type ef:Phase ;
+    rdfs:label "Phase 2: Agent Proposals" ;
+    rdfs:comment "Agents open PRs, humans review and apply." ;
+    ef:maturesTo ef:PlatformPhase3 .
+
+ef:PlatformPhase3 rdf:type ef:Phase ;
+    rdfs:label "Phase 3: Supervised Autonomy" ;
+    rdfs:comment "Agents execute pre-approved actions." ;
+    ef:maturesTo ef:PlatformPhase4 .
+
+ef:PlatformPhase4 rdf:type ef:Phase ;
+    rdfs:label "Phase 4: Full Autonomy" ;
+    rdfs:comment "Agents self-update, coordinate, optimize." .
+
+### Product Factory Phase Individuals
+
+ef:ProductPhaseA rdf:type ef:Phase ;
+    rdfs:label "Phase A: Registry as ground truth" ;
+    ef:maturesTo ef:ProductPhaseB .
+
+ef:ProductPhaseB rdf:type ef:Phase ;
+    rdfs:label "Phase B: Tool transport foundation" ;
+    ef:maturesTo ef:ProductPhaseC .
+
+ef:ProductPhaseC rdf:type ef:Phase ;
+    rdfs:label "Phase C: Living Spec rollout" ;
+    ef:maturesTo ef:ProductPhaseD .
+
+ef:ProductPhaseD rdf:type ef:Phase ;
+    rdfs:label "Phase D: Router v0" ;
+    ef:maturesTo ef:ProductPhaseE .
+
+ef:ProductPhaseE rdf:type ef:Phase ;
+    rdfs:label "Phase E: Spec Graph" ;
+    ef:maturesTo ef:ProductPhaseF .
+
+ef:ProductPhaseF rdf:type ef:Phase ;
+    rdfs:label "Phase F: Level 5 gate" ;
+    rdfs:comment "Auto-merge tier-1 changes." .
 
 ### Standard Individuals
 

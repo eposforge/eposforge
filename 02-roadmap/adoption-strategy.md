@@ -53,7 +53,7 @@ four hold:
    migration exists, which side they are touching, and where it
    is going. EposForge models this with first-class `Migration`
    entities in the Spec Graph (see
-   [glossary](../00-vision/01-glossary.md)): anything in the
+  [ontology](../00-vision/01-ontology.ttl)): anything in the
    graph declares its side via `LEGACY_SHAPE_OF` or
    `TARGET_SHAPE_OF`. How an instance populates those edges —
    frontmatter markers on files, a manifest file, lint rules,

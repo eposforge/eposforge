@@ -148,7 +148,7 @@ discovers them and writes dispatchers into `.git/hooks/`.
 
 3. **Indexing / extraction:**
    - Default path: Cognee performs ontology-grounded extraction (seeded by
-     `00-vision/01-glossary.ttl`) and writes normalized entities and
+    `00-vision/01-ontology.ttl`) and writes normalized entities and
      relationships to Neo4j.
    - Opt-in fallback path (`--graphrag`): GraphRAG reads all `*.md` files
      matching

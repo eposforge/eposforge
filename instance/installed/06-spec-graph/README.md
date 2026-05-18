@@ -213,4 +213,4 @@ backend by updating `api_base` in `settings.yaml`.
        ```
 
 4. **Validation**:
-   - Ensure the ontology files (e.g., `01-glossary.ttl`) are up-to-date and consistent with the graph.
+  - Ensure the ontology files (e.g., `01-ontology.ttl`) are up-to-date and consistent with the graph.
