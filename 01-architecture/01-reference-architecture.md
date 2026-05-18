@@ -7,7 +7,7 @@ source_of_truth: yes
 
 # Reference Architecture
 
-System-level view of a EposForge instance. Shows how the twelve
+System-level view of a EposForge instance. Shows how the fourteen
 components and the universal Adapter Pattern fit together. Concrete
 hardware, networks, hostnames, and tooling choices are out of scope —
 those are instance decisions.
@@ -69,7 +69,7 @@ they're plugged in.
 
 ## Component Layout
 
-The twelve components fall into three roles:
+The fourteen components fall into three roles:
 
 **Orchestration spine** — components that move work through the
 factory.
@@ -95,6 +95,8 @@ work over time.
   projection of all Living Specs.
 - [11-audit-observability.md](./02-components/11-audit-observability.md)
   — immutable record of what happened.
+- [13-backlog.md](./02-components/13-backlog.md) — durable, cross-repo
+  work-item tracker for active, deferred, and archived items.
 
 **Cross-cutting controls** — components consulted by every other
 component.

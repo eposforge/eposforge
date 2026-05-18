@@ -9,14 +9,15 @@ source_of_truth: yes
 
 ## Why this exists once, here
 
-EposForge defines twelve **components** — architectural slots every dark
-factory needs (Spec Input, Living Spec, Dev Product, Router, Tool
-Transport, Spec Graph, Execution Sandbox, Agent Policy, Source Control +
-CI, Inference Layer, Audit & Observability, Secrets & Key Management).
+EposForge defines fourteen **components** — architectural slots every
+dark factory needs (Spec Input, Living Spec, Dev Product, Router, Tool
+Transport, Spec Graph, Execution Sandbox, Agent Policy, Release Rings,
+Source Control + CI, Inference Layer, Audit & Observability, Secrets &
+Key Management, Backlog).
 
 Concrete products plug into those slots as **Adapters**. Rather than
-repeat the plug-in machinery in twelve component contracts, we define it
-once here and reference it everywhere.
+repeat the plug-in machinery in fourteen component contracts, we define
+it once here and reference it everywhere.
 
 ## Definitions
 

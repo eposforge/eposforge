@@ -26,7 +26,7 @@ ratify their metadata.
 
 By the end of Phase A:
 
-- For each of the twelve components, the operator has either:
+- For each of the fourteen components, the operator has either:
   - selected an Adapter and registered its metadata, or
   - explicitly declared the component as "deferred until later phase"
     with a reason.
