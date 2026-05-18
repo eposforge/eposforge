@@ -14,13 +14,19 @@ ef:DarkFactory rdf:type owl:Class ;
     rdfs:label "Dark Factory" ;
     rdfs:comment "A system where the operator declares desired capabilities and AI agents build, deploy, and operate them with minimal supervision." .
 
+ef:Factory rdf:type owl:Class ;
+    rdfs:label "Factory" ;
+    rdfs:comment "A maturity ladder for a given domain." .
+
 ef:PlatformFactory rdf:type owl:Class ;
     rdfs:subClassOf ef:DarkFactory ;
+    rdfs:subClassOf ef:Factory ;
     rdfs:label "Platform Factory" ;
     rdfs:comment "Operations autonomy — the substrate everything runs on." .
 
 ef:ProductFactory rdf:type owl:Class ;
     rdfs:subClassOf ef:DarkFactory ;
+    rdfs:subClassOf ef:Factory ;
     rdfs:label "Product Factory" ;
     rdfs:comment "Development autonomy — software the operator authors." .
 
@@ -39,6 +45,10 @@ ef:Component rdf:type owl:Class ;
 ef:Adapter rdf:type owl:Class ;
     rdfs:label "Adapter" ;
     rdfs:comment "A concrete implementation that plugs into a component slot. Every Adapter carries a status (experimental, approved, deprecated, or shelved)." .
+
+ef:AdapterPattern rdf:type owl:Class ;
+    rdfs:label "Adapter Pattern" ;
+    rdfs:comment "EposForge's universal plug-in pattern used across components." .
 
 ef:AdapterStatus rdf:type owl:Class ;
     rdfs:label "Adapter Status" ;
@@ -64,6 +74,22 @@ ef:LivingSpec rdf:type owl:Class ;
 ef:Phase rdf:type owl:Class ;
     rdfs:label "Phase" ;
     rdfs:comment "A stage of factory maturity." .
+
+ef:Pillar rdf:type owl:Class ;
+    rdfs:label "Pillar" ;
+    rdfs:comment "A foundational architectural axis of the dark factory vision." .
+
+ef:Principle rdf:type owl:Class ;
+    rdfs:label "Principle" ;
+    rdfs:comment "A guiding rule or norm that steers design and operation." .
+
+ef:Deliverable rdf:type owl:Class ;
+    rdfs:label "Deliverable" ;
+    rdfs:comment "A software, platform, or physical output produced by a factory." .
+
+ef:Constraint rdf:type owl:Class ;
+    rdfs:label "Constraint" ;
+    rdfs:comment "A limiting condition that bounds architecture or operations." .
 
 ef:Policy rdf:type owl:Class ;
     rdfs:label "Policy" ;
@@ -146,6 +172,31 @@ ef:targetShapeOf rdf:type owl:ObjectProperty ;
     rdfs:label "TARGET_SHAPE_OF" ;
     rdfs:range ef:Migration .
 
+ef:produces rdf:type owl:ObjectProperty ;
+    rdfs:label "PRODUCES" ;
+    rdfs:domain ef:Factory ;
+    rdfs:range ef:Deliverable .
+
+ef:hasPillar rdf:type owl:ObjectProperty ;
+    rdfs:label "HAS_PILLAR" ;
+    rdfs:domain ef:DarkFactory ;
+    rdfs:range ef:Pillar .
+
+ef:guidedByPrinciple rdf:type owl:ObjectProperty ;
+    rdfs:label "GUIDED_BY_PRINCIPLE" ;
+    rdfs:domain ef:DarkFactory ;
+    rdfs:range ef:Principle .
+
+ef:constrainedBy rdf:type owl:ObjectProperty ;
+    rdfs:label "CONSTRAINED_BY" ;
+    rdfs:domain ef:Component ;
+    rdfs:range ef:Constraint .
+
+ef:usesAdapterPattern rdf:type owl:ObjectProperty ;
+    rdfs:label "USES_ADAPTER_PATTERN" ;
+    rdfs:domain ef:Component ;
+    rdfs:range ef:AdapterPattern .
+
 ### Individuals (The 13 Core Components)
 
 ef:SpecInput rdf:type ef:Component ; rdfs:label "Spec Input" .
@@ -179,3 +230,69 @@ ef:AdapterStatusDeprecated rdf:type ef:AdapterStatus ;
 ef:AdapterStatusShelved rdf:type ef:AdapterStatus ;
     rdfs:label "shelved" ;
     rdfs:comment "Adapter is not being worked on but retained for possible future reactivation. Agents MUST NOT select or invoke shelved adapters." .
+
+### Vision Pillar Individuals
+
+ef:PillarSubstrateAgnosticPlatform rdf:type ef:Pillar ;
+    rdfs:label "Substrate-Agnostic Platform" ;
+    rdfs:comment "The dark-factory pattern is substrate-agnostic across software, platform, and future physical execution environments." .
+
+ef:PillarAIFactory rdf:type ef:Pillar ;
+    rdfs:label "AI Factory" ;
+    rdfs:comment "Agentic execution is the default operating model across factory workflows." .
+
+ef:PillarProductEngine rdf:type ef:Pillar ;
+    rdfs:label "Product Engine" ;
+    rdfs:comment "The factory produces durable deliverables with Living Specs and Spec Graph projection." .
+
+### Core Principle Individuals
+
+ef:PrincipleEverythingAsCode rdf:type ef:Principle ;
+    rdfs:label "Everything-as-Code" ;
+    rdfs:comment "Git is source of truth; no manual clicks." .
+
+ef:PrincipleAIFirstOperations rdf:type ef:Principle ;
+    rdfs:label "AI-First Operations" ;
+    rdfs:comment "Agents observe, reason, and act; humans set policy and audit." .
+
+ef:PrincipleDefenseInDepth rdf:type ef:Principle ;
+    rdfs:label "Defense in Depth" ;
+    rdfs:comment "Assume breach and limit blast radius with layered safeguards." .
+
+ef:PrincipleIncrementalComplexity rdf:type ef:Principle ;
+    rdfs:label "Incremental Complexity" ;
+    rdfs:comment "Start simple and add layers as needed." .
+
+ef:PrincipleCloudAgnostic rdf:type ef:Principle ;
+    rdfs:label "Cloud-Agnostic" ;
+    rdfs:comment "Workloads remain portable across environments." .
+
+ef:PrincipleObservableAndTestable rdf:type ef:Principle ;
+    rdfs:label "Observable and Testable" ;
+    rdfs:comment "State changes are observable and configurations are validated." .
+
+### Pattern Individual and Top-Level Relationship Assertions
+
+ef:EposForgePattern rdf:type ef:DarkFactory ;
+    rdfs:label "EposForge Pattern" ;
+    ef:hasPillar ef:PillarSubstrateAgnosticPlatform, ef:PillarAIFactory, ef:PillarProductEngine ;
+    ef:guidedByPrinciple ef:PrincipleEverythingAsCode, ef:PrincipleAIFirstOperations, ef:PrincipleDefenseInDepth,
+        ef:PrincipleIncrementalComplexity, ef:PrincipleCloudAgnostic, ef:PrincipleObservableAndTestable .
+
+ef:UniversalAdapterPattern rdf:type ef:AdapterPattern ;
+    rdfs:label "Universal Adapter Pattern" ;
+    rdfs:comment "The universal Adapter Pattern applied across EposForge components." .
+
+ef:SpecInputComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
+ef:LivingSpecComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
+ef:DevProductComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
+ef:RouterComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
+ef:ToolTransportComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
+ef:SpecGraphComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
+ef:ExecutionSandboxComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
+ef:AgentPolicyComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
+ef:SourceControlCIComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
+ef:InferenceLayerComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
+ef:AuditObservabilityComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
+ef:SecretsKeyManagementComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
+ef:BacklogComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
