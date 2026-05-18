@@ -70,9 +70,10 @@ A–F. The endpoint of each ladder is full autonomy within its domain.
 
 **Component** — An architectural slot in a dark factory (Spec Input,
 Living Spec, Dev Product, Router, Tool Transport, Spec Graph, Execution
-Sandbox, Agent Policy, Source Control + CI, Inference Layer, Audit &
-Observability, Secrets & Key Management). EposForge defines twelve
-components and the contract each must satisfy. See
+Sandbox, Agent Policy, Release Rings, Source Control + CI, Inference
+Layer, Audit & Observability, Secrets & Key Management, Backlog).
+EposForge defines fourteen components and the contract each must
+satisfy. See
 [../01-architecture/02-components/](../01-architecture/02-components/).
 
 **Adapter** — A concrete implementation that plugs into a component
@@ -82,7 +83,7 @@ contract. The set of installed Adapters is queryable; the Router uses
 Adapter metadata to make routing decisions.
 
 **Adapter Pattern** — EposForge's universal plug-in pattern. Applies
-uniformly across all twelve components. See
+uniformly across all fourteen components. See
 [../01-architecture/00-adapter-pattern.md](../01-architecture/00-adapter-pattern.md).
 
 **Agent** — An autonomous AI-driven executor that observes, reasons,

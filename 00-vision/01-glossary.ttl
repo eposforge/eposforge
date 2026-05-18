@@ -197,7 +197,45 @@ ef:usesAdapterPattern rdf:type owl:ObjectProperty ;
     rdfs:domain ef:Component ;
     rdfs:range ef:AdapterPattern .
 
-### Individuals (The 13 Core Components)
+### Datatype Properties (Adapter Metadata)
+
+ef:adapterName rdf:type owl:DatatypeProperty ;
+    rdfs:label "name" ;
+    rdfs:comment "Stable identifier of an Adapter within its component slot." ;
+    rdfs:domain ef:Adapter ;
+    rdfs:range xsd:string .
+
+ef:adapterVersion rdf:type owl:DatatypeProperty ;
+    rdfs:label "version" ;
+    rdfs:comment "Semver or equivalent version string of an Adapter." ;
+    rdfs:domain ef:Adapter ;
+    rdfs:range xsd:string .
+
+ef:privacyPosture rdf:type owl:DatatypeProperty ;
+    rdfs:label "privacy_posture" ;
+    rdfs:comment "One of: local, vendor-no-training, vendor-default." ;
+    rdfs:domain ef:Adapter ;
+    rdfs:range xsd:string .
+
+ef:costHint rdf:type owl:DatatypeProperty ;
+    rdfs:label "cost_hint" ;
+    rdfs:comment "Coarse cost tier: free, consumer-paid, commercial, metered, n/a." ;
+    rdfs:domain ef:Adapter ;
+    rdfs:range xsd:string .
+
+ef:capabilities rdf:type owl:DatatypeProperty ;
+    rdfs:label "capabilities" ;
+    rdfs:comment "Capability tag declared by an Adapter (multi-valued)." ;
+    rdfs:domain ef:Adapter ;
+    rdfs:range xsd:string .
+
+ef:invocationSurface rdf:type owl:DatatypeProperty ;
+    rdfs:label "invocation_surface" ;
+    rdfs:comment "How the Adapter is invoked: CLI, HTTP, library, process, etc." ;
+    rdfs:domain ef:Adapter ;
+    rdfs:range xsd:string .
+
+### Individuals (The 14 Core Components)
 
 ef:SpecInput rdf:type ef:Component ; rdfs:label "Spec Input" .
 ef:LivingSpecComponent rdf:type ef:Component ; rdfs:label "Living Spec" .
@@ -207,6 +245,7 @@ ef:ToolTransportComponent rdf:type ef:Component ; rdfs:label "Tool Transport" .
 ef:SpecGraphComponent rdf:type ef:Component ; rdfs:label "Spec Graph" .
 ef:ExecutionSandboxComponent rdf:type ef:Component ; rdfs:label "Execution Sandbox" .
 ef:AgentPolicyComponent rdf:type ef:Component ; rdfs:label "Agent Policy" .
+ef:ReleaseRingsComponent rdf:type ef:Component ; rdfs:label "Release Rings" .
 ef:SourceControlCIComponent rdf:type ef:Component ; rdfs:label "Source Control + CI" .
 ef:InferenceLayerComponent rdf:type ef:Component ; rdfs:label "Inference Layer" .
 ef:AuditObservabilityComponent rdf:type ef:Component ; rdfs:label "Audit & Observability" .
@@ -230,6 +269,20 @@ ef:AdapterStatusDeprecated rdf:type ef:AdapterStatus ;
 ef:AdapterStatusShelved rdf:type ef:AdapterStatus ;
     rdfs:label "shelved" ;
     rdfs:comment "Adapter is not being worked on but retained for possible future reactivation. Agents MUST NOT select or invoke shelved adapters." .
+
+### Standard Individuals
+
+ef:StandardsMeta rdf:type ef:Standard ;
+    rdfs:label "Standards Meta" ;
+    rdfs:comment "Adopted standard governing the shape, status, and conformance language of all other standards under 04-standards/." .
+
+ef:NamingConventions rdf:type ef:Standard ;
+    rdfs:label "Naming Conventions" ;
+    rdfs:comment "Adopted standard governing repo-wide naming (files, directories, identifiers)." .
+
+ef:ResearchMirror rdf:type ef:Standard ;
+    rdfs:label "Research Mirror" ;
+    rdfs:comment "Adopted standard governing how external research is mirrored into the repo." .
 
 ### Vision Pillar Individuals
 
@@ -296,3 +349,4 @@ ef:InferenceLayerComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
 ef:AuditObservabilityComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
 ef:SecretsKeyManagementComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
 ef:BacklogComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
+ef:ReleaseRingsComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
