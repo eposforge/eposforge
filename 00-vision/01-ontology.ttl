@@ -137,6 +137,51 @@ ef:ExecutionSandbox rdf:type owl:Class ;
     rdfs:label "Execution Sandbox" ;
     rdfs:comment "The isolated runtime in which dispatched Dev Product work executes." .
 
+ef:SpecInputAdapter rdf:type owl:Class ;
+    rdfs:subClassOf ef:Adapter ;
+    rdfs:label "Spec Input Adapter" ;
+    rdfs:comment "An Adapter kind that fulfills the Spec Input component slot." .
+
+ef:LivingSpecAdapter rdf:type owl:Class ;
+    rdfs:subClassOf ef:Adapter ;
+    rdfs:label "Living Spec Adapter" ;
+    rdfs:comment "An Adapter kind that fulfills the Living Spec component slot." .
+
+ef:AgentPolicyAdapter rdf:type owl:Class ;
+    rdfs:subClassOf ef:Adapter ;
+    rdfs:label "Agent Policy Adapter" ;
+    rdfs:comment "An Adapter kind that fulfills the Agent Policy component slot." .
+
+ef:ReleaseRingsAdapter rdf:type owl:Class ;
+    rdfs:subClassOf ef:Adapter ;
+    rdfs:label "Release Rings Adapter" ;
+    rdfs:comment "An Adapter kind that fulfills the Release Rings component slot." .
+
+ef:SourceControlCIAdapter rdf:type owl:Class ;
+    rdfs:subClassOf ef:Adapter ;
+    rdfs:label "Source Control + CI Adapter" ;
+    rdfs:comment "An Adapter kind that fulfills the Source Control + CI component slot." .
+
+ef:InferenceLayerAdapter rdf:type owl:Class ;
+    rdfs:subClassOf ef:Adapter ;
+    rdfs:label "Inference Layer Adapter" ;
+    rdfs:comment "An Adapter kind that fulfills the Inference Layer component slot." .
+
+ef:AuditObservabilityAdapter rdf:type owl:Class ;
+    rdfs:subClassOf ef:Adapter ;
+    rdfs:label "Audit and Observability Adapter" ;
+    rdfs:comment "An Adapter kind that fulfills the Audit and Observability component slot." .
+
+ef:SecretsKeyManagementAdapter rdf:type owl:Class ;
+    rdfs:subClassOf ef:Adapter ;
+    rdfs:label "Secrets and Key Management Adapter" ;
+    rdfs:comment "An Adapter kind that fulfills the Secrets and Key Management component slot." .
+
+ef:BacklogAdapter rdf:type owl:Class ;
+    rdfs:subClassOf ef:Adapter ;
+    rdfs:label "Backlog Adapter" ;
+    rdfs:comment "An Adapter kind that fulfills the Backlog component slot." .
+
 ef:Migration rdf:type owl:Class ;
     rdfs:label "Migration" ;
     rdfs:comment "A named, in-flight transition between two coexisting architectural shapes (legacy and target) within an instance, with a stated completion commitment." .
@@ -171,6 +216,11 @@ ef:hasStatus rdf:type owl:ObjectProperty ;
     rdfs:label "HAS_STATUS" ;
     rdfs:domain ef:Adapter ;
     rdfs:range ef:AdapterStatus .
+
+ef:adoptsFrom rdf:type owl:ObjectProperty ;
+    rdfs:label "ADOPTS_FROM" ;
+    rdfs:domain ef:Adapter ;
+    rdfs:range ef:ReferenceImplementation .
 
 ef:supersedes rdf:type owl:ObjectProperty ;
     rdfs:label "SUPERSEDES" .

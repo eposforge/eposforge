@@ -47,7 +47,7 @@ This repo has two layers that must stay explicit:
 | **Living Spec** | A machine-readable spec that travels with an artifact and drives agent behavior. |
 | **Spec Graph** | Component 6: the queryable knowledge graph of this repo's corpus. |
 
-- Vocabulary: `00-vision/01-ontology.ttl` is the authoritative ontology. Edits go directly there; the `maintain-ontology` skill governs editorial workflow.
+- Vocabulary: `00-vision/01-ontology.ttl` is the authoritative ontology. Editorial workflow is governed by `04-standards/02-vocabulary/vocabulary.md` and executed via the `maintain-ontology` skill.
 - MCP-first and canonical source policy: `04-standards/05-canonical-doc-sources/` and `04-standards/04-mcp/`
 - Naming and documentation hygiene: `04-standards/01-naming-conventions/naming-conventions.md`
 - Refactoring discipline for mirrored research paths: `04-standards/06-research-mirror/research-mirror.md`
@@ -89,7 +89,7 @@ Use this workflow when the user provides a description of additions, deletions, 
 2.  **Clarify:**
   *   Prompt the user for clarification if the intent is ambiguous (e.g., if a new entity should be a `component` or an `adapter`, or which `phase` it matures to).
 3.  **Implement (Graph-Influence Checklist):**
-  *   **Reserved Vocabulary:** Use exactly the terms from the [Vocabulary](#vocabulary--use-these-terms-exactly) section (`component`, `adapter`, `phase`, `pillar`, `principle`, `factory`, `deliverable`, `constraint`) as entity types.
+  *   **Reserved Vocabulary:** Use exactly the terms from the [Vocabulary standard](04-standards/02-vocabulary/vocabulary.md) (`component`, `adapter`, `phase`, `pillar`, `principle`, `factory`, `deliverable`, `constraint`) as entity types.
   *   **Relationship Keywords:** Use these exact keywords so Cognee's ontology-grounded extraction maps edges correctly:
     *   `FULFILLS_SLOT`: "fulfills", "fills slot", "candidate adapter".
     *   `DEPENDS_ON`: "depends on", "dependency", "requires".
