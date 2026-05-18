@@ -1,6 +1,6 @@
 # OWL / Turtle Primer for EposForge
 
-Reference for maintaining `00-vision/01-glossary.ttl`. Covers the syntax and
+Reference for maintaining `00-vision/01-ontology.ttl`. Covers the syntax and
 OWL semantics used in this file.
 
 ---
@@ -190,7 +190,7 @@ Quick check - pipe through `rapper` (if installed) or paste into an online
 Turtle validator:
 
 ```bash
-rapper -i turtle 00-vision/01-glossary.ttl
+rapper -i turtle 00-vision/01-ontology.ttl
 ```
 
 Signs of a broken file:

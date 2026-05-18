@@ -1,27 +1,27 @@
 ---
 name: maintain-ontology
-description: Keeps 00-vision/01-glossary.ttl aligned with the EposForge markdown corpus so Cognee extraction stays ontology-grounded and downstream EposForge consumers can use the EposForge Cognee MCP server to guide automated dark-factory creation.
+description: Keeps 00-vision/01-ontology.ttl well-formed, internally consistent, and aligned with adapter cards under instance/installed/ so Cognee extraction remains ontology-grounded.
 ---
 
-Maintains `00-vision/01-glossary.ttl` — the EposForge OWL ontology that grounds Cognee entity extraction for the Spec Graph.
+Maintains `00-vision/01-ontology.ttl` — the EposForge OWL ontology that grounds Cognee entity extraction for the Spec Graph.
 
-Primary purpose: keep the ontology in lockstep with the markdown corpus so entities extracted by Cognee remain anchored to stable EposForge IRIs. This enables external EposForge consumers to point their agents at the EposForge Cognee MCP server and use graph-backed guidance to automate dark-factory design and creation.
+Primary purpose: keep the ontology internally coherent and aligned with installed adapter cards so entities extracted by Cognee remain anchored to stable EposForge IRIs. This enables external EposForge consumers to point their agents at the EposForge Cognee MCP server and use graph-backed guidance to automate dark-factory design and creation.
 
 If this ontology drifts, consumer agents can still query Cognee MCP, but the guidance quality degrades (missing entities, weak relationships, or inconsistent terminology). This skill exists to prevent that drift.
 
 ## Prerequisites
 
-- `00-vision/01-glossary.ttl` — the ontology file under review
+- `00-vision/01-ontology.ttl` — the ontology file under review
 - `git log` — commit history to detect drift
-- markdown corpus — `00-vision/`, `01-architecture/`, `02-roadmap/`, `04-standards/` spec files
+- adapter cards and specs — `instance/installed/`, `instance/SPEC.md`, and core spec files under `00-vision/`, `01-architecture/`, `02-roadmap/`, `04-standards/`
 - [owl-turtle-primer](./references/owl-turtle-primer.md) — OWL/Turtle reference (load when coaching is needed)
 
 ## Detect drift from git history
 
-Find the last commit that edited `00-vision/01-glossary.ttl`. Then collect all markdown changes between that commit and HEAD.
+Find the last commit that edited `00-vision/01-ontology.ttl`. Then collect relevant spec and adapter-card changes between that commit and HEAD.
 
 ```bash
-git log --oneline -- 00-vision/01-glossary.ttl
+git log --oneline -- 00-vision/01-ontology.ttl
 ```
 
 Store the most recent hash as `$last`. Then list changed markdown files:
@@ -38,19 +38,20 @@ git diff "${last}..HEAD" -- <file>
 
 The `drift report` is the list of changed files and the new concepts or relationships found in their diffs.
 
-## Scan corpus for missing concepts
+## Scan corpus for ontology impacts
 
-Walk the markdown corpus in order, looking for concepts not yet modeled in the TTL.
+Walk the spec and adapter corpus in order, looking for concepts not yet modeled in the ontology.
 
 **Scan targets and what to look for:**
 
 | File / Glob | Signal | Maps to |
 |---|---|---|
-| `00-vision/01-glossary.md` | Bold terms `**term**` | Classes |
+| `00-vision/01-ontology.ttl` | Existing class/property model | Baseline consistency |
 | `01-architecture/00-adapter-pattern.md` | Metadata field names, status values | Properties, `AdapterStatus` individuals |
 | `01-architecture/02-components/*.md` | Component names (one file = one Component individual) | `ef:Component` individuals |
 | `02-roadmap/*.md` | Phase names (Phase 0–4, A–F) | `ef:Phase` individuals |
 | `04-standards/**/*.md` | Standard titles, relationship keywords | `ef:Standard` individuals |
+| `instance/installed/**/*.md` | Adapter status/capabilities and slot mapping | `ef:Adapter` model alignment |
 | `AGENTS.md` | RELATIONSHIP KEYWORDS in caps | Object properties |
 
 **Relationship keywords to detect (from AGENTS.md):**
@@ -68,7 +69,7 @@ The `gap report` is the set of concepts and relationships found in the corpus bu
 
 ## Apply TTL edits
 
-For each item in the `gap report`, model it in `00-vision/01-glossary.ttl` following these rules:
+For each item in the `gap report`, model it in `00-vision/01-ontology.ttl` following these rules:
 
 **New Class** (concept that describes a *type* of thing):
 ```turtle
@@ -124,5 +125,5 @@ Load `[owl-turtle-primer](./references/owl-turtle-primer.md)` when the user asks
 
 - `drift report` — markdown files changed since last TTL edit, with new concepts highlighted
 - `gap report` — concepts and relationships in the corpus not yet modeled in the TTL
-- updated `00-vision/01-glossary.ttl` — ontology with all identified gaps closed
+- updated `00-vision/01-ontology.ttl` — ontology with all identified gaps closed
 - `consumer guidance readiness` — confirmation that ontology-backed graph terms remain aligned for agent use through the EposForge Cognee MCP server
