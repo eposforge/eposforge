@@ -38,7 +38,15 @@ ef:Component rdf:type owl:Class ;
 
 ef:Adapter rdf:type owl:Class ;
     rdfs:label "Adapter" ;
-    rdfs:comment "A concrete implementation that plugs into a component slot." .
+    rdfs:comment "A concrete implementation that plugs into a component slot. Every Adapter carries a status (experimental, approved, deprecated, or shelved)." .
+
+ef:AdapterStatus rdf:type owl:Class ;
+    rdfs:label "Adapter Status" ;
+    rdfs:comment "The lifecycle state of an Adapter." .
+
+ef:Standard rdf:type owl:Class ;
+    rdfs:label "Standard" ;
+    rdfs:comment "A cross-cutting normative rule adopted under 04-standards/. Standards govern naming, documentation, tooling conventions, and similar cross-cutting concerns." .
 
 ef:Agent rdf:type owl:Class ;
     rdfs:label "Agent" ;
@@ -95,6 +103,11 @@ ef:Migration rdf:type owl:Class ;
 
 ### Object Properties (Relationships)
 
+ef:hasComponent rdf:type owl:ObjectProperty ;
+    rdfs:label "HAS_COMPONENT" ;
+    rdfs:domain ef:DarkFactory ;
+    rdfs:range ef:Component .
+
 ef:fulfillsSlot rdf:type owl:ObjectProperty ;
     rdfs:label "FULFILLS_SLOT" ;
     rdfs:domain ef:Adapter ;
@@ -114,6 +127,11 @@ ef:governedBy rdf:type owl:ObjectProperty ;
 ef:implements rdf:type owl:ObjectProperty ;
     rdfs:label "IMPLEMENTS" .
 
+ef:hasStatus rdf:type owl:ObjectProperty ;
+    rdfs:label "HAS_STATUS" ;
+    rdfs:domain ef:Adapter ;
+    rdfs:range ef:AdapterStatus .
+
 ef:supersedes rdf:type owl:ObjectProperty ;
     rdfs:label "SUPERSEDES" .
 
@@ -128,7 +146,7 @@ ef:targetShapeOf rdf:type owl:ObjectProperty ;
     rdfs:label "TARGET_SHAPE_OF" ;
     rdfs:range ef:Migration .
 
-### Individuals (The 12 Core Components)
+### Individuals (The 13 Core Components)
 
 ef:SpecInput rdf:type ef:Component ; rdfs:label "Spec Input" .
 ef:LivingSpecComponent rdf:type ef:Component ; rdfs:label "Living Spec" .
@@ -142,3 +160,22 @@ ef:SourceControlCIComponent rdf:type ef:Component ; rdfs:label "Source Control +
 ef:InferenceLayerComponent rdf:type ef:Component ; rdfs:label "Inference Layer" .
 ef:AuditObservabilityComponent rdf:type ef:Component ; rdfs:label "Audit & Observability" .
 ef:SecretsKeyManagementComponent rdf:type ef:Component ; rdfs:label "Secrets & Key Management" .
+ef:BacklogComponent rdf:type ef:Component ; rdfs:label "Backlog" .
+
+### Adapter Status Individuals
+
+ef:AdapterStatusExperimental rdf:type ef:AdapterStatus ;
+    rdfs:label "experimental" ;
+    rdfs:comment "Adapter is under active development or evaluation." .
+
+ef:AdapterStatusApproved rdf:type ef:AdapterStatus ;
+    rdfs:label "approved" ;
+    rdfs:comment "Adapter is production-ready and recommended for use." .
+
+ef:AdapterStatusDeprecated rdf:type ef:AdapterStatus ;
+    rdfs:label "deprecated" ;
+    rdfs:comment "Adapter is no longer recommended and may be removed." .
+
+ef:AdapterStatusShelved rdf:type ef:AdapterStatus ;
+    rdfs:label "shelved" ;
+    rdfs:comment "Adapter is not being worked on but retained for possible future reactivation. Agents MUST NOT select or invoke shelved adapters." .

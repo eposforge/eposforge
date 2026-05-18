@@ -138,6 +138,11 @@ Operational conventions retained here:
   ws-dev-1 (Git Bash).
 - Troubleshooting scratchpad: use `scratchpad/` (repo root) for ad-hoc test
   artifacts, logs, and proto-test data. This directory is gitignored.
+- Do not write ad-hoc diff outputs (for example `diff*.txt`) to the repo
+  root. Write temporary compare output under `scratchpad/` instead.
+- Skills placement: store canonical skill content under `skills/<name>/`.
+  Keep `.github/skills/<name>/SKILL.md` as a thin wrapper that points to the
+  canonical location.
 - Syncing to the Spec Graph (Cognee, default): from `instance/installed/06-spec-graph/cognee/sync`, run `epos-secrets uv run cognee-sync --modified <files>` (use `--added`/`--deleted` as appropriate; see sync/README.md for setup and full-corpus seed).
 - Rebuilding the Spec Graph (GraphRAG, fallback): `python instance/installed/12-secrets-key-management/bin/epos-secrets -- bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh`
   (secrets are declared in [instance/installed/12-secrets-key-management/sops-age/secrets.toml](instance/installed/12-secrets-key-management/sops-age/secrets.toml)).
