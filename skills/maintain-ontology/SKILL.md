@@ -5,6 +5,8 @@ description: Keeps 00-vision/01-ontology.ttl well-formed, internally consistent,
 
 Maintains `00-vision/01-ontology.ttl` — the EposForge OWL ontology that grounds Cognee entity extraction for the Spec Graph.
 
+This skill implements the editorial workflow defined by `04-standards/02-vocabulary/vocabulary.md`.
+
 Primary purpose: keep the ontology internally coherent and aligned with installed adapter cards so entities extracted by Cognee remain anchored to stable EposForge IRIs. This enables external EposForge consumers to point their agents at the EposForge Cognee MCP server and use graph-backed guidance to automate dark-factory design and creation.
 
 If this ontology drifts, consumer agents can still query Cognee MCP, but the guidance quality degrades (missing entities, weak relationships, or inconsistent terminology). This skill exists to prevent that drift.

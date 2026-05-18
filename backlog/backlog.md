@@ -65,7 +65,7 @@ Verify with: SPARQL `?a rdf:type ef:ReferenceImplementation` against the merged 
 ID: EF-007
 Title: Resolve component-slot kind-class symmetry
 Date: 2026-05-18
-Status: open
+Status: in-progress
 Effort: S
 Fix surface: eposforge-pattern
 Verify with: ontology has either 0 or 14 component-slot kind-classes (currently 5 of 14: DevProduct, Router, ToolTransport, SpecGraph, ExecutionSandbox); whichever direction is taken, the result is uniform and documented.
@@ -74,7 +74,7 @@ Verify with: ontology has either 0 or 14 component-slot kind-classes (currently 
 ID: EF-008
 Title: Create 04-standards/02-vocabulary/ standard
 Date: 2026-05-18
-Status: open
+Status: in-progress
 Effort: M
 Fix surface: eposforge-pattern
 Verify with: `04-standards/02-vocabulary/` exists, frontmatter matches existing standards (meta, naming-conventions, research-mirror); the `maintain-ontology` skill and AGENTS.md defer to it for editorial workflow.
@@ -83,8 +83,9 @@ Verify with: `04-standards/02-vocabulary/` exists, frontmatter matches existing 
 ID: EF-009
 Title: Model the adoption relationship in the ontology
 Date: 2026-05-18
-Status: open
+Status: in-progress
 Effort: S
 Fix surface: eposforge-pattern
 Depends on: EF-006
+Notes: `ef:adoptsFrom` property added in ontology; final verify step (adopter-scoped adapter instance assertion) remains blocked on EF-006 instance-scoped TTL individuals.
 Verify with: an `ef:adoptsFrom` (or equivalent) object property is defined with appropriate domain/range; at least one Adopter-scoped adapter declares `?adapter ef:adoptsFrom ?ref` linking to an `ef:ReferenceImplementation`; SPARQL returns the expected pairs. Skip if the operational pattern (agent reads markdown card) is judged sufficient — close with a rationale comment.
