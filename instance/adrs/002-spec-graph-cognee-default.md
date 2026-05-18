@@ -41,7 +41,7 @@ emerged:
 **Cognee 1.0** (topoteretes/cognee) addresses these concerns:
 
 - **Ontology-grounded extraction:** the `cognify` call accepts a TTL
-  ontology file (`00-vision/01-glossary.ttl`). Entities are normalized
+  ontology file (`00-vision/01-ontology.ttl`). Entities are normalized
   against the EposForge vocabulary before they enter the graph, producing
   consistent relationship labels without prompt engineering.
 - **Local embeddings:** Cognee supports `fastembed` as the embedding

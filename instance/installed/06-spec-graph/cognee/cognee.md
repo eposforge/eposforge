@@ -47,7 +47,7 @@ source_of_truth: yes
 | Field | Value |
 |---|---|
 | `script` | `in revision (see ./sync/ for in-flight implementation)` |
-| `ontology_file` | `00-vision/01-glossary.ttl` |
+| `ontology_file` | `00-vision/01-ontology.ttl` |
 | `llm_provider` | `anthropic` → `claude-sonnet-4-5` |
 | `embedding_provider` | `fastembed` (local; `BAAI/bge-small-en-v1.5`; no API key required) |
 | `graph_database` | embedded Kuzu/LanceDB |

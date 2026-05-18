@@ -76,7 +76,7 @@ All invocations require `epos-secrets` to inject `COGNEE_API_URL` and
 ```powershell
 # Add new files to Cognee:
 python ..\..\..\12-secrets-key-management\bin\epos-secrets `
-    uv run cognee-sync --added instance/SPEC.md 00-vision/01-glossary.ttl
+    uv run cognee-sync --added instance/SPEC.md 00-vision/01-ontology.ttl
 
 # Update changed files (delete old data_id + add new):
 python ..\..\..\12-secrets-key-management\bin\epos-secrets `
