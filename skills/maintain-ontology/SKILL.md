@@ -1,16 +1,20 @@
 ---
 name: maintain-ontology
-description: Synchronizes 00-vision/01-glossary.ttl with the EposForge markdown corpus. Use when updating the ontology after doc changes, auditing for missing classes or relationships, or getting coaching on how to model a new term in OWL/Turtle.
+description: Keeps 00-vision/01-glossary.ttl aligned with the EposForge markdown corpus so Cognee extraction stays ontology-grounded and downstream EposForge consumers can use the EposForge Cognee MCP server to guide automated dark-factory creation.
 ---
 
-Maintains `00-vision/01-glossary.ttl` — the EposForge OWL ontology that grounds Cognee entity extraction for the Spec Graph. The ontology must stay in sync with the markdown corpus; Cognee uses it to anchor extracted entities to defined IRIs.
+Maintains `00-vision/01-glossary.ttl` — the EposForge OWL ontology that grounds Cognee entity extraction for the Spec Graph.
+
+Primary purpose: keep the ontology in lockstep with the markdown corpus so entities extracted by Cognee remain anchored to stable EposForge IRIs. This enables external EposForge consumers to point their agents at the EposForge Cognee MCP server and use graph-backed guidance to automate dark-factory design and creation.
+
+If this ontology drifts, consumer agents can still query Cognee MCP, but the guidance quality degrades (missing entities, weak relationships, or inconsistent terminology). This skill exists to prevent that drift.
 
 ## Prerequisites
 
 - `00-vision/01-glossary.ttl` — the ontology file under review
 - `git log` — commit history to detect drift
 - markdown corpus — `00-vision/`, `01-architecture/`, `02-roadmap/`, `04-standards/` spec files
-- `[owl-turtle-primer](./references/owl-turtle-primer.md)` — OWL/Turtle reference (load when coaching is needed)
+- [owl-turtle-primer](./references/owl-turtle-primer.md) — OWL/Turtle reference (load when coaching is needed)
 
 ## Detect drift from git history
 
@@ -121,3 +125,4 @@ Load `[owl-turtle-primer](./references/owl-turtle-primer.md)` when the user asks
 - `drift report` — markdown files changed since last TTL edit, with new concepts highlighted
 - `gap report` — concepts and relationships in the corpus not yet modeled in the TTL
 - updated `00-vision/01-glossary.ttl` — ontology with all identified gaps closed
+- `consumer guidance readiness` — confirmation that ontology-backed graph terms remain aligned for agent use through the EposForge Cognee MCP server
