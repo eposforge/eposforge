@@ -6,6 +6,7 @@ Resolved issues are grouped by month (`## YYYY-MM`).
 
 
 
+
 ## Issue EF-007 — Resolve component-slot kind-class symmetry
 ID: EF-007
 Title: Resolve component-slot kind-class symmetry
@@ -62,3 +63,15 @@ Effort: M
 Fix surface: repo-instance
 Verify with: `cognee-sync --added` ingests current corpus and query returns expected entities
 Validation: cognee-sync --added seeded all 79 git-tracked .md files plus ontology and 2 instance TTL files (82 documents total); all reported `add` without errors; state DB confirms full tracking.
+
+## Issue EF-005 — Self-hosted MCP server with adopter-extensible ontology and cognee KG
+ID: EF-005
+Title: Self-hosted MCP server with adopter-extensible ontology and cognee KG
+Date: 2026-05-18
+Status: resolved
+Resolved: 2026-05-18
+Effort: XL
+Fix surface: eposforge-pattern
+Depends on: EF-001
+Verify with: an adopter can (a) supply a custom .ttl file that is merged with the canonical ontology on upload, (b) ingest their own markdown/specs into a named adopter dataset in cognee, and (c) issue an MCP query that returns entities from both the base EposForge KG and their adoption-specific KG
+Validation: Scope superseded by upstream cognee-mcp (topoteretes/cognee-mcp). Cognee-mcp already exposes `remember`/`recall`/`forget` plus workspace tools (`cognify_file`, `list_datasets_json`, `create_dataset_json`, `visualize_graph_ui`) — sufficient to cover EF-005 bullets (a)–(c) when pointed at the existing dkr-cgnee-api backend with `COGNEE_MCP_AGENT_SCOPED=false` and the eposforge corpus already seeded via cognee-sync (EF-001). Bullet (a) overlay-merge is not an MCP-time workflow; handled by cognee API / cognee-sync upload path. Bullet (c) cross-dataset retrieval comes for free under shared-backend mode (`ENABLE_BACKEND_ACCESS_CONTROL=false`) since GraphRAG traversal crosses dataset boundaries at the graph layer. Replaced by EF-010 (adopter-onboarding docs). Pattern-semantic tool wrappers can be revisited if/when a concrete agent task surfaces that `recall` can't answer well.
