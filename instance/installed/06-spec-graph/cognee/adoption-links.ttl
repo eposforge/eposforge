@@ -1,0 +1,20 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix ef: <http://eposforge.org/ontology/> .
+@prefix efi: <http://eposforge.org/instance/> .
+
+# Adopter-scoped example showing how a private adapter points at a
+# published EposForge reference implementation.
+
+efi:acme-copilot-adapter rdf:type ef:Adapter ;
+    rdfs:label "acme-copilot-adapter" ;
+    rdfs:comment "Example adopter-scoped adapter individual for EF-009 verification." ;
+    ef:adapterName "acme-copilot-adapter" ;
+    ef:adapterVersion "0.0.1" ;
+    ef:privacyPosture "vendor-no-training" ;
+    ef:costHint "consumer-paid" ;
+    ef:invocationSurface "IDE-extension" ;
+    ef:capabilities "chat", "agent-mode", "mcp-tool-use" ;
+    ef:fulfillsSlot ef:DevProductComponent ;
+    ef:hasStatus ef:AdapterStatusExperimental ;
+    ef:adoptsFrom efi:copilot .
