@@ -5,6 +5,7 @@ Resolved issues are grouped by month (`## YYYY-MM`).
 ## 2026-05
 
 
+
 ## Issue EF-007 — Resolve component-slot kind-class symmetry
 ID: EF-007
 Title: Resolve component-slot kind-class symmetry
@@ -50,3 +51,14 @@ Fix surface: eposforge-pattern
 Depends on: EF-006
 Verify with: ef:adoptsFrom object property defined with domain/range; at least one adapter declares ?adapter ef:adoptsFrom ?ref linking to an ef:ReferenceImplementation; SPARQL returns expected pairs.
 Validation: cognee-sync --added ingested adoption-links.ttl without errors; ef:adoptsFrom defined in ontology with efi:acme-copilot-adapter ef:adoptsFrom efi:copilot as verification triple; state DB confirms tracking (data_id 790fab00).
+
+## Issue EF-001 — Initial corpus seed via cognee-sync against live backend
+ID: EF-001
+Title: Initial corpus seed via cognee-sync against live backend
+Date: 2026-05-17
+Status: resolved
+Resolved: 2026-05-18
+Effort: M
+Fix surface: repo-instance
+Verify with: `cognee-sync --added` ingests current corpus and query returns expected entities
+Validation: cognee-sync --added seeded all 79 git-tracked .md files plus ontology and 2 instance TTL files (82 documents total); all reported `add` without errors; state DB confirms full tracking.
