@@ -28,6 +28,19 @@ This repo has two layers that must stay explicit:
 
 ---
 
+## Active execution plan (instance)
+
+When executing backlog items for the in-flight **inference cost-control +
+knowledge-tree migration** (`EF-015` onward), first load the detailed execution
+plan at `.scratchpad/execution-plan.md` and the strategic context in
+`.scratchpad/high-level-plan.md` (both local / gitignored on this instance). They
+carry the execution order, the **inference-cost gate** (do not run a bulk
+re-cognify before the credit-funded inference gateway is live and budget-capped),
+cross-repo host-stack coordination, and the migration design source
+`.scratchpad/knowledge-tree.txt`.
+
+---
+
 ## Standards
 
 | Term | Meaning |
