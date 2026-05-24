@@ -36,7 +36,8 @@ instance/installed/06-spec-graph/cognee/.venv/
 instance/installed/06-spec-graph/cognee/__pycache__/
 instance/installed/06-spec-graph/cognee/.cognee/
 
-# Troubleshooting scratchpad — never commit
+# Scratchpad — never commit (temp files, plans, scratch notes, diffs, logs)
+.scratchpad/
 scratchpad/
 
 # Python runtime cache artifacts

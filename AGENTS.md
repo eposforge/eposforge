@@ -136,10 +136,11 @@ Operational conventions retained here:
   that runs every fragment in order. Developers run the composer once per
   clone, per host; it is portable between srv-docker-hp (native bash) and
   ws-dev-1 (Git Bash).
-- Troubleshooting scratchpad: use `scratchpad/` (repo root) for ad-hoc test
-  artifacts, logs, and proto-test data. This directory is gitignored.
-- Do not write ad-hoc diff outputs (for example `diff*.txt`) to the repo
-  root. Write temporary compare output under `scratchpad/` instead.
+- Scratchpad: write all temporary files — plans, scratch notes, ad-hoc test
+  artifacts, logs, proto-test data, diff outputs — under `.scratchpad/` (repo
+  root). This directory is gitignored. Never write temp files (for example
+  `diff*.txt`) to the repo root or any tracked path. (`scratchpad/` without the
+  dot remains gitignored as a legacy alias.)
 - Skills placement: store canonical skill content under `skills/<name>/`.
   Keep `.github/skills/<name>/SKILL.md` as a thin wrapper that points to the
   canonical location.
