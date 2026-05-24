@@ -7,6 +7,10 @@ source_of_truth: yes
 
 # Installed Adapter: graphrag → Spec Graph (Component 6)
 
+> Archived snapshot only. Do not use this folder as guidance for the current
+> EposForge implementation. Cognee is the active Spec Graph path; this
+> directory is retained only in case GraphRAG is revived later.
+
 > Living Spec for the Microsoft GraphRAG + Neo4j adapter installed in this
 > repo.  Per [../../../../01-architecture/00-adapter-pattern.md](../../../../01-architecture/00-adapter-pattern.md),
 > all required universal and component-specific fields are declared here.

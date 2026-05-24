@@ -28,18 +28,189 @@ Environment variables (injected by epos-secrets):
 from __future__ import annotations
 
 import argparse
+import json
 import os
+import subprocess
 import sys
+import time
 from pathlib import Path
 
+from . import sync as _sync
 from .client import CogneeClient
 from .config import load_config
 from .state import StateStore
-from . import sync as _sync
 
 # Default state DB lives alongside the sync project itself, committed to source.
 # cli.py is at src/cognee_sync/cli.py; three parents up = sync/
 _DEFAULT_STATE_DB = str(Path(__file__).parent.parent.parent / ".cognee-state.db")
+_REPO_ROOT = Path(__file__).resolve().parents[7]
+
+
+def _script_path(relative_path: str) -> str:
+    return str(_REPO_ROOT / relative_path)
+
+
+def _is_truthy(value: str | None) -> bool:
+    if value is None:
+        return False
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _validate_inference_routing() -> None:
+    provider = os.environ.get("INFERENCE_PROVIDER", "").strip()
+    require_azure = _is_truthy(os.environ.get("COGNEE_REQUIRE_AZURE_ROUTING"))
+
+    if require_azure and provider != "azure-foundry":
+        raise RuntimeError(
+            "COGNEE_REQUIRE_AZURE_ROUTING=1 but INFERENCE_PROVIDER is not "
+            "'azure-foundry'. Refusing to run sync with non-Azure routing."
+        )
+
+    if provider != "azure-foundry" and not require_azure:
+        return
+
+    llm_model = os.environ.get("LLM_MODEL", "").strip()
+    embedding_model = os.environ.get("EMBEDDING_MODEL", "").strip()
+
+    validator = _script_path(
+        "instance/installed/10-inference/scripts/validate-azure-routing-config.sh"
+    )
+
+    proc = subprocess.run(
+        [
+            "bash",
+            validator,
+            "--provider",
+            "azure-foundry",
+            "--llm-model",
+            llm_model,
+            "--embedding-model",
+            embedding_model,
+        ],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    if proc.returncode != 0:
+        details = (proc.stderr or proc.stdout).strip()
+        raise RuntimeError(f"Azure routing validation failed: {details}")
+
+
+def _estimate_requested_tokens(args: argparse.Namespace, changed_files: int) -> int:
+    if args.budget_requested_tokens is not None:
+        return args.budget_requested_tokens
+
+    env_requested = os.environ.get("INFERENCE_BUDGET_REQUESTED_TOKENS", "").strip()
+    if env_requested:
+        try:
+            return int(env_requested)
+        except ValueError as exc:
+            raise RuntimeError(
+                "INFERENCE_BUDGET_REQUESTED_TOKENS must be an integer"
+            ) from exc
+
+    per_file = os.environ.get("INFERENCE_BUDGET_TOKENS_PER_FILE", "4000").strip()
+    try:
+        per_file_tokens = int(per_file)
+    except ValueError as exc:
+        raise RuntimeError("INFERENCE_BUDGET_TOKENS_PER_FILE must be an integer") from exc
+
+    file_count = max(changed_files, 1)
+    return max(file_count * per_file_tokens, 0)
+
+
+def _run_budget_gate(repo_key: str, requested_tokens: int, model: str) -> dict[str, object]:
+    checker = _script_path("instance/installed/10-inference/scripts/check-budget-gate.sh")
+    proc = subprocess.run(
+        [
+            "bash",
+            checker,
+            "--repo-key",
+            repo_key,
+            "--requested-tokens",
+            str(requested_tokens),
+            "--model",
+            model,
+        ],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    output = (proc.stdout or "").strip()
+    if not output:
+        details = (proc.stderr or "").strip()
+        raise RuntimeError(f"Budget gate failed without JSON output: {details}")
+
+    try:
+        decision = json.loads(output)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"Budget gate returned invalid JSON: {output}") from exc
+
+    if not isinstance(decision, dict):
+        raise RuntimeError("Budget gate response must be a JSON object")
+    return decision
+
+
+def _record_budget_usage(repo_key: str, consumed_tokens: int) -> None:
+    recorder = _script_path("instance/installed/10-inference/scripts/record-budget-usage.sh")
+    proc = subprocess.run(
+        [
+            "bash",
+            recorder,
+            "--repo-key",
+            repo_key,
+            "--consumed-tokens",
+            str(consumed_tokens),
+        ],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    if proc.returncode != 0:
+        details = (proc.stderr or proc.stdout).strip()
+        raise RuntimeError(f"Failed to record budget usage: {details}")
+
+
+def _emit_token_usage_event(
+    repo_key: str,
+    dataset_name: str,
+    model: str,
+    total_tokens: int,
+    latency_ms: int,
+) -> None:
+    emitter = _script_path("instance/installed/10-inference/scripts/emit-token-usage-event.sh")
+    proc = subprocess.run(
+        [
+            "bash",
+            emitter,
+            "--repo",
+            repo_key,
+            "--dataset",
+            dataset_name,
+            "--phase",
+            "cognify",
+            "--model",
+            model,
+            "--prompt-tokens",
+            str(total_tokens),
+            "--completion-tokens",
+            "0",
+            "--total-tokens",
+            str(total_tokens),
+            "--latency-ms",
+            str(max(latency_ms, 0)),
+        ],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    if proc.returncode != 0:
+        details = (proc.stderr or proc.stdout).strip()
+        raise RuntimeError(f"Failed to emit token usage event: {details}")
 
 
 def _state_store(args: argparse.Namespace) -> StateStore:
@@ -56,8 +227,12 @@ def main() -> None:
         prog="cognee-sync",
         description="Sync EposForge Markdown files to the Cognee knowledge graph.",
     )
-    parser.add_argument("--dataset", default=None, metavar="NAME",
-                        help="Cognee dataset name (default: $COGNEE_DATASET_NAME or 'eposforge-sync')")
+    parser.add_argument(
+        "--dataset",
+        default=None,
+        metavar="NAME",
+        help="Cognee dataset name (default: $COGNEE_DATASET_NAME or 'eposforge-sync')",
+    )
     parser.add_argument("--db", default=None, metavar="PATH",
                         help="State DB path (default: $COGNEE_STATE_DB or '.cognee-state.db')")
     parser.add_argument("--dry-run", action="store_true",
@@ -74,8 +249,18 @@ def main() -> None:
                         help="Skip the post-run cognify call. Use when batching multiple "
                              "cognee-sync invocations and you'll cognify manually at the end. "
                              "Default: run cognify against the target dataset after add/update.")
+    parser.add_argument(
+        "--repo-key",
+        default=None,
+        metavar="KEY",
+        help="Budget/event repo key (default: $INFERENCE_BUDGET_REPO_KEY or repo name)",
+    )
+    parser.add_argument("--budget-requested-tokens", type=int, default=None, metavar="N",
+                        help="Token estimate for this sync run when budgeting is enforced")
 
     args = parser.parse_args()
+
+    _validate_inference_routing()
 
     if args.status:
         state = _state_store(args)
@@ -105,6 +290,12 @@ def main() -> None:
     config = load_config()
     state = _state_store(args)
     dataset_name = _dataset_name(args)
+    repo_key = args.repo_key or os.environ.get("INFERENCE_BUDGET_REPO_KEY", _REPO_ROOT.name)
+    budget_enforce = _is_truthy(os.environ.get("INFERENCE_BUDGET_ENFORCE", "1"))
+    emit_usage_events = _is_truthy(os.environ.get("INFERENCE_EMIT_USAGE_EVENTS", "1"))
+    model = os.environ.get("LLM_MODEL", "").strip() or "unknown"
+    changed_files = len(args.added or []) + len(args.modified or [])
+    requested_tokens = _estimate_requested_tokens(args, changed_files)
 
     with CogneeClient(
         base_url=config.api_url,
@@ -136,8 +327,37 @@ def main() -> None:
         # until /cognify is called. Run it once per CLI invocation against
         # the affected dataset so MCP recall / graph queries see new docs.
         if cognify_needed and not args.no_cognify:
+            if budget_enforce:
+                decision = _run_budget_gate(repo_key, requested_tokens, model)
+                decision_name = str(decision.get("decision", ""))
+                if decision_name == "deny":
+                    print(json.dumps(decision))
+                    sys.exit(4)
+                if decision_name == "degrade":
+                    recommended_model = str(decision.get("recommended_model", "")).strip()
+                    if recommended_model:
+                        os.environ["LLM_MODEL"] = recommended_model
+                        model = recommended_model
+                        print(
+                            "budget: degrade requested, using recommended model "
+                            f"{recommended_model}"
+                        )
+
+            started = time.perf_counter()
             print(f"cognify {dataset_name} ...", flush=True)
             client.cognify(datasets=[dataset_name], run_in_background=False)
             print(f"cognify {dataset_name} done")
+            latency_ms = int((time.perf_counter() - started) * 1000)
+
+            if budget_enforce:
+                _record_budget_usage(repo_key, requested_tokens)
+            if emit_usage_events:
+                _emit_token_usage_event(
+                    repo_key=repo_key,
+                    dataset_name=dataset_name,
+                    model=model,
+                    total_tokens=requested_tokens,
+                    latency_ms=latency_ms,
+                )
 
     sys.exit(0)

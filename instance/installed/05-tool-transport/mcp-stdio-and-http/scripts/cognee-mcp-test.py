@@ -85,19 +85,9 @@ async def configure():
     else:
         cognee.config.set_embedding_dimensions(384)
 
-    neo4j_url  = os.environ.get("NEO4J_URI", "bolt://localhost:7688")
-    neo4j_user = os.environ.get("NEO4J_USERNAME", "neo4j")
-    neo4j_pw   = os.environ.get("NEO4J_PASSWORD", "")
-    cognee.config.set_graph_database_provider("neo4j")
-    cognee.config.set_graph_db_config({
-        "graph_database_url": neo4j_url,
-        "graph_database_username": neo4j_user,
-        "graph_database_password": neo4j_pw,
-    })
-
     print(f"  LLM:       anthropic / claude-haiku-4-5-20251001")
     print(f"  Embedding: {embedding_provider} / {embedding_model}")
-    print(f"  Graph DB:  {neo4j_url}")
+    print("  Graph DB:  embedded cognee store")
 
 # ---------------------------------------------------------------------------
 # Test 1 — Permanent ingest + recall

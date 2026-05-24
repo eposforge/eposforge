@@ -5,6 +5,10 @@ status: shelved
 
 # GraphRAG workspace — EposForge Spec Graph (shelved fallback)
 
+> Archived snapshot only. Do not use this folder to understand current
+> EposForge behavior or architecture. The active Spec Graph path is Cognee;
+> this directory is retained only in case GraphRAG is revived later.
+
 This directory is the Microsoft GraphRAG project retained as a shelved
 fallback adapter for Component 6 (Spec Graph). The default path runs
 Cognee-first extraction (see [`../cognee/`](../cognee/)); use this
