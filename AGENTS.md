@@ -102,13 +102,15 @@ Use this workflow when the user provides a description of additions, deletions, 
 2.  **Clarify:**
   *   Prompt the user for clarification if the intent is ambiguous (e.g., if a new entity should be a `component` or an `adapter`, or which `phase` it matures to).
 3.  **Implement (Graph-Influence Checklist):**
-  *   **Reserved Vocabulary:** Use exactly the terms from the [Vocabulary standard](04-standards/02-vocabulary/vocabulary.md) (`component`, `adapter`, `phase`, `pillar`, `principle`, `factory`, `deliverable`, `constraint`) as entity types.
+  *   **Reserved Vocabulary:** Use exactly the terms from the [Vocabulary standard](04-standards/02-vocabulary/vocabulary.md) (`component`, `adapter`, `phase`, `pillar`, `principle`, `factory`, `deliverable`, `constraint`, `concept`, `guidance`, `tenet`, `group`) as entity types. Canonical definitions for `concept`, `guidance`, `tenet`, and `group` are in `00-vision/01-ontology.ttl`.
   *   **Relationship Keywords:** Use these exact keywords so Cognee's ontology-grounded extraction maps edges correctly:
     *   `FULFILLS_SLOT`: "fulfills", "fills slot", "candidate adapter".
     *   `DEPENDS_ON`: "depends on", "dependency", "requires".
     *   `MATURES_TO`: "matures", "operational at phase", "graduation".
     *   `GOVERNED_BY`: "governed", "enforced by", "policy".
     *   `IMPLEMENTS`: "implements", "implementation of".
+    *   `KIND`: node kind discriminator (pillar|group|component|concept|guidance|tenet).
+    *   `LIFECYCLE_STATUS`: lifecycle state of a Concept/Guidance/Tenet (proposed|adopted|retired).
   *   **Living Spec Contract:** If creating or updating a spec (e.g., `instance/SPEC.md` or `01-architecture/02-components/*.md`), ensure it contains: Purpose, Observable Behavior, Inputs/Outputs, Dependencies, Non-functional Bounds (Metadata Table), and Versioning Policy.
   *   **Metadata Tables:** Ensure every Adapter and Component doc includes a machine-readable metadata table per the [Adapter Pattern](01-architecture/00-adapter-pattern.md).
 4.  **Validate & Rebuild:**
