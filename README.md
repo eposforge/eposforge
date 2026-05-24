@@ -27,7 +27,16 @@ EposForge defines:
 - A **research catalog** of candidate Adapters so you don't reinvent the
   wheel.
 
-EposForge does not pick implementations. Instances pick implementations.
+Instances pick implementations.
+
+## How to use it
+
+EposForge is delivers value via a Cognee MCP server which LLMs can use for a GraphRag grounding.  
+eposforge/instance/installed/06-spec-graph/cognee is the implementation
+
+Once agents have access to the server, they can ground their chats and actions by accessing the EposForge ontology grounded knowledge graph through Cognee MCP.
+
+This guides your agents in building a dark factory from scratch in a greenfield scenario, guides them on incrementally moving towards a dark factory in a brownfield scenario, and guides the development of eposforge itself when contributing to the eposforge github project.
 
 ## How to read this repo
 
