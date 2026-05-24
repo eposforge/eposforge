@@ -8,6 +8,8 @@ source_of_truth: yes
 > **STATUS:** Active. `cognee-sync` (Phases 0–5 complete) is the
 > sole ingestion path. See `./sync/README.md` for invocation,
 > environment, and tests.
+> For Cognee MCP self-consumption and adopter substitution guidance,
+> see `instance/installed/05-tool-transport/mcp-stdio-and-http/cognee-mcp-self-consume-runbook.md`.
 
 # Installed Adapter: cognee-ontology-preprocessor → Spec Graph (Component 6)
 
