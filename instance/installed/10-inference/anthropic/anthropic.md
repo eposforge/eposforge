@@ -40,6 +40,16 @@ source_of_truth: yes
 |---|---|
 | `completion_model` | GraphRAG: `claude-sonnet-4-6`; Cognee: `claude-haiku-3-5-20241022` (default, overridable via `LLM_MODEL`) |
 | `api_bindings` | `ANTHROPIC_API_KEY` |
+| `component11_event_emitter` | `instance/installed/10-inference/scripts/emit-token-usage-event.sh` |
+| `component11_event_type` | `adapter.invoked` |
+| `component11_event_payload_fields` | `repo`, `dataset`, `phase` (`extract`\|`embed`\|`cognify`), `model`, `prompt_tokens`, `completion_tokens`, `total_tokens`, `latency_ms` |
+| `provider_select_config` | `INFERENCE_PROVIDER` profile selection (`anthropic`\|`openai`\|`azure-foundry`) |
+| `azure_route_contract` | `instance/installed/10-inference/azure-foundry-routing.md` |
+| `azure_route_validator` | `instance/installed/10-inference/scripts/validate-azure-routing-config.sh` |
+| `budget_policy_file` | `instance/installed/10-inference/budget-policy.json` |
+| `budget_preflight_gate` | `instance/installed/10-inference/scripts/check-budget-gate.sh` |
+| `budget_counter_updater` | `instance/installed/10-inference/scripts/record-budget-usage.sh` |
+| `budget_contract` | `instance/installed/10-inference/budget-enforcement.md` |
 
 ## Contract gaps (v1)
 
