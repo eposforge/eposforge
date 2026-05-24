@@ -7,6 +7,12 @@ Each function is idempotent:
 
 All functions return a result dict with at minimum ``action`` and ``file_path``.
 ``action`` is one of: "add", "update", "delete", "skip".
+
+Note: ``add_file`` ingests content into Cognee's raw storage but in current
+cognee versions does NOT implicitly run knowledge-graph extraction. Callers
+that need the graph populated must invoke ``client.cognify(datasets=[name])``
+after their batch of add/update operations. The CLI driver does this; direct
+sync_* callers should follow the same pattern.
 """
 
 from __future__ import annotations

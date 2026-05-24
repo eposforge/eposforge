@@ -56,7 +56,7 @@ efi:cognee-ontology-preprocessor rdf:type ef:ReferenceImplementation ;
     ef:adapterVersion "unpinned (latest cognee release)" ;
     ef:privacyPosture "vendor-default" ;
     ef:costHint "metered" ;
-    ef:invocationSurface "in revision (see ./sync/)" ;
+    ef:invocationSurface "cognee-sync CLI (instance/installed/06-spec-graph/cognee/sync/), per-file --added/--modified/--deleted via HTTP to dkr-cgnee-api" ;
     ef:capabilities "ontology-grounded-extraction", "entity-normalization", "synonym-collapse", "embedded-graph-write" ;
     ef:fulfillsSlot ef:SpecGraphComponent ;
     ef:hasStatus ef:AdapterStatusExperimental .

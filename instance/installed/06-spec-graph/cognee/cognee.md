@@ -5,12 +5,87 @@ maturity: experimental
 source_of_truth: yes
 ---
 
-> **STATUS: in revision.** Incremental-sync development is underway in
-> `./sync/`. Sections below that describe `ingest_dual_container.sh`
-> refer to a deleted artifact and should not be followed; treat
-> `./sync/README.md` as the current authority for invocation.
+> **STATUS:** Active. `cognee-sync` (Phases 0–5 complete) is the
+> sole ingestion path. See `./sync/README.md` for invocation,
+> environment, and tests.
 
 # Installed Adapter: cognee-ontology-preprocessor → Spec Graph (Component 6)
+
+---
+
+## Deployment topology (read this first)
+
+**Two containers, single KG.** Both live in the docker-compose project at
+`/mnt/raid-storage/docker-volume-mounts/cognee/`.
+
+| Container | Role | Storage | Build context |
+|---|---|---|---|
+| `dkr-cgnee-api` | Cognee FastAPI backend — **owns** the KG | `./data/cognee_system` (host volume) | `Dockerfile` (extends `cognee/cognee:main`) |
+| `dkr-cgnee-mcp` | MCP server — **stateless proxy** to the API | none (proxy mode) | `Dockerfile.mcp` (extends `cognee/cognee-mcp:main`) |
+
+The MCP container runs with `API_URL=http://dkr-cgnee-api:8000` so every
+`remember` / `recall` / `forget` MCP tool call is forwarded over HTTP to the
+backend. There is one KG on one volume; both surfaces (MCP and HTTP) read and
+write to it. Do not bring up a second KG on the MCP container.
+
+```
+Claude Code ──MCP/SSE──▶ dkr-cgnee-mcp ──HTTP──▶ dkr-cgnee-api ──▶ ./data/cognee_system
+cognee-sync CLI ─────────────────HTTP──────────▶ dkr-cgnee-api ─────────────┘
+```
+
+**Where to ingest:** always against `dkr-cgnee-api`. `cognee-sync` (see
+`./sync/`) targets `https://cognee-api.grace.lan`. Do **not** target the MCP
+container — in proxy mode it has no local store; in direct mode it would create
+a second, divergent KG.
+
+**Where to query:**
+- From Claude Code: the cognee MCP tools (`mcp__cognee__recall` etc.) — they
+  hit the MCP container at `https://cognee-mcp.grace.lan/sse`, which proxies
+  to the API.
+- From scripts / HTTP: `https://cognee-api.grace.lan/api/v1/*` directly.
+
+### Why this layout, not a single container
+
+The MCP server is `cognee/cognee-mcp:main` (the published MCP-protocol bridge),
+the API is `cognee/cognee:main` (the FastAPI backend). They are separate
+upstream images. The MCP image's `cognee_client.py` is built for either
+direct-mode (own embedded store) or API/proxy mode — we use proxy mode so
+there's a single source of truth.
+
+### Switching modes
+
+| Mode | `API_URL` env on MCP | MCP volumes | Notes |
+|---|---|---|---|
+| Proxy (current) | `http://dkr-cgnee-api:8000` | none | shared KG |
+| Direct (don't use) | unset | local volume mounted | divergent KG, was the source of recent confusion |
+
+### Upstream image quirks we patched
+
+`Dockerfile.mcp` patches three bugs in `cognee/cognee-mcp:main` that only
+matter in **direct** mode (they're inert in proxy mode since the LLM calls and
+graph access happen inside the API container). Kept in place as a safety net in
+case proxy mode is ever disabled:
+
+1. `anthropic` Python SDK is missing from the upstream image despite
+   `LLM_PROVIDER=anthropic` being the intended config. Patched: `pip install anthropic`.
+2. `cognee.infrastructure.llm.structured_output_framework.litellm_instructor.llm.anthropic.adapter.AnthropicAdapter.acreate_structured_output` does not pass `max_tokens` to the Anthropic
+   messages API. Patched to set `max_tokens=self.max_completion_tokens`.
+3. `cognee.api.v1.recall.recall()` (cognee 1.0.4) never resolves the default
+   user when `user=None`, so it crashes with `AttributeError: 'NoneType' object has no attribute 'id'`. Patched to call `get_default_user()` — the same pattern `remember()` already uses.
+
+The API container (`cognee/cognee:main`, currently `cognee 1.0.7-local` with
+`instructor 1.15.1`, `anthropic 0.86.0`) does not need these patches in
+practice — 82 cognify runs / 0 errors over 48h confirmed.
+
+### Confusing-error decoder
+
+| Symptom | Real cause |
+|---|---|
+| `Failed to initialize Ladybug database: Could not map version_code to proper Ladybug version` | **File-lock contention**, not a real version mismatch. Some second process is trying to open `cognee_graph_ladybug` while the container holds the exclusive lock. Cognee's migration-fallback path masks the real `RuntimeError: Could not set lock on file` and reports the version-code lookup that fails because Ladybug 0.16.0 writes version_code 40, but cognee's migration table only knows 34–39. Don't try to "migrate" — find the second process. |
+| `Recall failed: 'NoneType' object has no attribute 'id'` | cognee 1.0.4 in the MCP image only. Already patched in `Dockerfile.mcp`. Won't appear in proxy mode. |
+| `HTTP 404 Could not find session` after a restart | Expected — SSE sessions don't survive container recreation. Reconnect via Claude Code's `/mcp`. |
+
+---
 
 > Living Spec for the Cognee ontology-grounded extraction adapter installed
 > in this repo. Per [../../../../01-architecture/00-adapter-pattern.md](../../../../01-architecture/00-adapter-pattern.md),
@@ -31,48 +106,58 @@ source_of_truth: yes
 | `privacy_posture` | `vendor-default` (Anthropic for LLM; OpenAI for embeddings during indexing) |
 | `cost_hint` | metered (Anthropic + OpenAI APIs for indexing) |
 | `capabilities` | `ontology-grounded-extraction`, `entity-normalization`, `synonym-collapse`, `embedded-graph-write` |
-| `invocation_surface` | `in revision (see ./sync/ for in-flight implementation)` |
+| `invocation_surface` | `cognee-sync` CLI (`./sync/`); per-file `--added` / `--modified` / `--deleted` over HTTP to `dkr-cgnee-api` |
 
 ### Spec Graph required fields
 
 | Field | Value |
 |---|---|
-| `query_languages` | Backend API |
-| `projection_format` | graph nodes/edges in embedded store |
-| `rebuild_target` | varies by corpus size; runs before GraphRAG community detection pass |
-| `incremental_update` | `false (in transition — see ./sync/)` — full prune-and-reproject while sync is in development |
+| `query_languages` | cognee HTTP API (`/api/v1/recall`, `/api/v1/search`); natural language via cognee MCP |
+| `projection_format` | graph nodes/edges in embedded Kuzu + embeddings in embedded LanceDB |
+| `rebuild_target` | per-file via cognee-sync (incremental); bulk cognify over the whole dataset typically completes in a few minutes |
+| `incremental_update` | true — `cognee-sync` provides git-diff-driven incremental updates (Phases 0–5 complete) |
 
 ### Repo-specific fields
 
 | Field | Value |
 |---|---|
-| `script` | `in revision (see ./sync/ for in-flight implementation)` |
+| `script` | `cognee-sync` CLI at `./sync/src/cognee_sync/cli.py` |
 | `ontology_file` | `00-vision/01-ontology.ttl` |
-| `llm_provider` | `anthropic` → `claude-sonnet-4-5` |
-| `embedding_provider` | `fastembed` (local; `BAAI/bge-small-en-v1.5`; no API key required) |
-| `graph_database` | embedded Kuzu/LanceDB |
-| `cognee_root` | `instance/installed/06-spec-graph/cognee/.cognee/` (gitignored) |
+| `llm_provider` | `anthropic` → `claude-haiku-4-5-20251001` (pinned in `.env` on the cognee compose project) |
+| `embedding_provider` | cognee default (OpenAI `text-embedding-3-small` via `EMBEDDING_API_KEY`; runs on `dkr-cgnee-api`) |
+| `graph_database` | embedded Kuzu (`cognee_graph_ladybug`) + embedded LanceDB (`cognee.lancedb/`), both on the `dkr-cgnee-api` volume at `./data/cognee_system/databases/` |
+| `cognee_root` | `dkr-cgnee-api`'s `/app/cognee/.cognee_system/` (host-mounted at `/mnt/raid-storage/docker-volume-mounts/cognee/data/cognee_system/`) |
 
 ---
 
 ## Role in the Runtime Pipeline
 
-This adapter is the active extraction path for the running dual-container
-deployment. The flow is:
+This adapter is the active extraction path. The flow is:
 
-1. Build a filtered corpus snapshot (`*.md` + `*.ttl`) from repo source roots.
-2. Copy that snapshot into `dkr-cgnee-api`.
-3. Run `cognee.add()` and `cognee.cognify()` in the backend container.
+1. `cognee-sync` (the CLI under `./sync/`) computes per-file diffs and
+   issues `POST /api/v1/add` for new/modified files and `DELETE
+   /api/v1/datasets/{id}/data/{data_id}` for removed files, all against
+   `dkr-cgnee-api`.
+2. After the batch of add/update operations, `cognee-sync` issues a
+   single `POST /api/v1/cognify` against the affected dataset (default:
+   `eposforge-sync`). Cognify drives `classify_documents`,
+   `extract_chunks_from_documents`, and `extract_graph_and_summarize`
+   to populate the KG.
+3. Cognee writes graph nodes/edges into `cognee_graph_ladybug` (embedded
+   Kuzu) and embeddings into `cognee.lancedb/` (embedded LanceDB) on
+   the `dkr-cgnee-api` volume.
 
-The resulting graph is stored in Cognee's embedded runtime data store.
+The MCP surface (`dkr-cgnee-mcp`) runs in proxy mode (`API_URL=http://dkr-cgnee-api:8000`),
+so `recall` / `remember` / `forget` over MCP read and write the same KG.
 
 ---
 
 ## Active ingestion path
 
-Active ingestion is being rewritten under `./sync/`. Until Phase 5 lands,
-manual ingestion is performed by the operator outside this adapter spec.
-See `./sync/README.md` for the current bootstrapping and test instructions.
+`cognee-sync` is the active ingestion path. Invocation, environment, and
+state-store details live in [`./sync/README.md`](./sync/README.md).
+Phases 0–5 of the strangler-fig migration are complete. The legacy
+`ingest_dual_container.sh` artifact is removed.
 
 ---
 
@@ -117,10 +202,27 @@ deployment — not the upstream Cognee spec — and may change with container up
 
 ### Pipeline behavior
 
-- **Cognify is implicit on `add_file`.** The full KG-extraction pipeline runs
-  synchronously during `POST /api/v1/add`. Content is queryable immediately after
-  the call returns. `POST /api/v1/cognify` is accepted but re-runs extraction;
-  it is not required.
+- **Cognify is NOT implicit on `add_file` (cognee 1.0.7+).** Prior Phase 1
+  observation said cognify ran synchronously during `POST /api/v1/add`. That
+  was true in earlier cognee versions; in 1.0.7-local only the
+  `resolve_data_directories` + `ingest_data` tasks fire — the graph-extraction
+  tasks (`classify_documents`, `extract_graph_and_summarize`) do NOT run.
+  Files land in raw storage and become listable via `list_documents`, but no
+  DocumentChunk / Entity nodes are created. **`POST /api/v1/cognify` is
+  required** to populate the KG. `cognee-sync` calls it automatically at the
+  end of each CLI invocation (unless `--no-cognify` is passed). Direct
+  callers must do the same.
+  - **Symptom to recognize:** `recall` returns "context does not contain
+    information about X" for content you know was just added. Before suspecting
+    embeddings or search bugs, check `TextDocument` node count in the graph vs
+    `list_documents` count — if they diverge, cognify never ran.
+  - **Bulk cognify is concurrency-fragile.** Re-running cognify after a fresh
+    `add_file` of 80+ docs produced ~10 SQLite errors (`no such table: data`,
+    `database is locked`) from worker contention. Failed docs leave no
+    graph nodes but no permanent damage. **Re-run cognify once more on the
+    same dataset** and the missing docs are picked up cleanly; the contention
+    burst doesn't repeat because the prior workers have released their locks.
+    Plan for a two-pass cognify when bulk-ingesting from scratch.
 - **No async / polling.** Neither `add` nor explicit `cognify` returns a job id
   to poll. No `wait_for_cognify` is needed.
 - **Re-add deduplicates on identical content.** Same content re-added to the same
