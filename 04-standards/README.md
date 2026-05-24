@@ -15,5 +15,6 @@ This section is the source of truth for cross-cutting standards adopted by EposF
 - [01-naming-conventions/naming-conventions.md](01-naming-conventions/naming-conventions.md)
 - [02-vocabulary/vocabulary.md](02-vocabulary/vocabulary.md)
 - [06-research-mirror/research-mirror.md](06-research-mirror/research-mirror.md)
+- [07-adapter-layout-mirror/adapter-layout-mirror.md](07-adapter-layout-mirror/adapter-layout-mirror.md)
 
 Additional standards are added here as they are adopted.
