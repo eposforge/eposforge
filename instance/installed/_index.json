@@ -122,6 +122,22 @@
       "invocation_surface": "OS-user-account"
     },
     {
+      "component": "08-agent-policy",
+      "adapter": "tier-yaml",
+      "spec": "instance/installed/08-agent-policy/tier-yaml/tier-yaml.md",
+      "scripts_dir": "instance/installed/08-agent-policy/tier-yaml/scripts",
+      "name": "tier-yaml",
+      "status": "experimental",
+      "privacy_posture": "local",
+      "cost_hint": "free",
+      "capabilities": [
+        "tiered-policy",
+        "claude-settings-generation",
+        "baseline-equivalence-check"
+      ],
+      "invocation_surface": "CLI scripts"
+    },
+    {
       "component": "09-source-control-ci",
       "adapter": "github-and-actions",
       "spec": "instance/installed/09-source-control-ci/github-and-actions/github-and-actions.md",
@@ -141,7 +157,7 @@
       "component": "10-inference",
       "adapter": "anthropic",
       "spec": "instance/installed/10-inference/anthropic/anthropic.md",
-      "scripts_dir": null,
+      "scripts_dir": "instance/installed/10-inference/scripts",
       "name": "anthropic",
       "status": "experimental",
       "privacy_posture": "vendor-default",
@@ -156,7 +172,7 @@
       "component": "10-inference",
       "adapter": "openai",
       "spec": "instance/installed/10-inference/openai/openai.md",
-      "scripts_dir": null,
+      "scripts_dir": "instance/installed/10-inference/scripts",
       "name": "openai",
       "status": "experimental",
       "privacy_posture": "vendor-default",
@@ -165,6 +181,22 @@
         "embedding-generation"
       ],
       "invocation_surface": "GraphRAG pipeline config"
+    },
+    {
+      "component": "11-audit-observability",
+      "adapter": "jsonl-event-sink",
+      "spec": "instance/installed/11-audit-observability/jsonl-event-sink/jsonl-event-sink.md",
+      "scripts_dir": "instance/installed/11-audit-observability/jsonl-event-sink/scripts",
+      "name": "jsonl-event-sink",
+      "status": "experimental",
+      "privacy_posture": "local",
+      "cost_hint": "free",
+      "capabilities": [
+        "structured-logs",
+        "append-only-audit",
+        "recent-event-query"
+      ],
+      "invocation_surface": "CLI scripts"
     },
     {
       "component": "12-secrets-key-management",
