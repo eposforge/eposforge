@@ -143,11 +143,13 @@ def _wrap_with_epos_secrets(server: dict, runtime_map: dict[str, str]) -> tuple[
     original_cmd = [server["command"]] + server.get("args", [])
     epos_secrets_path = str(_EPOS_SECRETS).replace("\\", "/")
 
+    python_cmd = sys.executable or "python3"
+
     if runtime_names:
         only_arg = ",".join(runtime_names)
-        wrapped = ["python", epos_secrets_path, "--only", only_arg, "--"] + original_cmd
+        wrapped = [python_cmd, epos_secrets_path, "--only", only_arg, "--"] + original_cmd
     else:
-        wrapped = ["python", epos_secrets_path, "--"] + original_cmd
+        wrapped = [python_cmd, epos_secrets_path, "--"] + original_cmd
 
     env_block = _build_env_block(server, runtime_map)
     return wrapped, env_block
