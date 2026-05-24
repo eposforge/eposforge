@@ -70,6 +70,10 @@ def main() -> None:
                         help="Files to update (delete old + add new)")
     parser.add_argument("--deleted", nargs="*", default=[], metavar="FILE",
                         help="Files to remove from Cognee")
+    parser.add_argument("--no-cognify", action="store_true",
+                        help="Skip the post-run cognify call. Use when batching multiple "
+                             "cognee-sync invocations and you'll cognify manually at the end. "
+                             "Default: run cognify against the target dataset after add/update.")
 
     args = parser.parse_args()
 
@@ -107,18 +111,33 @@ def main() -> None:
         token=config.api_token,
         verify=config.tls_verify,
     ) as client:
+        cognify_needed = False
+
         for file_path in (args.added or []):
             content = Path(file_path).read_bytes()
             result = _sync.sync_add(client, state, dataset_name, file_path, content)
             print(f"{result['action']:8} {file_path}")
+            if result["action"] in ("add",):
+                cognify_needed = True
 
         for file_path in (args.modified or []):
             content = Path(file_path).read_bytes()
             result = _sync.sync_update(client, state, dataset_name, file_path, content)
             print(f"{result['action']:8} {file_path}")
+            if result["action"] in ("update", "add"):
+                cognify_needed = True
 
         for file_path in (args.deleted or []):
             result = _sync.sync_delete(client, state, file_path)
             print(f"{result['action']:8} {file_path}")
+
+        # Cognee 1.0.7+ does NOT run extraction implicitly on /add — files
+        # land in raw storage but knowledge-graph nodes are not created
+        # until /cognify is called. Run it once per CLI invocation against
+        # the affected dataset so MCP recall / graph queries see new docs.
+        if cognify_needed and not args.no_cognify:
+            print(f"cognify {dataset_name} ...", flush=True)
+            client.cognify(datasets=[dataset_name], run_in_background=False)
+            print(f"cognify {dataset_name} done")
 
     sys.exit(0)

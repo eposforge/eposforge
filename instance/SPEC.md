@@ -18,13 +18,16 @@ source_of_truth: yes
 Maintain the EposForge vision and architecture Markdown corpus as a
 queryable knowledge graph. Cognee performs ontology-grounded extraction
 from all Markdown files in the docs directories and writes normalized
-entities and relationships into Neo4j. GraphRAG remains installed as an
-opt-in fallback path for extraction and community detection. Any
-MCP-compatible Dev Product
-(Gemini CLI, Claude Code, Cursor, Goose, or equivalent) connects to
-Neo4j via the Neo4j MCP extension and gains structured, graph-augmented
-memory of the full EposForge architecture for natural-language-driven
-consistency checks, spec generation, and ADR authoring.
+entities and relationships into its embedded Kuzu graph + LanceDB
+vector store, hosted inside the `dkr-cgnee-api` container. Microsoft
+GraphRAG (which would target Neo4j) remains installed as an opt-in
+shelved fallback for full-rebuild extraction and community detection;
+it is not on the active path. Any MCP-compatible Dev Product (Gemini
+CLI, Claude Code, Cursor, Goose, or equivalent) connects to the cognee
+MCP server (`dkr-cgnee-mcp`, which proxies to `dkr-cgnee-api`) and gains
+structured, graph-augmented memory of the full EposForge architecture
+for natural-language-driven consistency checks, spec generation, and
+ADR authoring.
 
 This spec also defines conventions that clarify which docs are
 architecture contracts versus repo-instance implementations.
@@ -49,17 +52,17 @@ and [../01-architecture/02-components/06-spec-graph.md](../01-architecture/02-co
 
 | Field | Value |
 |---|---|
-| `name` | `cognee-neo4j` |
+| `name` | `cognee-ontology-preprocessor` |
 | `component` | `06-spec-graph` |
 | `version` | `0.1.1` |
-| `privacy_posture` | `local` (Neo4j) / `vendor-default` (inference during indexing) |
-| `cost_hint` | free (Neo4j CE) + metered (Anthropic/OpenAI APIs for indexing) |
+| `privacy_posture` | `local` (embedded Kuzu/LanceDB store inside `dkr-cgnee-api`) / `vendor-default` (inference during indexing) |
+| `cost_hint` | free (embedded store) + metered (Anthropic API for indexing; OpenAI used only by the GraphRAG fallback) |
 | `capabilities` | ontology-grounded-extraction, entity-normalization, graph-query |
-| `invocation_surface` | `cognee-sync` CLI at `instance/installed/06-spec-graph/cognee/sync/` (incremental); GraphRAG fallback at `instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` |
+| `invocation_surface` | `cognee-sync` CLI at `instance/installed/06-spec-graph/cognee/sync/` (incremental, HTTP to `dkr-cgnee-api`); GraphRAG opt-in fallback at `instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` |
 | `status` | `experimental` |
-| `query_languages` | Cypher (via Neo4j); natural language (via Neo4j MCP) |
-| `projection_format` | hybrid (graph nodes/edges + embeddings) |
-| `rebuild_target` | 15 minutes (GraphRAG fallback); per-file via cognee-sync |
+| `query_languages` | cognee HTTP API (`/api/v1/recall`, `/api/v1/search`); natural language via cognee MCP (`dkr-cgnee-mcp`) |
+| `projection_format` | hybrid (graph nodes/edges in embedded Kuzu + embeddings in LanceDB) |
+| `rebuild_target` | per-file via cognee-sync (incremental); 15 minutes for the shelved GraphRAG fallback full-rebuild |
 | `incremental_update` | true — `cognee-sync` provides git-diff-driven incremental sync |
 
 ---
@@ -70,10 +73,10 @@ Single source of truth for installed adapter status tracked in this repository.
 
 | Adapter | FULFILLS_SLOT | Status | Invocation surface | Notes |
 |---|---|---|---|---|
-| `cognee-ontology-preprocessor` | `SPEC_GRAPH` | experimental | `epos-secrets uv run cognee-sync --added <files>` (see `cognee/sync/README.md`) | Default ontology-grounded extraction path (dual-container HTTP API, incremental) |
-| `cognee-sync` | `SPEC_GRAPH` | experimental | `epos-secrets uv run cognee-sync --added/--modified/--deleted <files>` | Incremental git-diff-driven sync CLI (Phases 0–5 complete) |
-| `neo4j-ce` | `SPEC_GRAPH` | experimental | `instance/installed/06-spec-graph/graphrag/scripts/import.sh` + Neo4j MCP | Query store and Cypher/vector surface |
-| `microsoft-graphrag` | `SPEC_GRAPH` | shelved | `bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` | Opt-in GraphRAG extraction and import path |
+| `cognee-ontology-preprocessor` | `SPEC_GRAPH` | experimental | `epos-secrets uv run cognee-sync --added <files>` (see `cognee/sync/README.md`) | Default ontology-grounded extraction path (two containers proxy-mode, HTTP API, incremental). Stores KG in cognee's embedded Kuzu graph + LanceDB vector indexes on the `dkr-cgnee-api` volume. |
+| `cognee-sync` | `SPEC_GRAPH` | experimental | `epos-secrets uv run cognee-sync --added/--modified/--deleted <files>` | Incremental git-diff-driven sync CLI (Phases 0–5 complete). Drives `dkr-cgnee-api` over HTTP; per-file `add + cognify`. |
+| `microsoft-graphrag` | `SPEC_GRAPH` | shelved | `bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` | Opt-in full-rebuild extraction and import path. Writes to a separate Neo4j Community Edition instance. Not on the active path. |
+| `neo4j-ce` | `SPEC_GRAPH` | shelved | `instance/installed/06-spec-graph/graphrag/scripts/import.sh` + Neo4j MCP | Target query store for the shelved GraphRAG path only. Not used by the default cognee path. |
 | `file-based-backlog` | `BACKLOG` | implemented, experimental | `bash instance/installed/13-backlog/file-based-backlog/scripts/{new-issue,lint-backlog,sweep-resolved,aggregate}.sh` | Local markdown backlog adapter with cross-repo aggregation and archive indexing |
 
 Candidate adapters remain cataloged in
@@ -139,17 +142,21 @@ discovers them and writes dispatchers into `.git/hooks/`.
 
 ## Observable behavior
 
-1. **Trigger:** operator runs `epos-secrets uv run cognee-sync --added/--modified/--deleted <files>` (default Cognee incremental sync, from `instance/installed/06-spec-graph/cognee/sync/`) or `bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` (GraphRAG full-rebuild fallback), or CI triggers the sync via a scheduled post-receive job.
+1. **Trigger:** operator runs `epos-secrets uv run cognee-sync --added/--modified/--deleted <files>` (default Cognee incremental sync, from `instance/installed/06-spec-graph/cognee/sync/`), or — opt-in only — `bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` for the shelved GraphRAG full-rebuild fallback. CI may trigger cognee-sync via a scheduled post-receive job.
 
-2. **Wipe stage:**
-   - The rebuild script clears Neo4j graph projection state, prunes Cognee
-     state, and removes generated GraphRAG `output/` and `cache/` artifacts.
-   - Wipe stage executes before either extraction path.
+2. **Wipe stage (fallback only):**
+   - The GraphRAG fallback's rebuild script clears Neo4j graph projection
+     state, prunes Cognee state, and removes generated GraphRAG `output/`
+     and `cache/` artifacts.
+   - The default Cognee path does **not** wipe — cognee-sync is incremental;
+     update = `delete_document` + `add_file` per file.
 
 3. **Indexing / extraction:**
-   - Default path: Cognee performs ontology-grounded extraction (seeded by
-    `00-vision/01-ontology.ttl`) and writes normalized entities and
-     relationships to Neo4j.
+   - Default path: cognee-sync `POST /api/v1/add`s each file to
+     `dkr-cgnee-api`, then `POST /api/v1/cognify` runs ontology-grounded
+     extraction (seeded by `00-vision/01-ontology.ttl`) and writes normalized
+     entities and relationships into cognee's embedded Kuzu graph + LanceDB
+     vector store.
    - Opt-in fallback path (`--graphrag`): GraphRAG reads all `*.md` files
      matching
      `^(00-vision|01-architecture|02-roadmap|03-research|instance/installed|instance/adrs)/.*\.md$`
@@ -157,14 +164,18 @@ discovers them and writes dispatchers into `.git/hooks/`.
      `instance/installed/06-spec-graph/graphrag/output/`.
 
 4. **Import / projection to query store:**
-   - Default path: Cognee writes directly into Neo4j.
+   - Default path: cognee writes directly into its own embedded Kuzu/LanceDB
+     store on the `dkr-cgnee-api` volume; no separate import step.
    - Opt-in GraphRAG path: the import script reads Parquet files and loads
      all records into the local Neo4j instance at `NEO4J_URI`.
-   Both paths follow full nuke-and-reproject semantics.
+   The default path is incremental (per-file diff). The GraphRAG fallback
+   follows full nuke-and-reproject semantics.
 
-5. **Query surface:** After import, the Neo4j MCP extension exposes
-   Cypher generation and graph-memory RAG to any connected Dev
-   Product. Operators can issue instructions such as:
+5. **Query surface:** Cognee's MCP server (`dkr-cgnee-mcp`, in proxy mode
+   to `dkr-cgnee-api`) exposes `recall` / `remember` / `forget` over SSE
+   to any MCP-compatible Dev Product. Scripts can hit the HTTP surface
+   directly at `https://cognee-api.grace.lan/api/v1/{recall,search,...}`.
+   Operators can issue instructions such as:
    - "Find all adapters that fulfill the Spec Graph slot."
    - "List all principles that govern the Router component."
    - "Generate a new ADR for adding a second Dev Product Adapter."
@@ -173,7 +184,7 @@ discovers them and writes dispatchers into `.git/hooks/`.
    hook fragment (composed into `.git/hooks/post-commit` by the SCM/CI adapter's
    `install-hooks.sh`) writes `instance/installed/06-spec-graph/.needs-rebuild`
    when doc files change. This is a non-blocking reminder; it does not trigger
-   the rebuild itself.
+   cognee-sync itself.
 
 7. **Layout/policy enforcement in CI:**
    - The doc lint checker validates adapter folder layout under
@@ -189,39 +200,42 @@ discovers them and writes dispatchers into `.git/hooks/`.
 
 | Input | Description | Bounds |
 |---|---|---|
-| Markdown files | `*.md` in 4 docs directories | Any valid Markdown |
-| `LLM_API_KEY` | Generic LLM API key used by Cognee MCP/runtime | Required for Cognee MCP retrieval and accepted by local Cognee scripts |
-| `ANTHROPIC_API_KEY` | Anthropic API key for extraction | Required for default Cognee path and GraphRAG fallback when `LLM_API_KEY` is not set |
+| Markdown files | `*.md` + `*.ttl` in tracked docs roots | Any valid Markdown / Turtle |
+| `COGNEE_API_URL` | Base URL of `dkr-cgnee-api` (default Cognee path) | Required for cognee-sync; injected by `epos-secrets` |
+| `COGNEE_API_TOKEN` | Bearer token for `dkr-cgnee-api` | Optional (anonymous if absent) |
+| `LLM_API_KEY` / `ANTHROPIC_API_KEY` | Anthropic API key for extraction | Required on the API container (`dkr-cgnee-api`) for cognify; not consumed by cognee-sync directly |
 | `OPENAI_API_KEY` | OpenAI API key for embeddings | Required for GraphRAG fallback (`--graphrag`) only |
-| `NEO4J_URI` | Neo4j bolt URI | Default: `bolt://localhost:7688` |
-| `NEO4J_USERNAME` | Neo4j username | Default: `neo4j` |
-| `NEO4J_PASSWORD` | Neo4j password | Must be set in env |
+| `NEO4J_URI` / `NEO4J_USERNAME` / `NEO4J_PASSWORD` | Neo4j connection | Required for GraphRAG fallback only; not used on the default Cognee path |
 | `--graphrag` | Rebuild flag selecting GraphRAG fallback extraction path | Optional |
 
 ### Outputs
 
 | Output | Description |
 |---|---|
-| `instance/installed/06-spec-graph/graphrag/output/*.parquet` | Entity, Relationship, Community, TextUnit tables |
-| Neo4j graph | Fully imported knowledge graph |
+| Cognee embedded store on `dkr-cgnee-api` | Authoritative KG: Kuzu graph (`cognee_graph_ladybug`) + LanceDB vector indexes under `./data/cognee_system/databases/` |
+| `instance/installed/06-spec-graph/cognee/sync/.cognee-state.db` | SQLite state store: `file_path → (dataset_id, data_id, content_hash)` committed to source |
+| `instance/installed/06-spec-graph/graphrag/output/*.parquet` | Fallback only: Entity / Relationship / Community / TextUnit tables |
+| Neo4j graph | Fallback only: target of the opt-in GraphRAG import |
 | `instance/installed/06-spec-graph/.needs-rebuild` | Flag file set by post-commit hook |
 
 ---
 
 ## Dependencies
 
-| Dependency | Version | Role |
-|---|---|---|
-| Python | 3.10–3.12 | GraphRAG runtime |
-| `graphrag` (pip) | 3.0.9 | Indexing pipeline |
-| `cognee` (pip) | current | Optional ontology-grounded extraction path |
-| `neo4j` (pip) | 5.x | Neo4j Python driver |
-| `lancedb` (pip) | 0.24.3 | Vector store reader (transitively installed via graphrag) |
-| `pandas`, `pyarrow` (pip) | current | Parquet reading |
-| Neo4j Community Edition | ≥ 5.11 | Graph store + native vector indexes |
-| APOC plugin | compatible | Neo4j stored procedures |
-| Anthropic API | current | Text extraction inference |
-| OpenAI API | current | Embedding generation |
+| Dependency | Version | Role | Path |
+|---|---|---|---|
+| `dkr-cgnee-api` container | `cognee/cognee:main` + local Dockerfile | Hosts the authoritative KG; runs cognify | default |
+| `dkr-cgnee-mcp` container | `cognee/cognee-mcp:main` + `Dockerfile.mcp` | MCP/SSE surface in proxy mode → `dkr-cgnee-api` | default |
+| `cognee-sync` (uv project) | local — `instance/installed/06-spec-graph/cognee/sync/` | Incremental git-diff-driven sync CLI | default |
+| Anthropic API | current | LLM inference during cognify | default |
+| Python | 3.13 (cognee-sync); 3.10–3.12 (GraphRAG) | Runtime | default / fallback |
+| `graphrag` (pip) | 3.0.9 | Indexing pipeline | fallback only |
+| `neo4j` (pip) | 5.x | Neo4j Python driver | fallback only |
+| Neo4j Community Edition | ≥ 5.11 | Graph store + native vector indexes | fallback only |
+| APOC plugin | compatible | Neo4j stored procedures | fallback only |
+| OpenAI API | current | Embedding generation | fallback only |
+| `pandas`, `pyarrow` (pip) | current | Parquet reading | fallback only |
+| `lancedb` (pip) | 0.24.3 | Vector store reader (transitively via graphrag) | fallback only |
 
 ---
 
@@ -229,11 +243,12 @@ discovers them and writes dispatchers into `.git/hooks/`.
 
 | Bound | Value |
 |---|---|
-| Rebuild target | < 15 minutes for the current EposForge corpus |
-| Privacy (graph) | `local` — Neo4j data never leaves the operator's machine |
-| Privacy (inference) | `vendor-default` for public docs; use Ollama for private |
-| Incremental update | Not supported; full rebuild required |
-| Concurrent operators | Not designed for concurrent rebuild; serialize manually |
+| Sync target (default) | per-file via cognee-sync; cognify completes in seconds-to-minutes per touched file |
+| Rebuild target (fallback) | < 15 minutes full GraphRAG rebuild on the current EposForge corpus |
+| Privacy (graph) | `local` — cognee's embedded Kuzu/LanceDB store lives on the API container's volume and is never sent to a vendor (default path); Neo4j on operator's machine (fallback) |
+| Privacy (inference) | `vendor-default` for public docs; use Ollama or another local provider for private content |
+| Incremental update | Supported on the default path (cognee-sync); not supported by the GraphRAG fallback (full rebuild required) |
+| Concurrent operators | Bulk cognify is concurrency-fragile (SQLite contention); serialize bulk operations against `dkr-cgnee-api`. Per-file incremental updates are safe. |
 
 ---
 
@@ -254,14 +269,16 @@ from this spec without reading implementation code:
 
 | Partition | Input | Expected outcome |
 |---|---|---|
-| Happy path | All env vars set, Neo4j running, valid Markdown | Graph imported; exit 0 |
-| Missing extraction key | `ANTHROPIC_API_KEY` unset | cognee-sync exits 1; GraphRAG fallback `index.sh` exits 1 with error message |
-| Missing embeddings key | `OPENAI_API_KEY` unset | GraphRAG fallback `index.sh` exits 1 with error message (Cognee uses fastembed locally) |
-| Missing Neo4j vars | `NEO4J_PASSWORD` unset | GraphRAG fallback `import.sh` exits 1 with error message |
+| Happy path (default) | `dkr-cgnee-api` healthy, `COGNEE_API_URL` reachable, valid Markdown | cognee-sync uploads + cognifies; exit 0 |
+| Happy path (fallback) | All env vars set, Neo4j running, valid Markdown | GraphRAG indexes + imports; exit 0 |
+| Unreachable API | `dkr-cgnee-api` down or `COGNEE_API_URL` wrong | cognee-sync raises an HTTP error and exits non-zero |
+| Missing extraction key | `ANTHROPIC_API_KEY` unset on `dkr-cgnee-api` | cognify fails on the API container (logged); cognee-sync upload still succeeds but no KG nodes are created. GraphRAG fallback `index.sh` exits 1 with error message |
+| Missing embeddings key | `OPENAI_API_KEY` unset | No effect on default path (cognee uses its configured embedder). GraphRAG fallback `index.sh` exits 1 with error message |
+| Missing Neo4j vars | `NEO4J_PASSWORD` unset | No effect on default path. GraphRAG fallback `import.sh` exits 1 with error message |
 | No output dir | `instance/installed/06-spec-graph/graphrag/output/` absent | GraphRAG fallback `import.sh` exits 1 with error message |
-| No venv | `instance/installed/06-spec-graph/graphrag/.venv/` absent | Index/import scripts exit 1 with setup instructions |
-| Zero matching files | All docs dirs empty | GraphRAG produces empty Parquet; Neo4j graph has 0 entities |
-| Large corpus | > 500 Markdown files | Completes within `rebuild_target` (15 min) |
+| No venv | `instance/installed/06-spec-graph/graphrag/.venv/` absent | GraphRAG index/import scripts exit 1 with setup instructions |
+| Zero matching files | All docs dirs empty | cognee-sync no-ops; GraphRAG produces empty Parquet; Neo4j graph has 0 entities |
+| Large corpus | > 500 Markdown files | Default path: per-file incremental keeps each invocation fast. GraphRAG fallback completes within `rebuild_target` (15 min) |
 
 ---
 
