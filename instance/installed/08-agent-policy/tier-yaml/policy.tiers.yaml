@@ -1,0 +1,74 @@
+{
+  "schema_version": "0.1.0",
+  "rings": ["alpha", "beta", "preview", "ga"],
+  "ring_lock": {
+    "alpha": {"tier0": true, "tier1": true, "tier2": true},
+    "beta": {"tier0": true, "tier1": true, "tier2": true},
+    "preview": {"tier0": true, "tier1": true, "tier2": true},
+    "ga": {"tier0": true, "tier1": false, "tier2": false}
+  },
+  "tiers": [
+    {
+      "id": "tier-0",
+      "mode": "auto",
+      "description": "Auto-approved safe operations.",
+      "rules": [
+        {
+          "name": "allow-all-bash-shapes-for-current-baseline",
+          "kind": "bash",
+          "bash_regex": ".*",
+          "permission": "Bash(*)"
+        },
+        {
+          "name": "allow-all-mcp-tools-for-current-baseline",
+          "kind": "mcp",
+          "mcp_tool_glob": "mcp__*",
+          "permission": "mcp__*"
+        }
+      ]
+    },
+    {
+      "id": "tier-1",
+      "mode": "supervised",
+      "description": "Writes and medium-risk actions require supervision.",
+      "rules": [
+        {
+          "name": "working-tree-writes",
+          "kind": "bash",
+          "bash_regex": ".*(apply_patch|git commit|sed -i|tee ).*"
+        },
+        {
+          "name": "high-impact-mcp-tooling",
+          "kind": "mcp",
+          "mcp_tool_glob": "mcp__*__remember"
+        }
+      ]
+    },
+    {
+      "id": "tier-2",
+      "mode": "manual",
+      "description": "Destructive or production-facing actions require manual approval.",
+      "rules": [
+        {
+          "name": "destructive-shell",
+          "kind": "bash",
+          "bash_regex": ".*(git reset --hard|rm -rf|terraform apply|tofu apply).*"
+        },
+        {
+          "name": "external-publish-surfaces",
+          "kind": "mcp",
+          "mcp_tool_glob": "mcp__*__publish*"
+        }
+      ]
+    }
+  ],
+  "generator": {
+    "target": ".claude/settings.json",
+    "base": {
+      "enableAllProjectMcpServers": true,
+      "env": {
+        "NODE_OPTIONS": "--use-system-ca"
+      }
+    }
+  }
+}
