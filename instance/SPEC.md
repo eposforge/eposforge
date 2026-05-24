@@ -20,9 +20,10 @@ queryable knowledge graph. Cognee performs ontology-grounded extraction
 from all Markdown files in the docs directories and writes normalized
 entities and relationships into its embedded Kuzu graph + LanceDB
 vector store, hosted inside the `dkr-cgnee-api` container. Microsoft
-GraphRAG (which would target Neo4j) remains installed as an opt-in
-shelved fallback for full-rebuild extraction and community detection;
-it is not on the active path. Any MCP-compatible Dev Product (Gemini
+GraphRAG is retained only as an archived revival-only snapshot under
+`instance/installed/06-spec-graph/graphrag/`; it is not part of the
+active path and should not be used to infer current EposForge behavior.
+Any MCP-compatible Dev Product (Gemini
 CLI, Claude Code, Cursor, Goose, or equivalent) connects to the cognee
 MCP server (`dkr-cgnee-mcp`, which proxies to `dkr-cgnee-api`) and gains
 structured, graph-augmented memory of the full EposForge architecture
@@ -56,7 +57,7 @@ and [../01-architecture/02-components/06-spec-graph.md](../01-architecture/02-co
 | `component` | `06-spec-graph` |
 | `version` | `0.1.1` |
 | `privacy_posture` | `local` (embedded Kuzu/LanceDB store inside `dkr-cgnee-api`) / `vendor-default` (inference during indexing) |
-| `cost_hint` | free (embedded store) + metered (Anthropic API for indexing; OpenAI used only by the GraphRAG fallback) |
+| `cost_hint` | free (embedded store) + metered (Azure Foundry default for indexing; Anthropic/OpenAI remain selectable profiles) |
 | `capabilities` | ontology-grounded-extraction, entity-normalization, graph-query |
 | `invocation_surface` | `cognee-sync` CLI at `instance/installed/06-spec-graph/cognee/sync/` (incremental, HTTP to `dkr-cgnee-api`); GraphRAG opt-in fallback at `instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` |
 | `status` | `experimental` |
@@ -75,8 +76,8 @@ Single source of truth for installed adapter status tracked in this repository.
 |---|---|---|---|---|
 | `cognee-ontology-preprocessor` | `SPEC_GRAPH` | experimental | `epos-secrets uv run cognee-sync --added <files>` (see `cognee/sync/README.md`) | Default ontology-grounded extraction path (two containers proxy-mode, HTTP API, incremental). Stores KG in cognee's embedded Kuzu graph + LanceDB vector indexes on the `dkr-cgnee-api` volume. |
 | `cognee-sync` | `SPEC_GRAPH` | experimental | `epos-secrets uv run cognee-sync --added/--modified/--deleted <files>` | Incremental git-diff-driven sync CLI (Phases 0–5 complete). Drives `dkr-cgnee-api` over HTTP; per-file `add + cognify`. |
-| `microsoft-graphrag` | `SPEC_GRAPH` | shelved | `bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` | Opt-in full-rebuild extraction and import path. Writes to a separate Neo4j Community Edition instance. Not on the active path. |
-| `neo4j-ce` | `SPEC_GRAPH` | shelved | `instance/installed/06-spec-graph/graphrag/scripts/import.sh` + Neo4j MCP | Target query store for the shelved GraphRAG path only. Not used by the default cognee path. |
+| `microsoft-graphrag` | `SPEC_GRAPH` | shelved | `bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` | Archived GraphRAG snapshot retained only for possible revival. Not part of the active path. |
+| `neo4j-ce` | `SPEC_GRAPH` | shelved | `instance/installed/06-spec-graph/graphrag/scripts/import.sh` + Neo4j MCP | Archived GraphRAG target store only; not used by the active Cognee path. |
 | `file-based-backlog` | `BACKLOG` | implemented, experimental | `bash instance/installed/13-backlog/file-based-backlog/scripts/{new-issue,lint-backlog,sweep-resolved,aggregate}.sh` | Local markdown backlog adapter with cross-repo aggregation and archive indexing |
 
 Candidate adapters remain cataloged in
@@ -142,7 +143,7 @@ discovers them and writes dispatchers into `.git/hooks/`.
 
 ## Observable behavior
 
-1. **Trigger:** operator runs `epos-secrets uv run cognee-sync --added/--modified/--deleted <files>` (default Cognee incremental sync, from `instance/installed/06-spec-graph/cognee/sync/`), or — opt-in only — `bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` for the shelved GraphRAG full-rebuild fallback. CI may trigger cognee-sync via a scheduled post-receive job.
+1. **Trigger:** operator runs `epos-secrets uv run cognee-sync --added/--modified/--deleted <files>` (default Cognee incremental sync, from `instance/installed/06-spec-graph/cognee/sync/`), or — opt-in only — `bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` for the shelved GraphRAG full-rebuild fallback. CI may trigger cognee-sync via a scheduled post-receive job. At startup, cognee-sync validates routing profile; when `COGNEE_REQUIRE_AZURE_ROUTING=1`, non-Azure providers are rejected before any API calls.
 
 2. **Wipe stage (fallback only):**
    - The GraphRAG fallback's rebuild script clears Neo4j graph projection
@@ -155,8 +156,11 @@ discovers them and writes dispatchers into `.git/hooks/`.
    - Default path: cognee-sync `POST /api/v1/add`s each file to
      `dkr-cgnee-api`, then `POST /api/v1/cognify` runs ontology-grounded
      extraction (seeded by `00-vision/01-ontology.ttl`) and writes normalized
-     entities and relationships into cognee's embedded Kuzu graph + LanceDB
-     vector store.
+  entities and relationships into cognee's embedded Kuzu graph + LanceDB
+  vector store. Before `cognify`, cognee-sync runs the Component 10 budget
+  preflight gate; deny exits with status 4. After successful `cognify`,
+  cognee-sync records budget usage and emits a Component 11
+  `adapter.invoked` token-usage event.
    - Opt-in fallback path (`--graphrag`): GraphRAG reads all `*.md` files
      matching
      `^(00-vision|01-architecture|02-roadmap|03-research|instance/installed|instance/adrs)/.*\.md$`
@@ -203,6 +207,11 @@ discovers them and writes dispatchers into `.git/hooks/`.
 | Markdown files | `*.md` + `*.ttl` in tracked docs roots | Any valid Markdown / Turtle |
 | `COGNEE_API_URL` | Base URL of `dkr-cgnee-api` (default Cognee path) | Required for cognee-sync; injected by `epos-secrets` |
 | `COGNEE_API_TOKEN` | Bearer token for `dkr-cgnee-api` | Optional (anonymous if absent) |
+| `INFERENCE_PROVIDER` | Active provider profile (`azure-foundry`, `anthropic`, `openai`) | If `COGNEE_REQUIRE_AZURE_ROUTING=1`, must be `azure-foundry` |
+| `COGNEE_REQUIRE_AZURE_ROUTING` | Fail-closed routing guardrail for sync startup | Optional (`1` enforces Azure-only) |
+| `LLM_MODEL` / `EMBEDDING_MODEL` | Active completion/embedding deployment model names | For Azure profile, both must start with `azure/` |
+| `AZURE_API_BASE` / `AZURE_API_VERSION` | Azure Foundry endpoint/version for Azure profile validation | Required when Azure routing is selected/enforced |
+| `INFERENCE_BUDGET_ENFORCE` | Toggle for Component 10 budget preflight + usage accounting | Default enabled for cognify runs |
 | `LLM_API_KEY` / `ANTHROPIC_API_KEY` | Anthropic API key for extraction | Required on the API container (`dkr-cgnee-api`) for cognify; not consumed by cognee-sync directly |
 | `OPENAI_API_KEY` | OpenAI API key for embeddings | Required for GraphRAG fallback (`--graphrag`) only |
 | `NEO4J_URI` / `NEO4J_USERNAME` / `NEO4J_PASSWORD` | Neo4j connection | Required for GraphRAG fallback only; not used on the default Cognee path |
@@ -272,7 +281,8 @@ from this spec without reading implementation code:
 | Happy path (default) | `dkr-cgnee-api` healthy, `COGNEE_API_URL` reachable, valid Markdown | cognee-sync uploads + cognifies; exit 0 |
 | Happy path (fallback) | All env vars set, Neo4j running, valid Markdown | GraphRAG indexes + imports; exit 0 |
 | Unreachable API | `dkr-cgnee-api` down or `COGNEE_API_URL` wrong | cognee-sync raises an HTTP error and exits non-zero |
-| Missing extraction key | `ANTHROPIC_API_KEY` unset on `dkr-cgnee-api` | cognify fails on the API container (logged); cognee-sync upload still succeeds but no KG nodes are created. GraphRAG fallback `index.sh` exits 1 with error message |
+| Missing Azure route vars | `COGNEE_REQUIRE_AZURE_ROUTING=1` with missing/invalid Azure routing env | cognee-sync exits non-zero before API calls, with validation error |
+| Missing extraction key | active provider key unset on `dkr-cgnee-api` | cognify fails on the API container (logged); cognee-sync upload still succeeds but no KG nodes are created. GraphRAG fallback `index.sh` exits 1 with error message |
 | Missing embeddings key | `OPENAI_API_KEY` unset | No effect on default path (cognee uses its configured embedder). GraphRAG fallback `index.sh` exits 1 with error message |
 | Missing Neo4j vars | `NEO4J_PASSWORD` unset | No effect on default path. GraphRAG fallback `import.sh` exits 1 with error message |
 | No output dir | `instance/installed/06-spec-graph/graphrag/output/` absent | GraphRAG fallback `import.sh` exits 1 with error message |

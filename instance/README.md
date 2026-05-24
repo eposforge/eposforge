@@ -8,9 +8,10 @@ source_of_truth: yes
 # instance/ — EposForge Self-Host Layer
 
 This directory is the self-host layer for this repository's dark factory.
-It contains the concrete adapter choices, scripts, GraphRAG pipeline, and
-repo-instance ADRs that make THIS repo work. It is illustrative reference
-implementation material, not normative guidance for other adopters.
+It contains the concrete adapter choices, scripts, and repo-instance ADRs
+that make THIS repo work. The `graphrag/` subtree is an archived snapshot
+retained only in case GraphRAG is ever revived; it is not part of the active
+EposForge implementation or guidance.
 
 ## Slot fillers (this repo)
 
@@ -21,7 +22,7 @@ implementation material, not normative guidance for other adopters.
 | 03 Dev Product | filled | Claude Code / Copilot / Gemini CLI | [installed/03-dev-product/](./installed/03-dev-product/) | [../01-architecture/02-components/03-dev-product.md](../01-architecture/02-components/03-dev-product.md) |
 | 04 Router | unfilled | operator-as-router | _none_ | [../01-architecture/02-components/04-router.md](../01-architecture/02-components/04-router.md) |
 | 05 Tool Transport | filled | MCP server set | [installed/05-tool-transport/mcp-stdio-and-http/mcp-stdio-and-http.md](./installed/05-tool-transport/mcp-stdio-and-http/mcp-stdio-and-http.md) | [../01-architecture/02-components/05-tool-transport.md](../01-architecture/02-components/05-tool-transport.md) |
-| 06 Spec Graph | filled | Cognee (embedded Kuzu + LanceDB; GraphRAG/Neo4j installed as shelved fallback) | [SPEC.md](./SPEC.md) · [installed/06-spec-graph/](./installed/06-spec-graph/) | [../01-architecture/02-components/06-spec-graph.md](../01-architecture/02-components/06-spec-graph.md) |
+| 06 Spec Graph | filled | Cognee (embedded Kuzu + LanceDB; GraphRAG/Neo4j archived snapshot retained only for possible revival) | [SPEC.md](./SPEC.md) · [installed/06-spec-graph/](./installed/06-spec-graph/) | [../01-architecture/02-components/06-spec-graph.md](../01-architecture/02-components/06-spec-graph.md) |
 | 07 Execution Sandbox | partial | Windows ACL user | [installed/07-execution-sandbox/windows-acl-user/windows-acl-user.md](./installed/07-execution-sandbox/windows-acl-user/windows-acl-user.md) | [../01-architecture/02-components/07-execution-sandbox.md](../01-architecture/02-components/07-execution-sandbox.md) |
 | 08 Agent Policy | filled | tier-yaml | [installed/08-agent-policy/tier-yaml/tier-yaml.md](./installed/08-agent-policy/tier-yaml/tier-yaml.md) | [../01-architecture/02-components/08-agent-policy.md](../01-architecture/02-components/08-agent-policy.md) |
 | 09 Source Control / CI | filled | GitHub + GitHub Actions | [installed/09-source-control-ci/github-and-actions/github-and-actions.md](./installed/09-source-control-ci/github-and-actions/github-and-actions.md) | [../01-architecture/02-components/09-source-control-ci.md](../01-architecture/02-components/09-source-control-ci.md) |

@@ -106,6 +106,13 @@ Linux equivalent — same invocations with forward slashes.
 | `COGNEE_TLS_VERIFY` | `true` | `false` or path to CA bundle |
 | `COGNEE_DATASET_NAME` | `eposforge-sync` | Dataset all tracked files go into |
 | `COGNEE_STATE_DB` | `sync/.cognee-state.db` | Override the state DB path |
+| `INFERENCE_PROVIDER` | unset | If `azure-foundry`, validates Azure routing profile before sync |
+| `COGNEE_REQUIRE_AZURE_ROUTING` | `0` | If `1`, refuse non-Azure provider startup |
+| `INFERENCE_BUDGET_ENFORCE` | `1` | Run budget gate before cognify |
+| `INFERENCE_BUDGET_REPO_KEY` | repo dir name | Budget repo key passed to gate scripts |
+| `INFERENCE_BUDGET_REQUESTED_TOKENS` | derived estimate | Token request estimate if CLI arg omitted |
+| `INFERENCE_BUDGET_TOKENS_PER_FILE` | `4000` | Per-file estimate used when deriving requested tokens |
+| `INFERENCE_EMIT_USAGE_EVENTS` | `1` | Emit Component 11 token usage event after cognify |
 
 ---
 
@@ -127,6 +134,14 @@ python ..\..\..\12-secrets-key-management\bin\epos-secrets `
 
 Expected: 18 pass, 1 xfail (`test_updated_content_evicts_old_content` —
 cognee accumulates on re-add; update uses explicit delete+add by design).
+
+## Runtime enforcement notes
+
+- Azure routing validation runs at startup when `INFERENCE_PROVIDER=azure-foundry`
+    or `COGNEE_REQUIRE_AZURE_ROUTING=1`.
+- Budget gate runs before `cognify`; `deny` exits with status code 4.
+- After successful `cognify`, the CLI records budget usage and emits an
+    `adapter.invoked` token-usage event via Component 11 sink scripts.
 
 ---
 
