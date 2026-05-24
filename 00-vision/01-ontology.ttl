@@ -186,6 +186,72 @@ ef:Migration rdf:type owl:Class ;
     rdfs:label "Migration" ;
     rdfs:comment "A named, in-flight transition between two coexisting architectural shapes (legacy and target) within an instance, with a stated completion commitment." .
 
+### Knowledge-Tree Node Kinds
+
+ef:Group rdf:type owl:Class ;
+    rdfs:label "Group" ;
+    rdfs:comment "An organizational sub-container in the canonical knowledge tree. Provides grouping for related items but is not load-bearing; the parent remains valid without it. Examples: ai systems, standards, data architecture, value streams." .
+
+ef:Concept rdf:type owl:Class ;
+    rdfs:label "Concept" ;
+    rdfs:comment "A defined term: a word that names something the factory deals with and carries a canonical adopted definition. A concept is a noun, not a how-to. Not itself implemented; a component adapter may enforce or realize it. Has a lifecycle distinct from components. Authoritative definition lives in this TTL. Examples: living spec, release rings, ontology, agent policy, naming conventions." .
+
+ef:Guidance rdf:type owl:Class ;
+    rdfs:label "Guidance" ;
+    rdfs:comment "A how-to document: an essay or playbook that helps an agent or human make a decision or carry out a methodology. Not a defined term and not enforced — it is consulted and applied. Where a Concept is a word, a Guidance node is the prose that tells you how to choose or act. Examples: language choice guidance, runtime target guidance, adoption strategy." .
+
+ef:Tenet rdf:type owl:Class ;
+    rdfs:label "Tenet" ;
+    rdfs:comment "A governing rule or principle — doctrine the factory operates under. Normative: do this / choose this way. Distinct from ef:Concept (a term) and from ef:Guidance (a how-to essay). The constitution is the set of Tenets. Examples: serve adopters by grounding their agents, plan where known iterate where unknown, one canonical tree many projected views." .
+
+### Node Kind Discriminator
+
+ef:NodeKind rdf:type owl:Class ;
+    rdfs:label "Node Kind" ;
+    rdfs:comment "A discriminator classifying what a node IS in the canonical knowledge tree. Kind is structural identity, not file type or representation. Allowed values: pillar, group, component, concept, guidance, tenet." .
+
+ef:NodeKindPillar rdf:type ef:NodeKind ;
+    rdfs:label "pillar" ;
+    rdfs:comment "Load-bearing structural division. Essential to the meaning of its parent; the parent could not be what it is without each pillar." .
+
+ef:NodeKindGroup rdf:type ef:NodeKind ;
+    rdfs:label "group" ;
+    rdfs:comment "Organizational sub-container. Provides grouping for related items but is not itself load-bearing." .
+
+ef:NodeKindComponent rdf:type ef:NodeKind ;
+    rdfs:label "component" ;
+    rdfs:comment "Operational subsystem of the factory. Filled by one or more Adapters via the Adapter Pattern." .
+
+ef:NodeKindConcept rdf:type ef:NodeKind ;
+    rdfs:label "concept" ;
+    rdfs:comment "A defined term carrying a canonical adopted definition. The ontology TTL is the authoritative home." .
+
+ef:NodeKindGuidance rdf:type ef:NodeKind ;
+    rdfs:label "guidance" ;
+    rdfs:comment "A how-to document: essay or playbook consulted and applied by agents and humans." .
+
+ef:NodeKindTenet rdf:type ef:NodeKind ;
+    rdfs:label "tenet" ;
+    rdfs:comment "A governing rule or principle — doctrine the factory operates under. Normative." .
+
+### Lifecycle Status
+
+ef:LifecycleStatus rdf:type owl:Class ;
+    rdfs:label "Lifecycle Status" ;
+    rdfs:comment "The lifecycle state of a Concept, Guidance, or Tenet node. Distinct from ef:AdapterStatus which governs Adapters." .
+
+ef:StatusProposed rdf:type ef:LifecycleStatus ;
+    rdfs:label "proposed" ;
+    rdfs:comment "Term or rule is under consideration; not yet adopted for use across the factory." .
+
+ef:StatusAdopted rdf:type ef:LifecycleStatus ;
+    rdfs:label "adopted" ;
+    rdfs:comment "Term or rule is accepted and in active use across the factory." .
+
+ef:StatusRetired rdf:type ef:LifecycleStatus ;
+    rdfs:label "retired" ;
+    rdfs:comment "Term or rule was adopted but is no longer in use. Retained for historical reference." .
+
 ### Object Properties (Relationships)
 
 ef:hasComponent rdf:type owl:ObjectProperty ;
@@ -261,6 +327,16 @@ ef:usesAdapterPattern rdf:type owl:ObjectProperty ;
     rdfs:domain ef:Component ;
     rdfs:range ef:AdapterPattern .
 
+ef:kind rdf:type owl:ObjectProperty ;
+    rdfs:label "KIND" ;
+    rdfs:range ef:NodeKind ;
+    rdfs:comment "Discriminator declaring a node's kind in the canonical knowledge tree (pillar|group|component|concept|guidance|tenet)." .
+
+ef:lifecycleStatus rdf:type owl:ObjectProperty ;
+    rdfs:label "LIFECYCLE_STATUS" ;
+    rdfs:range ef:LifecycleStatus ;
+    rdfs:comment "Lifecycle status of a Concept, Guidance, or Tenet (proposed|adopted|retired). Distinct from ef:hasStatus which governs Adapters." .
+
 ### Datatype Properties (Adapter Metadata)
 
 ef:adapterName rdf:type owl:DatatypeProperty ;
@@ -297,6 +373,32 @@ ef:invocationSurface rdf:type owl:DatatypeProperty ;
     rdfs:label "invocation_surface" ;
     rdfs:comment "How the Adapter is invoked: CLI, HTTP, library, process, etc." ;
     rdfs:domain ef:Adapter ;
+    rdfs:range xsd:string .
+
+### Datatype Properties (Concept / Guidance / Tenet Schemas)
+
+ef:adoptedDefinition rdf:type owl:DatatypeProperty ;
+    rdfs:label "adopted_definition" ;
+    rdfs:comment "The canonical one-sentence definition of a Concept, as adopted into the ontology. This is the definition agents and adopters rely on." ;
+    rdfs:domain ef:Concept ;
+    rdfs:range xsd:string .
+
+ef:statement rdf:type owl:DatatypeProperty ;
+    rdfs:label "statement" ;
+    rdfs:comment "The normative statement of a Tenet, expressed as a short imperative or declarative doctrine." ;
+    rdfs:domain ef:Tenet ;
+    rdfs:range xsd:string .
+
+ef:variants rdf:type owl:DatatypeProperty ;
+    rdfs:label "variants" ;
+    rdfs:comment "Alternative phrasings or related names for a Concept (multi-valued string)." ;
+    rdfs:domain ef:Concept ;
+    rdfs:range xsd:string .
+
+ef:relationshipEdge rdf:type owl:DatatypeProperty ;
+    rdfs:label "relationship_edge" ;
+    rdfs:comment "A typed relationship edge expression for a Concept, expressed as a string in the form KEYWORD:target (e.g. IMPLEMENTS:ef:LivingSpecAdapter). Multi-valued." ;
+    rdfs:domain ef:Concept ;
     rdfs:range xsd:string .
 
 ### Individuals (The 14 Core Components)

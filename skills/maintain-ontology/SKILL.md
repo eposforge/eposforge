@@ -5,7 +5,7 @@ description: Keeps 00-vision/01-ontology.ttl well-formed, internally consistent,
 
 Maintains `00-vision/01-ontology.ttl` — the EposForge OWL ontology that grounds Cognee entity extraction for the Spec Graph.
 
-This skill implements the editorial workflow defined by `04-standards/02-vocabulary/vocabulary.md`.
+This skill implements the editorial workflow for `00-vision/01-ontology.ttl`, which is itself the canonical vocabulary source. `04-standards/02-vocabulary/vocabulary.md` governs the normative policy (reserved entity types, keyword alignment) and points back to the TTL as source of truth. When vocabulary content and vocabulary policy diverge, the TTL wins for class/property definitions; `vocabulary.md` wins for conformance policy.
 
 Primary purpose: keep the ontology internally coherent and aligned with installed adapter cards so entities extracted by Cognee remain anchored to stable EposForge IRIs. This enables external EposForge consumers to point their agents at the EposForge Cognee MCP server and use graph-backed guidance to automate dark-factory design and creation.
 
@@ -55,6 +55,7 @@ Walk the spec and adapter corpus in order, looking for concepts not yet modeled 
 | `04-standards/**/*.md` | Standard titles, relationship keywords | `ef:Standard` individuals |
 | `instance/installed/**/*.md` | Adapter status/capabilities and slot mapping | `ef:Adapter` model alignment |
 | `AGENTS.md` | RELATIONSHIP KEYWORDS in caps | Object properties |
+| `.scratchpad/knowledge-tree.txt` | Node kind tags (`[concept]`, `[guidance]`, `[tenet]`, `[group]`) | `ef:Concept`, `ef:Guidance`, `ef:Tenet`, `ef:Group` individuals |
 
 **Relationship keywords to detect (from AGENTS.md):**
 
@@ -65,7 +66,9 @@ Walk the spec and adapter corpus in order, looking for concepts not yet modeled 
 - `IMPLEMENTS`, "implements" -> `ef:implements`
 - `LEGACY_SHAPE_OF`, `TARGET_SHAPE_OF` -> `ef:legacyShapeOf`, `ef:targetShapeOf`
 - `HAS_COMPONENT` -> `ef:hasComponent`
-- `HAS_STATUS` -> `ef:hasStatus`
+- `HAS_STATUS` -> `ef:hasStatus` (Adapters only)
+- `KIND` -> `ef:kind` (node kind discriminator: pillar|group|component|concept|guidance|tenet)
+- `LIFECYCLE_STATUS` -> `ef:lifecycleStatus` (Concept/Guidance/Tenet only: proposed|adopted|retired)
 
 The `gap report` is the set of concepts and relationships found in the corpus but absent from the TTL.
 
@@ -107,8 +110,11 @@ ef:MyThing rdf:type ef:MyClass ;
 **Placement rules:**
 - New classes -> add under `### Classes`, in alphabetical order within logical groupings
 - New properties -> add under `### Object Properties (Relationships)`
-- New component individuals -> add under `### Individuals (The N Core Components)`, update the count in the heading
+- New component individuals -> add under `### Individuals (The 14 Core Components)`, update the count in the heading if adding
 - New status individuals -> add under `### Adapter Status Individuals`
+- New node kind individuals -> add under `### Node Kind Discriminator`
+- New lifecycle status individuals -> add under `### Lifecycle Status`
+- New Concept/Guidance/Tenet individuals -> add under a new `### Knowledge-Tree Individuals` section before the `### Adapter Status Individuals` section
 
 After editing, verify the file is syntactically valid Turtle (no unclosed blocks, every statement ends with `.`).
 
