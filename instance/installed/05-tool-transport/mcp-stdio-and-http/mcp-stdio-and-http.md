@@ -44,6 +44,9 @@ source_of_truth: yes
 
 ## Installed server set
 
+Self-consumption and adopter onboarding steps for Cognee MCP are documented in
+[cognee-mcp-self-consume-runbook.md](./cognee-mcp-self-consume-runbook.md).
+
 | Server | Transport | Capability set | Notes |
 |---|---|---|---|
 | `cognee` | `stdio` (loopback) | `graph-query`, `memory` | Local Cognee MCP service; external LLM API calls via env keys |
