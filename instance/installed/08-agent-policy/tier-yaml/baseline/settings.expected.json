@@ -1,0 +1,12 @@
+{
+  "enableAllProjectMcpServers": true,
+  "env": {
+    "NODE_OPTIONS": "--use-system-ca"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "mcp__*"
+    ]
+  }
+}
