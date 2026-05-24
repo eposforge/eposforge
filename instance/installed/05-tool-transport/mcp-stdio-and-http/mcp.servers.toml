@@ -11,7 +11,7 @@ schema_version = "1"
 [[server]]
 name         = "cognee"
 transport    = "sse"
-url          = "https://cognee-mcp.grace.lan/sse"
+url          = "https://<your-cognee-mcp-host>/sse"
 
 [[server]]
 name         = "github"
