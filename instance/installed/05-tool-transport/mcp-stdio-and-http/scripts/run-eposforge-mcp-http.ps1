@@ -1,50 +1,79 @@
 param(
-    [string]$AnthropicApiKey,
-    [string]$Neo4jUri,
-    [string]$Neo4jUsername,
-    [string]$Neo4jPassword
+    [string]$AzureApiKey,
+    [string]$AnthropicApiKey
 )
 # Recommended invocation (secrets resolved automatically):
 #   python instance/installed/12-secrets-key-management/bin/epos-secrets -- pwsh instance/installed/05-tool-transport/mcp-stdio-and-http/scripts/run-eposforge-mcp-http.ps1
 
 $ErrorActionPreference = "Stop"
 
+if (-not $env:INFERENCE_PROVIDER) {
+    $env:INFERENCE_PROVIDER = "azure-foundry"
+}
+
+if (-not $env:COGNEE_REQUIRE_AZURE_ROUTING) {
+    $env:COGNEE_REQUIRE_AZURE_ROUTING = "1"
+}
+
 if (-not $AnthropicApiKey) {
     $AnthropicApiKey = $env:ANTHROPIC_API_KEY
 }
 
-if (-not $Neo4jUri) {
-    $Neo4jUri = $env:NEO4J_URI
+if (-not $AzureApiKey) {
+    $AzureApiKey = $env:AZURE_API_KEY
 }
 
-if (-not $Neo4jUsername) {
-    $Neo4jUsername = $env:NEO4J_USERNAME
-}
-
-if (-not $Neo4jPassword) {
-    $Neo4jPassword = $env:NEO4J_PASSWORD
+if (-not $AzureApiKey) {
+    $AzureApiKey = $env:OPENAI_API_KEY
 }
 
 $missingSettings = @()
 
-if (-not $AnthropicApiKey) {
+$provider = $env:INFERENCE_PROVIDER
+$requireAzure = ($env:COGNEE_REQUIRE_AZURE_ROUTING -eq "1")
+
+if ($requireAzure -and $provider -ne "azure-foundry") {
+    $missingSettings += "INFERENCE_PROVIDER=azure-foundry (required by COGNEE_REQUIRE_AZURE_ROUTING=1)"
+}
+
+if ($provider -eq "azure-foundry") {
+    if (-not $env:LLM_MODEL) {
+        $env:LLM_MODEL = "azure/mdl-openai-gpt41mini-std-eus2-r1"
+    }
+    if (-not $env:EMBEDDING_MODEL) {
+        $env:EMBEDDING_MODEL = "azure/mdl-openai-textembed3large-std-eus2-r1"
+    }
+    if (-not $env:AZURE_API_VERSION) {
+        $env:AZURE_API_VERSION = "2024-10-01"
+    }
+    if (-not $env:LLM_PROVIDER) {
+        $env:LLM_PROVIDER = "openai"
+    }
+    if (-not $env:EMBEDDING_PROVIDER) {
+        $env:EMBEDDING_PROVIDER = "openai"
+    }
+
+    if (-not $env:AZURE_API_BASE) {
+        $missingSettings += "AZURE_API_BASE"
+    }
+    if (-not $AzureApiKey) {
+        $missingSettings += "AZURE_API_KEY (or OPENAI_API_KEY fallback) or -AzureApiKey"
+    }
+    if (-not $env:AZURE_API_VERSION) {
+        $missingSettings += "AZURE_API_VERSION"
+    }
+    if ($env:LLM_MODEL -notlike "azure/*") {
+        $missingSettings += "LLM_MODEL must start with azure/ when INFERENCE_PROVIDER=azure-foundry"
+    }
+    if ($env:EMBEDDING_MODEL -notlike "azure/*") {
+        $missingSettings += "EMBEDDING_MODEL must start with azure/ when INFERENCE_PROVIDER=azure-foundry"
+    }
+} elseif (-not $AnthropicApiKey) {
     $missingSettings += "ANTHROPIC_API_KEY or -AnthropicApiKey"
 }
 
-if (-not $Neo4jUri) {
-    $missingSettings += "NEO4J_URI or -Neo4jUri"
-}
-
-if (-not $Neo4jUsername) {
-    $missingSettings += "NEO4J_USERNAME or -Neo4jUsername"
-}
-
-if (-not $Neo4jPassword) {
-    $missingSettings += "NEO4J_PASSWORD or -Neo4jPassword"
-}
-
 if ($missingSettings.Count -gt 0) {
-    Write-Error ("Missing required Neo4j connection settings: {0}" -f ($missingSettings -join ", "))
+    Write-Error ("Missing required settings: {0}" -f ($missingSettings -join ", "))
     exit 1
 }
 
@@ -55,9 +84,7 @@ if (-not $uvx) {
 }
 
 $env:ANTHROPIC_API_KEY = $AnthropicApiKey
-$env:NEO4J_URI = $Neo4jUri
-$env:NEO4J_USERNAME = $Neo4jUsername
-$env:NEO4J_PASSWORD = $Neo4jPassword
+$env:AZURE_API_KEY = $AzureApiKey
 
 # Point Cognee at the same SQLite metadata DB used during indexing.
 # The indexing script (cognee.py) sets system_root_directory to this path;

@@ -6,7 +6,7 @@ This tests the real stdio JSON-RPC path without tying up the VS Code MCP
 connection.  Run it any time to validate the server without agent intervention.
 
 Usage:
-    uv run --with "cognee[fastembed]" --with cognee-mcp --with mcp --with openai --with anthropic --with neo4j \
+    uv run --with "cognee[fastembed]" --with cognee-mcp --with mcp --with openai --with anthropic \
         python instance/installed/05-tool-transport/mcp-stdio-and-http/scripts/cognee-mcp-protocol-test.py
 """
 import asyncio

@@ -44,19 +44,19 @@ that does not yet have a higher-fidelity adapter configured.
 
 | Field | Value |
 |---|---|
-| `env_bindings` | `LLM_MODEL`, `EPOS_ENV` |
+| `env_bindings` | `LLM_MODEL`, `EMBEDDING_MODEL`, `INFERENCE_PROVIDER`, `COGNEE_REQUIRE_AZURE_ROUTING`, `AZURE_API_BASE`, `AZURE_API_VERSION`, `EPOS_ENV` |
 | `manifest_file` | `secrets.toml` (this directory) |
 | `resolver_note` | `epos-secrets` resolver reads this manifest; env-var entries are passthrough from the calling process environment |
 
 ## Purpose
 
 This adapter declares env-var-backed configuration that is:
-- Not sensitive (e.g., `LLM_MODEL`, `EPOS_ENV`) — but is tracked in the manifest so the
+- Not sensitive (e.g., `LLM_MODEL`, `INFERENCE_PROVIDER`, `AZURE_API_BASE`, `EPOS_ENV`) — but is tracked in the manifest so the
   resolver has a canonical record of every named entry.
 - Used as a bootstrap fallback when the `sops-age` adapter cannot be initialized (e.g.,
   on a fresh developer machine before age keys are distributed).
 
-Sensitive secrets (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `NEO4J_PASSWORD`, etc.) belong
+Sensitive secrets (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `AZURE_API_KEY`, `NEO4J_PASSWORD`, etc.) belong
 in the `sops-age` adapter. This adapter does NOT own those entries; any attempt to declare
 them here conflicts with `sops-age` and will cause the resolver to fail loudly on collision.
 
