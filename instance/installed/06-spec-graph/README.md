@@ -1,216 +1,64 @@
 ---
-adapter: cognee-sync
-status: active
+component: 06-spec-graph
+status: filled
 ---
 
-# GraphRAG workspace — EposForge Spec Graph (installed fallback)
+# Component 06 — Spec Graph (this instance)
 
-This directory is the Microsoft GraphRAG project retained as an
-installed fallback adapter for Component 6 (Spec Graph). The default
-path now runs Cognee-first extraction; use this GraphRAG workspace only
-for explicit fallback runs.
+This directory is the EposForge repo's concrete implementation of
+Component 6 (Spec Graph). Two adapters are installed here; one is on the
+active path, the other is a shelved opt-in fallback.
 
-See [03-research/01-architecture/02-components/06-spec-graph/graphrag-neo4j-integration.md](../../../03-research/01-architecture/02-components/06-spec-graph/graphrag-neo4j-integration.md)
-for the full architecture and setup walkthrough.
+| Adapter | Status | Where | Backend | Notes |
+|---|---|---|---|---|
+| `cognee-ontology-preprocessor` | **active (default)** | [`./cognee/`](./cognee/) | Cognee's embedded Kuzu graph + LanceDB vector store inside `dkr-cgnee-api` | Ontology-grounded extraction; per-file incremental sync via `cognee-sync` |
+| `graphrag` | shelved fallback | [`./graphrag/`](./graphrag/) | Microsoft GraphRAG → separate Neo4j Community Edition | Full nuke-and-reproject only; not on the active path |
 
----
-
-## Quick start
-
-```bash
-# 1. Create and activate a Python virtual environment (Python 3.11–3.13)
-python -m venv .venv
-source .venv/bin/activate        # Linux / macOS
-# .venv\Scripts\activate         # Windows
-
-# 2. Install dependencies (pinned to tested version)
-pip install 'graphrag==3.0.9' neo4j pandas pyarrow lancedb
-
-# 3. One-time init: generates default prompts in prompts/
-#    The custom prompts already in prompts/ override the defaults.
-#    --force is required in GraphRAG 3.x to generate the new config layout.
-graphrag init --root . --force
-
-# 4. Set your API keys
-export ANTHROPIC_API_KEY=your-anthropic-key
-export NEO4J_URI=bolt://localhost:7688  # host port mapped from container's 7687
-export NEO4J_USERNAME=neo4j
-export NEO4J_PASSWORD=your-neo4j-password
-
-# Alternative: use Gemini for both completion and embeddings by
-# uncommenting the Gemini blocks in settings.yaml and setting:
-# export GEMINI_API_KEY=your-gemini-key
-
-# 5. Run the GraphRAG fallback path explicitly
-cd ../../..                         # repo root
-bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh
-```
-
-> **Note:** The first index run creates `output/lancedb/` (the vector
-> store). This directory is gitignored and will be recreated on the next
-> rebuild if deleted.
+Component slot contract: [`../../../01-architecture/02-components/06-spec-graph.md`](../../../01-architecture/02-components/06-spec-graph.md).
+Repo-instance Living Spec: [`../../SPEC.md`](../../SPEC.md).
 
 ---
 
-## Requirements
+## Default path (cognee)
 
-| Requirement | Version | Notes |
-|---|---|---|
-| Neo4j Community Edition | **≥ 5.11** | Required for native vector indexes |
-| APOC plugin | compatible | Required; already used for dynamic rels |
-| OpenAI API key | current | For `text-embedding-3-small` (1536 dims) |
-| `neo4j-genai-plugin` | ≥ 5.18 only | **Optional.** Enables `genai.vector.encode` for in-Cypher query embedding. Not bundled with CE — install separately if needed. |
+Active ingestion runs through `cognee-sync` against the
+`dkr-cgnee-api` container. The MCP surface (`dkr-cgnee-mcp`) runs in
+proxy mode so Claude Code / Gemini CLI / any MCP-compatible Dev
+Product reads and writes the same KG.
 
----
+- Living Spec: [`./cognee/cognee.md`](./cognee/cognee.md)
+- CLI: [`./cognee/sync/`](./cognee/sync/) — `cognee-sync --added / --modified / --deleted <files>`
+- Quickstart and invocation: [`./cognee/sync/README.md`](./cognee/sync/README.md)
+- Deployment topology (two containers, proxy mode): see the
+  "Deployment topology" section in `cognee.md`.
 
-## Hybrid graph + vector queries
-
-After a rebuild, Neo4j holds three vector indexes (`entity_embedding`,
-`text_unit_embedding`, `community_report_embedding`). Any MCP-connected
-Dev Product can issue hybrid Cypher that combines semantic similarity
-with structural graph traversal in a single `read-cypher` call.
-
-### Primary pattern — client-side embedding (all Neo4j CE ≥ 5.11)
-
-Embed the query string with the OpenAI API (or any compatible client)
-and pass the vector as a `$query_vec` parameter:
-
-```cypher
-// Example 1: Find ADAPTERs semantically near a topic that fulfill a slot
-CALL db.index.vector.queryNodes('entity_embedding', 25, $query_vec)
-YIELD node AS candidate, score
-WHERE candidate.type = 'ADAPTER'
-  AND EXISTS {
-    MATCH (candidate)-[:FULFILLS_SLOT]->(slot:Entity {title: 'AUDIT_OBSERVABILITY'})
-  }
-RETURN candidate.title, score
-ORDER BY score DESC LIMIT 5;
-```
-
-```cypher
-// Example 2: Find spec passages (TextUnits) near a topic, then jump to
-// the entities that appear in those passages.
-CALL db.index.vector.queryNodes('text_unit_embedding', 10, $query_vec)
-YIELD node AS tu, score
-MATCH (e:Entity)-[:APPEARS_IN]->(tu)
-RETURN DISTINCT e.title, e.type, score
-ORDER BY score DESC LIMIT 10;
-```
-
-```cypher
-// Example 3: High-level synthesis — find community reports near a topic
-// and return their summaries for broad architectural context.
-CALL db.index.vector.queryNodes('community_report_embedding', 5, $query_vec)
-YIELD node AS report, score
-RETURN report.title, report.summary, score
-ORDER BY score DESC;
-```
-
-### Optional pattern — in-Cypher embedding (Neo4j ≥ 5.18 + `neo4j-genai-plugin`)
-
-> **Prerequisite:** the `neo4j-genai-plugin` must be installed on the
-> Neo4j instance. It is **not bundled with Community Edition**. Without
-> it, `genai.vector.encode` throws "unknown function" even on ≥ 5.18.
-> Use the client-side pattern above on standard CE installs.
-
-```cypher
-// Same as Example 1 but embedding happens inside the Cypher query.
-WITH genai.vector.encode(
-  'compliance-grade audit logging',
-  'OpenAI',
-  {token: $openAiKey, model: 'text-embedding-3-small'}
-) AS query_vec
-CALL db.index.vector.queryNodes('entity_embedding', 25, query_vec)
-YIELD node AS candidate, score
-WHERE candidate.type = 'ADAPTER'
-  AND EXISTS {
-    MATCH (candidate)-[:FULFILLS_SLOT]->(slot:Entity {title: 'AUDIT_OBSERVABILITY'})
-  }
-RETURN candidate.title, score
-ORDER BY score DESC LIMIT 5;
-```
+Typical workflow: edit Markdown, commit; the
+`scripts/hooks/post-commit` fragment flags
+`./.needs-rebuild`; operator runs `cognee-sync` with the git diff;
+cognee-sync uploads changed files and triggers cognify; the KG is
+queryable immediately via the MCP `recall` tool.
 
 ---
 
-## Verification
+## Shelved fallback (graphrag)
 
-After a full rebuild (`bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh`), confirm
-the vector indexes are online and fully populated:
+Full-rebuild path retained for one-off bulk re-extractions or for
+cross-checking the cognee output against a different extractor.
+Requires its own Neo4j instance and OpenAI embeddings.
 
-```bash
-cypher-shell -u neo4j -p "$NEO4J_PASSWORD" \
-  "SHOW VECTOR INDEXES YIELD name, state, populationPercent;"
-```
+- Living Spec: [`./graphrag/graphrag.md`](./graphrag/graphrag.md)
+- Setup & Cypher query patterns: [`./graphrag/README.md`](./graphrag/README.md)
+- Invocation: `bash ./graphrag/scripts/rebuild.sh`
 
-Expected output: three rows (`entity_embedding`, `text_unit_embedding`,
-`community_report_embedding`), each with `state=ONLINE` and
-`populationPercent=100`.
-
-Confirm embedding counts in Cypher:
-
-```cypher
-MATCH (e:Entity) WHERE e.embedding IS NOT NULL RETURN count(e);
-MATCH (t:TextUnit) WHERE t.embedding IS NOT NULL RETURN count(t);
-MATCH (r:CommunityReport) WHERE r.embedding IS NOT NULL RETURN count(r);
-```
-
-Each count should equal the total node count for that label.
+The fallback writes into a **separate** Neo4j store. It does not touch
+the cognee KG.
 
 ---
 
-## Files
+## Shared bits
 
-| File / Dir | Purpose |
-|---|---|
-| `settings.yaml` | GraphRAG project configuration |
-| `prompts/` | Custom entity/relationship extraction prompts |
-| `output/` | Generated Parquet files (gitignored) |
-| `cache/` | GraphRAG run cache (gitignored) |
-
----
-
-## Privacy note
-
-GraphRAG sends text chunks to the inference backend for extraction.
-This repo's content is public, so `vendor-default` posture is
-acceptable. For private Living Spec content in a factory instance,
-use a `vendor-no-training` API key or substitute Ollama as the
-backend by updating `api_base` in `settings.yaml`.
-
-### Updated Instructions for Regenerating Ontology and Graph DB
-
-#### Primary Path: `cognee-sync`
-1. **What is `cognee-sync`?**
-   - `cognee-sync` is the default incremental sync tool for the Cognee knowledge graph. It handles per-file add, update, and delete operations via the Cognee HTTP API.
-
-2. **Prerequisites**:
-   - Ensure the following environment variables are set:
-     - `COGNEE_API_URL`: Base URL of the Cognee HTTP API.
-     - `COGNEE_API_TOKEN`: Optional bearer token.
-     - `COGNEE_DATASET_NAME`: Defaults to `eposforge-sync`.
-
-3. **Usage**:
-   - Navigate to the `cognee/sync` directory:
-     ```bash
-     cd instance/installed/06-spec-graph/cognee/sync
-     ```
-   - Run the `cognee-sync` command with the appropriate flags:
-     - **Add new files**:
-       ```bash
-       epos-secrets uv run cognee-sync --added path/to/file.md
-       ```
-     - **Modify existing files**:
-       ```bash
-       epos-secrets uv run cognee-sync --modified path/a.md path/b.md
-       ```
-     - **Delete files**:
-       ```bash
-       epos-secrets uv run cognee-sync --deleted path/old.md
-       ```
-     - **Check status**:
-       ```bash
-       epos-secrets uv run cognee-sync --status
-       ```
-
-4. **Validation**:
-  - Ensure the ontology files (e.g., `01-ontology.ttl`) are up-to-date and consistent with the graph.
+- `./scripts/hooks/post-commit` — non-blocking flag-setter; touches
+  `./.needs-rebuild` when tracked `*.md` files change. Composed into
+  `.git/hooks/post-commit` by `instance/installed/09-source-control-ci/github-and-actions/scripts/install-hooks.sh`.
+- `./.needs-rebuild` — the flag file. Cleared the next time the
+  operator (or CI) successfully runs cognee-sync against the diff.
