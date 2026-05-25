@@ -14,6 +14,7 @@ If this ontology drifts, consumer agents can still query Cognee MCP, but the gui
 ## Prerequisites
 
 - `00-vision/01-ontology.ttl` — the ontology file under review
+- previous ontology-grounded KG state via Cognee MCP when available — use it as the last published graph-backed memory of the ontology, not as authority over newer unrebuild corpus changes
 - `git log` — commit history to detect drift
 - adapter cards and specs — `instance/installed/`, `instance/SPEC.md`, and core spec files under `00-vision/`, `01-architecture/`, `02-roadmap/`, `04-standards/`
 - [owl-turtle-primer](./references/owl-turtle-primer.md) — OWL/Turtle reference (load when coaching is needed)
@@ -40,6 +41,46 @@ git diff "${last}..HEAD" -- <file>
 
 The `drift report` is the list of changed files and the new concepts or relationships found in their diffs.
 
+## Query the previous KG first when available
+
+When Cognee MCP is available, query the most recent ontology-grounded KG before editing the TTL. Use it as the last rebuilt memory of what the ontology already meant in graph form.
+
+Ask for:
+
+- the candidate term itself
+- nearby related concepts already in the graph
+- existing aliases or overlapping labels
+- current relationship structure around the candidate term
+
+Use the KG to answer: "what did the last ontology-backed graph already think this term meant?"
+
+Important constraint:
+
+- if the KG predates recent conceptual work, treat it as previous-state evidence only
+- the current corpus and `00-vision/01-ontology.ttl` remain the source of truth for the next edit
+- if Cognee is unavailable or stale, fall back to repo files and the drift report
+
+This is specifically useful for the adopted editorial epistemology already modeled in the ontology: `Randian concept formation`, `Rule of Fundamentality`, `measurement-omission`, `contextual essentiality`, `explanatory power`, and the tenet `essential-characteristic node selection`.
+
+The `previous-kg report` is the set of nearest existing graph terms and relationships around the candidate concept.
+
+## Apply the concept-formation gate before minting terms
+
+Before adding a new class, property, or individual to the TTL, force the proposal through the adopted concept-formation gate:
+
+1. Name the units being grouped.
+2. State the proposed essential characteristic.
+3. Test whether that characteristic explains the greatest number of other characteristics of those units.
+4. Check whether the characteristic is present across different measures or variants rather than being a one-off surface feature.
+5. Ask whether this is the deepest available distinction supported by current knowledge, or whether a later/more abstract/sibling term already captures it.
+
+If the proposal fails these checks:
+
+- do not mint a new ontology term
+- prefer an alias on an existing term, a prose explanation in guidance, or no explicit modeling yet
+
+This is the engineering-use slice of Rand's epistemology adopted by EposForge. The goal is not to encode philosophy for its own sake; the goal is to keep the ontology grounded in explanatory structure so Cognee extraction stays useful.
+
 ## Scan corpus for ontology impacts
 
 Walk the spec and adapter corpus in order, looking for concepts not yet modeled in the ontology.
@@ -56,6 +97,7 @@ Walk the spec and adapter corpus in order, looking for concepts not yet modeled 
 | `instance/installed/**/*.md` | Adapter status/capabilities and slot mapping | `ef:Adapter` model alignment |
 | `AGENTS.md` | RELATIONSHIP KEYWORDS in caps | Object properties |
 | `.scratchpad/knowledge-tree.txt` | Node kind tags (`[concept]`, `[guidance]`, `[tenet]`, `[group]`) | `ef:Concept`, `ef:Guidance`, `ef:Tenet`, `ef:Group` individuals |
+| previous Cognee KG state | last rebuilt meaning/aliases/nearby edges for existing terms | editorial disambiguation before minting new terms |
 
 **Relationship keywords to detect (from AGENTS.md):**
 
@@ -118,6 +160,8 @@ ef:MyThing rdf:type ef:MyClass ;
 
 After editing, verify the file is syntactically valid Turtle (no unclosed blocks, every statement ends with `.`).
 
+Also verify the editorial rationale still passes the concept-formation gate: the new term should survive comparison against the nearest existing graph terms from the previous KG and the nearest current-corpus neighbors.
+
 ## Coach on OWL/Turtle
 
 Load `[owl-turtle-primer](./references/owl-turtle-primer.md)` when the user asks about TTL syntax, OWL semantics, or how to model a specific concept. Key coaching topics covered there:
@@ -132,6 +176,7 @@ Load `[owl-turtle-primer](./references/owl-turtle-primer.md)` when the user asks
 ## Outputs
 
 - `drift report` — markdown files changed since last TTL edit, with new concepts highlighted
+- `previous-kg report` — existing ontology-grounded graph terms relevant to the candidate concept, when Cognee is available
 - `gap report` — concepts and relationships in the corpus not yet modeled in the TTL
 - updated `00-vision/01-ontology.ttl` — ontology with all identified gaps closed
 - `consumer guidance readiness` — confirmation that ontology-backed graph terms remain aligned for agent use through the EposForge Cognee MCP server
