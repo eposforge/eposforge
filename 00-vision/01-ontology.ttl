@@ -401,6 +401,62 @@ ef:relationshipEdge rdf:type owl:DatatypeProperty ;
     rdfs:domain ef:Concept ;
     rdfs:range xsd:string .
 
+### Knowledge-Tree Individuals
+
+ef:RandianConceptFormation rdf:type ef:Concept ;
+    rdfs:label "Randian concept formation" ;
+    rdfs:comment "The engineering-relevant slice of Rand's epistemology adopted by EposForge for ontology editing: form concepts around explanatory roots rather than surface similarities. Included as editorial guidance for the canonical ontology, not as an attempt to model Objectivism in full." ;
+    ef:adoptedDefinition "A concept-formation discipline that selects terms by their deepest available explanatory characteristic, using context-aware abstraction rather than surface resemblance." ;
+    ef:variants "Objectivist concept formation", "Randian epistemology" ;
+    ef:kind ef:NodeKindConcept ;
+    ef:lifecycleStatus ef:StatusAdopted ;
+    ef:dependsOn ef:RuleOfFundamentality, ef:MeasurementOmission, ef:ContextualEssentiality, ef:ExplanatoryPower .
+
+ef:RuleOfFundamentality rdf:type ef:Concept ;
+    rdfs:label "Rule of Fundamentality" ;
+    rdfs:comment "A candidate concept distinction is justified when its defining characteristic explains the greatest number of other characteristics of the units it groups." ;
+    ef:adoptedDefinition "The rule that the essential characteristic of a concept is the deepest available explanatory root of the units in scope." ;
+    ef:variants "essential characteristic", "fundamental characteristic" ;
+    ef:kind ef:NodeKindConcept ;
+    ef:lifecycleStatus ef:StatusAdopted ;
+    ef:dependsOn ef:RandianConceptFormation, ef:ExplanatoryPower .
+
+ef:MeasurementOmission rdf:type ef:Concept ;
+    rdfs:label "measurement-omission" ;
+    rdfs:comment "Concepts may abstract over differences in degree or measurement while retaining that the defining characteristic exists in some measure." ;
+    ef:adoptedDefinition "A concept-formation move that omits specific measurements while retaining the existence of the shared characteristic being abstracted." ;
+    ef:variants "concept-formation via measurement-omission", "measurement omission" ;
+    ef:kind ef:NodeKindConcept ;
+    ef:lifecycleStatus ef:StatusAdopted ;
+    ef:dependsOn ef:RandianConceptFormation, ef:ContextualEssentiality .
+
+ef:ContextualEssentiality rdf:type ef:Concept ;
+    rdfs:label "contextual essentiality" ;
+    rdfs:comment "The essential characteristic of a concept is selected relative to the current state of knowledge; better knowledge may justify a better distinction later." ;
+    ef:adoptedDefinition "The rule that essential characteristics are objective within context: choose the deepest distinction currently supported by what is actually known." ;
+    ef:variants "contextual essentials", "contextual essence" ;
+    ef:kind ef:NodeKindConcept ;
+    ef:lifecycleStatus ef:StatusAdopted ;
+    ef:dependsOn ef:RandianConceptFormation, ef:RuleOfFundamentality .
+
+ef:ExplanatoryPower rdf:type ef:Concept ;
+    rdfs:label "explanatory power" ;
+    rdfs:comment "The strength of a concept's defining characteristic is judged by how much of the grouped units' downstream behavior, lifecycle, and relationships it explains." ;
+    ef:adoptedDefinition "The test that a proposed distinction is worth modeling when it explains a wide cascade of other characteristics rather than merely naming a visible surface similarity." ;
+    ef:variants "explanatory root", "explanatory depth" ;
+    ef:kind ef:NodeKindConcept ;
+    ef:lifecycleStatus ef:StatusAdopted ;
+    ef:dependsOn ef:RuleOfFundamentality .
+
+ef:EssentialCharacteristicNodeSelection rdf:type ef:Tenet ;
+    rdfs:label "essential-characteristic node selection" ;
+    rdfs:comment "Ontology and knowledge-tree nodes are admitted only when their defining characteristic is explanatorily fundamental enough to earn a stable place in the model." ;
+    ef:statement "Admit a node only when its defining characteristic explains the greatest number of other characteristics of the units it groups; otherwise keep it out of the ontology or treat it as guidance rather than a canonical term." ;
+    ef:kind ef:NodeKindTenet ;
+    ef:lifecycleStatus ef:StatusAdopted ;
+    ef:governedBy ef:RuleOfFundamentality, ef:ContextualEssentiality ;
+    ef:dependsOn ef:MeasurementOmission, ef:ExplanatoryPower .
+
 ### Individuals (The 14 Core Components)
 
 ef:SpecInput rdf:type ef:Component ; rdfs:label "Spec Input" .
@@ -547,8 +603,11 @@ ef:PrincipleObservableAndTestable rdf:type ef:Principle ;
 ef:EposForgePattern rdf:type ef:DarkFactory ;
     rdfs:label "EposForge Pattern" ;
     ef:hasPillar ef:PillarSubstrateAgnosticPlatform, ef:PillarAIFactory, ef:PillarProductEngine ;
+    ef:governedBy ef:EssentialCharacteristicNodeSelection ;
     ef:guidedByPrinciple ef:PrincipleEverythingAsCode, ef:PrincipleAIFirstOperations, ef:PrincipleDefenseInDepth,
         ef:PrincipleIncrementalComplexity, ef:PrincipleCloudAgnostic, ef:PrincipleObservableAndTestable .
+
+ef:Ontology ef:governedBy ef:EssentialCharacteristicNodeSelection .
 
 ef:UniversalAdapterPattern rdf:type ef:AdapterPattern ;
     rdfs:label "Universal Adapter Pattern" ;
