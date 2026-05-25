@@ -403,14 +403,13 @@ ef:relationshipEdge rdf:type owl:DatatypeProperty ;
 
 ### Knowledge-Tree Individuals
 
-ef:RandianConceptFormation rdf:type ef:Concept ;
+ef:RandianConceptFormation rdf:type ef:Tenet ;
     rdfs:label "Randian concept formation" ;
-    rdfs:comment "The engineering-relevant slice of Rand's epistemology adopted by EposForge for ontology editing: form concepts around explanatory roots rather than surface similarities. Included as editorial guidance for the canonical ontology, not as an attempt to model Objectivism in full." ;
-    ef:adoptedDefinition "A concept-formation discipline that selects terms by their deepest available explanatory characteristic, using context-aware abstraction rather than surface resemblance." ;
+    rdfs:comment "The engineering-relevant doctrine adopted by EposForge for ontology editing: select terms by explanatory roots rather than surface similarities. Included as governing editorial doctrine for the canonical ontology, not as an attempt to model Objectivism in full." ;
+    ef:statement "Form ontology terms around the deepest available explanatory characteristic, using context-aware abstraction rather than surface resemblance." ;
     ef:variants "Objectivist concept formation", "Randian epistemology" ;
-    ef:kind ef:NodeKindConcept ;
-    ef:lifecycleStatus ef:StatusAdopted ;
-    ef:dependsOn ef:RuleOfFundamentality, ef:MeasurementOmission, ef:ContextualEssentiality, ef:ExplanatoryPower .
+    ef:kind ef:NodeKindTenet ;
+    ef:lifecycleStatus ef:StatusAdopted .
 
 ef:RuleOfFundamentality rdf:type ef:Concept ;
     rdfs:label "Rule of Fundamentality" ;
@@ -419,7 +418,7 @@ ef:RuleOfFundamentality rdf:type ef:Concept ;
     ef:variants "essential characteristic", "fundamental characteristic" ;
     ef:kind ef:NodeKindConcept ;
     ef:lifecycleStatus ef:StatusAdopted ;
-    ef:dependsOn ef:RandianConceptFormation, ef:ExplanatoryPower .
+    ef:dependsOn ef:RandianConceptFormation .
 
 ef:MeasurementOmission rdf:type ef:Concept ;
     rdfs:label "measurement-omission" ;
@@ -428,7 +427,7 @@ ef:MeasurementOmission rdf:type ef:Concept ;
     ef:variants "concept-formation via measurement-omission", "measurement omission" ;
     ef:kind ef:NodeKindConcept ;
     ef:lifecycleStatus ef:StatusAdopted ;
-    ef:dependsOn ef:RandianConceptFormation, ef:ContextualEssentiality .
+    ef:dependsOn ef:RandianConceptFormation .
 
 ef:ContextualEssentiality rdf:type ef:Concept ;
     rdfs:label "contextual essentiality" ;
@@ -448,13 +447,13 @@ ef:ExplanatoryPower rdf:type ef:Concept ;
     ef:lifecycleStatus ef:StatusAdopted ;
     ef:dependsOn ef:RuleOfFundamentality .
 
-ef:EssentialCharacteristicNodeSelection rdf:type ef:Tenet ;
+ef:EssentialCharacteristicNodeSelection rdf:type ef:Guidance ;
     rdfs:label "essential-characteristic node selection" ;
-    rdfs:comment "Ontology and knowledge-tree nodes are admitted only when their defining characteristic is explanatorily fundamental enough to earn a stable place in the model." ;
-    ef:statement "Admit a node only when its defining characteristic explains the greatest number of other characteristics of the units it groups; otherwise keep it out of the ontology or treat it as guidance rather than a canonical term." ;
-    ef:kind ef:NodeKindTenet ;
+    rdfs:comment "Guidance for ontology and knowledge-tree editing: admit nodes only when their defining characteristic is explanatorily fundamental enough to earn a stable place in the model." ;
+    ef:adoptedDefinition "A guidance rule for ontology editing: admit a node only when its defining characteristic explains the greatest number of other characteristics of the units it groups; otherwise keep it out of the ontology or treat it as guidance rather than a canonical term." ;
+    ef:kind ef:NodeKindGuidance ;
     ef:lifecycleStatus ef:StatusAdopted ;
-    ef:governedBy ef:RuleOfFundamentality, ef:ContextualEssentiality ;
+    ef:governedBy ef:RandianConceptFormation ;
     ef:dependsOn ef:MeasurementOmission, ef:ExplanatoryPower .
 
 ### Individuals (The 14 Core Components)
@@ -603,11 +602,11 @@ ef:PrincipleObservableAndTestable rdf:type ef:Principle ;
 ef:EposForgePattern rdf:type ef:DarkFactory ;
     rdfs:label "EposForge Pattern" ;
     ef:hasPillar ef:PillarSubstrateAgnosticPlatform, ef:PillarAIFactory, ef:PillarProductEngine ;
-    ef:governedBy ef:EssentialCharacteristicNodeSelection ;
+    ef:governedBy ef:EssentialCharacteristicNodeSelection, ef:RandianConceptFormation ;
     ef:guidedByPrinciple ef:PrincipleEverythingAsCode, ef:PrincipleAIFirstOperations, ef:PrincipleDefenseInDepth,
         ef:PrincipleIncrementalComplexity, ef:PrincipleCloudAgnostic, ef:PrincipleObservableAndTestable .
 
-ef:Ontology ef:governedBy ef:EssentialCharacteristicNodeSelection .
+ef:Ontology ef:governedBy ef:EssentialCharacteristicNodeSelection, ef:RandianConceptFormation .
 
 ef:UniversalAdapterPattern rdf:type ef:AdapterPattern ;
     rdfs:label "Universal Adapter Pattern" ;

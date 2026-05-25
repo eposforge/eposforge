@@ -60,7 +60,7 @@ Important constraint:
 - the current corpus and `00-vision/01-ontology.ttl` remain the source of truth for the next edit
 - if Cognee is unavailable or stale, fall back to repo files and the drift report
 
-This is specifically useful for the adopted editorial epistemology already modeled in the ontology: `Randian concept formation`, `Rule of Fundamentality`, `measurement-omission`, `contextual essentiality`, `explanatory power`, and the tenet `essential-characteristic node selection`.
+This is specifically useful for the adopted editorial doctrine already modeled in the ontology: the tenet `Randian concept formation`; the concepts `Rule of Fundamentality`, `measurement-omission`, `contextual essentiality`, and `explanatory power`; and the guidance `essential-characteristic node selection`.
 
 The `previous-kg report` is the set of nearest existing graph terms and relationships around the candidate concept.
 
