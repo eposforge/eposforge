@@ -1,0 +1,6 @@
+# Executable resolver shims and scripts must stay LF so the shebang works on Linux.
+instance/installed/12-secrets-key-management/bin/epos-secrets text eol=lf
+instance/installed/12-secrets-key-management/bin/epos-authorize text eol=lf
+instance/installed/12-secrets-key-management/bin/epos-machine-request text eol=lf
+*.sh text eol=lf
+*.py text eol=lf
