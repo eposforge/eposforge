@@ -36,6 +36,7 @@ source_of_truth: yes
 | `context_window` | `1M tokens` (Gemini 2.5 Pro) |
 | `parallelism` | `false` (single interactive session) |
 | `streaming` | `true` (streams to terminal; not to audit log in v1) |
+| `autonomy_tos_posture` | `subscription-ok-through-supervised; api-key-required-for-autonomous` (see [../../../../01-architecture/03-autonomy-modes.md](../../../../01-architecture/03-autonomy-modes.md)) |
 
 ### Repo-specific fields
 
@@ -104,6 +105,12 @@ Manager (never in env files or committed configs):
 - `GEMINI_API_KEY` — optional; only required if using a paid Gemini API
   key. Free tier uses Google account auth and does not require this key.
 - `GITHUB_PERSONAL_ACCESS_TOKEN` — required for GitHub MCP server.
+
+Free-tier Google account auth (OAuth) is valid through `supervised` mode.
+Google enforces against OAuth use in automated / unattended patterns, so
+promotion to `autonomous` mode requires setting `GEMINI_API_KEY` (direct
+API key); see the ToS threshold in
+[../../../../01-architecture/03-autonomy-modes.md](../../../../01-architecture/03-autonomy-modes.md).
 
 No secrets are committed to this repo. See
 [../../../../01-architecture/02-components/12-secrets-key-management.md](../../../../01-architecture/02-components/12-secrets-key-management.md)

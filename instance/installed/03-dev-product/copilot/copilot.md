@@ -36,6 +36,7 @@ source_of_truth: yes
 | `context_window` | `varies` (depends on active model backend; typically 128k–200k tokens) |
 | `parallelism` | `false` (single agent session) |
 | `streaming` | `true` (streams to VS Code chat panel; not to audit log in v1) |
+| `autonomy_tos_posture` | `subscription-only; supervised-max` (see [../../../../01-architecture/03-autonomy-modes.md](../../../../01-architecture/03-autonomy-modes.md)) |
 
 ### Repo-specific fields
 
@@ -85,6 +86,12 @@ One layer:
 Secrets are read from VS Code's environment or secret storage:
 
 - `GITHUB_PERSONAL_ACCESS_TOKEN` — required for GitHub MCP server.
+
+Copilot authenticates via a per-seat subscription with no BYOK / API-key
+path, and its `IDE-extension` invocation surface has no sanctioned
+headless mode. It therefore caps at `supervised` mode and cannot be
+promoted to `autonomous` regardless of auth rebind; see the ToS threshold
+in [../../../../01-architecture/03-autonomy-modes.md](../../../../01-architecture/03-autonomy-modes.md).
 
 No secrets are committed to this repo. See
 [../../../../01-architecture/02-components/12-secrets-key-management.md](../../../../01-architecture/02-components/12-secrets-key-management.md)

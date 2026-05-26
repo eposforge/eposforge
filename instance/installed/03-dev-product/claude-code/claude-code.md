@@ -36,6 +36,7 @@ source_of_truth: yes
 | `context_window` | `200k tokens` (Claude 3.7 Sonnet) |
 | `parallelism` | `false` (single interactive session) |
 | `streaming` | `true` (streams to terminal; not to audit log in v1) |
+| `autonomy_tos_posture` | `subscription-ok-through-supervised; api-key-required-for-autonomous` (see [../../../../01-architecture/03-autonomy-modes.md](../../../../01-architecture/03-autonomy-modes.md)) |
 
 ### Repo-specific fields
 
@@ -89,6 +90,13 @@ Secrets are read from the operator environment at session start:
 
 - `GITHUB_PERSONAL_ACCESS_TOKEN` — required for GitHub MCP server.
 - Other model keys managed by Anthropic's own credential chain.
+
+The installed adapter authenticates via Claude Max / Pro subscription
+(OAuth), which Anthropic permits only for human-present use inside Claude
+Code. This is valid through `supervised` mode. Promotion to `autonomous`
+mode requires re-binding to an Anthropic **API key**; see the ToS
+threshold in
+[../../../../01-architecture/03-autonomy-modes.md](../../../../01-architecture/03-autonomy-modes.md).
 
 No secrets are committed to this repo. See
 [../../../../01-architecture/02-components/12-secrets-key-management.md](../../../../01-architecture/02-components/12-secrets-key-management.md)
