@@ -17,6 +17,7 @@ Notes: Surfaced when an adopter querying the graph about secrets handling for a 
 
 
 
+
 ## Issue EF-012 — Spec graph emits design intent as present-tense state; recommendations need maturity tagging
 ID: EF-012
 Title: Spec graph emits design intent as present-tense state; recommendations need maturity tagging
@@ -28,18 +29,6 @@ Verify with: recall queries either (a) return only present-tense, currently-ship
 Notes: Recall results in the field treat aspirational designs as if they have shipped. Two examples surfaced in one session: (1) `epos-secrets` is recommended as the standard runtime invocation for sops-age, but it currently exists only as a script inside `instance/installed/12-secrets-key-management/bin/`, with no stable installable artifact — an adopter in mode-B (consume-without-fork) cannot follow the recommendation as written; (2) the graph characterizes an adopter-side IaC use case as a "future capability" blocked on an upstream tooling gap, when adopters have already implemented the workaround. The common root: the graph fuses design intent and operational state into a single voice. Possible directions: maturity tags on recommendation nodes (`shipped`|`partial`|`intent`), separate "design" vs "operational" recall views, or richer source-of-truth provenance per fact. Related to EF-011 (conflation): together they erode adopter trust in the graph as a recommendation surface.
 
 
-
-
-
-## Issue EF-017 — Component 10 (Inference): Azure AI Foundry routing backend
-ID: EF-017
-Title: Component 10 (Inference): Azure AI Foundry routing backend
-Date: 2026-05-24
-Status: in-progress
-Effort: M
-Fix surface: eposforge-pattern
-Verify with: the inference adapter routes Cognee LLM + embedding calls to an Azure AI Foundry endpoint via LiteLLM (`azure/<deployment>` + AZURE_API_BASE/AZURE_API_KEY/AZURE_API_VERSION); a full Cognee re-graph completes against Foundry; provider is selectable as config. This is the cost gate: once routing is live, cognify bills against a credit-funded Azure subscription rather than direct metered vendor APIs.
-Notes: Mechanism only — cloud resource/project provisioning, deployment rate (TPM) caps, and per-repo keys are host/adopter concerns tracked on the host-stack backlog. Cognee uses LiteLLM under the hood, so this is largely an `.env`/config path plus adapter support for an azure backend. Gates the migration's re-cognify steps (EF-019, EF-021). Progress: provider-selectable Azure routing contract and validator are now implemented in repo docs/scripts; full Foundry re-graph verification remains deferred until the cost-gate dependency chain is fully satisfied.
 
 
 
@@ -56,6 +45,7 @@ Notes: Today the resolver discovers its manifests + vault relative to its own sc
 
 
 
+
 ## Issue EF-023 — Capture cross-IDE agent chat logs inside GEA LAN for semantic memory and future distillation
 ID: EF-023
 Title: Capture cross-IDE agent chat logs inside GEA LAN for semantic memory and future distillation
@@ -66,6 +56,7 @@ Fix surface: eposforge-pattern
 Depends on: EF-017
 Verify with: for both Claude Code and GitHub Copilot sessions, chat transcripts (prompts, assistant responses, tool traces metadata, and session identifiers) are persisted to a GEA-LAN-hosted storage target with a documented retention policy; records include stable account identity and machine identity fields so sessions from the same Claude/Copilot account across different dev machines are correlated into one logical timeline; a semantic index job can ingest new transcripts incrementally and answer recall queries over both IDE sources in one result set; access controls enforce LAN-local storage + operator-only retrieval/export; a dry-run dataset can be exported in a training-ready JSONL format for future fine-tuning/distillation experiments without changing source-of-truth raw logs. Implementation bootstrap exists in `.scratchpad/build-unified-chat-index.py` (index build) and `.scratchpad/search-unified-chat-index.py` (semantic prefilter/search scaffolding).
 Notes: User-story intent: while EposForge is pre-dark-factory and developers still use heterogeneous IDE adapters, conversation exhaust should not remain fragmented across vendor clouds or local workstation silos. Implement an adapter-agnostic chat capture contract (normalized event schema + source adapter field), then add per-adapter collectors for Claude Code and Copilot. Keep raw immutable logs plus derived semantic chunks as separate layers. Include identity provenance fields (provider account key + machine key + workspace key) to support cross-machine continuity for one developer account. Include privacy/safety guardrails (PII redaction mode, secret-token scrubbing, and explicit opt-in boundaries for any downstream training export). Seed artifacts now live in `.scratchpad/unified-chat-index.jsonl` with extraction support from `.scratchpad/export-claude-session-md.py`. This issue is the observability + memory substrate needed to support semantic search now and potential model distillation later.
+
 
 
 
