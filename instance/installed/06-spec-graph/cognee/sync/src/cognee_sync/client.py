@@ -39,14 +39,14 @@ class CogneeClient:
         on every request.
     timeout:
         Request timeout in seconds.  Defaults to 180 to match the
-        ``COGNEE_TEST_STEP_TIMEOUT`` convention in the existing test scripts.
+        long-running sync workload (900s).
     """
 
     def __init__(
         self,
         base_url: str,
         token: str = "",
-        timeout: float = 180.0,
+        timeout: float = 900.0,
         verify: bool | str = True,
     ) -> None:
         self._base_url = base_url.rstrip("/")
