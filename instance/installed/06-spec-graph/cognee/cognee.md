@@ -83,9 +83,35 @@ practice — 82 cognify runs / 0 errors over 48h confirmed.
 
 | Symptom | Real cause |
 |---|---|
-| `Failed to initialize Ladybug database: Could not map version_code to proper Ladybug version` | **File-lock contention**, not a real version mismatch. Some second process is trying to open `cognee_graph_ladybug` while the container holds the exclusive lock. Cognee's migration-fallback path masks the real `RuntimeError: Could not set lock on file` and reports the version-code lookup that fails because Ladybug 0.16.0 writes version_code 40, but cognee's migration table only knows 34–39. Don't try to "migrate" — find the second process. |
+| `Failed to initialize Ladybug database: Could not map version_code to proper Ladybug version` | **File-lock contention**, not a real version mismatch. Some second process is trying to open `cognee_graph_ladybug` while the container holds the exclusive lock. Cognee's migration-fallback path masks the real `RuntimeError: Could not set lock on file` and reports the version-code lookup that fails because Ladybug 0.16.0 writes version_code 40, but cognee's migration table only knows 34–39. Don't try to "migrate" — find the second process. If no external second process is visible, the prior container run left a stale lock in `./data/cognee_system/databases/`. Recovery: **wipe and restart** — see **Recovery procedures** below. This destroys the KG; follow with a full corpus rebuild. |
+| `database is locked` or `no such table: data` during bulk cognify | Cognee internal SQLite worker-concurrency. A large (80+ doc) batch spawns concurrent writer tasks; if any task holds a lock past the batch, subsequent re-runs hit it. Recovery: re-run the same `cognee-sync --added` command — the second pass picks up all missed docs cleanly. If the second pass also fails, restart `dkr-cgnee-api` to clear stale in-process locks, then re-run. |
 | `Recall failed: 'NoneType' object has no attribute 'id'` | cognee 1.0.4 in the MCP image only. Already patched in `Dockerfile.mcp`. Won't appear in proxy mode. |
 | `HTTP 404 Could not find session` after a restart | Expected — SSE sessions don't survive container recreation. Reconnect via Claude Code's `/mcp`. |
+
+### Recovery procedures
+
+#### KG wipe and restart (Ladybug stale-lock recovery)
+
+Only use this when the Ladybug error appears at container startup and no
+external process is holding the lock. **This destroys the entire KG.** Must be
+followed by a full corpus rebuild.
+
+```bash
+COMPOSE_FILE=/mnt/raid-storage/docker-volume-mounts/cognee/docker-compose.yml
+docker compose -f "$COMPOSE_FILE" stop dkr-cgnee-api
+sudo rm -rf /mnt/raid-storage/docker-volume-mounts/cognee/data/cognee_system
+sudo mkdir -p /mnt/raid-storage/docker-volume-mounts/cognee/data/cognee_system
+sudo chown -R cdfadmin: /mnt/raid-storage/docker-volume-mounts/cognee/data/cognee_system
+docker compose -f "$COMPOSE_FILE" start dkr-cgnee-api
+# Wait ~10s for the health check, then run a full rebuild:
+bash instance/installed/06-spec-graph/cognee/scripts/bulk-rebuild.sh
+```
+
+Also reset the cognee-sync state DB so it re-stages all files:
+
+```bash
+rm -f instance/installed/06-spec-graph/cognee/sync/.cognee-state.db
+```
 
 ---
 
@@ -224,7 +250,10 @@ deployment — not the upstream Cognee spec — and may change with container up
     graph nodes but no permanent damage. **Re-run cognify once more on the
     same dataset** and the missing docs are picked up cleanly; the contention
     burst doesn't repeat because the prior workers have released their locks.
-    Plan for a two-pass cognify when bulk-ingesting from scratch.
+    Plan for a two-pass cognify when bulk-ingesting from scratch. If the
+    second pass also fails with lock errors, restart `dkr-cgnee-api` to
+    clear stale in-process worker locks, then re-run. A third pass has not
+    been needed in practice.
 - **No async / polling.** Neither `add` nor explicit `cognify` returns a job id
   to poll. No `wait_for_cognify` is needed.
 - **Re-add deduplicates on identical content.** Same content re-added to the same

@@ -239,6 +239,44 @@ status: active
      - Search queries return results aligned with the updated ontology structure.
    - If discrepancies appear, check the ontology for syntax errors or missing relationships and re-sync.
 
+5. **Token usage note**: `completion=0` in cognee-sync output is expected.
+   The token tracker only counts embedding prompt tokens; LLM completion
+   tokens are recorded separately by the Azure gateway. A corpus rebuild of
+   ~97 files costs roughly 180K–200K embedding tokens.
+
+---
+
+#### Bulk corpus rebuild (from scratch)
+
+Use when the KG needs to be rebuilt from a clean state — after a KG wipe,
+a container migration, or any time incremental state is suspect.
+
+```bash
+# From repo root:
+bash instance/installed/06-spec-graph/cognee/scripts/bulk-rebuild.sh
+```
+
+The script collects all git-tracked `*.md` and `*.ttl` files, wipes the
+cognee-sync state DB, and runs `cognee-sync --added` on the full corpus.
+
+**Two-pass note:** a first cognify pass on 80+ docs may produce ~10 SQLite
+contention errors. Re-run the script — the second pass picks up missed docs.
+If the second pass also fails, restart `dkr-cgnee-api` first, then re-run.
+
+**KG wipe before rebuild:** if the Ladybug version-code error appears at
+container startup, the prior run left stale lock files in `cognee_system`.
+Recovery (destroys KG — requires full rebuild after):
+
+```bash
+COMPOSE_FILE=/mnt/raid-storage/docker-volume-mounts/cognee/docker-compose.yml
+docker compose -f "$COMPOSE_FILE" stop dkr-cgnee-api
+sudo rm -rf /mnt/raid-storage/docker-volume-mounts/cognee/data/cognee_system
+sudo mkdir -p /mnt/raid-storage/docker-volume-mounts/cognee/data/cognee_system
+sudo chown -R cdfadmin: /mnt/raid-storage/docker-volume-mounts/cognee/data/cognee_system
+docker compose -f "$COMPOSE_FILE" start dkr-cgnee-api
+# then run bulk-rebuild.sh
+```
+
 ---
 
 #### Note on `graphrag`
