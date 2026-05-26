@@ -33,6 +33,7 @@ import os
 import subprocess
 import sys
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 from . import sync as _sync
@@ -174,10 +175,53 @@ def _record_budget_usage(repo_key: str, consumed_tokens: int) -> None:
         raise RuntimeError(f"Failed to record budget usage: {details}")
 
 
+def _read_actual_tokens(usage_file: str, since_ts: float) -> dict[str, int] | None:
+    """Sum token counts from the LiteLLM JSONL tracker file written after `since_ts`.
+
+    Returns None when the file is absent or contains no records in the window,
+    so callers can fall back to estimated counts.
+    """
+    try:
+        path = Path(usage_file)
+        if not path.exists():
+            return None
+        prompt = completion = total = 0
+        found = False
+        with path.open() as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    record = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                ts_str = record.get("ts", "")
+                if not ts_str:
+                    continue
+                try:
+                    record_ts = datetime.fromisoformat(ts_str).timestamp()
+                except ValueError:
+                    continue
+                if record_ts < since_ts:
+                    continue
+                prompt += record.get("prompt_tokens", 0) or 0
+                completion += record.get("completion_tokens", 0) or 0
+                total += record.get("total_tokens", 0) or 0
+                found = True
+        if not found:
+            return None
+        return {"prompt_tokens": prompt, "completion_tokens": completion, "total_tokens": total}
+    except OSError:
+        return None
+
+
 def _emit_token_usage_event(
     repo_key: str,
     dataset_name: str,
     model: str,
+    prompt_tokens: int,
+    completion_tokens: int,
     total_tokens: int,
     latency_ms: int,
 ) -> None:
@@ -195,9 +239,9 @@ def _emit_token_usage_event(
             "--model",
             model,
             "--prompt-tokens",
-            str(total_tokens),
+            str(prompt_tokens),
             "--completion-tokens",
-            "0",
+            str(completion_tokens),
             "--total-tokens",
             str(total_tokens),
             "--latency-ms",
@@ -296,6 +340,11 @@ def main() -> None:
     model = os.environ.get("LLM_MODEL", "").strip() or "unknown"
     changed_files = len(args.added or []) + len(args.modified or [])
     requested_tokens = _estimate_requested_tokens(args, changed_files)
+    # Host-side path to the LiteLLM JSONL tracker written by litellm_token_tracker.py
+    # inside dkr-cgnee-api.  Set to the ./data mount path on the host so cognee-sync
+    # can read actual token counts after each cognify run.
+    # Example: COGNEE_TOKEN_USAGE_FILE=/mnt/raid-storage/docker-volume-mounts/cognee/data/token-usage.jsonl
+    token_usage_file = os.environ.get("COGNEE_TOKEN_USAGE_FILE", "").strip()
 
     with CogneeClient(
         base_url=config.api_url,
@@ -343,20 +392,44 @@ def main() -> None:
                             f"{recommended_model}"
                         )
 
+            cognify_wall_start = datetime.now(timezone.utc).timestamp()
             started = time.perf_counter()
             print(f"cognify {dataset_name} ...", flush=True)
             client.cognify(datasets=[dataset_name], run_in_background=False)
             print(f"cognify {dataset_name} done")
             latency_ms = int((time.perf_counter() - started) * 1000)
 
+            # Resolve actual token counts from the LiteLLM tracker file when
+            # available; fall back to the pre-run estimate so budget accounting
+            # always has a value.
+            actual = (
+                _read_actual_tokens(token_usage_file, cognify_wall_start)
+                if token_usage_file
+                else None
+            )
+            if actual is not None:
+                prompt_tokens = actual["prompt_tokens"]
+                completion_tokens = actual["completion_tokens"]
+                consumed_tokens = actual["total_tokens"]
+                print(
+                    f"token usage (actual): prompt={prompt_tokens} "
+                    f"completion={completion_tokens} total={consumed_tokens}"
+                )
+            else:
+                prompt_tokens = requested_tokens
+                completion_tokens = 0
+                consumed_tokens = requested_tokens
+
             if budget_enforce:
-                _record_budget_usage(repo_key, requested_tokens)
+                _record_budget_usage(repo_key, consumed_tokens)
             if emit_usage_events:
                 _emit_token_usage_event(
                     repo_key=repo_key,
                     dataset_name=dataset_name,
                     model=model,
-                    total_tokens=requested_tokens,
+                    prompt_tokens=prompt_tokens,
+                    completion_tokens=completion_tokens,
+                    total_tokens=consumed_tokens,
                     latency_ms=latency_ms,
                 )
 
