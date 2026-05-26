@@ -52,6 +52,13 @@ In addition to the universal fields in
 - `context_window` — practical limits the Router should respect.
 - `parallelism` — whether the Adapter supports concurrent invocations.
 - `streaming` — whether the Adapter streams progress to the audit log.
+- `autonomy_tos_posture` — the highest autonomy mode the Adapter's
+  licensing / terms of service permit, expressed as a threshold (see
+  [../03-autonomy-modes.md](../03-autonomy-modes.md)). OSS BYOK products
+  are typically `byok-clean-all-modes`; subscription / OAuth products are
+  typically `subscription-ok-through-supervised;
+  api-key-required-for-autonomous`. A factory running in `autonomous`
+  mode must not dispatch to an Adapter whose posture forbids it.
 
 ## Boundaries
 
