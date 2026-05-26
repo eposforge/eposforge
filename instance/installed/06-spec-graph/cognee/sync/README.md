@@ -106,6 +106,7 @@ Linux equivalent — same invocations with forward slashes.
 | `COGNEE_TLS_VERIFY` | `true` | `false` or path to CA bundle |
 | `COGNEE_DATASET_NAME` | `eposforge-sync` | Dataset all tracked files go into |
 | `COGNEE_STATE_DB` | `sync/.cognee-state.db` | Override the state DB path |
+| `COGNEE_HTTP_TIMEOUT` | `900` | HTTP request timeout (seconds) for Cognee API calls |
 | `INFERENCE_PROVIDER` | unset | If `azure-foundry`, validates Azure routing profile before sync |
 | `COGNEE_REQUIRE_AZURE_ROUTING` | `0` | If `1`, refuse non-Azure provider startup |
 | `INFERENCE_BUDGET_ENFORCE` | `1` | Run budget gate before cognify |
@@ -140,8 +141,12 @@ cognee accumulates on re-add; update uses explicit delete+add by design).
 - Azure routing validation runs at startup when `INFERENCE_PROVIDER=azure-foundry`
     or `COGNEE_REQUIRE_AZURE_ROUTING=1`.
 - Budget gate runs before `cognify`; `deny` exits with status code 4.
-- After successful `cognify`, the CLI records budget usage and emits an
-    `adapter.invoked` token-usage event via Component 11 sink scripts.
+- Before `cognify`, the CLI reserves the requested token estimate in the
+    persistent budget counter. After `cognify`, it tops up any additional
+    usage reported by the LiteLLM tracker and emits an `adapter.invoked`
+    token-usage event via Component 11 sink scripts.
+- If `cognify` times out or aborts after the reservation is recorded, the
+    reservation remains counted so a retry cannot evade the budget ledger.
 
 ---
 

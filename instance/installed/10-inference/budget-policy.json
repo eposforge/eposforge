@@ -3,7 +3,7 @@
   "default_action": "deny",
   "repo_budgets": {
     "eposforge": {
-      "limit_tokens": 1000000,
+      "limit_tokens": 2000000,
       "degrade_model": "azure/mdl-openai-gpt4o-mini-std-region-r1"
     }
   }
