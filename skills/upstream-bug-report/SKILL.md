@@ -120,15 +120,37 @@ Title conventions:
 - State the symptom briefly at the end (`silently dropping Turtle/N3 ontologies`)
 - Keep under ~100 characters
 
-## Step 4 — Record in the EposForge backlog
+## Step 4 — Record in the EposForge backlog (Component 13)
 
-After filing, add a cross-reference to the relevant backlog item (or create a
-new `blocked` item if this defect is blocking EposForge work):
+Upstream defects belong in the **Backlog (Component 13)**. Use the
+`file-based-backlog` adapter scripts rather than hand-editing the backlog file.
 
-```markdown
-- upstream: https://github.com/{owner}/{repo}/issues/{N}
-- workaround applied: <yes/no — describe if yes>
+If a backlog item already exists for the affected work, update it to add the
+upstream issue URL and a `blocked-by-upstream` note:
+
+```bash
+# From repo root — open the affected item and add the upstream ref
+# (edit the item file directly; the scripts don't have an "update" command)
+$EDITOR backlog/backlog.md   # find the item by ID and append:
+# upstream: https://github.com/{owner}/{repo}/issues/{N}
+# workaround applied: <yes/no — describe if yes>
 ```
+
+If no backlog item exists yet, create one with `new-issue.sh`:
+
+```bash
+bash instance/installed/13-backlog/file-based-backlog/scripts/new-issue.sh
+# Title: Track upstream fix for {defect summary}
+# Fix surface: repo-instance (or eposforge-pattern if it affects all adopters)
+# Dependencies: link to whichever EposForge item is blocked
+# Verification: upstream issue closed and version released
+```
+
+The `ef:dependsOn` relationship in the ontology models blocking dependencies
+between EposForge work items and upstream fixes. If the defect blocks an
+in-flight architectural decision, consider whether a new `ef:Constraint` node
+should be added to `00-vision/01-ontology.ttl` (use the `maintain-ontology`
+skill to guide that change).
 
 If a workaround is applied at the instance level (e.g. converting TTL to RDF/XML
 before upload), document it in the relevant adapter's README or `cognee.md` under
