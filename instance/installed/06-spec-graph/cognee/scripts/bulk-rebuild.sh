@@ -19,8 +19,8 @@
 # Ontology changes: this script does NOT wipe the knowledge graph. Because
 # cognee dedups on content hash, re-running over unchanged docs will not
 # re-anchor them against a changed ontology. After editing the ontology,
-# first perform the KG wipe (see cognee.md "Recovery procedures") and THEN
-# run this script.
+# first perform the KG wipe (see instance/installed/06-spec-graph/cognee/MAINTENANCE.md
+# "Recovery procedures") and THEN run this script.
 #
 # Prerequisites:
 #   - epos-secrets on PATH (or at instance/installed/12-secrets-key-management/bin/)

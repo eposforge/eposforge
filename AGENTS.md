@@ -263,19 +263,13 @@ cognee-sync state DB, and runs `cognee-sync --added` on the full corpus.
 contention errors. Re-run the script — the second pass picks up missed docs.
 If the second pass also fails, restart `dkr-cgnee-api` first, then re-run.
 
-**KG wipe before rebuild:** if the Ladybug version-code error appears at
-container startup, the prior run left stale lock files in `cognee_system`.
-Recovery (destroys KG — requires full rebuild after):
-
-```bash
-COMPOSE_FILE=/mnt/raid-storage/docker-volume-mounts/cognee/docker-compose.yml
-docker compose -f "$COMPOSE_FILE" stop dkr-cgnee-api
-sudo rm -rf /mnt/raid-storage/docker-volume-mounts/cognee/data/cognee_system
-sudo mkdir -p /mnt/raid-storage/docker-volume-mounts/cognee/data/cognee_system
-sudo chown -R cdfadmin: /mnt/raid-storage/docker-volume-mounts/cognee/data/cognee_system
-docker compose -f "$COMPOSE_FILE" start dkr-cgnee-api
-# then run bulk-rebuild.sh
-```
+**KG wipe — operator-only:** wiping `cognee_system` destroys all graph data
+and requires a full token-budget rebuild. Agents MUST NOT wipe the KG without
+explicit operator confirmation using the exact phrase **"I authorize KG wipe"**.
+Note: the Ladybug version-code error is unreliable as a wipe trigger — it has
+appeared on already-empty databases and does not by itself indicate corruption.
+The wipe procedure is in
+`instance/installed/06-spec-graph/cognee/MAINTENANCE.md`.
 
 ---
 

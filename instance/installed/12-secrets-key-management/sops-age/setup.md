@@ -58,6 +58,10 @@ python instance/installed/12-secrets-key-management/bin/epos-secrets -- bash ins
 
 # Run a specific script with only the secrets it needs
 python instance/installed/12-secrets-key-management/bin/epos-secrets --only ANTHROPIC_API_KEY,NEO4J_PASSWORD -- python my-script.py
+
+# Resolve manifests + vault from another repo while using the same resolver binary
+EPOS_SECRETS_HOME=/path/to/adopter/12-secrets-key-management \
+python instance/installed/12-secrets-key-management/bin/epos-secrets -- <command>
 ```
 
 The MCP servers (cognee, github) are already configured to use the resolver via the generated `.mcp.json` and `.vscode/mcp.json`. After running setup, reload your IDE.

@@ -46,6 +46,14 @@ a second, divergent KG.
   to the API.
 - From scripts / HTTP: `https://cognee-api.grace.lan/api/v1/*` directly.
 
+For adopter-facing recommendation queries, use
+`instance/installed/06-spec-graph/cognee/scripts/adopter-recall.py` instead of
+raw `recall`/`search` output. The wrapper enforces two answering rules:
+- EF-011 boundary: rewrite EposForge-internal `instance/installed/...` paths to
+  adopter-layer placeholders.
+- EF-012 clarity: add `[maturity: shipped|partial|intent]` tags per
+  recommendation line.
+
 ### Why this layout, not a single container
 
 The MCP server is `cognee/cognee-mcp:main` (the published MCP-protocol bridge),
