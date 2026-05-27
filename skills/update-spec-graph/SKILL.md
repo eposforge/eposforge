@@ -114,13 +114,16 @@ rebuild, that anchoring actually took:
 
 - **Coverage:** `TextDocument` node count should match the synced doc count. If
   they diverge, cognify did not run (see cognee.md §Pipeline behavior).
-- **Anchoring took (full rebuild):** the `EntityType` set should collapse toward
-  the ontology's `ef:` classes (~30) rather than 150+ free-form LLM types. A
-  large, fragmented, near-duplicate `EntityType` set (`costhint`/`cost hint`,
-  `configfile`/`configuration_file`) means extraction was *not* ontology-anchored.
-  Fetch the graph and inspect:
-  `GET https://cognee.grace.lan/api/v1/datasets/<id>/graph` (returns the global
-  instance graph; group nodes by `type`, list `EntityType` labels).
+- **Anchoring took (full rebuild):** the definitive signal is node
+  `ontology_valid`. Fetch the graph
+  (`GET https://cognee.grace.lan/api/v1/datasets/<id>/graph`) and confirm nodes
+  carry `properties.ontology_valid: true` — if *every* node is `false`, nothing
+  anchored. Corroborate in the API log: a storm of
+  `OntologyAdapter: No close match found for '<x>' in category 'classes'` during
+  cognify means the ontology did not load (most often it was uploaded as Turtle
+  instead of RDF/XML — see cognee.md §Ontology grounding; `cognee-sync` now
+  converts automatically). When healthy, the API log shows
+  `OntologyAdapter: Lookup built: N classes, M individuals` at cognify start.
 - **Recall probe:** ask cognee MCP `recall` for a term you just changed and
   confirm it reflects the new content.
 
