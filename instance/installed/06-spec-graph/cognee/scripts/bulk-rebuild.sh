@@ -9,9 +9,18 @@
 #   bash instance/installed/06-spec-graph/cognee/scripts/bulk-rebuild.sh [--dry-run]
 #
 # What this does:
-#   1. Collects all *.md and *.ttl files tracked by git (repo root).
+#   1. Collects all *.md and *.ttl files tracked by git (repo root),
+#      EXCLUDING the ontology TTL — it is the anchor, not a corpus document.
 #   2. Wipes the cognee-sync state DB so every file is staged as new.
-#   3. Runs cognee-sync --added on the full file list via Azure AI Foundry.
+#   3. Uploads the ontology TTL as the '$ONTOLOGY_KEY' anchor and runs
+#      cognee-sync --added on the full file list via Azure AI Foundry,
+#      cognifying with ontologyKey=[$ONTOLOGY_KEY] so entities are anchored.
+#
+# Ontology changes: this script does NOT wipe the knowledge graph. Because
+# cognee dedups on content hash, re-running over unchanged docs will not
+# re-anchor them against a changed ontology. After editing the ontology,
+# first perform the KG wipe (see cognee.md "Recovery procedures") and THEN
+# run this script.
 #
 # Prerequisites:
 #   - epos-secrets on PATH (or at instance/installed/12-secrets-key-management/bin/)
@@ -34,6 +43,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../../../../.." && pwd)"
 SYNC_DIR="${REPO_ROOT}/instance/installed/06-spec-graph/cognee/sync"
 STATE_DB="${SYNC_DIR}/.cognee-state.db"
+ONTOLOGY_KEY="${COGNEE_ONTOLOGY_KEY:-eposforge}"
+ONTOLOGY_REL="00-vision/01-ontology.ttl"
+ONTOLOGY_FILE="${REPO_ROOT}/${ONTOLOGY_REL}"
 
 # Locate epos-secrets: prefer PATH, fall back to known location
 if command -v epos-secrets >/dev/null 2>&1; then
@@ -47,17 +59,22 @@ if [[ "${1:-}" == "--dry-run" ]]; then
   DRY_RUN=1
 fi
 
-# Collect all tracked *.md and *.ttl files
+# Collect all tracked *.md and *.ttl files, excluding the ontology TTL
+# (it is uploaded as the anchor below, not ingested as a corpus document).
 mapfile -t FILES < <(
   cd "$REPO_ROOT" &&
   git ls-files '*.md' '*.ttl' |
+  grep -vxF "$ONTOLOGY_REL" |
   sed "s|^|${REPO_ROOT}/|"
 )
 
 echo "bulk-rebuild: ${#FILES[@]} files staged from ${REPO_ROOT}"
+echo "bulk-rebuild: ontology anchor: ${ONTOLOGY_REL} (key=${ONTOLOGY_KEY})"
 
 if [[ "$DRY_RUN" == "1" ]]; then
+  echo "dry-run: would upload ${ONTOLOGY_REL} as ontology key '${ONTOLOGY_KEY}'"
   echo "dry-run: would run cognee-sync --added on ${#FILES[@]} files"
+  echo "dry-run: would cognify with ontologyKey=[${ONTOLOGY_KEY}]"
   echo "dry-run: would wipe state DB at ${STATE_DB}"
   exit 0
 fi
@@ -81,6 +98,8 @@ LLM_MODEL=azure/mdl-openai-gpt41mini-std-eus2-r1 \
 EMBEDDING_MODEL=azure/mdl-openai-textembed3large-std-eus2-r1 \
 python3 "$SECRETS_BIN" -- \
   uv run --directory "$SYNC_DIR" cognee-sync \
+    --ontology-key "$ONTOLOGY_KEY" \
+    --upload-ontology "$ONTOLOGY_FILE" \
     --added "${FILES[@]}"
 
 echo "bulk-rebuild: done — commit updated .cognee-state.db to source"

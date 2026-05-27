@@ -170,13 +170,49 @@ This adapter is the active extraction path. The flow is:
    single `POST /api/v1/cognify` against the affected dataset (default:
    `eposforge-sync`). Cognify drives `classify_documents`,
    `extract_chunks_from_documents`, and `extract_graph_and_summarize`
-   to populate the KG.
+   to populate the KG. When `--ontology-key` (or `$COGNEE_ONTOLOGY_KEY`)
+   is set, cognify is called with `ontologyKey=[key]` so extracted
+   entities are anchored to the uploaded ontology — see
+   §Ontology grounding below.
 3. Cognee writes graph nodes/edges into `cognee_graph_ladybug` (embedded
    Kuzu) and embeddings into `cognee.lancedb/` (embedded LanceDB) on
    the `dkr-cgnee-api` volume.
 
 The MCP surface (`dkr-cgnee-mcp`) runs in proxy mode (`API_URL=http://dkr-cgnee-api:8000`),
 so `recall` / `remember` / `forget` over MCP read and write the same KG.
+
+---
+
+## Ontology grounding
+
+Cognee anchors extraction to an ontology only when cognify is called with an
+`ontologyKey` naming a previously-uploaded ontology. Anchoring is applied at
+cognify time, per run, and is **not retroactive** — nodes from earlier
+unanchored runs keep their LLM-improvised `EntityType` taxonomy.
+
+**Build paths** (both via `cognee-sync`; ontology key defaults to `eposforge`):
+
+- **Full rebuild** — `scripts/bulk-rebuild.sh`. Uploads `00-vision/01-ontology.ttl`
+  as the `eposforge` anchor (`--upload-ontology`), stages every tracked `*.md`/`*.ttl`
+  **except** the ontology TTL itself, and cognifies with `ontologyKey=[eposforge]`.
+  The ontology is the anchor, not a corpus document — ingesting it as a document
+  produced an isolated `rdf_type`/`fulfillsSlot` island and is no longer done.
+- **Incremental** — on push, `cognee-sync --ontology-key eposforge --added/--modified/--deleted ...`.
+  Assumes the ontology is already uploaded; just threads the key into the per-run
+  cognify so new/changed docs anchor against the current ontology.
+
+**Ontology changes require a full rebuild with a KG wipe — not an incremental run.**
+Two compounding reasons: (1) no retroactive re-anchoring, so a changed ontology
+only affects docs cognified after the change; (2) content-hash dedup
+(`PipelineRunAlreadyCompleted`) skips re-extraction of unchanged docs, so simply
+re-running over the same corpus will silently *not* re-anchor. After editing the
+ontology, perform the KG wipe (§Recovery procedures) and then run `bulk-rebuild.sh`.
+Document-only changes are safe incrementally.
+
+> Open question: whether passing a *new* `ontologyKey` over content-hash-dedup'd
+> documents forces re-resolution (it might, if the cache keys on content+ontology).
+> If confirmed, ontology changes could skip the KG wipe. Untested — verify before
+> relying on it.
 
 ---
 
@@ -432,4 +468,4 @@ Unicode literals in print strings in test files, when targeting a cp1252 termina
 |---|---|---|
 | Unpinned `cognee` version | Breaking API changes may silently change graph schema or ontology resolution | Pin version in `requirements.txt` once the adapter is promoted from experimental |
 | No audit events | Indexing runs are not logged to the Audit & Observability slot | Wire structured events when a factory Audit Adapter is installed |
-| Full prune on every run | `cognee.prune()` clears all Cognee state before each rebuild; no incremental update | Explore Cognee's diff/update APIs once the corpus stabilizes |
+| Ontology change forces full KG wipe + rebuild | Content-hash dedup skips re-extraction; anchoring is not retroactive | Verify whether a new `ontologyKey` defeats dedup; if so, incremental re-anchor is possible |

@@ -23,6 +23,7 @@ Environment variables (injected by epos-secrets):
     COGNEE_TLS_VERIFY      false / path to CA bundle (optional)
     COGNEE_DATASET_NAME    Dataset to sync into (default: eposforge-sync)
     COGNEE_STATE_DB        Path to SQLite state store (default: .cognee-state.db)
+    COGNEE_ONTOLOGY_KEY    Uploaded ontology key to anchor cognify against (optional)
 """
 
 from __future__ import annotations
@@ -317,6 +318,12 @@ def _dataset_name(args: argparse.Namespace) -> str:
     return args.dataset or os.environ.get("COGNEE_DATASET_NAME", "eposforge-sync")
 
 
+def _ontology_key(args: argparse.Namespace) -> str | None:
+    key = args.ontology_key or os.environ.get("COGNEE_ONTOLOGY_KEY", "")
+    key = key.strip()
+    return key or None
+
+
 def _http_timeout_seconds() -> float:
     raw_timeout = os.environ.get("COGNEE_HTTP_TIMEOUT", "900").strip()
     try:
@@ -356,6 +363,22 @@ def main() -> None:
                              "cognee-sync invocations and you'll cognify manually at the end. "
                              "Default: run cognify against the target dataset after add/update.")
     parser.add_argument(
+        "--ontology-key",
+        default=None,
+        metavar="KEY",
+        help="Uploaded ontology key to anchor cognify entity extraction against "
+             "(default: $COGNEE_ONTOLOGY_KEY). When set, cognify is called with "
+             "ontologyKey=[KEY] so extracted entities are matched to the ontology.",
+    )
+    parser.add_argument(
+        "--upload-ontology",
+        default=None,
+        metavar="PATH",
+        help="Upload (delete + re-upload) the ontology file at PATH under "
+             "--ontology-key before cognify. Use on a full rebuild; omit on "
+             "incremental runs where the ontology is already uploaded.",
+    )
+    parser.add_argument(
         "--repo-key",
         default=None,
         metavar="KEY",
@@ -385,6 +408,8 @@ def main() -> None:
         sys.exit(0)
 
     if args.dry_run:
+        if args.upload_ontology:
+            print(f"[dry-run] upload ontology: {args.upload_ontology} (key={_ontology_key(args)})")
         for f in (args.added or []):
             print(f"[dry-run] add:    {f}")
         for f in (args.modified or []):
@@ -408,12 +433,24 @@ def main() -> None:
     # Example: COGNEE_TOKEN_USAGE_FILE=/mnt/raid-storage/docker-volume-mounts/cognee/data/token-usage.jsonl
     token_usage_file = os.environ.get("COGNEE_TOKEN_USAGE_FILE", "").strip()
 
+    ontology_key = _ontology_key(args)
+
     with CogneeClient(
         base_url=config.api_url,
         token=config.api_token,
         timeout=_http_timeout_seconds(),
         verify=config.tls_verify,
     ) as client:
+        if args.upload_ontology:
+            if not ontology_key:
+                raise RuntimeError(
+                    "--upload-ontology requires --ontology-key or $COGNEE_ONTOLOGY_KEY"
+                )
+            ontology_content = Path(args.upload_ontology).read_bytes()
+            client.delete_ontology(ontology_key)
+            client.upload_ontology(ontology_key, ontology_content)
+            print(f"ontology uploaded: key={ontology_key} from {args.upload_ontology}")
+
         cognify_needed = False
 
         for file_path in (args.added or []):
@@ -459,10 +496,15 @@ def main() -> None:
 
             cognify_wall_start = datetime.now(timezone.utc).timestamp()
             started = time.perf_counter()
-            print(f"cognify {dataset_name} ...", flush=True)
+            anchor = f" (ontology={ontology_key})" if ontology_key else ""
+            print(f"cognify {dataset_name}{anchor} ...", flush=True)
             actual = None
             try:
-                client.cognify(datasets=[dataset_name], run_in_background=False)
+                client.cognify(
+                    datasets=[dataset_name],
+                    run_in_background=False,
+                    ontology_key=[ontology_key] if ontology_key else None,
+                )
                 print(f"cognify {dataset_name} done")
             finally:
                 latency_ms = int((time.perf_counter() - started) * 1000)
