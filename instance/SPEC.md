@@ -178,7 +178,12 @@ discovers them and writes dispatchers into `.git/hooks/`.
 5. **Query surface:** Cognee's MCP server (`dkr-cgnee-mcp`, in proxy mode
    to `dkr-cgnee-api`) exposes `recall` / `remember` / `forget` over SSE
    to any MCP-compatible Dev Product. Scripts can hit the HTTP surface
-   directly at `https://cognee-api.grace.lan/api/v1/{recall,search,...}`.
+  directly at `https://cognee-api.grace.lan/api/v1/{recall,search,...}`.
+  For adopter-facing recommendation queries, use
+  `instance/installed/06-spec-graph/cognee/scripts/adopter-recall.py` to
+  enforce adopter-boundary path rewriting (no raw `instance/installed/...`
+  guidance) and emit recommendation maturity tags
+  (`shipped` / `partial` / `intent`).
    Operators can issue instructions such as:
    - "Find all adapters that fulfill the Spec Graph slot."
    - "List all principles that govern the Router component."
