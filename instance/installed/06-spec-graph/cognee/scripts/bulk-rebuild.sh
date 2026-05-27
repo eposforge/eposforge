@@ -49,7 +49,7 @@ ONTOLOGY_FILE="${REPO_ROOT}/${ONTOLOGY_REL}"
 
 # Locate epos-secrets: prefer PATH, fall back to known location
 if command -v epos-secrets >/dev/null 2>&1; then
-  SECRETS_BIN="epos-secrets"
+  SECRETS_BIN="$(command -v epos-secrets)"
 else
   SECRETS_BIN="${REPO_ROOT}/instance/installed/12-secrets-key-management/bin/epos-secrets"
 fi
