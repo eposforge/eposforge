@@ -201,6 +201,19 @@ unanchored runs keep their LLM-improvised `EntityType` taxonomy.
   Assumes the ontology is already uploaded; just threads the key into the per-run
   cognify so new/changed docs anchor against the current ontology.
 
+**The uploaded ontology must be RDF/XML, not Turtle (cognee 1.0.7-local quirk).**
+`RDFLibOntologyResolver`'s file-object load path (the one the upload endpoint
+uses) parses with a hardcoded `format="xml"`, so a Turtle file uploaded as
+`eposforge.owl` fails to parse, the graph falls back to `None`, and the
+class/individual lookup is empty. Symptom: cognify "succeeds" with `ontologyKey`
+set, but the API log shows `OntologyAdapter: No close match found for '<x>' in
+category 'classes'/'individuals'` for *everything* and every node carries
+`ontology_valid: false` — i.e. nothing anchored. `cognee-sync`'s
+`upload_ontology` therefore converts Turtle → RDF/XML (via `rdflib`) before
+upload; the on-disk source of truth stays `00-vision/01-ontology.ttl`. Verified
+fix: the resolver then reports `Lookup built: 46 classes, 60 individuals` and
+matches `concept`/`component`/`adapter`/`darkfactory`/`pillar`.
+
 **Ontology changes require a full rebuild with a KG wipe — not an incremental run.**
 Two compounding reasons: (1) no retroactive re-anchoring, so a changed ontology
 only affects docs cognified after the change; (2) content-hash dedup

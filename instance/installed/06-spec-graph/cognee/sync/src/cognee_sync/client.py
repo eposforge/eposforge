@@ -26,6 +26,25 @@ from typing import Any
 import httpx
 
 
+def _to_rdf_xml(content: bytes) -> bytes:
+    """Return ``content`` as RDF/XML bytes.
+
+    Cognee's RDFLibOntologyResolver parses uploaded ontology files with a
+    hardcoded ``format="xml"`` on its file-object path, so a Turtle file
+    silently fails to load (no classes/individuals → nothing anchors). We
+    convert Turtle (and anything else RDFLib can parse) to RDF/XML before
+    upload. Content that is already RDF/XML is returned unchanged.
+    """
+    head = content.lstrip()[:64].lower()
+    if head.startswith(b"<?xml") or head.startswith(b"<rdf"):
+        return content
+    from rdflib import Graph
+
+    graph = Graph()
+    graph.parse(data=content, format="turtle")
+    return graph.serialize(format="xml").encode("utf-8")
+
+
 class CogneeClient:
     """Thin httpx wrapper around the Cognee HTTP API.
 
@@ -237,6 +256,7 @@ class CogneeClient:
         """
         if isinstance(content, str):
             content = content.encode("utf-8")
+        content = _to_rdf_xml(content)
         files = {"ontology_file": (f"{ontology_key}.owl", content, "application/octet-stream")}
         data: dict[str, str] = {"ontology_key": ontology_key}
         if description:
@@ -246,9 +266,15 @@ class CogneeClient:
         return response.json()
 
     def delete_ontology(self, ontology_key: str) -> None:
-        """DELETE /api/v1/ontologies/{ontology_key} — remove an uploaded ontology."""
+        """DELETE /api/v1/ontologies/{ontology_key} — remove an uploaded ontology.
+
+        Treats "not found" as success so delete-before-upload stays idempotent.
+        This cognee build returns 400 (not 404) when the key is absent.
+        """
         response = self._client.delete(f"/api/v1/ontologies/{ontology_key}")
         if response.status_code == 404:
+            return
+        if response.status_code == 400 and "not found" in response.text.lower():
             return
         response.raise_for_status()
 
