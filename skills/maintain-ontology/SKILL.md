@@ -162,6 +162,10 @@ After editing, verify the file is syntactically valid Turtle (no unclosed blocks
 
 Also verify the editorial rationale still passes the concept-formation gate: the new term should survive comparison against the nearest existing graph terms from the previous KG and the nearest current-corpus neighbors.
 
+## Rebuild the graph after editing
+
+A TTL edit does not change the live graph on its own — Cognee only re-anchors at cognify time, and its content-hash dedup skips re-extraction of unchanged docs. So editing the ontology requires a **full rebuild with a KG wipe**, not an incremental sync. Hand off to [update-spec-graph](../update-spec-graph/SKILL.md) to run it; that skill owns the wipe + `bulk-rebuild.sh` flow and the verification that anchoring took. Document-only changes stay incremental and are also handled there.
+
 ## Coach on OWL/Turtle
 
 Load `[owl-turtle-primer](./references/owl-turtle-primer.md)` when the user asks about TTL syntax, OWL semantics, or how to model a specific concept. Key coaching topics covered there:
