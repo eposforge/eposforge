@@ -99,6 +99,23 @@ Use placeholders in tracked config examples (do not commit private hostnames).
    - Example: `mcp__cognee__recall` for a known architecture term.
 3. Confirm results include expected entities from the eposforge dataset.
 
+### Adopter-safe recommendation view (EF-011 / EF-012)
+
+For recommendation-style questions ("how does an adopter org do <pattern>"),
+use the adopter-safe wrapper so responses do not leak EposForge-internal
+`instance/installed/...` paths and each recommendation is maturity-tagged.
+
+```bash
+python instance/installed/06-spec-graph/cognee/scripts/adopter-recall.py \
+  --query "how does an adopter org do secrets handling for CI"
+```
+
+Expected output behavior:
+
+- Internal `instance/installed/...` references are rewritten to
+  `<adopter-layout-path>` with a prerequisite note.
+- Each line is tagged as `[maturity: shipped|partial|intent]`.
+
 ## TTL overlay flow
 
 Overlay ontology updates are uploaded via `cognee-sync`, not by ad-hoc MCP

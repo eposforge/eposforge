@@ -1,0 +1,26 @@
+%% Client-side Router v0 augmentation shim - architecture
+%% Plan: cognee-rag-hook-plan.md
+%% Backlog: GEA-004 (instance) / eposforge:EF-013 (pattern)
+flowchart TB
+    U["User prompt"] --> UP["UserPromptSubmit hook"]
+
+    subgraph SHIM["Claude Code client - srv-docker-hp / GEA-004"]
+        UP --> R["router.sh - Router v0 (C4): classify, gate, label, cap"]
+        R --> T["mcp_retrieve.py - Tool Transport (C5): one MCP client, http+sse, fail-open"]
+    end
+
+    T --> CGA["cognee adapter"]
+    T --> MSA["microsoft.docs adapter"]
+    T --> GHA["github adapter - entity gated"]
+
+    CGA -->|sse| COG["cognee-mcp - Spec Graph (C6): eposforge dataset / cognee-mcp.grace.lan/sse"]
+    MSA -->|http| MSS["microsoft.docs MCP: learn.microsoft.com/api/mcp"]
+    GHA -->|http + PAT| GHS["github MCP: api.githubcopilot.com/mcp"]
+
+    R -.->|inject labeled context blocks| L["Claude model context"]
+
+    EF011["eposforge:EF-011 - recall conflates internal vs adopter paths"] -. recall caveat .-> COG
+    EF012["eposforge:EF-012 - emits design intent as present state"] -. recall caveat .-> COG
+
+    classDef blocker fill:#fee,stroke:#c33,color:#900;
+    class EF011,EF012 blocker;

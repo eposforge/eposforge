@@ -252,6 +252,22 @@ ef:StatusRetired rdf:type ef:LifecycleStatus ;
     rdfs:label "retired" ;
     rdfs:comment "Term or rule was adopted but is no longer in use. Retained for historical reference." .
 
+### Autonomy Mode
+
+ef:AutonomyMode rdf:type owl:Class ;
+    rdfs:label "Autonomy Mode" ;
+    rdfs:comment "The operating posture of a factory with respect to human presence in the execution loop: how autonomously it runs at a given moment, selected per instance and reversible. Gated by Dev Product terms of service and by trust calibration. Distinct from ef:Phase: a Phase is an irreversible maturity rung reached via ef:maturesTo, whereas a Mode is a posture the operator can set and unset. Allowed values: supervised, autonomous." .
+
+ef:AutonomyModeSupervised rdf:type ef:AutonomyMode ;
+    rdfs:label "supervised" ;
+    rdfs:comment "Human on the loop: a near-autonomous fleet runs while a human observes and intervenes by exception. Subscription/OAuth-authenticated Dev Products are permitted here. The operating-posture counterpart of the Platform maturity rung ef:PlatformPhase3, not the same node." ;
+    rdfs:seeAlso ef:PlatformPhase3 .
+
+ef:AutonomyModeAutonomous rdf:type ef:AutonomyMode ;
+    rdfs:label "autonomous" ;
+    rdfs:comment "Human off the loop: no human in the critical path (the dark-factory end state). ToS-restricted Dev Products require BYOK / API-key auth here. The operating-posture counterpart of the Platform maturity rung ef:PlatformPhase4, not the same node." ;
+    rdfs:seeAlso ef:PlatformPhase4 .
+
 ### Object Properties (Relationships)
 
 ef:hasComponent rdf:type owl:ObjectProperty ;
@@ -337,6 +353,12 @@ ef:lifecycleStatus rdf:type owl:ObjectProperty ;
     rdfs:range ef:LifecycleStatus ;
     rdfs:comment "Lifecycle status of a Concept, Guidance, or Tenet (proposed|adopted|retired). Distinct from ef:hasStatus which governs Adapters." .
 
+ef:operatesInMode rdf:type owl:ObjectProperty ;
+    rdfs:label "OPERATES_IN_MODE" ;
+    rdfs:domain ef:Factory ;
+    rdfs:range ef:AutonomyMode ;
+    rdfs:comment "The autonomy mode a factory currently operates in. A reversible operating posture, distinct from the factory's ef:Phase maturity." .
+
 ### Datatype Properties (Adapter Metadata)
 
 ef:adapterName rdf:type owl:DatatypeProperty ;
@@ -372,6 +394,12 @@ ef:capabilities rdf:type owl:DatatypeProperty ;
 ef:invocationSurface rdf:type owl:DatatypeProperty ;
     rdfs:label "invocation_surface" ;
     rdfs:comment "How the Adapter is invoked: CLI, HTTP, library, process, etc." ;
+    rdfs:domain ef:Adapter ;
+    rdfs:range xsd:string .
+
+ef:autonomyTosPosture rdf:type owl:DatatypeProperty ;
+    rdfs:label "autonomy_tos_posture" ;
+    rdfs:comment "The highest ef:AutonomyMode an Adapter's licensing/terms of service permit, expressed as a threshold string. Examples: byok-clean-all-modes; subscription-ok-through-supervised|api-key-required-for-autonomous; supervised-max. A factory operating in autonomous mode must not dispatch to an Adapter whose posture forbids it." ;
     rdfs:domain ef:Adapter ;
     rdfs:range xsd:string .
 
@@ -510,12 +538,14 @@ ef:PlatformPhase2 rdf:type ef:Phase ;
 
 ef:PlatformPhase3 rdf:type ef:Phase ;
     rdfs:label "Phase 3: Supervised Autonomy" ;
-    rdfs:comment "Agents execute pre-approved actions." ;
+    rdfs:comment "Maturity rung (irreversible, reached via ef:maturesTo): agents execute pre-approved actions. For the reversible operating posture at this level, see ef:AutonomyModeSupervised." ;
+    rdfs:seeAlso ef:AutonomyModeSupervised ;
     ef:maturesTo ef:PlatformPhase4 .
 
 ef:PlatformPhase4 rdf:type ef:Phase ;
     rdfs:label "Phase 4: Full Autonomy" ;
-    rdfs:comment "Agents self-update, coordinate, optimize." .
+    rdfs:comment "Maturity rung (irreversible, reached via ef:maturesTo): agents self-update, coordinate, optimize. For the reversible operating posture at this level, see ef:AutonomyModeAutonomous." ;
+    rdfs:seeAlso ef:AutonomyModeAutonomous .
 
 ### Product Factory Phase Individuals
 

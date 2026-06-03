@@ -7,7 +7,7 @@ source_of_truth: no
 
 # Execution Sandbox — Implementation Catalog
 
-> **Snapshot date:** 2026-04. Verify current details before adopting.
+> **Snapshot date:** 2026-05. Verify current details before adopting.
 
 Candidate Adapters for the Execution Sandbox slot
 ([../../01-architecture/02-components/07-execution-sandbox.md](../../01-architecture/02-components/07-execution-sandbox.md)).
@@ -46,7 +46,11 @@ Each entry includes (where known):
   [dev-products.md](../03-dev-product/dev-products.md). When OpenClaw fills the
   Execution Sandbox slot, Dev Product Adapters dispatched into it
   inherit its network and isolation posture; declare
-  `network_policy_modes` per instance.
+  `network_policy_modes` per instance. **ToS caveat:** running a
+  ToS-restricted Dev Product (e.g. Gemini / Claude on OAuth) inside the
+  sandbox does not launder its terms — the dispatched Adapter still needs
+  BYOK / API-key auth to satisfy `autonomous` mode. See
+  [../../01-architecture/03-autonomy-modes.md](../../01-architecture/03-autonomy-modes.md).
 
 ### Docker containers
 

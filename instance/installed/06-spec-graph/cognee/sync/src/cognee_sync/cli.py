@@ -23,6 +23,7 @@ Environment variables (injected by epos-secrets):
     COGNEE_TLS_VERIFY      false / path to CA bundle (optional)
     COGNEE_DATASET_NAME    Dataset to sync into (default: eposforge-sync)
     COGNEE_STATE_DB        Path to SQLite state store (default: .cognee-state.db)
+    COGNEE_ONTOLOGY_KEY    Uploaded ontology key to anchor cognify against (optional)
 """
 
 from __future__ import annotations
@@ -33,6 +34,7 @@ import os
 import subprocess
 import sys
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 from . import sync as _sync
@@ -174,10 +176,53 @@ def _record_budget_usage(repo_key: str, consumed_tokens: int) -> None:
         raise RuntimeError(f"Failed to record budget usage: {details}")
 
 
+def _read_actual_tokens(usage_file: str, since_ts: float) -> dict[str, int] | None:
+    """Sum token counts from the LiteLLM JSONL tracker file written after `since_ts`.
+
+    Returns None when the file is absent or contains no records in the window,
+    so callers can fall back to estimated counts.
+    """
+    try:
+        path = Path(usage_file)
+        if not path.exists():
+            return None
+        prompt = completion = total = 0
+        found = False
+        with path.open() as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    record = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                ts_str = record.get("ts", "")
+                if not ts_str:
+                    continue
+                try:
+                    record_ts = datetime.fromisoformat(ts_str).timestamp()
+                except ValueError:
+                    continue
+                if record_ts < since_ts:
+                    continue
+                prompt += record.get("prompt_tokens", 0) or 0
+                completion += record.get("completion_tokens", 0) or 0
+                total += record.get("total_tokens", 0) or 0
+                found = True
+        if not found:
+            return None
+        return {"prompt_tokens": prompt, "completion_tokens": completion, "total_tokens": total}
+    except OSError:
+        return None
+
+
 def _emit_token_usage_event(
     repo_key: str,
     dataset_name: str,
     model: str,
+    prompt_tokens: int,
+    completion_tokens: int,
     total_tokens: int,
     latency_ms: int,
 ) -> None:
@@ -195,9 +240,9 @@ def _emit_token_usage_event(
             "--model",
             model,
             "--prompt-tokens",
-            str(total_tokens),
+            str(prompt_tokens),
             "--completion-tokens",
-            "0",
+            str(completion_tokens),
             "--total-tokens",
             str(total_tokens),
             "--latency-ms",
@@ -213,6 +258,57 @@ def _emit_token_usage_event(
         raise RuntimeError(f"Failed to emit token usage event: {details}")
 
 
+def _token_usage_counts(
+    requested_tokens: int,
+    actual: dict[str, int] | None,
+) -> tuple[int, int, int]:
+    if actual is not None:
+        return (
+            actual["prompt_tokens"],
+            actual["completion_tokens"],
+            actual["total_tokens"],
+        )
+    return (requested_tokens, 0, requested_tokens)
+
+
+def _record_budget_reservation(repo_key: str, requested_tokens: int, budget_enforce: bool) -> None:
+    if budget_enforce:
+        _record_budget_usage(repo_key, requested_tokens)
+
+
+def _record_cognify_usage(
+    *,
+    repo_key: str,
+    dataset_name: str,
+    model: str,
+    requested_tokens: int,
+    actual: dict[str, int] | None,
+    latency_ms: int,
+    budget_enforce: bool,
+    emit_usage_events: bool,
+) -> None:
+    prompt_tokens, completion_tokens, consumed_tokens = _token_usage_counts(
+        requested_tokens,
+        actual,
+    )
+
+    if budget_enforce:
+        recorded_tokens = consumed_tokens - requested_tokens
+        if recorded_tokens > 0:
+            _record_budget_usage(repo_key, recorded_tokens)
+
+    if emit_usage_events:
+        _emit_token_usage_event(
+            repo_key=repo_key,
+            dataset_name=dataset_name,
+            model=model,
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+            total_tokens=consumed_tokens,
+            latency_ms=latency_ms,
+        )
+
+
 def _state_store(args: argparse.Namespace) -> StateStore:
     db_path = args.db or os.environ.get("COGNEE_STATE_DB", _DEFAULT_STATE_DB)
     return StateStore(db_path)
@@ -220,6 +316,23 @@ def _state_store(args: argparse.Namespace) -> StateStore:
 
 def _dataset_name(args: argparse.Namespace) -> str:
     return args.dataset or os.environ.get("COGNEE_DATASET_NAME", "eposforge-sync")
+
+
+def _ontology_key(args: argparse.Namespace) -> str | None:
+    key = args.ontology_key or os.environ.get("COGNEE_ONTOLOGY_KEY", "")
+    key = key.strip()
+    return key or None
+
+
+def _http_timeout_seconds() -> float:
+    raw_timeout = os.environ.get("COGNEE_HTTP_TIMEOUT", "900").strip()
+    try:
+        timeout = float(raw_timeout)
+    except ValueError as exc:
+        raise RuntimeError("COGNEE_HTTP_TIMEOUT must be a number") from exc
+    if timeout <= 0:
+        raise RuntimeError("COGNEE_HTTP_TIMEOUT must be greater than 0")
+    return timeout
 
 
 def main() -> None:
@@ -250,6 +363,22 @@ def main() -> None:
                              "cognee-sync invocations and you'll cognify manually at the end. "
                              "Default: run cognify against the target dataset after add/update.")
     parser.add_argument(
+        "--ontology-key",
+        default=None,
+        metavar="KEY",
+        help="Uploaded ontology key to anchor cognify entity extraction against "
+             "(default: $COGNEE_ONTOLOGY_KEY). When set, cognify is called with "
+             "ontologyKey=[KEY] so extracted entities are matched to the ontology.",
+    )
+    parser.add_argument(
+        "--upload-ontology",
+        default=None,
+        metavar="PATH",
+        help="Upload (delete + re-upload) the ontology file at PATH under "
+             "--ontology-key before cognify. Use on a full rebuild; omit on "
+             "incremental runs where the ontology is already uploaded.",
+    )
+    parser.add_argument(
         "--repo-key",
         default=None,
         metavar="KEY",
@@ -279,6 +408,8 @@ def main() -> None:
         sys.exit(0)
 
     if args.dry_run:
+        if args.upload_ontology:
+            print(f"[dry-run] upload ontology: {args.upload_ontology} (key={_ontology_key(args)})")
         for f in (args.added or []):
             print(f"[dry-run] add:    {f}")
         for f in (args.modified or []):
@@ -296,12 +427,30 @@ def main() -> None:
     model = os.environ.get("LLM_MODEL", "").strip() or "unknown"
     changed_files = len(args.added or []) + len(args.modified or [])
     requested_tokens = _estimate_requested_tokens(args, changed_files)
+    # Host-side path to the LiteLLM JSONL tracker written by litellm_token_tracker.py
+    # inside dkr-cgnee-api.  Set to the ./data mount path on the host so cognee-sync
+    # can read actual token counts after each cognify run.
+    # Example: COGNEE_TOKEN_USAGE_FILE=/mnt/raid-storage/docker-volume-mounts/cognee/data/token-usage.jsonl
+    token_usage_file = os.environ.get("COGNEE_TOKEN_USAGE_FILE", "").strip()
+
+    ontology_key = _ontology_key(args)
 
     with CogneeClient(
         base_url=config.api_url,
         token=config.api_token,
+        timeout=_http_timeout_seconds(),
         verify=config.tls_verify,
     ) as client:
+        if args.upload_ontology:
+            if not ontology_key:
+                raise RuntimeError(
+                    "--upload-ontology requires --ontology-key or $COGNEE_ONTOLOGY_KEY"
+                )
+            ontology_content = Path(args.upload_ontology).read_bytes()
+            client.delete_ontology(ontology_key)
+            client.upload_ontology(ontology_key, ontology_content)
+            print(f"ontology uploaded: key={ontology_key} from {args.upload_ontology}")
+
         cognify_needed = False
 
         for file_path in (args.added or []):
@@ -343,21 +492,47 @@ def main() -> None:
                             f"{recommended_model}"
                         )
 
-            started = time.perf_counter()
-            print(f"cognify {dataset_name} ...", flush=True)
-            client.cognify(datasets=[dataset_name], run_in_background=False)
-            print(f"cognify {dataset_name} done")
-            latency_ms = int((time.perf_counter() - started) * 1000)
+            _record_budget_reservation(repo_key, requested_tokens, budget_enforce)
 
-            if budget_enforce:
-                _record_budget_usage(repo_key, requested_tokens)
-            if emit_usage_events:
-                _emit_token_usage_event(
+            cognify_wall_start = datetime.now(timezone.utc).timestamp()
+            started = time.perf_counter()
+            anchor = f" (ontology={ontology_key})" if ontology_key else ""
+            print(f"cognify {dataset_name}{anchor} ...", flush=True)
+            actual = None
+            try:
+                client.cognify(
+                    datasets=[dataset_name],
+                    run_in_background=False,
+                    ontology_key=[ontology_key] if ontology_key else None,
+                )
+                print(f"cognify {dataset_name} done")
+            finally:
+                latency_ms = int((time.perf_counter() - started) * 1000)
+
+                # Resolve actual token counts from the LiteLLM tracker file when
+                # available; fall back to the pre-run estimate so budget accounting
+                # always has a value. If cognify failed or timed out, the reservation
+                # above remains counted so a retry cannot evade the budget ledger.
+                actual = (
+                    _read_actual_tokens(token_usage_file, cognify_wall_start)
+                    if token_usage_file
+                    else None
+                )
+                if actual is not None:
+                    print(
+                        f"token usage (actual): prompt={actual['prompt_tokens']} "
+                        f"completion={actual['completion_tokens']} total={actual['total_tokens']}"
+                    )
+
+                _record_cognify_usage(
                     repo_key=repo_key,
                     dataset_name=dataset_name,
                     model=model,
-                    total_tokens=requested_tokens,
+                    requested_tokens=requested_tokens,
+                    actual=actual,
                     latency_ms=latency_ms,
+                    budget_enforce=budget_enforce,
+                    emit_usage_events=emit_usage_events,
                 )
 
     sys.exit(0)

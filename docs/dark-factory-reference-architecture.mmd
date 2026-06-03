@@ -1,0 +1,127 @@
+%% Standard agentic-AI dark-factory reference architecture (industry-conventional terms)
+%% EposForge component IDs annotated in [brackets] for cross-mapping.
+%% Naming caveat: industry "Router" = model router (per-call model selection);
+%%   industry "Orchestrator" = task decomposition + agent dispatch.
+%% EposForge calls its orchestrator "Router (C4)" -- collides with the industry term.
+%% Model router lives in EposForge as Inference (C10).
+%% Naming alignment ticket: EF-026.
+%% Gap-fill tickets: EF-027 (Content Safety, proposed C14), EF-028 (Working Memory, proposed C15, slated).
+%% Public refs: Anthropic "Building Effective Agents" (2024), OpenAI Agents/Swarm,
+%%   Microsoft Agent Framework, LangGraph, MCP spec, Cognition Devin notes, SWE-agent.
+flowchart TB
+
+    USER["Operator / Stakeholder"]
+
+    subgraph INPUT["Input Layer"]
+        SI["Spec / Goal / Brief [EF C1 Spec Input]"]
+        LS["Normalized Living Spec [EF C2 Living Spec]"]
+        SI --> LS
+    end
+
+    USER --> SI
+    LS --> ORCH
+
+    subgraph CTRL["Control Plane"]
+        ORCH["Orchestrator (planner, supervisor, lead agent) [EF C4, called 'Router' - rename pending EF-026]"]
+        HITL["Human-in-the-loop checkpoints (approvals, reviews)"]
+        ORCH <-->|gate / approve| HITL
+    end
+
+    ORCH -->|decompose and dispatch sub-tasks| WORK
+
+    subgraph WORK["Worker Agents [EF C3 Dev Product]"]
+        W1["Coder agent"]
+        W2["Reviewer agent"]
+        W3["Tester agent"]
+        W4["Research agent"]
+    end
+
+    WORK -->|outcomes / artifacts| ORCH
+
+    subgraph TOOLS["Tool Plane (MCP capabilities) [EF C5 Tool Transport]"]
+        FS["fs / git"]
+        SH["shell / exec"]
+        BR["browser / http"]
+        GQ["graph-query"]
+        SR["search / docs"]
+        VC["vector-search"]
+    end
+
+    W1 -->|tool calls| TOOLS
+    W2 -->|tool calls| TOOLS
+    W3 -->|tool calls| TOOLS
+    W4 -->|tool calls| TOOLS
+    ORCH -. reuse-lookup .-> GQ
+
+    subgraph KNOW["Knowledge and Memory"]
+        KG["Knowledge Graph / GraphRAG (cognee) [EF C6 Spec Graph]"]
+        VEC["Vector index (LanceDB inside cognee; pgvector / Pinecone as alternates) [EF C6 internal, not a separate slot]"]
+        STM["Short-term / cross-session working memory (Mem0, Zep, LangMem, Letta) [EF C15 PROPOSED -- EF-028 slated, GAP]"]
+        DOCS["External knowledge (MS Learn, code hosts, web) via MCP servers"]
+    end
+
+    GQ --> KG
+    VC --> VEC
+    VEC -. embedded in .-> KG
+    SR --> DOCS
+    WORK -.-> STM
+
+    subgraph EXEC["Execution and Delivery"]
+        SBX["Execution sandbox (E2B, Modal, gVisor, container) [EF C7 Execution Sandbox]"]
+        SCM["Source control + CI (Git, GitHub/Gitea Actions) [EF C9 Source Control / CI]"]
+        RING["Release rings (alpha / beta / preview / GA) [EF C9b Release Rings]"]
+        ART["Delivered artifacts (PRs, backlog updates, reports)"]
+    end
+
+    SH --> SBX
+    FS --> SCM
+    SCM --> RING
+    SCM --> ART
+    ART --> USER
+
+    subgraph MODEL["Model Plane"]
+        MR["Model Router / Inference Gateway (LiteLLM, OpenRouter, Azure AI Foundry, Portkey) [EF C10 Inference -- THIS is what industry usually calls 'the router']"]
+        LLMS["LLM providers (Anthropic, OpenAI, Azure, Bedrock, local / vLLM)"]
+        MR -->|cost / latency / capability routing| LLMS
+    end
+
+    ORCH -.->|inference calls| MR
+    W1 -.->|inference calls| MR
+    W2 -.->|inference calls| MR
+    W3 -.->|inference calls| MR
+    W4 -.->|inference calls| MR
+
+    subgraph CROSS["Cross-cutting Planes"]
+        GRA["Action-policy guardrails: tier 0/1/2/3 + ring-lock (tier-yaml) [EF C8 Agent Policy -- FILLED by EF-014, richer than industry]"]
+        GRC["Content-safety / output validation: Llama Guard, NeMo Guardrails, Azure AI Content Safety, Lakera, PromptArmor [EF C14 PROPOSED -- EF-027 open, GAP]"]
+        OBS["Observability / Tracing / Evals (Langfuse, OpenTelemetry, Arize, Braintrust) [EF C11 Audit and Observability]"]
+        BACK["Backlog (file-based, per-repo IDs) [EF C13 Backlog]"]
+        SEC["Secrets / Identity / Authz (vault, OIDC, sops-age) [EF C12 Secrets and Key Management]"]
+        BUD["Cost and budget governance (per-repo / per-agent budgets, kill-switches)"]
+    end
+
+    ORCH -.-> OBS
+    WORK -.-> OBS
+    TOOLS -.-> OBS
+    MR -.-> OBS
+    GRA -.-> OBS
+    GRC -.-> OBS
+    SEC -.->|inject creds| TOOLS
+    SEC -.->|inject creds| MR
+    GRA -.->|consulted before action| ORCH
+    GRA -.->|consulted before action| TOOLS
+    GRA -.->|consulted before action| SCM
+    GRC -.->|inspect prompt / output / tool-args| WORK
+    GRC -.->|inspect prompt / output / tool-args| ORCH
+    BUD -.->|enforce| MR
+    ORCH -. records .-> BACK
+    WORK -. records .-> BACK
+
+    classDef misnamed fill:#fff3cd,stroke:#856404,color:#5a4500;
+    classDef truerouter fill:#d1ecf1,stroke:#0c5460,color:#073642;
+    classDef gap fill:#fee,stroke:#c33,color:#900;
+    classDef filled fill:#d4edda,stroke:#155724,color:#0b3d18;
+    class ORCH misnamed;
+    class MR truerouter;
+    class STM,GRC gap;
+    class GRA filled;

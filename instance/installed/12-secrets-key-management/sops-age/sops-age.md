@@ -74,6 +74,9 @@ user's GitHub PAT (`github_pat_sandbox`) is a separate token stored in the
 
 - At runtime, the `epos-secrets` resolver runs `sops --decrypt secrets.enc.yaml` once,
   caches the result in process memory, and looks up each secret by `logical_name`.
+- Resolver location is decoupled from vault location: set `EPOS_SECRETS_HOME` (or
+  `EPOS_VAULT`) to point at another repo's `12-secrets-key-management/` directory
+  when using a shared resolver binary on PATH.
 - The decrypted values are set as environment variables for the child process only. They are
   never written to disk.
 - Each resolved secret emits one `secret.accessed` JSON line (no value) to
