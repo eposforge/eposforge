@@ -46,6 +46,14 @@ a second, divergent KG.
   to the API.
 - From scripts / HTTP: `https://cognee-api.grace.lan/api/v1/*` directly.
 
+For adopter-facing recommendation queries, use
+`instance/installed/06-spec-graph/cognee/scripts/adopter-recall.py` instead of
+raw `recall`/`search` output. The wrapper enforces two answering rules:
+- EF-011 boundary: rewrite EposForge-internal `instance/installed/...` paths to
+  adopter-layer placeholders.
+- EF-012 clarity: add `[maturity: shipped|partial|intent]` tags per
+  recommendation line.
+
 ### Why this layout, not a single container
 
 The MCP server is `cognee/cognee-mcp:main` (the published MCP-protocol bridge),
@@ -83,9 +91,35 @@ practice — 82 cognify runs / 0 errors over 48h confirmed.
 
 | Symptom | Real cause |
 |---|---|
-| `Failed to initialize Ladybug database: Could not map version_code to proper Ladybug version` | **File-lock contention**, not a real version mismatch. Some second process is trying to open `cognee_graph_ladybug` while the container holds the exclusive lock. Cognee's migration-fallback path masks the real `RuntimeError: Could not set lock on file` and reports the version-code lookup that fails because Ladybug 0.16.0 writes version_code 40, but cognee's migration table only knows 34–39. Don't try to "migrate" — find the second process. |
+| `Failed to initialize Ladybug database: Could not map version_code to proper Ladybug version` | **File-lock contention**, not a real version mismatch. Some second process is trying to open `cognee_graph_ladybug` while the container holds the exclusive lock. Cognee's migration-fallback path masks the real `RuntimeError: Could not set lock on file` and reports the version-code lookup that fails because Ladybug 0.16.0 writes version_code 40, but cognee's migration table only knows 34–39. Don't try to "migrate" — find the second process. If no external second process is visible, the prior container run left a stale lock in `./data/cognee_system/databases/`. Recovery: **wipe and restart** — see **Recovery procedures** below. This destroys the KG; follow with a full corpus rebuild. |
+| `database is locked` or `no such table: data` during bulk cognify | Cognee internal SQLite worker-concurrency. A large (80+ doc) batch spawns concurrent writer tasks; if any task holds a lock past the batch, subsequent re-runs hit it. Recovery: re-run the same `cognee-sync --added` command — the second pass picks up all missed docs cleanly. If the second pass also fails, restart `dkr-cgnee-api` to clear stale in-process locks, then re-run. |
 | `Recall failed: 'NoneType' object has no attribute 'id'` | cognee 1.0.4 in the MCP image only. Already patched in `Dockerfile.mcp`. Won't appear in proxy mode. |
 | `HTTP 404 Could not find session` after a restart | Expected — SSE sessions don't survive container recreation. Reconnect via Claude Code's `/mcp`. |
+
+### Recovery procedures
+
+#### KG wipe and restart (Ladybug stale-lock recovery)
+
+Only use this when the Ladybug error appears at container startup and no
+external process is holding the lock. **This destroys the entire KG.** Must be
+followed by a full corpus rebuild.
+
+```bash
+COMPOSE_FILE=/mnt/raid-storage/docker-volume-mounts/cognee/docker-compose.yml
+docker compose -f "$COMPOSE_FILE" stop dkr-cgnee-api
+sudo rm -rf /mnt/raid-storage/docker-volume-mounts/cognee/data/cognee_system
+sudo mkdir -p /mnt/raid-storage/docker-volume-mounts/cognee/data/cognee_system
+sudo chown -R cdfadmin: /mnt/raid-storage/docker-volume-mounts/cognee/data/cognee_system
+docker compose -f "$COMPOSE_FILE" start dkr-cgnee-api
+# Wait ~10s for the health check, then run a full rebuild:
+bash instance/installed/06-spec-graph/cognee/scripts/bulk-rebuild.sh
+```
+
+Also reset the cognee-sync state DB so it re-stages all files:
+
+```bash
+rm -f instance/installed/06-spec-graph/cognee/sync/.cognee-state.db
+```
 
 ---
 
@@ -144,13 +178,62 @@ This adapter is the active extraction path. The flow is:
    single `POST /api/v1/cognify` against the affected dataset (default:
    `eposforge-sync`). Cognify drives `classify_documents`,
    `extract_chunks_from_documents`, and `extract_graph_and_summarize`
-   to populate the KG.
+   to populate the KG. When `--ontology-key` (or `$COGNEE_ONTOLOGY_KEY`)
+   is set, cognify is called with `ontologyKey=[key]` so extracted
+   entities are anchored to the uploaded ontology — see
+   §Ontology grounding below.
 3. Cognee writes graph nodes/edges into `cognee_graph_ladybug` (embedded
    Kuzu) and embeddings into `cognee.lancedb/` (embedded LanceDB) on
    the `dkr-cgnee-api` volume.
 
 The MCP surface (`dkr-cgnee-mcp`) runs in proxy mode (`API_URL=http://dkr-cgnee-api:8000`),
 so `recall` / `remember` / `forget` over MCP read and write the same KG.
+
+---
+
+## Ontology grounding
+
+Cognee anchors extraction to an ontology only when cognify is called with an
+`ontologyKey` naming a previously-uploaded ontology. Anchoring is applied at
+cognify time, per run, and is **not retroactive** — nodes from earlier
+unanchored runs keep their LLM-improvised `EntityType` taxonomy.
+
+**Build paths** (both via `cognee-sync`; ontology key defaults to `eposforge`):
+
+- **Full rebuild** — `scripts/bulk-rebuild.sh`. Uploads `00-vision/01-ontology.ttl`
+  as the `eposforge` anchor (`--upload-ontology`), stages every tracked `*.md`/`*.ttl`
+  **except** the ontology TTL itself, and cognifies with `ontologyKey=[eposforge]`.
+  The ontology is the anchor, not a corpus document — ingesting it as a document
+  produced an isolated `rdf_type`/`fulfillsSlot` island and is no longer done.
+- **Incremental** — on push, `cognee-sync --ontology-key eposforge --added/--modified/--deleted ...`.
+  Assumes the ontology is already uploaded; just threads the key into the per-run
+  cognify so new/changed docs anchor against the current ontology.
+
+**The uploaded ontology must be RDF/XML, not Turtle (cognee 1.0.7-local quirk).**
+`RDFLibOntologyResolver`'s file-object load path (the one the upload endpoint
+uses) parses with a hardcoded `format="xml"`, so a Turtle file uploaded as
+`eposforge.owl` fails to parse, the graph falls back to `None`, and the
+class/individual lookup is empty. Symptom: cognify "succeeds" with `ontologyKey`
+set, but the API log shows `OntologyAdapter: No close match found for '<x>' in
+category 'classes'/'individuals'` for *everything* and every node carries
+`ontology_valid: false` — i.e. nothing anchored. `cognee-sync`'s
+`upload_ontology` therefore converts Turtle → RDF/XML (via `rdflib`) before
+upload; the on-disk source of truth stays `00-vision/01-ontology.ttl`. Verified
+fix: the resolver then reports `Lookup built: 46 classes, 60 individuals` and
+matches `concept`/`component`/`adapter`/`darkfactory`/`pillar`.
+
+**Ontology changes require a full rebuild with a KG wipe — not an incremental run.**
+Two compounding reasons: (1) no retroactive re-anchoring, so a changed ontology
+only affects docs cognified after the change; (2) content-hash dedup
+(`PipelineRunAlreadyCompleted`) skips re-extraction of unchanged docs, so simply
+re-running over the same corpus will silently *not* re-anchor. After editing the
+ontology, perform the KG wipe (§Recovery procedures) and then run `bulk-rebuild.sh`.
+Document-only changes are safe incrementally.
+
+> Open question: whether passing a *new* `ontologyKey` over content-hash-dedup'd
+> documents forces re-resolution (it might, if the cache keys on content+ontology).
+> If confirmed, ontology changes could skip the KG wipe. Untested — verify before
+> relying on it.
 
 ---
 
@@ -224,7 +307,10 @@ deployment — not the upstream Cognee spec — and may change with container up
     graph nodes but no permanent damage. **Re-run cognify once more on the
     same dataset** and the missing docs are picked up cleanly; the contention
     burst doesn't repeat because the prior workers have released their locks.
-    Plan for a two-pass cognify when bulk-ingesting from scratch.
+    Plan for a two-pass cognify when bulk-ingesting from scratch. If the
+    second pass also fails with lock errors, restart `dkr-cgnee-api` to
+    clear stale in-process worker locks, then re-run. A third pass has not
+    been needed in practice.
 - **No async / polling.** Neither `add` nor explicit `cognify` returns a job id
   to poll. No `wait_for_cognify` is needed.
 - **Re-add deduplicates on identical content.** Same content re-added to the same
@@ -403,4 +489,4 @@ Unicode literals in print strings in test files, when targeting a cp1252 termina
 |---|---|---|
 | Unpinned `cognee` version | Breaking API changes may silently change graph schema or ontology resolution | Pin version in `requirements.txt` once the adapter is promoted from experimental |
 | No audit events | Indexing runs are not logged to the Audit & Observability slot | Wire structured events when a factory Audit Adapter is installed |
-| Full prune on every run | `cognee.prune()` clears all Cognee state before each rebuild; no incremental update | Explore Cognee's diff/update APIs once the corpus stabilizes |
+| Ontology change forces full KG wipe + rebuild | Content-hash dedup skips re-extraction; anchoring is not retroactive | Verify whether a new `ontologyKey` defeats dedup; if so, incremental re-anchor is possible |

@@ -1,0 +1,25 @@
+sequenceDiagram
+    autonumber
+    participant U as User prompt
+    participant R as router.sh (C4)
+    participant T as mcp_retrieve.py (C5)
+    participant C as cognee (C6 / sse)
+    participant M as msdocs (http)
+    participant G as github (http)
+    participant L as Claude model
+
+    U->>R: UserPromptSubmit injects prompt text
+    R->>R: classify_domains() + gate
+    R->>R: github gate = concrete entity only
+    R-->>L: if no domain matched, inject nothing and exit
+    R->>T: if matched, start retrieval fan-out
+    T->>C: retrieve cognee search for eposforge
+    C-->>T: graph chunks
+    T->>M: retrieve microsoft_docs_search
+    M-->>T: doc chunks
+    T->>G: retrieve search_code or search_issues
+    G-->>T: code or issue hits
+    T-->>R: return results with per-adapter timeout and fail-open
+    R->>R: label and truncate with per-source and global caps
+    R-->>L: inject context blocks from cognee, msdocs, and github
+    L->>L: respond using pre-injected context

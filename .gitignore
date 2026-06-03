@@ -16,6 +16,9 @@ instance/.audit/
 # Plaintext secrets staging file — deleted after encryption but gitignore as safety net
 **/secrets.plaintext.yaml
 
+# Real encrypted vault — adopters keep their own; the framework ships secrets.example.yaml only
+**/secrets.enc.yaml
+
 # Node / Gemini CLI
 node_modules/
 .gemini/*

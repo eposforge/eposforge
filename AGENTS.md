@@ -239,6 +239,38 @@ status: active
      - Search queries return results aligned with the updated ontology structure.
    - If discrepancies appear, check the ontology for syntax errors or missing relationships and re-sync.
 
+5. **Token usage note**: `completion=0` in cognee-sync output is expected.
+   The token tracker only counts embedding prompt tokens; LLM completion
+   tokens are recorded separately by the Azure gateway. A corpus rebuild of
+   ~97 files costs roughly 180K–200K embedding tokens.
+
+---
+
+#### Bulk corpus rebuild (from scratch)
+
+Use when the KG needs to be rebuilt from a clean state — after a KG wipe,
+a container migration, or any time incremental state is suspect.
+
+```bash
+# From repo root:
+bash instance/installed/06-spec-graph/cognee/scripts/bulk-rebuild.sh
+```
+
+The script collects all git-tracked `*.md` and `*.ttl` files, wipes the
+cognee-sync state DB, and runs `cognee-sync --added` on the full corpus.
+
+**Two-pass note:** a first cognify pass on 80+ docs may produce ~10 SQLite
+contention errors. Re-run the script — the second pass picks up missed docs.
+If the second pass also fails, restart `dkr-cgnee-api` first, then re-run.
+
+**KG wipe — operator-only:** wiping `cognee_system` destroys all graph data
+and requires a full token-budget rebuild. Agents MUST NOT wipe the KG without
+explicit operator confirmation using the exact phrase **"I authorize KG wipe"**.
+Note: the Ladybug version-code error is unreliable as a wipe trigger — it has
+appeared on already-empty databases and does not by itself indicate corruption.
+The wipe procedure is in
+`instance/installed/06-spec-graph/cognee/MAINTENANCE.md`.
+
 ---
 
 #### Note on `graphrag`

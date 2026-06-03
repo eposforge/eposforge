@@ -1,0 +1,80 @@
+%% EposForge reference architecture - 14 components across 4 tiers
+%% Companion zoom-in: cognee-rag-hook-architecture.mmd (Router v0 augmentation shim)
+%% Source of truth: cognee eposforge dataset (recalled 2026-05-27)
+flowchart TB
+
+    %% ---------------- Operator Tier ----------------
+    subgraph OP["Operator Tier - human intent declared"]
+        C1["C1 Spec Input"]
+    end
+
+    %% ---------------- Factory Tier ----------------
+    subgraph FAC["Factory Tier - specs become artifacts"]
+
+        subgraph SPINE["Orchestration spine"]
+            C4["C4 Router - decompose, dispatch, aggregate"]
+            C3["C3 Dev Product - agent execution"]
+            C5["C5 Tool Transport - MCP client, fail-open"]
+            C9["C9 Source Control + CI"]
+        end
+
+        subgraph MEM["Memory & State"]
+            C2["C2 Living Spec"]
+            C6["C6 Spec Graph - cognee / GraphRAG"]
+            C11["C11 Audit & Observability"]
+            C13["C13 Backlog"]
+        end
+
+        subgraph XCUT["Cross-cutting controls"]
+            C7["C7 Execution Sandbox"]
+            C8["C8 Agent Policy"]
+            C10["C10 Inference Layer"]
+            C12["C12 Secrets & Key Mgmt"]
+        end
+    end
+
+    %% ---------------- Substrate Tier ----------------
+    subgraph SUB["Substrate Tier - hosts, networks, storage, OS, services"]
+        SUBN["srv-docker-hp / containers / RAID storage / grace.lan"]
+    end
+
+    %% ---------------- External Tier ----------------
+    subgraph EXT["External Tier - vendor APIs via Adapters"]
+        C14["C14 Adapters - universal adapter pattern"]
+        VEND["Vendor MCP / APIs: cognee-mcp, microsoft.docs, github, inference vendors"]
+    end
+
+    %% ---------------- Primary flow ----------------
+    C1 --> C4
+    C4 -->|reuse lookup| C6
+    C4 --> C3
+    C3 --> C7
+    C4 --> C5
+    C5 --> C14
+    C14 --> VEND
+    C3 --> C9
+    C4 -->|outcomes| C13
+    C2 --> C4
+
+    %% Cross-cutting governance (applied across Factory Tier)
+    C8 -.governs.-> C4
+    C8 -.governs.-> C3
+    C10 -.model access.-> C3
+    C12 -.secrets.-> C5
+    C11 -.observes.-> C4
+    C11 -.observes.-> C3
+
+    %% Substrate underpins the Factory Tier
+    FAC --- SUBN
+
+    %% ---------------- Zoom-in marker ----------------
+    ZOOM["ZOOM: Router v0 augmentation shim<br/>UserPromptSubmit hook pre-fetches labeled MCP context (RAG)<br/>detailed in cognee-rag-hook-architecture.mmd"]
+    ZOOM -. detail of .-> C4
+    ZOOM -. detail of .-> C5
+    ZOOM -. detail of .-> C6
+    ZOOM -. detail of .-> C14
+
+    classDef zoom fill:#eef,stroke:#33c,color:#009,stroke-dasharray:5 3;
+    class ZOOM zoom;
+    classDef shimscope fill:#f5f5ff,stroke:#66c;
+    class C4,C5,C6,C14 shimscope;

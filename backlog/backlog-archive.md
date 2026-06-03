@@ -11,6 +11,7 @@ Resolved issues are grouped by month (`## YYYY-MM`).
 
 
 
+
 ## Issue EF-007 — Resolve component-slot kind-class symmetry
 ID: EF-007
 Title: Resolve component-slot kind-class symmetry
@@ -158,3 +159,15 @@ Fix surface: eposforge-pattern
 Depends on: EF-017
 Verify with: 00-vision/01-ontology.ttl carries a `kind` discriminator (pillar|group|component|concept|guidance|tenet) on nodes, a Concept schema (adopted_definition, status, variants, relationship_edges), Guidance (status, prose body), and Tenet (statement, status); component nodes keep the Adapter schema; recall returns kind-typed nodes and status-tagged recommendations. Authored via the maintain-ontology skill.
 Notes: This is the data model EF-011 (kind clarifies adopter-vs-internal) and EF-012 (status = shipped/partial/intent maturity) need — it accelerates those. Authoring the TTL is cheap and can start now; the re-cognify step is the inference-cost event, so it is gated behind Foundry routing (EF-017) to bill against credits. Re-home the maintain-ontology skill's vocabulary.md workflow reference (vocabulary folds into the ontology). Full design source: knowledge-tree (working copy in this repo's gitignored `.scratchpad/`).
+
+## Issue EF-017 — Component 10 (Inference): Azure AI Foundry routing backend
+ID: EF-017
+Title: Component 10 (Inference): Azure AI Foundry routing backend
+Date: 2026-05-24
+Status: resolved
+Effort: M
+Fix surface: eposforge-pattern
+Verify with: the inference adapter routes Cognee LLM + embedding calls to an Azure AI Foundry endpoint via LiteLLM (`azure/<deployment>` + AZURE_API_BASE/AZURE_API_KEY/AZURE_API_VERSION); a full Cognee re-graph completes against Foundry; provider is selectable as config. This is the cost gate: once routing is live, cognify bills against a credit-funded Azure subscription rather than direct metered vendor APIs.
+Validation: Full 97-file corpus rebuild completed 2026-05-26 against Azure AI Foundry (endpoint fp-llm-gateway.openai.azure.com). LLM: azure/mdl-openai-gpt41mini-std-eus2-r1 (100K TPM); Embedding: azure/mdl-openai-textembed3large-std-eus2-r1 (50K TPM). Cognify completed ("cognify eposforge-sync done"); MCP recall queries return accurate graph answers. Provider routing is env-selectable via INFERENCE_PROVIDER=azure-foundry + COGNEE_REQUIRE_AZURE_ROUTING=1. Budget gate enforces per-repo token limit (budget-policy.json). All billing routed through credit-funded Azure subscription.
+Notes: Mechanism only — cloud resource/project provisioning, deployment rate (TPM) caps, and per-repo keys are host/adopter concerns tracked on the host-stack backlog. Cognee uses LiteLLM under the hood, so this is largely an `.env`/config path plus adapter support for an azure backend. Gates the migration's re-cognify steps (EF-019, EF-021).
+Resolved: 2026-05-26
