@@ -76,7 +76,7 @@ All invocations require `epos-secrets` to inject `COGNEE_API_URL` and
 ```powershell
 # Add new files to Cognee:
 python ..\..\..\12-secrets-key-management\bin\epos-secrets `
-    uv run cognee-sync --added instance/SPEC.md 00-vision/01-ontology.ttl
+    uv run cognee-sync --added instance/SPEC.md docs/another.md
 
 # Update changed files (delete old data_id + add new):
 python ..\..\..\12-secrets-key-management\bin\epos-secrets `
@@ -97,6 +97,40 @@ python ..\..\..\12-secrets-key-management\bin\epos-secrets `
 
 Linux equivalent — same invocations with forward slashes.
 
+### Ontology grounding
+
+To anchor entity extraction to the EposForge ontology, cognify must be
+called with an `ontologyKey` that names a previously-uploaded ontology.
+Two flags drive this:
+
+- `--ontology-key KEY` (or `$COGNEE_ONTOLOGY_KEY`) — passed to every
+  cognify call so extracted entities are matched against the ontology.
+- `--upload-ontology PATH` — deletes and re-uploads the ontology file at
+  `PATH` under `--ontology-key` before cognify. Use on a full rebuild;
+  omit on incremental push runs where the ontology is already uploaded.
+
+The ontology TTL (`00-vision/01-ontology.ttl`) is the **anchor**, not a
+corpus document — do **not** pass it via `--added`. The full-rebuild
+script `../scripts/bulk-rebuild.sh` excludes it from the corpus and
+uploads it as the anchor automatically.
+
+```sh
+# Incremental push (ontology already uploaded): just anchor cognify.
+epos-secrets uv run cognee-sync --ontology-key eposforge \
+    --modified instance/installed/06-spec-graph/cognee/cognee.md
+
+# Re-upload + anchor in one shot (e.g. after the ontology itself changed,
+# following a KG wipe — see ../cognee.md "Recovery procedures"):
+epos-secrets uv run cognee-sync --ontology-key eposforge \
+    --upload-ontology 00-vision/01-ontology.ttl --added <files...>
+```
+
+**Ontology changes require a full rebuild, not an incremental run.**
+Cognee resolves the ontology at cognify time and does not retroactively
+re-anchor existing nodes; its content-hash dedup also skips re-extraction
+of unchanged docs. So after editing the ontology, perform a KG wipe and
+re-run `bulk-rebuild.sh`. Document-only changes are fine incrementally.
+
 ### Environment variables
 
 | Variable | Default | Purpose |
@@ -105,7 +139,9 @@ Linux equivalent — same invocations with forward slashes.
 | `COGNEE_API_TOKEN` | empty | Bearer token (anonymous if absent) |
 | `COGNEE_TLS_VERIFY` | `true` | `false` or path to CA bundle |
 | `COGNEE_DATASET_NAME` | `eposforge-sync` | Dataset all tracked files go into |
+| `COGNEE_ONTOLOGY_KEY` | unset | Uploaded ontology key to anchor cognify against (`--ontology-key` overrides) |
 | `COGNEE_STATE_DB` | `sync/.cognee-state.db` | Override the state DB path |
+| `COGNEE_HTTP_TIMEOUT` | `900` | HTTP request timeout (seconds) for Cognee API calls |
 | `INFERENCE_PROVIDER` | unset | If `azure-foundry`, validates Azure routing profile before sync |
 | `COGNEE_REQUIRE_AZURE_ROUTING` | `0` | If `1`, refuse non-Azure provider startup |
 | `INFERENCE_BUDGET_ENFORCE` | `1` | Run budget gate before cognify |
@@ -140,8 +176,12 @@ cognee accumulates on re-add; update uses explicit delete+add by design).
 - Azure routing validation runs at startup when `INFERENCE_PROVIDER=azure-foundry`
     or `COGNEE_REQUIRE_AZURE_ROUTING=1`.
 - Budget gate runs before `cognify`; `deny` exits with status code 4.
-- After successful `cognify`, the CLI records budget usage and emits an
-    `adapter.invoked` token-usage event via Component 11 sink scripts.
+- Before `cognify`, the CLI reserves the requested token estimate in the
+    persistent budget counter. After `cognify`, it tops up any additional
+    usage reported by the LiteLLM tracker and emits an `adapter.invoked`
+    token-usage event via Component 11 sink scripts.
+- If `cognify` times out or aborts after the reservation is recorded, the
+    reservation remains counted so a retry cannot evade the budget ledger.
 
 ---
 

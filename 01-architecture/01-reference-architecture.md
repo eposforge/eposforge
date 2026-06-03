@@ -166,8 +166,11 @@ re-project. Living Specs win.
 
 ## Agentic Control Plane
 
-The factory runs autonomously within bounds set by humans. The control
-plane has three loops:
+The factory runs autonomously within bounds set by humans. The degree of
+human presence in this loop is the factory's **autonomy mode** —
+`supervised` (human on the loop) or `autonomous` (off the loop); see
+[03-autonomy-modes.md](./03-autonomy-modes.md). The control plane has
+three loops:
 
 **Observe.** Audit & Observability collects everything: every Adapter
 invocation, every policy decision, every artifact, every error, every
