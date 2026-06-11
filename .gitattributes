@@ -1,6 +1,12 @@
-# Executable resolver shims and scripts must stay LF so the shebang works on Linux.
+# All text files use LF. Windows machines must set core.autocrlf=false and rely on these rules.
+* text=auto eol=lf
+
+# SOPS-encrypted files must never be line-ending-normalized — changing bytes breaks the MAC.
+*.enc.yaml -text
+
+# Explicit overrides (redundant with the blanket rule above, kept for clarity)
+*.sh text eol=lf
+*.py text eol=lf
 instance/installed/12-secrets-key-management/bin/epos-secrets text eol=lf
 instance/installed/12-secrets-key-management/bin/epos-authorize text eol=lf
 instance/installed/12-secrets-key-management/bin/epos-machine-request text eol=lf
-*.sh text eol=lf
-*.py text eol=lf
