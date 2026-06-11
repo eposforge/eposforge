@@ -240,6 +240,24 @@ ef:LifecycleStatus rdf:type owl:Class ;
     rdfs:label "Lifecycle Status" ;
     rdfs:comment "The lifecycle state of a Concept, Guidance, or Tenet node. Distinct from ef:AdapterStatus which governs Adapters." .
 
+### Component Implementation Maturity
+
+ef:ComponentMaturity rdf:type owl:Class ;
+    rdfs:label "Component Maturity" ;
+    rdfs:comment "The implementation maturity of a Component slot. Answers 'is this component actually running?' Distinct from ef:AdapterStatus (which grades individual Adapter quality). Agents MUST check this before citing a component's patterns as operational. Values: shipped = production-ready adapter installed and running; partial = adapter exists but experimental, platform-specific, or covers only a subset of the contract; intent = component is designed but no functional adapter is installed — treat as design intent only." .
+
+ef:MaturityShipped rdf:type ef:ComponentMaturity ;
+    rdfs:label "shipped" ;
+    rdfs:comment "At least one functional adapter is installed and running. Agents may cite patterns from this component as currently operational." .
+
+ef:MaturityPartial rdf:type ef:ComponentMaturity ;
+    rdfs:label "partial" ;
+    rdfs:comment "An adapter exists but is experimental, platform-specific, or covers only part of the component contract. Agents should qualify recommendations with the adapter's scope and limitations." .
+
+ef:MaturityIntent rdf:type ef:ComponentMaturity ;
+    rdfs:label "intent" ;
+    rdfs:comment "Component slot is defined and designed but no functional installed adapter exists in this instance. Agents MUST NOT present patterns from this component as currently operational — they are design intent only." .
+
 ef:StatusProposed rdf:type ef:LifecycleStatus ;
     rdfs:label "proposed" ;
     rdfs:comment "Term or rule is under consideration; not yet adopted for use across the factory." .
@@ -352,6 +370,12 @@ ef:lifecycleStatus rdf:type owl:ObjectProperty ;
     rdfs:label "LIFECYCLE_STATUS" ;
     rdfs:range ef:LifecycleStatus ;
     rdfs:comment "Lifecycle status of a Concept, Guidance, or Tenet (proposed|adopted|retired). Distinct from ef:hasStatus which governs Adapters." .
+
+ef:componentMaturity rdf:type owl:ObjectProperty ;
+    rdfs:label "COMPONENT_MATURITY" ;
+    rdfs:domain ef:Component ;
+    rdfs:range ef:ComponentMaturity ;
+    rdfs:comment "Implementation maturity of a Component slot (shipped|partial|intent). Agents must check this before citing a component's patterns as operational. intent = design only." .
 
 ef:operatesInMode rdf:type owl:ObjectProperty ;
     rdfs:label "OPERATES_IN_MODE" ;
@@ -486,20 +510,89 @@ ef:EssentialCharacteristicNodeSelection rdf:type ef:Guidance ;
 
 ### Individuals (The 14 Core Components)
 
-ef:SpecInput rdf:type ef:Component ; rdfs:label "Spec Input" .
-ef:LivingSpecComponent rdf:type ef:Component ; rdfs:label "Living Spec" .
-ef:DevProductComponent rdf:type ef:Component ; rdfs:label "Dev Product" .
-ef:RouterComponent rdf:type ef:Component ; rdfs:label "Router" .
-ef:ToolTransportComponent rdf:type ef:Component ; rdfs:label "Tool Transport" .
-ef:SpecGraphComponent rdf:type ef:Component ; rdfs:label "Spec Graph" .
-ef:ExecutionSandboxComponent rdf:type ef:Component ; rdfs:label "Execution Sandbox" .
-ef:AgentPolicyComponent rdf:type ef:Component ; rdfs:label "Agent Policy" .
-ef:ReleaseRingsComponent rdf:type ef:Component ; rdfs:label "Release Rings" .
-ef:SourceControlCIComponent rdf:type ef:Component ; rdfs:label "Source Control + CI" .
-ef:InferenceLayerComponent rdf:type ef:Component ; rdfs:label "Inference Layer" .
-ef:AuditObservabilityComponent rdf:type ef:Component ; rdfs:label "Audit & Observability" .
-ef:SecretsKeyManagementComponent rdf:type ef:Component ; rdfs:label "Secrets & Key Management" .
-ef:BacklogComponent rdf:type ef:Component ; rdfs:label "Backlog" .
+ef:SpecInput rdf:type ef:Component ;
+    rdfs:label "Spec Input" ;
+    ef:kind ef:NodeKindComponent ;
+    ef:componentMaturity ef:MaturityIntent ;
+    rdfs:comment "Component contract defined (draft). No installed adapter in this instance. Spec input happens informally via backlog files; no tooling normalizes it for Router consumption. See 03-research/ for candidate adapters." .
+
+ef:LivingSpecComponent rdf:type ef:Component ;
+    rdfs:label "Living Spec" ;
+    ef:kind ef:NodeKindComponent ;
+    ef:componentMaturity ef:MaturityPartial ;
+    rdfs:comment "Living Spec format is in active use across all repos (every adapter card and component doc follows the pattern). No formal installed adapter in instance/installed/02-living-spec/; the paired-change CI check and graph-projection contract are not yet formally enforced." .
+
+ef:DevProductComponent rdf:type ef:Component ;
+    rdfs:label "Dev Product" ;
+    ef:kind ef:NodeKindComponent ;
+    ef:componentMaturity ef:MaturityShipped ;
+    rdfs:comment "Multiple adapters installed: claude-code (approved), copilot (approved), gemini-cli (experimental). All are operational." .
+
+ef:RouterComponent rdf:type ef:Component ;
+    rdfs:label "Router" ;
+    ef:kind ef:NodeKindComponent ;
+    ef:componentMaturity ef:MaturityIntent ;
+    rdfs:comment "No reference implementation installed in this EposForge instance. EF-013 (Router v0) is slated, gated on EF-011 and EF-012 recall quality. Adopters may install their own adapter (e.g. Gas Town at the GEA adopter instance) — that is an adopter-side installation, not this framework layer. Do not present Router patterns as currently operational at the framework level." .
+
+ef:ToolTransportComponent rdf:type ef:Component ;
+    rdfs:label "Tool Transport" ;
+    ef:kind ef:NodeKindComponent ;
+    ef:componentMaturity ef:MaturityShipped ;
+    rdfs:comment "mcp-stdio-and-http adapter installed and in active use. MCP is the adopted Tool Transport standard." .
+
+ef:SpecGraphComponent rdf:type ef:Component ;
+    rdfs:label "Spec Graph" ;
+    ef:kind ef:NodeKindComponent ;
+    ef:componentMaturity ef:MaturityShipped ;
+    rdfs:comment "Cognee adapter installed and running against Azure Foundry (EF-017 resolved 2026-05-26). graphrag adapter also present. EF-020 (KG sync validation) is still slated — treat recall as operational but not yet drift-verified over time." .
+
+ef:ExecutionSandboxComponent rdf:type ef:Component ;
+    rdfs:label "Execution Sandbox" ;
+    ef:kind ef:NodeKindComponent ;
+    ef:componentMaturity ef:MaturityPartial ;
+    rdfs:comment "windows-acl-user adapter installed (experimental): Windows OS-user + NTFS-ACL isolation via runas. Platform-specific — Windows only. No Linux or container sandbox adapter exists. Adopters on Linux or Docker MUST treat this slot as intent-only for their platform. The Gas Town container boundary is NOT an Execution Sandbox (GEA-006 confirmed this is an EF-012 conflation)." .
+
+ef:AgentPolicyComponent rdf:type ef:Component ;
+    rdfs:label "Agent Policy" ;
+    ef:kind ef:NodeKindComponent ;
+    ef:componentMaturity ef:MaturityPartial ;
+    rdfs:comment "tier-yaml adapter installed: generates .claude/settings.json allowlist from policy.tiers.yaml tier-0 rules. Tier-0 (auto-approved) generation is operational. Higher tiers (tier-1 human-review, tier-2 blocked) and formal enforcement are design intent; no runtime enforcement exists beyond the generated settings file." .
+
+ef:ReleaseRingsComponent rdf:type ef:Component ;
+    rdfs:label "Release Rings" ;
+    ef:kind ef:NodeKindComponent ;
+    ef:componentMaturity ef:MaturityIntent ;
+    rdfs:comment "Component contract defined. No installed adapter in this instance. Release ring enforcement (alpha/beta/stable gating, ring-lock) is design intent only — no tooling enforces ring membership today." .
+
+ef:SourceControlCIComponent rdf:type ef:Component ;
+    rdfs:label "Source Control + CI" ;
+    ef:kind ef:NodeKindComponent ;
+    ef:componentMaturity ef:MaturityShipped ;
+    rdfs:comment "github-and-actions adapter installed. Gitea self-hosted + GitHub Actions are active and operational." .
+
+ef:InferenceLayerComponent rdf:type ef:Component ;
+    rdfs:label "Inference Layer" ;
+    ef:kind ef:NodeKindComponent ;
+    ef:componentMaturity ef:MaturityShipped ;
+    rdfs:comment "Azure Foundry routing adapter live (EF-017 resolved 2026-05-26); Anthropic and OpenAI adapters also installed. Per-repo budget enforcement active. All inference routes through Foundry gateway." .
+
+ef:AuditObservabilityComponent rdf:type ef:Component ;
+    rdfs:label "Audit & Observability" ;
+    ef:kind ef:NodeKindComponent ;
+    ef:componentMaturity ef:MaturityPartial ;
+    rdfs:comment "jsonl-event-sink adapter installed (experimental): append-only structured event log. Full OTEL/trace backend stack is NOT deployed — GEA-001 (stand up C11 backend on srv-docker-hp) is in-progress. EF-015 defined the adapter contract (resolved 2026-05-24) but the backend that ingests and queries the events is design intent." .
+
+ef:SecretsKeyManagementComponent rdf:type ef:Component ;
+    rdfs:label "Secrets & Key Management" ;
+    ef:kind ef:NodeKindComponent ;
+    ef:componentMaturity ef:MaturityShipped ;
+    rdfs:comment "sops-age adapter installed and operational: vault at instance/installed/12-secrets-key-management/sops-age/, resolver at bin/epos-secrets. Note: epos-secrets is a repo-local script, not a standalone installable artifact (EF-022 tracks making it relocatable). Adopters in mode-B must copy the script; a stable independent install does not yet exist." .
+
+ef:BacklogComponent rdf:type ef:Component ;
+    rdfs:label "Backlog" ;
+    ef:kind ef:NodeKindComponent ;
+    ef:componentMaturity ef:MaturityShipped ;
+    rdfs:comment "file-based-backlog adapter installed: per-repo markdown backlog files under backlog/ with EF-/GEA- IDs. Beads (bd, Dolt-backed) is available via Gas Town at adopter instances as a complementary agent-facing ledger." .
 
 ### Adapter Status Individuals
 
