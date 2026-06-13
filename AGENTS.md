@@ -28,6 +28,31 @@ This repo has two layers that must stay explicit:
 
 ---
 
+## Agent coding guidelines
+
+Behavioral ground rules for all agents working in this repo. Source of
+truth: [04-standards/08-agent-coding-guidelines/agent-coding-guidelines.md](04-standards/08-agent-coding-guidelines/agent-coding-guidelines.md).
+The bias is toward caution over speed; for trivial edits, use judgment.
+
+1. **Think before coding.** State assumptions explicitly. If multiple
+   interpretations exist, present them — don't pick silently. Push back
+   when a simpler approach exists. If something is unclear, stop, name
+   what's confusing, and ask.
+2. **Simplicity first.** Minimum change that solves the problem. No
+   features beyond what was asked, no abstractions for single-use content,
+   no speculative configurability, no handling for impossible scenarios.
+3. **Surgical changes.** Touch only what the task requires. Don't
+   "improve" adjacent content, refactor what isn't broken, or remove
+   pre-existing dead content — mention it instead. Remove only orphans
+   your own change created. Every changed line should trace to the request.
+4. **Goal-driven execution.** Restate the task as verifiable success
+   criteria before starting — in this repo that means a named conformance
+   command, lint script, or recall query, not "make it better". For
+   multi-step work, state a brief plan with a verify step per item, and
+   loop until verified.
+
+---
+
 ## Active execution plan (instance)
 
 When executing backlog items for the in-flight **inference cost-control +
