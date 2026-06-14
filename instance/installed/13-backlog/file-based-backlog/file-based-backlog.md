@@ -18,11 +18,11 @@ source_of_truth: yes
 |---|---|
 | `name` | `file-based-backlog` |
 | `component` | `13-backlog` |
-| `version` | `0.1.0` |
+| `version` | `0.2.0` |
 | `status` | `experimental` |
 | `privacy_posture` | `local` |
 | `cost_hint` | `free` |
-| `capabilities` | `issue-tracking`, `dependency-linking`, `cross-repo-aggregation`, `archive-indexing`, `linting` |
+| `capabilities` | `issue-tracking`, `dependency-linking`, `cross-repo-aggregation`, `archive-indexing`, `linting`, `ready-work-query`, `portfolio-views`, `version-sync` |
 | `invocation_surface` | `bash scripts` |
 
 ### Backlog required fields
@@ -71,7 +71,7 @@ The adapter supports aggregation across repos using discovery precedence:
 
 ## Operator commands
 
-From repo root:
+From repo root (preferred: run-from-clone via `BACKLOG_HOME`; these paths are the vendored-copy fallback):
 
 - `bash instance/installed/13-backlog/file-based-backlog/scripts/new-issue.sh`
 - `bash instance/installed/13-backlog/file-based-backlog/scripts/lint-backlog.sh`
@@ -79,6 +79,21 @@ From repo root:
 - `bash instance/installed/13-backlog/file-based-backlog/scripts/aggregate.sh --plan`
 - `bash instance/installed/13-backlog/file-based-backlog/scripts/aggregate.sh --regressions <keyword>`
 - `bash instance/installed/13-backlog/file-based-backlog/scripts/aggregate.sh --graph`
+- `bash instance/installed/13-backlog/file-based-backlog/scripts/aggregate.sh --themes`
+- `bash instance/installed/13-backlog/file-based-backlog/scripts/aggregate.sh --critical-path <ID>`
+- `bash instance/installed/13-backlog/file-based-backlog/scripts/ready.sh`
+- `bash instance/installed/13-backlog/file-based-backlog/scripts/ready.sh --json`
+
+### Tooling distribution
+
+Preferred mode: run scripts directly from a framework clone, set `BACKLOG_HOME` to
+`<framework-clone>/instance/installed/13-backlog/file-based-backlog`.
+
+Vendored-copy mode: copy the scripts directory into the adopter repo, then keep it
+current with:
+
+- `bash <framework-scripts>/sync-tooling.sh <adopter-repo-root>` — sync scripts and report changes
+- `bash <framework-scripts>/sync-tooling.sh --check <adopter-repo-root>` — check for drift, exit non-zero if stale
 
 ## Cross-host portability
 
