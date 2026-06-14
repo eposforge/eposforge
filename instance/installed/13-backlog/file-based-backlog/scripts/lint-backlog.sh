@@ -2,7 +2,22 @@
 set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
-BACKLOG_DIR="${REPO_ROOT}/backlog"
+# Discover adoption-root: workspace-file → BACKLOG_ROOTS env → git-root fallback.
+_ws="${VSCODE_WORKSPACE_FILE:-${WORKSPACE_FILE:-}}"
+BACKLOG_DIR=""
+if [[ -n "${_ws}" && -f "${_ws}" ]]; then
+  _ws_dir="$(dirname "$(realpath "${_ws}")")"
+  while IFS= read -r _folder; do
+    [[ -z "${_folder}" ]] && continue
+    if [[ "${_folder}" = /* ]]; then _cand="${_folder}/backlog"; else _cand="${_ws_dir}/${_folder}/backlog"; fi
+    if [[ -f "${_cand}/config.toml" ]]; then BACKLOG_DIR="$(realpath "${_cand}")"; break; fi
+  done < <(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); [print(f.get('path','')) for f in d.get('folders',[])]" "${_ws}" 2>/dev/null)
+fi
+if [[ -z "${BACKLOG_DIR}" && -n "${BACKLOG_ROOTS:-}" ]]; then
+  _first="${BACKLOG_ROOTS%%:*}"
+  [[ -f "${_first}/backlog/config.toml" ]] && BACKLOG_DIR="${_first}/backlog"
+fi
+[[ -z "${BACKLOG_DIR}" ]] && BACKLOG_DIR="${REPO_ROOT}/backlog"
 ACTIVE_FILE="${BACKLOG_DIR}/backlog.md"
 SLATED_FILE="${BACKLOG_DIR}/backlog-slated.md"
 ARCHIVE_FILE="${BACKLOG_DIR}/backlog-archive.md"
@@ -19,6 +34,21 @@ if [[ ! -f "${CONFIG_FILE}" ]]; then
 fi
 
 workspace_file="${VSCODE_WORKSPACE_FILE:-${WORKSPACE_FILE:-}}"
+
+# Drift check: warn if the installed scripts are older than the framework source.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LOCAL_VERSION=""
+if [[ -f "${SCRIPT_DIR}/VERSION" ]]; then
+  LOCAL_VERSION="$(cat "${SCRIPT_DIR}/VERSION" | tr -d '[:space:]')"
+fi
+if [[ -n "${BACKLOG_HOME:-}" && -f "${BACKLOG_HOME}/scripts/VERSION" ]]; then
+  FRAMEWORK_VERSION="$(cat "${BACKLOG_HOME}/scripts/VERSION" | tr -d '[:space:]')"
+  if [[ -z "$LOCAL_VERSION" ]]; then
+    echo "WARNING: installed backlog tooling has no VERSION stamp; run sync-tooling.sh to update" >&2
+  elif [[ "$LOCAL_VERSION" != "$FRAMEWORK_VERSION" ]]; then
+    echo "WARNING: installed tooling ${LOCAL_VERSION} differs from framework ${FRAMEWORK_VERSION}; run sync-tooling.sh to update" >&2
+  fi
+fi
 
 python3 - "$REPO_ROOT" "$ACTIVE_FILE" "$SLATED_FILE" "$ARCHIVE_FILE" "$CONFIG_FILE" "$staged_only" "$workspace_file" "${BACKLOG_ROOTS:-}" <<'PY'
 import json
@@ -69,7 +99,11 @@ def parse_config(path: Path):
     surfaces = []
     if surfaces_match:
         surfaces = [s.strip().strip('"') for s in surfaces_match.group(1).split(",") if s.strip()]
-    return prefix, surfaces
+    themes_match = re.search(r"^\s*themes\s*=\s*\[(.*?)\]\s*$", text, re.M)
+    themes = []
+    if themes_match:
+        themes = [s.strip().strip('"') for s in themes_match.group(1).split(",") if s.strip()]
+    return prefix, surfaces, themes
 
 
 def parse_issues(path: Path):
@@ -154,8 +188,11 @@ def dedupe_roots(roots):
     return out
 
 
-def collect_all_issue_ids(roots):
+def collect_all_issues(roots):
     all_ids = set()
+    id_status = {}
+    # Maps: superseded_id -> list of superseding_ids (for bidirectional check)
+    superseded_by: dict = {}
     for root in roots:
         backlog_root = root / "backlog"
         config = backlog_root / "config.toml"
@@ -166,7 +203,10 @@ def collect_all_issue_ids(roots):
             for issue in data["issues"]:
                 issue_id = issue["fields"].get("ID", issue["header_id"])
                 all_ids.add(issue_id)
-    return all_ids
+                id_status[issue_id] = issue["fields"].get("Status", "").strip().lower()
+                for sup_id in csv_ids(issue["fields"].get("Supersedes", "")):
+                    superseded_by.setdefault(sup_id, []).append(issue_id)
+    return all_ids, id_status, superseded_by
 
 
 def csv_ids(raw: str):
@@ -175,9 +215,9 @@ def csv_ids(raw: str):
     return [x.strip() for x in raw.split(",") if x.strip()]
 
 
-prefix, fix_surfaces = parse_config(config_file)
+prefix, fix_surfaces, themes = parse_config(config_file)
 roots = discover_roots(repo_root)
-all_ids = collect_all_issue_ids(roots)
+all_ids, id_status, superseded_by = collect_all_issues(roots)
 
 check_files = [active_file, slated_file]
 if staged_only:
@@ -242,6 +282,48 @@ for path in check_files:
             errors.append(
                 f"{issue_ref} invalid `Fix surface:` `{surface}` (expected one of: {', '.join(fix_surfaces)})"
             )
+
+        theme = fields.get("Theme", "").strip()
+        if theme and themes and theme not in themes:
+            errors.append(
+                f"{issue_ref} invalid `Theme:` `{theme}` (expected one of: {', '.join(themes)})"
+            )
+
+        for sup_id in csv_ids(fields.get("Supersedes", "")):
+            if sup_id not in all_ids:
+                errors.append(
+                    f"{issue_ref} Supersedes references unknown issue ID `{sup_id}`"
+                )
+            else:
+                sup_status = id_status.get(sup_id, "")
+                if sup_status in ("open", "in-progress"):
+                    errors.append(
+                        f"{issue_ref} supersedes `{sup_id}` which is still `{sup_status}`; "
+                        "the superseded item must be resolved or slated before this link is valid"
+                    )
+
+        # If this item is superseded by another, it must carry a `Superseded by:` pointer back
+        this_id = fields.get("ID", issue["header_id"])
+        if this_id in superseded_by:
+            sup_by_field = csv_ids(fields.get("Superseded by", ""))
+            expected = superseded_by[this_id]
+            missing = [s for s in expected if s not in sup_by_field]
+            if missing:
+                errors.append(
+                    f"{issue_ref} is superseded by {missing} but lacks a `Superseded by:` "
+                    f"pointer; add `Superseded by: {', '.join(missing)}`"
+                )
+
+        if status == "blocked":
+            open_dep_statuses = {"open", "in-progress", "blocked", "slated"}
+            dep_ids = csv_ids(fields.get("Depends on", ""))
+            has_open_dep = any(
+                id_status.get(d, "") in open_dep_statuses for d in dep_ids
+            )
+            if not has_open_dep:
+                errors.append(
+                    f"{issue_ref} `Status: blocked` requires at least one open `Depends on:` item (EF-042 blocker-record convention)"
+                )
 
         if status == "slated":
             if not fields.get("Slated", "").strip():

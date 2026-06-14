@@ -2,8 +2,23 @@
 set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
-SCRIPTS_DIR="${REPO_ROOT}/instance/installed/13-backlog/file-based-backlog/scripts"
-BACKLOG_DIR="${REPO_ROOT}/backlog"
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Discover adoption-root: workspace-file → BACKLOG_ROOTS env → git-root fallback.
+_ws="${VSCODE_WORKSPACE_FILE:-${WORKSPACE_FILE:-}}"
+BACKLOG_DIR=""
+if [[ -n "${_ws}" && -f "${_ws}" ]]; then
+  _ws_dir="$(dirname "$(realpath "${_ws}")")"
+  while IFS= read -r _folder; do
+    [[ -z "${_folder}" ]] && continue
+    if [[ "${_folder}" = /* ]]; then _cand="${_folder}/backlog"; else _cand="${_ws_dir}/${_folder}/backlog"; fi
+    if [[ -f "${_cand}/config.toml" ]]; then BACKLOG_DIR="$(realpath "${_cand}")"; break; fi
+  done < <(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); [print(f.get('path','')) for f in d.get('folders',[])]" "${_ws}" 2>/dev/null)
+fi
+if [[ -z "${BACKLOG_DIR}" && -n "${BACKLOG_ROOTS:-}" ]]; then
+  _first="${BACKLOG_ROOTS%%:*}"
+  [[ -f "${_first}/backlog/config.toml" ]] && BACKLOG_DIR="${_first}/backlog"
+fi
+[[ -z "${BACKLOG_DIR}" ]] && BACKLOG_DIR="${REPO_ROOT}/backlog"
 ACTIVE_FILE="${BACKLOG_DIR}/backlog.md"
 ARCHIVE_FILE="${BACKLOG_DIR}/backlog-archive.md"
 ARCHIVE_INDEX_FILE="${BACKLOG_DIR}/backlog-archive-index.md"
