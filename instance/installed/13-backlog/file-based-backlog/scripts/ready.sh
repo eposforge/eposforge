@@ -84,6 +84,28 @@ def dedupe(paths):
 
 
 def discover_roots():
+    # 1. CLI --roots (highest)
+    if roots_cli:
+        roots = [Path(p).expanduser().resolve() for p in roots_cli]
+        if roots:
+            return dedupe(roots)
+
+    # 2. BACKLOG_ROOTS env
+    if backlog_roots_env:
+        roots = [Path(p).expanduser().resolve() for p in backlog_roots_env.split(":") if p.strip()]
+        if roots:
+            return dedupe(roots)
+
+    # 3. cwd walk-up — probes <dir>/backlog/ then <dir>/eposforge/backlog/ (D1: depth-tolerant)
+    cwd = Path.cwd()
+    while cwd != cwd.parent:
+        if (cwd / "backlog" / "config.toml").exists():
+            return [cwd]
+        if (cwd / "eposforge" / "backlog" / "config.toml").exists():
+            return [cwd / "eposforge"]
+        cwd = cwd.parent
+
+    # 4. VS Code workspace file
     if workspace_file:
         ws = Path(workspace_file).expanduser().resolve()
         if ws.exists():
@@ -98,19 +120,18 @@ def discover_roots():
                     p = Path(path)
                     if not p.is_absolute():
                         p = (ws_dir / p).resolve()
-                    roots.append(p)
+                    else:
+                        p = p.resolve()
+                    if (p / "backlog" / "config.toml").exists():
+                        roots.append(p)
+                    elif (p / "eposforge" / "backlog" / "config.toml").exists():
+                        roots.append(p / "eposforge")
                 if roots:
                     return dedupe(roots)
             except Exception:
                 pass
-    if backlog_roots_env:
-        roots = [Path(p).expanduser().resolve() for p in backlog_roots_env.split(":") if p.strip()]
-        if roots:
-            return dedupe(roots)
-    if roots_cli:
-        roots = [Path(p).expanduser().resolve() for p in roots_cli]
-        if roots:
-            return dedupe(roots)
+
+    # 5. git-root fallback
     return [repo_root]
 
 

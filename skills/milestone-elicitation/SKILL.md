@@ -49,7 +49,7 @@ Before the interview begins, load:
 3. **Roadmap and vision** — read `02-roadmap/` and `00-vision/` to ground the
    interview in the current phase structure.
 
-4. **Aggregated backlog** — run `aggregate.sh --themes` to see the current theme
+4. **Aggregated backlog** — run `aggregate.sh --themes` (via `$EPOSFORGE_HOME`) to see the current theme
    clusters and what work is already in flight.
 
 5. **Cognee MCP** (if available) — recall roadmap milestones and anchor items from
@@ -150,7 +150,7 @@ during the next portfolio-review pass).
 Run lint after writing:
 
 ```bash
-bash instance/installed/13-backlog/file-based-backlog/scripts/lint-backlog.sh
+bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/instance/installed/13-backlog/file-based-backlog/scripts/lint-backlog.sh
 ```
 
 ## Step 7 — Write elicitation record
