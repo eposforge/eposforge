@@ -1,27 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_ROOT="$(git rev-parse --show-toplevel)"
 SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Discover adoption-root: workspace-file → BACKLOG_ROOTS env → git-root fallback.
-_ws="${VSCODE_WORKSPACE_FILE:-${WORKSPACE_FILE:-}}"
-BACKLOG_DIR=""
-if [[ -n "${_ws}" && -f "${_ws}" ]]; then
-  _ws_dir="$(dirname "$(realpath "${_ws}")")"
-  while IFS= read -r _folder; do
-    [[ -z "${_folder}" ]] && continue
-    if [[ "${_folder}" = /* ]]; then _cand="${_folder}/backlog"; else _cand="${_ws_dir}/${_folder}/backlog"; fi
-    if [[ -f "${_cand}/config.toml" ]]; then BACKLOG_DIR="$(realpath "${_cand}")"; break; fi
-  done < <(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); [print(f.get('path','')) for f in d.get('folders',[])]" "${_ws}" 2>/dev/null)
-fi
-if [[ -z "${BACKLOG_DIR}" && -n "${BACKLOG_ROOTS:-}" ]]; then
-  _first="${BACKLOG_ROOTS%%:*}"
-  [[ -f "${_first}/backlog/config.toml" ]] && BACKLOG_DIR="${_first}/backlog"
-fi
-[[ -z "${BACKLOG_DIR}" ]] && BACKLOG_DIR="${REPO_ROOT}/backlog"
+# shellcheck source=resolve-backlog.sh
+source "${SCRIPTS_DIR}/resolve-backlog.sh"
 ACTIVE_FILE="${BACKLOG_DIR}/backlog.md"
 ARCHIVE_FILE="${BACKLOG_DIR}/backlog-archive.md"
 ARCHIVE_INDEX_FILE="${BACKLOG_DIR}/backlog-archive-index.md"
+
+if [[ ! -f "${BACKLOG_DIR}/config.toml" ]]; then
+  echo "ERROR: no backlog found at ${BACKLOG_DIR}/config.toml." >&2
+  echo "  Bootstrap: create ${BACKLOG_DIR}/config.toml with:" >&2
+  echo '    prefix = "XX"' >&2
+  echo "  Resolution order tried: BACKLOG_ROOTS env → cwd walk-up → VS Code workspace file → <git-root>/backlog" >&2
+  exit 1
+fi
 
 "${SCRIPTS_DIR}/lint-backlog.sh"
 

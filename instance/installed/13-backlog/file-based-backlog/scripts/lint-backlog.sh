@@ -1,23 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_ROOT="$(git rev-parse --show-toplevel)"
-# Discover adoption-root: workspace-file → BACKLOG_ROOTS env → git-root fallback.
-_ws="${VSCODE_WORKSPACE_FILE:-${WORKSPACE_FILE:-}}"
-BACKLOG_DIR=""
-if [[ -n "${_ws}" && -f "${_ws}" ]]; then
-  _ws_dir="$(dirname "$(realpath "${_ws}")")"
-  while IFS= read -r _folder; do
-    [[ -z "${_folder}" ]] && continue
-    if [[ "${_folder}" = /* ]]; then _cand="${_folder}/backlog"; else _cand="${_ws_dir}/${_folder}/backlog"; fi
-    if [[ -f "${_cand}/config.toml" ]]; then BACKLOG_DIR="$(realpath "${_cand}")"; break; fi
-  done < <(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); [print(f.get('path','')) for f in d.get('folders',[])]" "${_ws}" 2>/dev/null)
-fi
-if [[ -z "${BACKLOG_DIR}" && -n "${BACKLOG_ROOTS:-}" ]]; then
-  _first="${BACKLOG_ROOTS%%:*}"
-  [[ -f "${_first}/backlog/config.toml" ]] && BACKLOG_DIR="${_first}/backlog"
-fi
-[[ -z "${BACKLOG_DIR}" ]] && BACKLOG_DIR="${REPO_ROOT}/backlog"
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || echo "")"
+SCRIPT_DIR_LINT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=resolve-backlog.sh
+source "${SCRIPT_DIR_LINT}/resolve-backlog.sh"
 ACTIVE_FILE="${BACKLOG_DIR}/backlog.md"
 SLATED_FILE="${BACKLOG_DIR}/backlog-slated.md"
 ARCHIVE_FILE="${BACKLOG_DIR}/backlog-archive.md"
@@ -29,17 +16,20 @@ if [[ "${1:-}" == "--staged" ]]; then
 fi
 
 if [[ ! -f "${CONFIG_FILE}" ]]; then
-  echo "ERROR: missing config file: ${CONFIG_FILE}" >&2
+  echo "ERROR: no backlog found at ${CONFIG_FILE}." >&2
+  echo "  Bootstrap: create ${BACKLOG_DIR}/config.toml with:" >&2
+  echo '    prefix = "XX"' >&2
+  echo "  Resolution order tried: BACKLOG_ROOTS env → cwd walk-up → VS Code workspace file → <git-root>/backlog" >&2
   exit 1
 fi
 
 workspace_file="${VSCODE_WORKSPACE_FILE:-${WORKSPACE_FILE:-}}"
+[[ -z "$REPO_ROOT" ]] && REPO_ROOT="$(realpath "${BACKLOG_DIR}/..")"
 
 # Drift check: warn if the installed scripts are older than the framework source.
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOCAL_VERSION=""
-if [[ -f "${SCRIPT_DIR}/VERSION" ]]; then
-  LOCAL_VERSION="$(cat "${SCRIPT_DIR}/VERSION" | tr -d '[:space:]')"
+if [[ -f "${SCRIPT_DIR_LINT}/VERSION" ]]; then
+  LOCAL_VERSION="$(cat "${SCRIPT_DIR_LINT}/VERSION" | tr -d '[:space:]')"
 fi
 if [[ -n "${BACKLOG_HOME:-}" && -f "${BACKLOG_HOME}/scripts/VERSION" ]]; then
   FRAMEWORK_VERSION="$(cat "${BACKLOG_HOME}/scripts/VERSION" | tr -d '[:space:]')"
@@ -246,7 +236,11 @@ for path in check_files:
     issues = parsed["issues"]
 
     for issue in issues:
-        issue_ref = f"{path.relative_to(repo_root)}:{issue['header_id']}"
+        try:
+            _display_path = str(path.relative_to(repo_root))
+        except ValueError:
+            _display_path = str(path)
+        issue_ref = f"{_display_path}:{issue['header_id']}"
         fields = issue["fields"]
 
         for req in required_fields:
@@ -359,8 +353,12 @@ for path in check_files:
         for issue in issues:
             status = issue["fields"].get("Status", "").strip()
             if status and status != "slated":
+                try:
+                    _slated_path = str(path.relative_to(repo_root))
+                except ValueError:
+                    _slated_path = str(path)
                 errors.append(
-                    f"{path.relative_to(repo_root)}:{issue['header_id']} has status `{status}` in backlog-slated.md"
+                    f"{_slated_path}:{issue['header_id']} has status `{status}` in backlog-slated.md"
                 )
 
 if warnings:

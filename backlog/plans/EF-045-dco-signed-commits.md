@@ -1,4 +1,4 @@
-# EF-030 Implementation Plan — DCO + SSH Commit Signing
+# EF-045 Implementation Plan — DCO + SSH Commit Signing
 
 Source package prepared in `scratchpad/git-signed/` (gitignored; copy to a temp
 location if the session is fresh).
@@ -99,7 +99,7 @@ show as "Unverified" on GitHub even though they are cryptographically signed.
 
 ---
 
-## Deferred (not in EF-030 scope)
+## Deferred (not in EF-045 scope)
 
 - Commit message template (`.gitmessage`) reminding contributors about
   sign-off format
