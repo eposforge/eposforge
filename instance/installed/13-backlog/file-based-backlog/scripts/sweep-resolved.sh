@@ -2,8 +2,10 @@
 set -euo pipefail
 
 SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || echo "")"
 # shellcheck source=resolve-backlog.sh
 source "${SCRIPTS_DIR}/resolve-backlog.sh"
+[[ -z "${REPO_ROOT}" ]] && REPO_ROOT="$(realpath "${BACKLOG_DIR}/..")"
 ACTIVE_FILE="${BACKLOG_DIR}/backlog.md"
 ARCHIVE_FILE="${BACKLOG_DIR}/backlog-archive.md"
 ARCHIVE_INDEX_FILE="${BACKLOG_DIR}/backlog-archive-index.md"

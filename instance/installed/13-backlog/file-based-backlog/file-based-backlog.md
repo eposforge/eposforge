@@ -69,6 +69,28 @@ The adapter supports aggregation across repos using discovery precedence:
 3. `aggregate.sh --roots <path...>`
 4. Current repo fallback
 
+### Repo roles: substrate vs product
+
+In a multi-repo portfolio, each repo declares a `role` in its `config.toml`:
+
+- `role = "product"` — the repo delivers business value to a human or customer.
+  **Value-harvest milestone anchors live in product repos** (discovered via the
+  milestone-elicitation skill, EF-043). These anchors are the destinations the
+  portfolio's critical-path and triage tooling (EF-039/EF-040/EF-041) computes
+  toward.
+- `role = "substrate"` — the repo provides the operational/infrastructure
+  substrate that products run on (hosts, networking, secrets, orchestration,
+  CI, IaC). **Substrate repos do not originate harvest anchors**, because the
+  value they create is only realized through a product. Substrate items earn
+  priority by linking toward product-repo anchors via `Blocks: <repo>:<ID>`
+  (directly or through a dependency chain).
+
+The role is advisory metadata today (mirrored in each `backlog.md` header for
+readers); making the elicitation and portfolio tooling refuse to place anchors in
+`substrate` repos, and flag substrate items with no `Blocks:` path to any product
+anchor, is a natural enforcement follow-up. Repos that are neither (e.g. the
+framework/pattern repo itself) may omit the field.
+
 ## Operator commands
 
 From repo root (preferred: run-from-clone via `BACKLOG_HOME`; these paths are the vendored-copy fallback):

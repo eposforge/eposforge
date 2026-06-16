@@ -3,6 +3,60 @@ set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || echo "")"
 SCRIPT_DIR_LINT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  cat <<'HELP'
+lint-backlog.sh — structural + boundary lint for a file-based backlog.
+
+USAGE
+  lint-backlog.sh            Lint active + slated backlog files at the resolved root.
+  lint-backlog.sh --staged   Lint only the backlog files staged in git (pre-commit use).
+  lint-backlog.sh --help     Show this help.
+
+WHAT IT CHECKS
+  - Required fields, ID/date/status/effort format, supersede + dependency integrity.
+  - Public/private boundary (eposforge:EF-047): a repo whose config.toml declares
+    `visibility = "public"` may NOT carry an outbound cross-repo `Depends on:` /
+    `Blocks:` edge to a private (or unknown) repo. Cross-repo edges are directional:
+    the PRIVATE/adopter item declares `Depends on: <public-repo>:<ID>`; the public
+    item never names a private ID. Violations are ERRORS.
+
+VISIBILITY MODEL
+  Each backlog `config.toml` may declare `visibility = "public" | "private"`.
+  Unset is treated as `private` (fail-safe — only an explicit `public` opts a repo
+  into outbound-reference scrutiny). Visibility is resolved per repo prefix by
+  scanning every discovered root's config (see resolution precedence below).
+
+SINGLE-ROOT DEGRADATION
+  When lint runs against a single root, foreign-prefix visibility cannot be
+  resolved. In that mode any outbound cross-repo (foreign-prefix) edge from a
+  public repo is flagged as an ERROR — the safe default, since the framework is
+  typically the only public repo present. To resolve foreign visibility instead,
+  run with multi-root context via `BACKLOG_ROOTS` (colon-separated backlog-parent
+  dirs) or a VS Code workspace file enumerating the sibling repos.
+
+WHOLE-FILE LEAK SCAN (ERRORS — a public repo must leak nothing)
+  In public repos every line of the active, slated, AND archive backlog files —
+  including file headers and operational notes, not just issue bodies — is scanned
+  for private markers. Any match is a blocking ERROR; private repos are not scanned.
+  Markers:
+    - References to private-repo backlog items: an ID-shaped token (`PREFIX-NNN`,
+      optionally `<repo>:`-qualified) whose PREFIX resolves to a `private` repo in
+      the visibility map. This is map-driven, not a hardcoded name list — it
+      generalizes to any prefix any config declares and matches only real item IDs,
+      so prose like "UTF-8" or a bare repo name never false-positives. (Resolving
+      foreign visibility needs multi-root context — see SINGLE-ROOT DEGRADATION.)
+    - Private infrastructure: absolute host paths (/mnt/..., /home/..., /root/...,
+      /srv/...), `*.lan` hostnames, and private IPv4 ranges (10/8, 192.168/16,
+      172.16/12).
+  This catches leaks the structural edge check can't see (prose, notes, headers).
+
+ROOT RESOLUTION PRECEDENCE
+  BACKLOG_ROOTS env → cwd walk-up → VS Code workspace file → <git-root>/backlog.
+HELP
+  exit 0
+fi
+
 # shellcheck source=resolve-backlog.sh
 source "${SCRIPT_DIR_LINT}/resolve-backlog.sh"
 ACTIVE_FILE="${BACKLOG_DIR}/backlog.md"
@@ -93,7 +147,40 @@ def parse_config(path: Path):
     themes = []
     if themes_match:
         themes = [s.strip().strip('"') for s in themes_match.group(1).split(",") if s.strip()]
-    return prefix, surfaces, themes
+    visibility = parse_visibility(text)
+    return prefix, surfaces, themes, visibility
+
+
+def parse_visibility(text: str) -> str:
+    # Unset is treated as "private" (fail-safe): only an explicit `public` opts a
+    # repo into outbound-reference scrutiny (eposforge:EF-047).
+    m = re.search(r'^\s*visibility\s*=\s*"(public|private)"\s*$', text, re.M)
+    return m.group(1) if m else "private"
+
+
+def build_visibility_map(roots):
+    # Maps repo prefix -> visibility ("public"/"private") across all discovered
+    # roots. A prefix absent from the map is "unknown" (single-root degradation).
+    vis_map = {}
+    for root in roots:
+        cfg = root / "backlog" / "config.toml"
+        if not cfg.exists():
+            continue
+        text = read_text(cfg)
+        pm = re.search(r'^\s*prefix\s*=\s*"([A-Z]+)"\s*$', text, re.M)
+        if not pm:
+            continue
+        vis_map[pm.group(1)] = parse_visibility(text)
+    return vis_map
+
+
+def ref_prefix(dep_id: str):
+    # A cross-repo reference may be "PREFIX-NNN" (bare, foreign prefix) or
+    # "<repo>:PREFIX-NNN" (repo-qualified). Return the PREFIX, or None if the
+    # token is not an issue ID.
+    tail = dep_id.split(":")[-1].strip()
+    m = re.match(r"^([A-Z]+)-[0-9]+$", tail)
+    return m.group(1) if m else None
 
 
 def parse_issues(path: Path):
@@ -225,9 +312,35 @@ def csv_ids(raw: str):
     return [x.strip() for x in raw.split(",") if x.strip()]
 
 
-prefix, fix_surfaces, themes = parse_config(config_file)
+prefix, fix_surfaces, themes, local_visibility = parse_config(config_file)
 roots = discover_roots(repo_root)
 all_ids, id_status, superseded_by = collect_all_issues(roots)
+visibility_map = build_visibility_map(roots)
+
+# Private-marker patterns for the public-repo whole-file leak scan (ERRORS).
+host_path_re = re.compile(r"/(?:mnt|home|root|srv)/[A-Za-z0-9._/-]+")
+lan_host_re = re.compile(r"\b[a-z0-9][a-z0-9-]*\.lan\b")
+private_ip_re = re.compile(
+    r"\b(?:10\.\d{1,3}\.\d{1,3}\.\d{1,3}"
+    r"|192\.168\.\d{1,3}\.\d{1,3}"
+    r"|172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})\b"
+)
+# A reference to a private-repo backlog item: an ID-shaped token (`PREFIX-NNN`,
+# optionally `<repo>:`-qualified) whose PREFIX resolves to a private repo in the
+# visibility map. This is the right level of abstraction — driven by the map, not
+# a hardcoded/guessed name list, so it generalizes to ANY prefix any config
+# declares and matches only real item IDs (prose like "UTF-8" or a bare repo name
+# never false-positives). Longest prefixes first so e.g. OAPI-041 isn't split as OA.
+private_prefixes = sorted(
+    (p for p, v in visibility_map.items() if v == "private" and p != prefix),
+    key=len,
+    reverse=True,
+)
+private_id_re = (
+    re.compile(r"\b(?:[A-Za-z0-9_.-]+:)?((?:" + "|".join(private_prefixes) + r")-[0-9]+)\b")
+    if private_prefixes
+    else None
+)
 
 check_files = [active_file, slated_file]
 if staged_only:
@@ -364,10 +477,37 @@ for path in check_files:
 
         for link_field in ["Depends on", "Blocks"]:
             for dep_id in csv_ids(fields.get(link_field, "")):
-                if dep_id not in all_ids:
+                # Cross-repo edges use `<repo>:<ID>` notation (the directional form
+                # eposforge:EF-047 prescribes for the private side); strip the
+                # qualifier before resolving against the aggregated ID set.
+                if dep_id.split(":")[-1].strip() not in all_ids:
                     errors.append(
                         f"{issue_ref} {link_field} references unknown issue ID `{dep_id}`"
                     )
+
+        # Public/private boundary (eposforge:EF-047): a public repo must not carry
+        # an outbound cross-repo edge to a private (or unknown) repo. Cross-repo
+        # edges are directional — declared on the private side only.
+        if local_visibility == "public":
+            for link_field in ["Depends on", "Blocks"]:
+                for dep_id in csv_ids(fields.get(link_field, "")):
+                    rp = ref_prefix(dep_id)
+                    if rp is None or rp == prefix:
+                        continue
+                    ref_vis = visibility_map.get(rp)
+                    if ref_vis == "private":
+                        errors.append(
+                            f"{issue_ref} (public) references non-public `{dep_id}` in `{link_field}:`; "
+                            f"declare the edge on the private side (`<private> Depends on: {prefix}:<ID>`), "
+                            f"never the public side (eposforge:EF-047 boundary)"
+                        )
+                    elif ref_vis is None:
+                        errors.append(
+                            f"{issue_ref} (public) carries an outbound cross-repo edge `{dep_id}` in "
+                            f"`{link_field}:` to unresolved prefix `{rp}`; declare it on the private side, or run "
+                            f"with multi-root context (BACKLOG_ROOTS) to resolve visibility (single-root "
+                            f"degradation — see `lint-backlog.sh --help`)"
+                        )
 
     if path.name == "backlog-slated.md":
         for issue in issues:
@@ -379,6 +519,31 @@ for path in check_files:
                     _slated_path = str(path)
                 errors.append(
                     f"{_slated_path}:{issue['header_id']} has status `{status}` in backlog-slated.md"
+                )
+
+# Whole-file private-leak scan (eposforge:EF-047): in a public repo NO private
+# marker may appear ANYWHERE — file headers / operational notes included, not just
+# issue bodies. Covers active, slated, and the (also-public) archive. These are
+# blocking ERRORS, not warnings: a public repo must leak nothing whatsoever.
+if local_visibility == "public":
+    leak_files = check_files if staged_only else [active_file, slated_file, archive_file]
+    for path in leak_files:
+        try:
+            _display_path = str(path.resolve().relative_to(repo_root))
+        except ValueError:
+            _display_path = str(path)
+        for lineno, line in enumerate(read_text(path).splitlines(), start=1):
+            markers = []
+            markers += host_path_re.findall(line)
+            markers += lan_host_re.findall(line)
+            markers += private_ip_re.findall(line)
+            if private_id_re is not None:
+                markers += private_id_re.findall(line)
+            for marker in dict.fromkeys(markers):  # de-dupe, preserve order
+                errors.append(
+                    f"{_display_path}:{lineno} public-repo leak — private marker `{marker}`: a public "
+                    f"repo must reference no private-repo backlog items, nor private host paths, `.lan` "
+                    f"hostnames, or private IPs (eposforge:EF-047; see `lint-backlog.sh --help`)"
                 )
 
 if warnings:
