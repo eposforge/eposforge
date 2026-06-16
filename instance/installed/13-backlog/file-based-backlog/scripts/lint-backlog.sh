@@ -136,13 +136,34 @@ def parse_issues(path: Path):
 
 
 def discover_roots(current_repo: Path):
-    roots = []
+    # Roots are normalized to the directory CONTAINING `backlog/` so that
+    # `collect_all_issues` can resolve `<root>/backlog` for both the flat
+    # (`<repo>/backlog`) and the adapter-mirror (`<repo>/eposforge/backlog`)
+    # layouts. Precedence matches aggregate.sh / ready.sh.
+
+    # 1. BACKLOG_ROOTS env (each entry is a backlog-parent dir)
+    if backlog_roots_env:
+        env_roots = [Path(p).expanduser().resolve() for p in backlog_roots_env.split(":") if p.strip()]
+        if env_roots:
+            return dedupe_roots(env_roots)
+
+    # 2. cwd walk-up — probes <dir>/backlog/ then <dir>/eposforge/backlog/ (D1: depth-tolerant)
+    cwd = Path.cwd()
+    while cwd != cwd.parent:
+        if (cwd / "backlog" / "config.toml").exists():
+            return [cwd]
+        if (cwd / "eposforge" / "backlog" / "config.toml").exists():
+            return [cwd / "eposforge"]
+        cwd = cwd.parent
+
+    # 3. VS Code workspace file
     if workspace_file:
         ws_path = Path(workspace_file).expanduser().resolve()
         if ws_path.exists():
             try:
                 data = json.loads(ws_path.read_text(encoding="utf-8"))
                 ws_dir = ws_path.parent
+                roots = []
                 for folder in data.get("folders", []):
                     folder_path = folder.get("path")
                     if not folder_path:
@@ -152,17 +173,16 @@ def discover_roots(current_repo: Path):
                         p = (ws_dir / p).resolve()
                     else:
                         p = p.resolve()
-                    roots.append(p)
+                    if (p / "backlog" / "config.toml").exists():
+                        roots.append(p)
+                    elif (p / "eposforge" / "backlog" / "config.toml").exists():
+                        roots.append(p / "eposforge")
+                if roots:
+                    return dedupe_roots(roots)
             except Exception:
                 pass
-    if roots:
-        return dedupe_roots(roots)
 
-    if backlog_roots_env:
-        env_roots = [Path(p).expanduser().resolve() for p in backlog_roots_env.split(":") if p.strip()]
-        if env_roots:
-            return dedupe_roots(env_roots)
-
+    # 4. git-root fallback
     return [current_repo]
 
 
