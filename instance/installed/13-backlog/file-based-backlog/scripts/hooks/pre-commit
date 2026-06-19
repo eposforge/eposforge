@@ -12,7 +12,7 @@ if [[ ! -x "${LINT_SCRIPT}" ]]; then
 fi
 
 changed="$(git diff --cached --name-only)"
-if ! grep -Eq '^backlog/(backlog\.md|backlog-slated\.md)$' <<<"${changed}"; then
+if ! grep -Eq '^instance/backlog/(backlog\.md|backlog-slated\.md)$' <<<"${changed}"; then
   exit 0
 fi
 

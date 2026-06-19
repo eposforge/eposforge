@@ -28,6 +28,31 @@ This repo has two layers that must stay explicit:
 
 ---
 
+## Agent coding guidelines
+
+Behavioral ground rules for all agents working in this repo. Source of
+truth: [04-standards/08-agent-coding-guidelines/agent-coding-guidelines.md](04-standards/08-agent-coding-guidelines/agent-coding-guidelines.md).
+The bias is toward caution over speed; for trivial edits, use judgment.
+
+1. **Think before coding.** State assumptions explicitly. If multiple
+   interpretations exist, present them — don't pick silently. Push back
+   when a simpler approach exists. If something is unclear, stop, name
+   what's confusing, and ask.
+2. **Simplicity first.** Minimum change that solves the problem. No
+   features beyond what was asked, no abstractions for single-use content,
+   no speculative configurability, no handling for impossible scenarios.
+3. **Surgical changes.** Touch only what the task requires. Don't
+   "improve" adjacent content, refactor what isn't broken, or remove
+   pre-existing dead content — mention it instead. Remove only orphans
+   your own change created. Every changed line should trace to the request.
+4. **Goal-driven execution.** Restate the task as verifiable success
+   criteria before starting — in this repo that means a named conformance
+   command, lint script, or recall query, not "make it better". For
+   multi-step work, state a brief plan with a verify step per item, and
+   loop until verified.
+
+---
+
 ## Active execution plan (instance)
 
 When executing backlog items for the in-flight **inference cost-control +
@@ -162,16 +187,31 @@ Operational conventions retained here:
 - Syncing to the Spec Graph (Cognee, default): from `instance/installed/06-spec-graph/cognee/sync`, run `epos-secrets uv run cognee-sync --modified <files>` (use `--added`/`--deleted` as appropriate; see sync/README.md for setup and full-corpus seed).
 - Rebuilding the Spec Graph (GraphRAG, fallback): `python instance/installed/12-secrets-key-management/bin/epos-secrets -- bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh`
   (secrets are declared in [instance/installed/12-secrets-key-management/sops-age/secrets.toml](instance/installed/12-secrets-key-management/sops-age/secrets.toml)).
+- **Technical findings go in the repo, not personal memory.** When you discover
+  vendor bugs, version-specific behavior, API quirks, or diagnostic recipes for
+  a system this repo integrates with (Cognee, Anthropic SDK, Kuzu, etc.),
+  document them in the relevant adapter doc under
+  `instance/installed/<component>/<adapter>/` (e.g. `cognee/cognee.md`).
+  Operational and access setup belongs in the relevant repo skill. Personal
+  memory is for pointers to where the canonical info lives, not for the info
+  itself.
+- **Pull before editing source-of-truth files.** This repo is developed from
+  multiple hosts (srv-docker-hp and ws-dev-1). Before editing a shared
+  source-of-truth file (e.g. `00-vision/01-ontology.ttl`), run
+  `git fetch && git log HEAD..origin/<branch> --oneline` and pull if upstream
+  commits exist. Prefer `git pull --ff-only` when local uncommitted work is
+  absent. Don't trust `git status`'s "up to date with origin" without a fresh
+  fetch first.
 
 ## Backlog management
 
 - Backlog load rules:
-  - Load `backlog/backlog.md` during active fix work (open,
+  - Load `instance/backlog/backlog.md` during active fix work (open,
     in-progress, blocked only).
-  - Load `backlog/backlog-slated.md` during planning and deferral
+  - Load `instance/backlog/backlog-slated.md` during planning and deferral
     decisions.
-  - Load `backlog/backlog-archive-index.md` first for regression checks;
-    open `backlog/backlog-archive.md` only for full historical detail.
+  - Load `instance/backlog/backlog-archive-index.md` first for regression checks;
+    open `instance/backlog/backlog-archive.md` only for full historical detail.
 - Cross-repo planning: when multiple working directories are present,
   run `bash instance/installed/13-backlog/file-based-backlog/scripts/aggregate.sh --plan`
   before planning the next iteration.

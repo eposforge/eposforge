@@ -1,12 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_ROOT="$(git rev-parse --show-toplevel)"
-SCRIPTS_DIR="${REPO_ROOT}/instance/installed/13-backlog/file-based-backlog/scripts"
-BACKLOG_DIR="${REPO_ROOT}/backlog"
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || echo "")"
+# shellcheck source=resolve-backlog.sh
+source "${SCRIPTS_DIR}/resolve-backlog.sh"
+[[ -z "${REPO_ROOT}" ]] && REPO_ROOT="$(realpath "${BACKLOG_DIR}/..")"
 ACTIVE_FILE="${BACKLOG_DIR}/backlog.md"
 ARCHIVE_FILE="${BACKLOG_DIR}/backlog-archive.md"
 ARCHIVE_INDEX_FILE="${BACKLOG_DIR}/backlog-archive-index.md"
+
+if [[ ! -f "${BACKLOG_DIR}/config.toml" ]]; then
+  echo "ERROR: no backlog found at ${BACKLOG_DIR}/config.toml." >&2
+  echo "  Bootstrap: create ${BACKLOG_DIR}/config.toml with:" >&2
+  echo '    prefix = "XX"' >&2
+  echo "  Resolution order tried: BACKLOG_ROOTS env → cwd walk-up → VS Code workspace file → <git-root>/backlog" >&2
+  exit 1
+fi
 
 "${SCRIPTS_DIR}/lint-backlog.sh"
 

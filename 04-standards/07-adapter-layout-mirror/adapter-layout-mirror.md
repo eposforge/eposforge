@@ -34,10 +34,18 @@ This standard does not govern an adopter's own application source layout.
    from its dogfooded implementation. A pure ADOPTER has only implementation and
    MUST NOT reproduce the `instance/installed/` layer — components sit directly
    at the adoption root: `<adoption-root>/<component>/<adapter>/`.
+   - **Adopter container name:** `eposforge/` — all eposforge-owned content for
+     an adopting repo lives under this single top-level directory. The framework
+     repo uses `instance/` for the same role (to avoid a confusing self-duplicate).
 3. Backlog DATA (the issue files) MUST live at `<adoption-root>/backlog/`
-   (mirroring eposforge's repo-root `backlog/`), distinct from the
+   (mirroring eposforge's `instance/backlog/`), distinct from the
    file-based-backlog ADAPTER (scripts + living spec) at its component path.
    Data is repo content; the adapter is the tool that operates on it.
+   - **Prescriptive core per installed adapter:** data files + `config.toml`.
+     The Living Spec (`file-based-backlog.md`) is part of the model but may be
+     deferred on first adoption. Framework conveniences (`instance/README.md`
+     slot-table, `instance/adrs/`, `instance/`.audit/`) are NOT prescribed —
+     adopters omit them.
 4. Each repo carries exactly one backlog instance with a repo-scoped ID prefix.
    Cross-repo dependency references MUST name the **bare ID only**; a public repo
    MUST NOT embed another repo's name or path in a reference. Dependency
@@ -46,13 +54,25 @@ This standard does not govern an adopter's own application source layout.
    and a machine-readable old->new rename map; adopters re-shelve via the
    migration skill on their own schedule (pinning a tree version). This standard
    enumerates no paths — it points at the tree.
+6. **Discovery wiring (required):** each repo MUST declare its adoption-root via
+   a `.code-workspace` file. The adapter scripts' git-root fallback checks
+   `<repo-root>/backlog/config.toml`, which misses when the backlog is nested
+   under a container (`eposforge/backlog/` for adopters, `instance/backlog/` for
+   the framework). Without a workspace file, Preferred-mode invocations silently
+   find zero items.
+   - Adopters: workspace `folders` must include `./eposforge` and
+     `../../gh/eposforge` (the framework clone, for cross-repo aggregation).
+   - Framework repo: workspace `folders` must include `.` and `./instance`.
+   - `BACKLOG_ROOTS` remains the pure-CLI fallback when no workspace file is active.
 
 ## Conformance
 
 - Adopter-layout check: each installed component/adapter path resolves to a live
   tree node by identity; orphans (no matching node) fail.
-- Backlog-location check: data at `<adoption-root>/backlog/`; adapter at its
-  component path.
+- Backlog-location check: data at `<adoption-root>/backlog/` (i.e.
+  `eposforge/backlog/` for adopters, `instance/backlog/` for the framework);
+  adapter at its component path. A workspace file declaring the adoption-root
+  must be present.
 - `aggregate.sh` discovers per-repo backlogs via workspace / `BACKLOG_ROOTS` and
   rolls them into one cross-repo view.
 
