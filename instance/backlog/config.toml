@@ -1,0 +1,7 @@
+prefix = "EF"
+# Publishable open-source framework repo. `public` opts this repo into
+# outbound-reference scrutiny: a public item may never reference a private
+# (adopter) backlog ID. See eposforge:EF-047 and `lint-backlog.sh --help`.
+visibility = "public"
+fix_surfaces = ["eposforge-pattern", "repo-instance", "infrastructure", "process", "external"]
+themes = ["backlog-tooling", "spec-graph", "agent-policy", "secrets", "inference", "observability", "source-control", "distribution", "portfolio", "orchestrator", "resilience", "security-isolation"]

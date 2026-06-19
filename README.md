@@ -29,9 +29,11 @@ EposForge defines:
 
 Instances pick implementations.
 
-## How to use it
+## How to build your own dark factory
 
-EposForge is delivers value via a Cognee MCP server which LLMs can use for a GraphRag grounding.  
+What better way to build an AI driven dark factory than to have AI build it for you?
+
+EposForge delivers value via a Cognee MCP server which LLMs can use for a GraphRag grounding.  
 eposforge/instance/installed/06-spec-graph/cognee is the implementation
 
 Once agents have access to the server, they can ground their chats and actions by accessing the EposForge ontology grounded knowledge graph through Cognee MCP.

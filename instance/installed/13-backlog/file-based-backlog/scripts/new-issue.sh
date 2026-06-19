@@ -1,15 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_ROOT="$(git rev-parse --show-toplevel)"
-BACKLOG_DIR="${REPO_ROOT}/backlog"
+SCRIPT_DIR_NEW="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=resolve-backlog.sh
+source "${SCRIPT_DIR_NEW}/resolve-backlog.sh"
 CONFIG_FILE="${BACKLOG_DIR}/config.toml"
 ACTIVE_FILE="${BACKLOG_DIR}/backlog.md"
 SLATED_FILE="${BACKLOG_DIR}/backlog-slated.md"
 ARCHIVE_FILE="${BACKLOG_DIR}/backlog-archive.md"
 
 if [[ ! -f "${CONFIG_FILE}" ]]; then
-  echo "ERROR: missing config file: ${CONFIG_FILE}" >&2
+  echo "ERROR: no backlog found at ${CONFIG_FILE}." >&2
+  echo "  Bootstrap: create ${BACKLOG_DIR}/config.toml with:" >&2
+  echo '    prefix = "XX"' >&2
+  echo "  Resolution order tried: BACKLOG_ROOTS env → cwd walk-up → VS Code workspace file → <git-root>/backlog" >&2
   exit 1
 fi
 

@@ -30,6 +30,8 @@ Example:
 |---|---|---|
 | `Depends on:` | Dependencies exist | Comma-separated IDs |
 | `Blocks:` | Dependents exist | Comma-separated IDs |
+| `Theme:` | Item belongs to a theme | Per-repo vocabulary from `backlog/config.toml`; omit if none; set at creation time so grouping is data, not inference |
+| `Supersedes:` | Item replaces an older one | Comma-separated IDs; the superseded item should add `Blocks: <this-id>` for bidirectional traceability |
 | `Bundle hint:` | Co-scheduling intent exists | Omit if none |
 | `Validation:` | `Status: resolved` | Summary of confirmation |
 | `Resolved:` | `Status: resolved` | `YYYY-MM-DD` |
@@ -46,9 +48,23 @@ Example:
 
 ## Dependency-link rules
 
-- IDs in `Depends on:` and `Blocks:` must resolve to an existing issue in
+- IDs in `Depends on:`, `Blocks:`, and `Supersedes:` must resolve to an existing issue in
   active, slated, or archive files across the discovery set.
 - IDs remain stable; links must never be rewritten to prose references.
+- `Status: blocked` requires at least one `Depends on:` ID that is still `open`,
+  `in-progress`, `blocked`, or `slated`. A blocked item with no open dependency is a
+  lint error (use a blocker record — see below).
+
+## Blocker records (EF-042)
+
+Non-work constraints (budget, vendor dependency, hardware availability, waiting on
+an external party) are tracked as ordinary backlog items with `Fix surface: external`
+and a re-check cadence in `Notes:` or `Re-evaluate by:`. Items stalled by the
+constraint declare `Depends on: <blocker-id>`. Resolution is recorded via the normal
+`Validation:`/`Resolved:` flow.
+
+`fix_surfaces` in `config.toml` must include `"external"` for blocker records to
+pass lint.
 
 ## Validation and sweep rules
 
