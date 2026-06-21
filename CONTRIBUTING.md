@@ -50,6 +50,60 @@ Signed-off-by: Your Name <you@example.com>
 
 PRs without sign-off will be asked to amend. We do not merge unsigned commits.
 
+## Cryptographically Signed Commits (Required)
+
+DCO sign-off (above) asserts authorship in the commit *message*; it is not
+cryptographic. We additionally require every commit to be **cryptographically
+signed** so GitHub shows the green **Verified** badge and the provenance of each
+commit is verifiable. We use SSH commit signing — the same SSH key you already
+use to push can sign commits, with no GPG setup.
+
+Run the one-time setup script for your platform (it only writes your local
+`git config` — it never touches a remote):
+
+```bash
+# Linux / macOS / Git Bash
+bash instance/installed/09-source-control-ci/github-and-actions/scripts/setup-signed-commits.sh
+```
+
+```powershell
+# Windows PowerShell
+instance\installed\09-source-control-ci\github-and-actions\scripts\setup-signed-commits.ps1
+```
+
+The script configures `gpg.format ssh`, points `user.signingkey` at your public
+key, and turns on `commit.gpgsign`/`tag.gpgsign`. It also adds a convenience
+alias so a single command signs off **and** signs each commit:
+
+```bash
+git config alias.ci 'commit -s -S'   # the script sets this globally for you
+git ci -m "Your commit message"      # -s = DCO sign-off, -S = cryptographic sign
+```
+
+After running the script, upload the **same** public key to GitHub a second
+time as a **Signing key** (it is separate from your Authentication key):
+[github.com/settings/ssh/new](https://github.com/settings/ssh/new) → Key type
+**Signing key**. Then verify with a test commit — `git log --show-signature`
+should report a good signature, and the commit shows **Verified** on GitHub.
+
+### Fixing a PR that fails the check
+
+If the **DCO Check** or signature check fails, re-sign the offending commits and
+force-push the topic branch:
+
+```bash
+# Last commit only — re-sign-off and re-sign in place
+git commit --amend --signoff -S
+git push --force-with-lease origin your-branch-name
+
+# Multiple commits — rewrite the last N to add sign-off (and sign each)
+git rebase -i --signoff HEAD~N
+git push --force-with-lease origin your-branch-name
+```
+
+Always prefer `--force-with-lease` over `--force` so you never clobber a commit
+someone else pushed to your branch.
+
 ## What kinds of contributions fit
 
 **Welcome:**
