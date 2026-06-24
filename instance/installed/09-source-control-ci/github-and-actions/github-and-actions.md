@@ -82,6 +82,7 @@ host-absolute paths are committed — fragments derive the repo root from
 | Hook | Fragment | Purpose |
 |---|---|---|
 | `pre-commit` | `scripts/hooks/pre-commit` | Run `check-sensitive-literals.sh --staged` and `check-installed-scripts-layout.sh` |
+| `commit-msg` | `scripts/hooks/commit-msg` | Append exact DCO trailer (Dialedin2014) when no Signed-off-by present |
 
 ### Adapter-script layout enforcement
 
