@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# install-hooks.sh — Install EposForge Git hooks into .git/hooks/.
+# install-hooks.sh — Install EposForge Git hooks into the repo's hooks dir
+# (portable across normal clones and worktrees used by polecat/agent clones).
 #
 # Discovers per-component hook fragments at:
 #   instance/installed/<component>/scripts/hooks/<git-hook-name>
@@ -24,7 +25,10 @@ set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 INSTALLED_ROOT="${REPO_ROOT}/instance/installed"
-HOOKS_DIR="${REPO_ROOT}/.git/hooks"
+# Use --git-path for portability: works in normal clones (.git dir) and in
+# git-worktrees (as used by polecat/agent runtimes) where hooks live under the
+# common git dir.
+HOOKS_DIR="$(git rev-parse --git-path hooks)"
 MARKER="# managed-by: install-hooks.sh (eposforge)"
 
 MODE="install"
@@ -134,7 +138,7 @@ discovered_names() {
   discover_fragments | awk -F'\t' '{print $1}' | uniq
 }
 
-# Hook files in .git/hooks/ that carry our marker line.
+# Hook files in the hooks dir that carry our marker line.
 managed_installed_names() {
   [ -d "$HOOKS_DIR" ] || return 0
   for f in "$HOOKS_DIR"/*; do
