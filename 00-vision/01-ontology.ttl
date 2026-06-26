@@ -508,6 +508,52 @@ ef:EssentialCharacteristicNodeSelection rdf:type ef:Guidance ;
     ef:governedBy ef:RandianConceptFormation ;
     ef:dependsOn ef:MeasurementOmission, ef:ExplanatoryPower .
 
+### Knowledge-Tree Individuals — Stabilization & Kernels (EF-053 / EF-054)
+
+ef:BootstrapRule rdf:type ef:Tenet ;
+    rdfs:label "bootstrap rule" ;
+    rdfs:comment "The doctrine that prevents the self-improvement grind: a factory may trust a layer's autonomy only once the layers beneath it are kernels. Gall's Law operationalized — a complex system that works is invariably found to have evolved from a simple system that worked, so autonomy is grown upward from a trustworthy foundation, never built from scratch over un-kernelled substrate. Governs Loop A (trusting autonomy), not Loop B (adding detection), which is always-valid work on any layer regardless of the bootstrap order." ;
+    ef:statement "A layer's autonomy may be trusted only once the layers beneath it are kernels." ;
+    ef:variants "bootstrap order", "trust autonomy upward only", "Gall's Law" ;
+    ef:kind ef:NodeKindTenet ;
+    ef:lifecycleStatus ef:StatusAdopted .
+
+ef:DetectionRatchet rdf:type ef:Concept ;
+    rdfs:label "detection ratchet" ;
+    rdfs:comment "The detectable half of a kernel: a single-command, unambiguous pass/fail check (smoke test or hard gate) that proves an element is still good. Detection is the negentropy input — Lehman's Laws hold that complexity rises in any layer still in use unless deliberate work reduces it, and the ratchet is that deliberate work: it converts silent drift into a caught, bounded red-gate event. Detection — not stability — is the half almost always missing, and the half that does the work. Operationalized by the paired-detection standard (04-standards/09)." ;
+    ef:adoptedDefinition "A cheap, re-runnable, one-command pass/fail check that proves an element is still good, supplying the continuous detection that keeps a kernel a kernel." ;
+    ef:variants "smoke gate", "smoke test", "hard gate", "one-command gate", "negentropy input", "paired detection", "Lehman's Laws", "Lehman" ;
+    ef:kind ef:NodeKindConcept ;
+    ef:lifecycleStatus ef:StatusAdopted .
+
+ef:Kernel rdf:type ef:Concept ;
+    rdfs:label "kernel" ;
+    rdfs:comment "The primitive that prevents the self-improvement grind (using a not-yet-working tool to fix a not-yet-working tool). A kernel needs two properties, not one: stable (pinned/frozen/source-controlled — it does not change under you) AND detectable (confirmable good in one command). Stability without detection is only 'code you haven't broken yet.' Yields three states — kernel (stable+detectable), candidate kernel (stable, detection partial/just added), not-a-kernel (fast-moving) — where the candidate->kernel promotion is exactly the event 'detection was added.' Kernel state is the maturity model applied to substrate, not a new lifecycle vocabulary. External-tier dependencies (frontier-model / vendor APIs) are inherently un-kernelable — they change on the vendor's schedule and cannot be pinned, so they must be wrapped by an Adapter that carries its own detection and never trusted as foundation." ;
+    ef:adoptedDefinition "A substrate or control-layer element that is both stable and detectable — confirmable good in a single command — and is therefore trustworthy to build on." ;
+    ef:variants "candidate kernel", "stable foundation", "trustworthy foundation", "what can I build on", "what is solid enough to build on" ;
+    ef:kind ef:NodeKindConcept ;
+    ef:lifecycleStatus ef:StatusAdopted ;
+    ef:governedBy ef:BootstrapRule ;
+    ef:dependsOn ef:DetectionRatchet .
+
+ef:FoundationTrust rdf:type ef:Concept ;
+    rdfs:label "foundation-trust" ;
+    rdfs:comment "One of the two orthogonal axes a factory uses to grade 'how solid is this?'. Foundation-trust answers 'what may I build on?' and is governed by kernel state plus the bootstrap order; it applies to the substrate and control layers. It is independent of, and MUST NOT be conflated with, the product-promotion axis: whether the substrate an artifact runs on is a kernel is a different question from whether that artifact is safe to ship. Trust in a foundation comes from kernels, not from ring promotion." ;
+    ef:adoptedDefinition "The axis that grades what may be built upon — governed by kernel state and the bootstrap order — held distinct from whether a product is safe to ship." ;
+    ef:variants "foundation-trust axis", "what may I build on" ;
+    ef:kind ef:NodeKindConcept ;
+    ef:lifecycleStatus ef:StatusAdopted ;
+    ef:dependsOn ef:Kernel, ef:BootstrapRule .
+
+ef:ProductPromotion rdf:type ef:Concept ;
+    rdfs:label "product-promotion" ;
+    rdfs:comment "One of the two orthogonal axes a factory uses to grade 'how solid is this?'. Product-promotion answers 'is this artifact safe to ship?' and is governed by the maturity model plus release rings; it applies to the products the factory builds. It is independent of, and MUST NOT be conflated with, the foundation-trust axis: a product moving alpha->beta->GA is a separate question from whether the substrate beneath it is a kernel. Quality of a shipped product comes from rings and feedback-minted checks, not from being frozen." ;
+    ef:adoptedDefinition "The axis that grades whether a product is safe to ship — governed by the maturity model and release rings — held distinct from what may be built upon." ;
+    ef:variants "product-promotion axis", "is this safe to ship" ;
+    ef:kind ef:NodeKindConcept ;
+    ef:lifecycleStatus ef:StatusAdopted ;
+    ef:dependsOn ef:ReleaseRingsComponent .
+
 ### Individuals (The 14 Core Components)
 
 ef:SpecInput rdf:type ef:Component ;
