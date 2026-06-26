@@ -17,6 +17,6 @@ This section is the source of truth for cross-cutting standards adopted by EposF
 - [06-research-mirror/research-mirror.md](06-research-mirror/research-mirror.md)
 - [07-adapter-layout-mirror/adapter-layout-mirror.md](07-adapter-layout-mirror/adapter-layout-mirror.md)
 - [08-agent-coding-guidelines/agent-coding-guidelines.md](08-agent-coding-guidelines/agent-coding-guidelines.md)
-- [09-paired-detection/paired-detection.md](09-paired-detection/paired-detection.md) *(draft — pending EF-053)*
+- [09-paired-detection/paired-detection.md](09-paired-detection/paired-detection.md)
 
 Additional standards are added here as they are adopted.

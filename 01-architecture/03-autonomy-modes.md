@@ -1,7 +1,7 @@
 ---
 doc_kind: architecture-concept
 scope: eposforge-pattern
-maturity: draft
+maturity: adopted
 source_of_truth: yes
 ---
 
