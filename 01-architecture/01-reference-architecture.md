@@ -65,6 +65,14 @@ The operator tier and the external tier are open: EposForge does not
 constrain how the operator works or which vendors are used, only how
 they're plugged in.
 
+The Logical Tiers are a **functional** view — *what role does each part
+play?* They are deliberately distinct from the **stabilization** view —
+*what has to be solid before what?* — which orders the same elements by
+bootstrap dependency and asks which are kernels. A self-improving factory
+needs both; for the stabilization view, the kernel definition, and the
+bootstrap rule, see
+[04-stabilization-and-kernels.md](./04-stabilization-and-kernels.md).
+
 ---
 
 ## Component Layout

@@ -88,3 +88,33 @@ not promote a Dev Product from `supervised` to `autonomous` until its
 observed behavior under supervision justifies the auto-grant profile the
 headless Agent Policy ([02-components/08-agent-policy.md](./02-components/08-agent-policy.md))
 will enforce. Promotion is evidence-based, not scheduled.
+
+## Two loops: autonomy vs self-detection
+
+Autonomy promotion is easy to conflate with a second, independent activity
+the factory performs on itself. Keep them apart — confusing them produces
+the false dilemma *"do I demote this component or invest in it?"*
+
+- **Loop A — autonomy.** The factory autonomously drains its backlog:
+  builds products, fixes itself. This is the end state, and *trusting* it
+  is governed by the **bootstrap order** in
+  [04-stabilization-and-kernels.md](./04-stabilization-and-kernels.md#the-bootstrap-rule):
+  a layer's Loop-A autonomy is trusted only once the layers beneath it are
+  kernels.
+- **Loop B — self-detection.** The factory hardens *its own operating
+  configuration* — adds smoke gates, one-command restarts, reconstruction
+  checks. This is how a component **becomes** a kernel.
+
+**The bootstrap order governs Loop A (trusting autonomy), not Loop B
+(adding detection).** Loop B is valid work on *any* layer right now —
+including layers whose autonomy you will not trust until the layers under
+them are solid. This asymmetry dissolves the apparent contradiction of
+hardening a component while withholding trust in its autonomy: you harden
+it *by hand* (Loop B) precisely so that, when its autonomy is eventually
+trusted (Loop A), it cannot silently break itself. A component can be a
+*candidate kernel* worth Loop-B investment and simultaneously a component
+whose Loop-A autonomy stays off — those are not in tension.
+
+The detection minted in Loop B is the subject of the
+[09-paired-detection](../04-standards/09-paired-detection/paired-detection.md)
+standard.
