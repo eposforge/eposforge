@@ -1,7 +1,7 @@
 ---
 doc_kind: standard
 scope: eposforge-pattern
-maturity: draft
+maturity: adopted
 source_of_truth: yes
 ---
 
@@ -9,7 +9,7 @@ source_of_truth: yes
 
 ## Status
 
-- adopted: proposed (pending EF-053)
+- adopted: 2026-06-26
 - supersedes: none
 - declined-options: "test-suite-per-layer" — rejected; the unit is one
   end-to-end ratchet per layer, not a battery of isolated tests an agent
