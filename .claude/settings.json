@@ -5,8 +5,7 @@
   },
   "permissions": {
     "allow": [
-      "Bash(*)",
-      "mcp__*"
+      "Bash(*)"
     ]
   }
 }
