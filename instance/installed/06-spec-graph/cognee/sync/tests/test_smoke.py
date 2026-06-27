@@ -64,3 +64,34 @@ def test_dataset_lifecycle_roundtrip(
     # know the exact key to use in Phases 1–4.
     print(f"\n[Phase 0 discovery] add_file response keys: {sorted(response.keys())}")
     print(f"[Phase 0 discovery] add_file response: {response!r}")
+
+
+# L2 ratchet: known-query recall against the live eposforge-sync corpus.
+# Cognee MCP `recall` proxies to this API path (dkr-cgnee-mcp → dkr-cgnee-api).
+KNOWN_RECALL_QUERY = "What defines a kernel in stabilization?"
+KNOWN_RECALL_MARKERS = ("stable", "detect")
+
+
+@pytest.mark.smoke
+def test_spec_graph_recall_known_query(client: CogneeClient) -> None:
+    """Recall a known architecture concept from the eposforge-sync corpus.
+
+    This is the detectable half of the Cognee L2 kernel ratchet: the spec graph
+    must answer a fixed query with content that proves the corpus is indexed and
+    queryable. MCP ``recall`` hits the same backend via the MCP proxy container.
+    """
+    result = client.search(
+        KNOWN_RECALL_QUERY,
+        "GRAPH_COMPLETION",
+        datasets=["eposforge-sync"],
+        top_k=3,
+    )
+    assert isinstance(result, list), f"Expected list from search, got {type(result)}"
+    assert result, f"Empty recall for known query: {KNOWN_RECALL_QUERY!r}"
+
+    text = str(result[0]).lower()
+    missing = [marker for marker in KNOWN_RECALL_MARKERS if marker not in text]
+    assert not missing, (
+        f"Recall for {KNOWN_RECALL_QUERY!r} missing expected terms {missing!r}. "
+        f"Got: {result[0]!r}"
+    )
