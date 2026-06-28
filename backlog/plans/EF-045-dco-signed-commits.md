@@ -42,7 +42,7 @@ style, license).
 ## Step 3 — Add setup scripts
 
 Place two new files under
-`instance/installed/09-source-control-ci/github-and-actions/scripts/`:
+`instance/source-control-ci/github-and-actions/scripts/`:
 
 ### `setup-signed-commits.sh` (bash / Git Bash)
 
