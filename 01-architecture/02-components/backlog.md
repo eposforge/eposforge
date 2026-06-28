@@ -38,7 +38,7 @@ Any Adapter for this slot must:
 ## Required Adapter metadata
 
 In addition to the universal fields in
-[../00-adapter-pattern.md](../00-adapter-pattern.md):
+[../00-adapter-pattern/adapter-pattern.md](../00-adapter-pattern/adapter-pattern.md):
 
 - `repo_prefix` — short uppercase ID prefix for this repo (for example,
   `EF`, `OA`).
@@ -116,5 +116,5 @@ In addition to the universal fields in
 ## Reference implementations
 
 See repo-instance adapter docs under
-`instance/installed/13-backlog/` for concrete implementations of this
+`instance/backlog/` for concrete implementations of this
 slot.

@@ -42,7 +42,7 @@ the Tool Transport. There is no "back door" for a Dev Product.
 ## Required Adapter metadata
 
 In addition to the universal fields in
-[../00-adapter-pattern.md](../00-adapter-pattern.md):
+[../00-adapter-pattern/adapter-pattern.md](../00-adapter-pattern/adapter-pattern.md):
 
 - `capabilities_exposed` — full capability set, beyond the required
   minimum.

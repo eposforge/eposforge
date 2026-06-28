@@ -127,7 +127,7 @@ Any Adapter for this slot must:
 ## Required Adapter metadata
 
 In addition to the universal fields in
-[../00-adapter-pattern.md](../00-adapter-pattern.md):
+[../00-adapter-pattern/adapter-pattern.md](../00-adapter-pattern/adapter-pattern.md):
 
 - `rings` — ordered list of ring names the Adapter implements.
 - `evidence_schema` — format of the evidence threshold declarations

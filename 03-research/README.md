@@ -20,17 +20,17 @@ Research paths mirror source paths.
 
 Currently populated mirrored paths:
 
-- [01-architecture/02-components/01-spec-input/](01-architecture/02-components/01-spec-input/)
-- [01-architecture/02-components/02-living-spec/](01-architecture/02-components/02-living-spec/)
-- [01-architecture/02-components/03-dev-product/](01-architecture/02-components/03-dev-product/)
-- [01-architecture/02-components/04-router/](01-architecture/02-components/04-router/)
-- [01-architecture/02-components/05-tool-transport/](01-architecture/02-components/05-tool-transport/)
-- [01-architecture/02-components/06-spec-graph/](01-architecture/02-components/06-spec-graph/)
-- [01-architecture/02-components/07-execution-sandbox/](01-architecture/02-components/07-execution-sandbox/)
-- [01-architecture/02-components/09-source-control-ci/](01-architecture/02-components/09-source-control-ci/)
-- [01-architecture/02-components/10-inference/](01-architecture/02-components/10-inference/)
-- [01-architecture/02-components/11-audit-observability/](01-architecture/02-components/11-audit-observability/)
-- [01-architecture/02-components/12-secrets-key-management/](01-architecture/02-components/12-secrets-key-management/)
+- [01-architecture/02-components/spec-input/](01-architecture/02-components/spec-input/)
+- [01-architecture/02-components/living-spec/](01-architecture/02-components/living-spec/)
+- [01-architecture/02-components/dev-product/](01-architecture/02-components/dev-product/)
+- [01-architecture/02-components/router/](01-architecture/02-components/router/)
+- [01-architecture/02-components/tool-transport/](01-architecture/02-components/tool-transport/)
+- [01-architecture/02-components/spec-graph/](01-architecture/02-components/spec-graph/)
+- [01-architecture/02-components/execution-sandbox/](01-architecture/02-components/execution-sandbox/)
+- [01-architecture/02-components/source-control-ci/](01-architecture/02-components/source-control-ci/)
+- [01-architecture/02-components/inference/](01-architecture/02-components/inference/)
+- [01-architecture/02-components/audit-observability/](01-architecture/02-components/audit-observability/)
+- [01-architecture/02-components/secrets-key-management/](01-architecture/02-components/secrets-key-management/)
 - [04-standards/01-naming-conventions/](04-standards/01-naming-conventions/)
 - [04-standards/06-research-mirror/](04-standards/06-research-mirror/)
 

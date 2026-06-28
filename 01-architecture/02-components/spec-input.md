@@ -15,7 +15,7 @@ non-functional bounds (privacy, cost, latency, etc.). The Router consumes
 Spec Input and decomposes it into work the factory can execute.
 
 Spec Input is **request-shaped** ("build me X"); it is distinct from the
-Living Spec ([02-living-spec.md](./02-living-spec.md)), which is the
+Living Spec ([living-spec.md](./living-spec.md)), which is the
 durable description of an existing deliverable.
 
 ## Contract
@@ -36,7 +36,7 @@ Any Adapter for this slot must:
 ## Required Adapter metadata
 
 In addition to the universal fields in
-[../00-adapter-pattern.md](../00-adapter-pattern.md):
+[../00-adapter-pattern/adapter-pattern.md](../00-adapter-pattern/adapter-pattern.md):
 
 - `input_format` — markdown, YAML, structured form, etc.
 - `decomposition_hints` — capability tags the Adapter recognizes and
