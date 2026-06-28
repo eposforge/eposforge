@@ -45,7 +45,7 @@ File names *inside* mirrored folders are content-descriptive — not pinned to m
   README.md
   00-standards-meta/standards-meta.md
   01-naming-conventions/naming-conventions.md
-  02-vocabulary/vocabulary.md
+  02-ontology-taxonomy/ontology-taxonomy.md  (superseded the earlier vocabulary standard)
   03-agent-skills/agent-skills.md
   04-mcp/mcp.md
   05-canonical-doc-sources/canonical-doc-sources.md
@@ -130,7 +130,7 @@ Use `git mv` to preserve history.
 - `AGENTS.md` — collapse §Vocabulary, §Authoritative-docs MCPs, §Conventions into a single `## Standards` H2 with bullet pointers to `04-standards/`. Add one line pointing at `04-standards/06-research-mirror/` under a refactoring-discipline note.
 - `03-research/README.md` — rewrite the Organization section. Replace "Each subdirectory corresponds to a component" with the mirror rule: "Research paths mirror source paths. Research for `<path>.md` lives at `03-research/<path>/`. The mirror is need-based — folders exist only when populated. See `04-standards/06-research-mirror/` for the normative rule." Replace the per-component table with a generated/illustrative listing of currently-populated paths.
 - `README.md` — add `04-standards/` row to the §How to read code block and to the §Repository Layers table.
-- `00-vision/01-ontology.ttl` — add guidance note pointing at `04-standards/02-vocabulary/` when that standard lands.
+- `00-vision/01-ontology.ttl` — add guidance note pointing at `04-standards/02-ontology-taxonomy/` (the standard that governs ontology/taxonomy editorial rules; previously lived under 02-vocabulary).
 - `01-architecture/00-adapter-pattern/adapter-pattern.md` — `invocation_surface` bullet gains "see `04-standards/04-mcp/` and `04-standards/03-agent-skills/`" once those land.
 - `.github/workflows/doc-lint.yml` — extend glob from `03-research/**` to also cover `04-standards/**` and the new `03-research/01-architecture/**` deep paths.
 - Update internal cross-references to moved research files. Search pattern: `03-research/<old-component-folder>` across the entire repo.

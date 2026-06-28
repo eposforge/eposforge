@@ -9,7 +9,7 @@ This skill implements the editorial workflow. Distinguish:
 - Domain ontology (OWL classes like ef:Component, properties like fulfillsSlot) — the *pattern*.
 - Knowledge taxonomy (SKOS for labels/hierarchy on tree items + our NodeKind discriminator) — how we *organize what we know*.
 
-The TTL remains the single source of truth. See also the updated owl-turtle-primer for SKOS usage. `04-standards/02-vocabulary/vocabulary.md` still governs reserved terms and policy (we are evolving its name toward "ontology policy").
+The TTL remains the single source of truth. See also the updated owl-turtle-primer for SKOS usage. The ontology & taxonomy policy is now at `04-standards/02-ontology-taxonomy/ontology-taxonomy.md` (supersedes the previous vocabulary standard).
 
 Primary purpose: keep the ontology internally coherent and aligned with installed adapter cards so entities extracted by Cognee remain anchored to stable EposForge IRIs. This enables external EposForge consumers to point their agents at the EposForge Cognee MCP server and use graph-backed guidance to automate dark-factory design and creation.
 
