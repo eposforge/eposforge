@@ -9,7 +9,7 @@ source_of_truth: yes
 
 > Living Spec for Component 6 (Spec Graph) as implemented in this repo.
 > Per the paired-change rule: any change to the tooling behavior in
-> `instance/installed/06-spec-graph/` must update this file in the same commit.
+> `instance/spec-graph/` must update this file in the same commit.
 
 ---
 
@@ -21,7 +21,7 @@ from all Markdown files in the docs directories and writes normalized
 entities and relationships into its embedded Kuzu graph + LanceDB
 vector store, hosted inside the `dkr-cgnee-api` container. Microsoft
 GraphRAG is retained only as an archived revival-only snapshot under
-`instance/installed/06-spec-graph/graphrag/`; it is not part of the
+`instance/spec-graph/graphrag/`; it is not part of the
 active path and should not be used to infer current EposForge behavior.
 Any MCP-compatible Dev Product (Gemini
 CLI, Claude Code, Cursor, Goose, or equivalent) connects to the cognee
@@ -40,26 +40,26 @@ architecture contracts versus repo-instance implementations.
 This tooling implements **Component 6: Spec Graph** for the EposForge
 repo itself. This is one of many possible Spec Graph implementations;
 the slot contract is defined in
-[../01-architecture/02-components/06-spec-graph.md](../01-architecture/02-components/06-spec-graph.md).
+[../01-architecture/02-components/spec-graph.md](../01-architecture/02-components/spec-graph.md).
 It is a concrete reference implementation of the pattern documented in
-[../03-research/01-architecture/02-components/06-spec-graph/graphrag-neo4j-integration.md](../03-research/01-architecture/02-components/06-spec-graph/graphrag-neo4j-integration.md).
+[../03-research/01-architecture/02-components/spec-graph/graphrag-neo4j-integration.md](../03-research/01-architecture/02-components/spec-graph/graphrag-neo4j-integration.md).
 
 ---
 
 ## Adapter metadata
 
-Per [../01-architecture/00-adapter-pattern.md](../01-architecture/00-adapter-pattern.md)
-and [../01-architecture/02-components/06-spec-graph.md](../01-architecture/02-components/06-spec-graph.md):
+Per [../01-architecture/00-adapter-pattern/adapter-pattern.md](../01-architecture/00-adapter-pattern/adapter-pattern.md)
+and [../01-architecture/02-components/spec-graph.md](../01-architecture/02-components/spec-graph.md):
 
 | Field | Value |
 |---|---|
 | `name` | `cognee-ontology-preprocessor` |
-| `component` | `06-spec-graph` |
+| `component` | `spec-graph` |
 | `version` | `0.1.1` |
 | `privacy_posture` | `local` (embedded Kuzu/LanceDB store inside `dkr-cgnee-api`) / `vendor-default` (inference during indexing) |
 | `cost_hint` | free (embedded store) + metered (Azure Foundry default for indexing; Anthropic/OpenAI remain selectable profiles) |
 | `capabilities` | ontology-grounded-extraction, entity-normalization, graph-query |
-| `invocation_surface` | `cognee-sync` CLI at `instance/installed/06-spec-graph/cognee/sync/` (incremental, HTTP to `dkr-cgnee-api`); GraphRAG opt-in fallback at `instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` |
+| `invocation_surface` | `cognee-sync` CLI at `instance/spec-graph/cognee/sync/` (incremental, HTTP to `dkr-cgnee-api`); GraphRAG opt-in fallback at `instance/spec-graph/graphrag/scripts/rebuild.sh` |
 | `status` | `experimental` |
 | `query_languages` | cognee HTTP API (`/api/v1/recall`, `/api/v1/search`); natural language via cognee MCP (`dkr-cgnee-mcp`) |
 | `projection_format` | hybrid (graph nodes/edges in embedded Kuzu + embeddings in LanceDB) |
@@ -76,15 +76,15 @@ Single source of truth for installed adapter status tracked in this repository.
 |---|---|---|---|---|
 | `cognee-ontology-preprocessor` | `SPEC_GRAPH` | experimental | `epos-secrets uv run cognee-sync --added <files>` (see `cognee/sync/README.md`) | Default ontology-grounded extraction path (two containers proxy-mode, HTTP API, incremental). Stores KG in cognee's embedded Kuzu graph + LanceDB vector indexes on the `dkr-cgnee-api` volume. |
 | `cognee-sync` | `SPEC_GRAPH` | experimental | `epos-secrets uv run cognee-sync --added/--modified/--deleted <files>` | Incremental git-diff-driven sync CLI (Phases 0–5 complete). Drives `dkr-cgnee-api` over HTTP; per-file `add + cognify`. |
-| `microsoft-graphrag` | `SPEC_GRAPH` | shelved | `bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` | Archived GraphRAG snapshot retained only for possible revival. Not part of the active path. |
-| `neo4j-ce` | `SPEC_GRAPH` | shelved | `instance/installed/06-spec-graph/graphrag/scripts/import.sh` + Neo4j MCP | Archived GraphRAG target store only; not used by the active Cognee path. |
-| `file-based-backlog` | `BACKLOG` | implemented, experimental | `bash instance/installed/13-backlog/file-based-backlog/scripts/{new-issue,lint-backlog,sweep-resolved,aggregate}.sh` | Local markdown backlog adapter with cross-repo aggregation and archive indexing |
+| `microsoft-graphrag` | `SPEC_GRAPH` | shelved | `bash instance/spec-graph/graphrag/scripts/rebuild.sh` | Archived GraphRAG snapshot retained only for possible revival. Not part of the active path. |
+| `neo4j-ce` | `SPEC_GRAPH` | shelved | `instance/spec-graph/graphrag/scripts/import.sh` + Neo4j MCP | Archived GraphRAG target store only; not used by the active Cognee path. |
+| `file-based-backlog` | `BACKLOG` | implemented, experimental | `bash instance/backlog/file-based-backlog/scripts/{new-issue,lint-backlog,sweep-resolved,aggregate}.sh` | Local markdown backlog adapter with cross-repo aggregation and archive indexing |
 
 Candidate adapters remain cataloged in
-`../03-research/01-architecture/02-components/06-spec-graph/spec-graph.md` and are non-normative until listed
+`../03-research/01-architecture/02-components/spec-graph/spec-graph.md` and are non-normative until listed
 here as implemented.
 These adapters fill Component 6 for THIS repo only. Other instances will pick
-differently; see `../03-research/01-architecture/02-components/06-spec-graph/spec-graph.md` for the candidate catalog.
+differently; see `../03-research/01-architecture/02-components/spec-graph/spec-graph.md` for the candidate catalog.
 
 ---
 
@@ -120,30 +120,30 @@ source_of_truth: yes
 
 Adapter scripts — hooks, runners, helpers — must live under:
 
-`instance/installed/<component>/scripts/`
+`instance/<component>/scripts/`
 
 or, when a component has multiple adapters, under:
 
-`instance/installed/<component>/<adapter>/scripts/`
+`instance/<component>/<adapter>/scripts/`
 
 The flat `instance/scripts/` directory is not permitted; nothing may live
 there. This convention is enforced by
-`instance/installed/09-source-control-ci/github-and-actions/scripts/check-installed-scripts-layout.sh`,
-which runs from the `pre-commit` hook fragment owned by `09-source-control-ci`
+`instance/source-control-ci/github-and-actions/scripts/check-installed-scripts-layout.sh`,
+which runs from the `pre-commit` hook fragment owned by `source-control-ci`
 and from the `installed-scripts-layout` GitHub Actions workflow.
 
 Git hooks themselves follow the same rule: each adapter places per-hook
 fragments at
-`instance/installed/<component>/scripts/hooks/<git-hook-name>` and a single
+`instance/<component>/scripts/hooks/<git-hook-name>` and a single
 composer at
-`instance/installed/09-source-control-ci/github-and-actions/scripts/install-hooks.sh`
+`instance/source-control-ci/github-and-actions/scripts/install-hooks.sh`
 discovers them and writes dispatchers into `.git/hooks/`.
 
 ---
 
 ## Observable behavior
 
-1. **Trigger:** operator runs `epos-secrets uv run cognee-sync --added/--modified/--deleted <files>` (default Cognee incremental sync, from `instance/installed/06-spec-graph/cognee/sync/`), or — opt-in only — `bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` for the shelved GraphRAG full-rebuild fallback. CI may trigger cognee-sync via a scheduled post-receive job. At startup, cognee-sync validates routing profile; when `COGNEE_REQUIRE_AZURE_ROUTING=1`, non-Azure providers are rejected before any API calls.
+1. **Trigger:** operator runs `epos-secrets uv run cognee-sync --added/--modified/--deleted <files>` (default Cognee incremental sync, from `instance/spec-graph/cognee/sync/`), or — opt-in only — `bash instance/spec-graph/graphrag/scripts/rebuild.sh` for the shelved GraphRAG full-rebuild fallback. CI may trigger cognee-sync via a scheduled post-receive job. At startup, cognee-sync validates routing profile; when `COGNEE_REQUIRE_AZURE_ROUTING=1`, non-Azure providers are rejected before any API calls.
 
 2. **Wipe stage (fallback only):**
    - The GraphRAG fallback's rebuild script clears Neo4j graph projection
@@ -163,9 +163,9 @@ discovers them and writes dispatchers into `.git/hooks/`.
   `adapter.invoked` token-usage event.
    - Opt-in fallback path (`--graphrag`): GraphRAG reads all `*.md` files
      matching
-     `^(00-vision|01-architecture|02-roadmap|03-research|instance/installed|instance/adrs)/.*\.md$`
+     `^(00-vision|01-architecture|02-roadmap|03-research|instance|instance/adrs)/.*\.md$`
      from the repo root and produces Parquet outputs under
-     `instance/installed/06-spec-graph/graphrag/output/`.
+     `instance/spec-graph/graphrag/output/`.
 
 4. **Import / projection to query store:**
    - Default path: cognee writes directly into its own embedded Kuzu/LanceDB
@@ -180,8 +180,8 @@ discovers them and writes dispatchers into `.git/hooks/`.
    to any MCP-compatible Dev Product. Scripts can hit the HTTP surface
   directly at `https://cognee-api.grace.lan/api/v1/{recall,search,...}`.
   For adopter-facing recommendation queries, use
-  `instance/installed/06-spec-graph/cognee/scripts/adopter-recall.py` to
-  enforce adopter-boundary path rewriting (no raw `instance/installed/...`
+  `instance/spec-graph/cognee/scripts/adopter-recall.py` to
+  enforce adopter-boundary path rewriting (no raw `instance/...`
   guidance) and emit recommendation maturity tags
   (`shipped` / `partial` / `intent`).
    Operators can issue instructions such as:
@@ -189,15 +189,15 @@ discovers them and writes dispatchers into `.git/hooks/`.
    - "List all principles that govern the Router component."
    - "Generate a new ADR for adding a second Dev Product Adapter."
 
-6. **Rebuild flag:** The `instance/installed/06-spec-graph/scripts/hooks/post-commit`
+6. **Rebuild flag:** The `instance/spec-graph/scripts/hooks/post-commit`
    hook fragment (composed into `.git/hooks/post-commit` by the SCM/CI adapter's
-   `install-hooks.sh`) writes `instance/installed/06-spec-graph/.needs-rebuild`
+   `install-hooks.sh`) writes `instance/spec-graph/.needs-rebuild`
    when doc files change. This is a non-blocking reminder; it does not trigger
    cognee-sync itself.
 
 7. **Layout/policy enforcement in CI:**
    - The doc lint checker validates adapter folder layout under
-     `instance/installed/`.
+     `instance/`.
    - The checker enforces script placement so adapter implementation scripts
      live in adapter-local `scripts/` folders.
 
@@ -227,10 +227,10 @@ discovers them and writes dispatchers into `.git/hooks/`.
 | Output | Description |
 |---|---|
 | Cognee embedded store on `dkr-cgnee-api` | Authoritative KG: Kuzu graph (`cognee_graph_ladybug`) + LanceDB vector indexes under `./data/cognee_system/databases/` |
-| `instance/installed/06-spec-graph/cognee/sync/.cognee-state.db` | SQLite state store: `file_path → (dataset_id, data_id, content_hash)` committed to source |
-| `instance/installed/06-spec-graph/graphrag/output/*.parquet` | Fallback only: Entity / Relationship / Community / TextUnit tables |
+| `instance/spec-graph/cognee/sync/.cognee-state.db` | SQLite state store: `file_path → (dataset_id, data_id, content_hash)` committed to source |
+| `instance/spec-graph/graphrag/output/*.parquet` | Fallback only: Entity / Relationship / Community / TextUnit tables |
 | Neo4j graph | Fallback only: target of the opt-in GraphRAG import |
-| `instance/installed/06-spec-graph/.needs-rebuild` | Flag file set by post-commit hook |
+| `instance/spec-graph/.needs-rebuild` | Flag file set by post-commit hook |
 
 ---
 
@@ -240,7 +240,7 @@ discovers them and writes dispatchers into `.git/hooks/`.
 |---|---|---|---|
 | `dkr-cgnee-api` container | `cognee/cognee:main` + local Dockerfile | Hosts the authoritative KG; runs cognify | default |
 | `dkr-cgnee-mcp` container | `cognee/cognee-mcp:main` + `Dockerfile.mcp` | MCP/SSE surface in proxy mode → `dkr-cgnee-api` | default |
-| `cognee-sync` (uv project) | local — `instance/installed/06-spec-graph/cognee/sync/` | Incremental git-diff-driven sync CLI | default |
+| `cognee-sync` (uv project) | local — `instance/spec-graph/cognee/sync/` | Incremental git-diff-driven sync CLI | default |
 | Anthropic API | current | LLM inference during cognify | default |
 | Python | 3.13 (cognee-sync); 3.10–3.12 (GraphRAG) | Runtime | default / fallback |
 | `graphrag` (pip) | 3.0.9 | Indexing pipeline | fallback only |
@@ -290,8 +290,8 @@ from this spec without reading implementation code:
 | Missing extraction key | active provider key unset on `dkr-cgnee-api` | cognify fails on the API container (logged); cognee-sync upload still succeeds but no KG nodes are created. GraphRAG fallback `index.sh` exits 1 with error message |
 | Missing embeddings key | `OPENAI_API_KEY` unset | No effect on default path (cognee uses its configured embedder). GraphRAG fallback `index.sh` exits 1 with error message |
 | Missing Neo4j vars | `NEO4J_PASSWORD` unset | No effect on default path. GraphRAG fallback `import.sh` exits 1 with error message |
-| No output dir | `instance/installed/06-spec-graph/graphrag/output/` absent | GraphRAG fallback `import.sh` exits 1 with error message |
-| No venv | `instance/installed/06-spec-graph/graphrag/.venv/` absent | GraphRAG index/import scripts exit 1 with setup instructions |
+| No output dir | `instance/spec-graph/graphrag/output/` absent | GraphRAG fallback `import.sh` exits 1 with error message |
+| No venv | `instance/spec-graph/graphrag/.venv/` absent | GraphRAG index/import scripts exit 1 with setup instructions |
 | Zero matching files | All docs dirs empty | cognee-sync no-ops; GraphRAG produces empty Parquet; Neo4j graph has 0 entities |
 | Large corpus | > 500 Markdown files | Default path: per-file incremental keeps each invocation fast. GraphRAG fallback completes within `rebuild_target` (15 min) |
 
@@ -302,14 +302,14 @@ from this spec without reading implementation code:
 Changes to the following files require updating this `SPEC.md` in the
 same commit:
 
-- `instance/installed/06-spec-graph/graphrag/settings.yaml` (any key that changes observable behavior)
-- `instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh`
-- `instance/installed/06-spec-graph/cognee/sync/src/cognee_sync/` (cognee-sync CLI core)
-- `instance/installed/06-spec-graph/graphrag/scripts/index.sh`
-- `instance/installed/06-spec-graph/graphrag/scripts/import.sh`
-- `instance/installed/06-spec-graph/cognee/scripts/cognee.py`
-- `instance/installed/09-source-control-ci/github-and-actions/scripts/check-doc-classification.py` (regulated directories, exempt patterns, or required fields)
-- `instance/installed/09-source-control-ci/github-and-actions/scripts/generate-installed-index.py` (adapter crawl logic or index schema)
+- `instance/spec-graph/graphrag/settings.yaml` (any key that changes observable behavior)
+- `instance/spec-graph/graphrag/scripts/rebuild.sh`
+- `instance/spec-graph/cognee/sync/src/cognee_sync/` (cognee-sync CLI core)
+- `instance/spec-graph/graphrag/scripts/index.sh`
+- `instance/spec-graph/graphrag/scripts/import.sh`
+- `instance/spec-graph/cognee/scripts/cognee.py`
+- `instance/source-control-ci/github-and-actions/scripts/check-doc-classification.py` (regulated directories, exempt patterns, or required fields)
+- `instance/source-control-ci/github-and-actions/scripts/generate-installed-index.py` (adapter crawl logic or index schema)
 - `.github/workflows/doc-lint.yml` (trigger paths or job behaviour)
-- `instance/installed/06-spec-graph/scripts/hooks/post-commit`
+- `instance/spec-graph/scripts/hooks/post-commit`
 
