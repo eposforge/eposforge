@@ -19,7 +19,7 @@ epos-secrets uv run cognee-sync --added path/new.md --modified path/changed.md -
 ```
 
 API behavioral findings from all phases are in
-`instance/installed/06-spec-graph/cognee/cognee.md` §Observed API behavior.
+`instance/spec-graph/cognee/cognee.md` §Observed API behavior.
 
 ## What remains
 
@@ -59,7 +59,7 @@ The workflow must run on a self-hosted runner that has:
 
 ### 3. `COGNEE_STATE_DB` persistence between runs — **decided**
 
-State DB lives at `instance/installed/06-spec-graph/cognee/sync/.cognee-state.db`,
+State DB lives at `instance/spec-graph/cognee/sync/.cognee-state.db`,
 committed to source. Default is hardcoded in `cli.py` relative to `__file__`
 so it resolves correctly regardless of working directory. Override with
 `COGNEE_STATE_DB` if needed.

@@ -1,11 +1,15 @@
 ---
 name: maintain-ontology
-description: Keeps 00-vision/01-ontology.ttl well-formed, internally consistent, and aligned with adapter cards under instance/installed/ so Cognee extraction remains ontology-grounded.
+description: Keeps 00-vision/01-ontology.ttl well-formed, internally consistent, and aligned with adapter cards under instance/ so Cognee extraction remains ontology-grounded.
 ---
 
-Maintains `00-vision/01-ontology.ttl` — the EposForge OWL ontology that grounds Cognee entity extraction for the Spec Graph.
+Maintains `00-vision/01-ontology.ttl` — the EposForge file that combines the domain **ontology** (OWL: the dark factory pattern model) and **knowledge taxonomy** (SKOS + ef:kind: the canonical tree organization of concepts, guidance, tenets, pillars, etc.). It grounds Cognee entity extraction for the Spec Graph so agents receive consistent, pattern-aligned knowledge.
 
-This skill implements the editorial workflow for `00-vision/01-ontology.ttl`, which is itself the canonical vocabulary source. `04-standards/02-vocabulary/vocabulary.md` governs the normative policy (reserved entity types, keyword alignment) and points back to the TTL as source of truth. When vocabulary content and vocabulary policy diverge, the TTL wins for class/property definitions; `vocabulary.md` wins for conformance policy.
+This skill implements the editorial workflow. Distinguish:
+- Domain ontology (OWL classes like ef:Component, properties like fulfillsSlot) — the *pattern*.
+- Knowledge taxonomy (SKOS for labels/hierarchy on tree items + our NodeKind discriminator) — how we *organize what we know*.
+
+The TTL remains the single source of truth. See also the updated owl-turtle-primer for SKOS usage. `04-standards/02-vocabulary/vocabulary.md` still governs reserved terms and policy (we are evolving its name toward "ontology policy").
 
 Primary purpose: keep the ontology internally coherent and aligned with installed adapter cards so entities extracted by Cognee remain anchored to stable EposForge IRIs. This enables external EposForge consumers to point their agents at the EposForge Cognee MCP server and use graph-backed guidance to automate dark-factory design and creation.
 
@@ -16,7 +20,7 @@ If this ontology drifts, consumer agents can still query Cognee MCP, but the gui
 - `00-vision/01-ontology.ttl` — the ontology file under review
 - previous ontology-grounded KG state via Cognee MCP when available — use it as the last published graph-backed memory of the ontology, not as authority over newer unrebuild corpus changes
 - `git log` — commit history to detect drift
-- adapter cards and specs — `instance/installed/`, `instance/SPEC.md`, and core spec files under `00-vision/`, `01-architecture/`, `02-roadmap/`, `04-standards/`
+- adapter cards and specs — `instance/`, `instance/SPEC.md`, and core spec files under `00-vision/`, `01-architecture/`, `02-roadmap/`, `04-standards/`
 - [owl-turtle-primer](./references/owl-turtle-primer.md) — OWL/Turtle reference (load when coaching is needed)
 
 ## Detect drift from git history
@@ -90,11 +94,11 @@ Walk the spec and adapter corpus in order, looking for concepts not yet modeled 
 | File / Glob | Signal | Maps to |
 |---|---|---|
 | `00-vision/01-ontology.ttl` | Existing class/property model | Baseline consistency |
-| `01-architecture/00-adapter-pattern.md` | Metadata field names, status values | Properties, `AdapterStatus` individuals |
+| `01-architecture/00-adapter-pattern/adapter-pattern.md` | Metadata field names, status values | Properties, `AdapterStatus` individuals |
 | `01-architecture/02-components/*.md` | Component names (one file = one Component individual) | `ef:Component` individuals |
 | `02-roadmap/*.md` | Phase names (Phase 0–4, A–F) | `ef:Phase` individuals |
 | `04-standards/**/*.md` | Standard titles, relationship keywords | `ef:Standard` individuals |
-| `instance/installed/**/*.md` | Adapter status/capabilities and slot mapping | `ef:Adapter` model alignment |
+| `instance/**/*.md` | Adapter status/capabilities and slot mapping | `ef:Adapter` model alignment |
 | `AGENTS.md` | RELATIONSHIP KEYWORDS in caps | Object properties |
 | `.scratchpad/knowledge-tree.txt` | Node kind tags (`[concept]`, `[guidance]`, `[tenet]`, `[group]`) | `ef:Concept`, `ef:Guidance`, `ef:Tenet`, `ef:Group` individuals |
 | previous Cognee KG state | last rebuilt meaning/aliases/nearby edges for existing terms | editorial disambiguation before minting new terms |
@@ -118,14 +122,14 @@ The `gap report` is the set of concepts and relationships found in the corpus bu
 
 For each item in the `gap report`, model it in `00-vision/01-ontology.ttl` following these rules:
 
-**New Class** (concept that describes a *type* of thing):
+**New Class** (domain ontology — a *type* of thing in the dark factory pattern):
 ```turtle
 ef:MyClass rdf:type owl:Class ;
     rdfs:label "My Class" ;
     rdfs:comment "One-sentence definition from the glossary." .
 ```
 
-**Subclass** (concept that is a specialization of another):
+**Subclass** (specialization in the domain model):
 ```turtle
 ef:MySubclass rdf:type owl:Class ;
     rdfs:subClassOf ef:ParentClass ;
@@ -133,16 +137,25 @@ ef:MySubclass rdf:type owl:Class ;
     rdfs:comment "Definition." .
 ```
 
-**New Object Property** (relationship between two things):
+**New Object Property** (domain relation):
 ```turtle
 ef:myRelation rdf:type owl:ObjectProperty ;
     rdfs:label "MY_RELATION" ;
     rdfs:domain ef:SubjectClass ;
     rdfs:range ef:ObjectClass .
 ```
-Omit `rdfs:domain` / `rdfs:range` when the relationship is open (applies across many types).
+Omit domain/range when open.
 
-**New Individual** (a specific named thing that belongs to a class):
+**Knowledge tree item** (use SKOS for taxonomy layer + our kinds):
+```turtle
+ef:MyConcept rdf:type ef:Concept, skos:Concept ;
+    skos:prefLabel "My Concept" ;
+    skos:definition "..." ;
+    ef:kind ef:NodeKindConcept ;
+    ef:lifecycleStatus ef:StatusAdopted .
+```
+
+**New Individual** (domain or taxonomy item belonging to a class):
 ```turtle
 ef:MyThing rdf:type ef:MyClass ;
     rdfs:label "My Thing" ;
@@ -166,16 +179,15 @@ Also verify the editorial rationale still passes the concept-formation gate: the
 
 A TTL edit does not change the live graph on its own — Cognee only re-anchors at cognify time, and its content-hash dedup skips re-extraction of unchanged docs. So editing the ontology requires a **full rebuild with a KG wipe**, not an incremental sync. Hand off to [update-spec-graph](../update-spec-graph/SKILL.md) to run it; that skill owns the wipe + `bulk-rebuild.sh` flow and the verification that anchoring took. Document-only changes stay incremental and are also handled there.
 
-## Coach on OWL/Turtle
+## Coach on OWL/Turtle + SKOS
 
-Load `[owl-turtle-primer](./references/owl-turtle-primer.md)` when the user asks about TTL syntax, OWL semantics, or how to model a specific concept. Key coaching topics covered there:
+Load `[owl-turtle-primer](./references/owl-turtle-primer.md)` (now includes SKOS section) when the user asks about modeling. Key topics:
 
-- Triple structure and Turtle syntax shortcuts (`;`, `,`)
-- When to use a Class vs. an Individual vs. a Property
-- `rdfs:subClassOf` for inheritance
-- `rdfs:domain` and `rdfs:range` constraints
-- This ontology's `ef:` namespace and naming conventions
-- How Cognee uses this file during cognify
+- OWL for *domain ontology* (dark factory pattern classes/properties/constraints)
+- SKOS for *knowledge taxonomy* (labels, definitions, hierarchy on tree items + ef:kind)
+- Triple structure, shortcuts, Class vs Individual vs Property
+- When a knowledge item should be typed as both ef:XXX and skos:Concept
+- How Cognee uses the combined ontology (anchoring + richer properties)
 
 ## Outputs
 

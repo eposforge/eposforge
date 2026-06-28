@@ -14,7 +14,7 @@ UAT 1 — Lint rule: Status: blocked without an open dep
   Fix surface: eposforge-pattern
   Verify with: n/a
   EOF
-  bash instance/installed/13-backlog/file-based-backlog/scripts/lint-backlog.sh
+  bash instance/backlog/file-based-backlog/scripts/lint-backlog.sh
 
   Expect: error on EF-999 — Status: blocked requires at least one open Depends on:
   item.
@@ -23,7 +23,7 @@ UAT 1 — Lint rule: Status: blocked without an open dep
   # Remove the last 10 lines (the appended item)
   head -n -10 instance/backlog/backlog.md > /tmp/bl.tmp && mv /tmp/bl.tmp
   instance/backlog/backlog.md
-  bash instance/installed/13-backlog/file-based-backlog/scripts/lint-backlog.sh
+  bash instance/backlog/file-based-backlog/scripts/lint-backlog.sh
 
   ---
   UAT 2 — Lint rule: invalid Theme: value
@@ -41,14 +41,14 @@ UAT 1 — Lint rule: Status: blocked without an open dep
   Theme: nonexistent-theme
   Verify with: n/a
   EOF
-  bash instance/installed/13-backlog/file-based-backlog/scripts/lint-backlog.sh
+  bash instance/backlog/file-based-backlog/scripts/lint-backlog.sh
 
   Expect: error — invalid Theme: value not in vocabulary.
 
   Cleanup:
   head -n -11 instance/backlog/backlog.md > /tmp/bl.tmp && mv /tmp/bl.tmp
   instance/backlog/backlog.md
-  bash instance/installed/13-backlog/file-based-backlog/scripts/lint-backlog.sh
+  bash instance/backlog/file-based-backlog/scripts/lint-backlog.sh
 
   ---
   UAT 3 — Lint rule: Supersedes: without back-pointer
@@ -65,7 +65,7 @@ UAT 1 — Lint rule: Status: blocked without an open dep
   Supersedes: EF-022
   Verify with: n/a
   EOF
-  bash instance/installed/13-backlog/file-based-backlog/scripts/lint-backlog.sh
+  bash instance/backlog/file-based-backlog/scripts/lint-backlog.sh
 
   Expect two errors:
   1. EF-022 is still open — can't be superseded yet
@@ -74,12 +74,12 @@ UAT 1 — Lint rule: Status: blocked without an open dep
   Cleanup:
   head -n -11 instance/backlog/backlog.md > /tmp/bl.tmp && mv /tmp/bl.tmp
   instance/backlog/backlog.md
-  bash instance/installed/13-backlog/file-based-backlog/scripts/lint-backlog.sh
+  bash instance/backlog/file-based-backlog/scripts/lint-backlog.sh
 
   ---
   UAT 4 — Portfolio diagram in VS Code preview
 
-  bash instance/installed/13-backlog/file-based-backlog/scripts/aggregate.sh
+  bash instance/backlog/file-based-backlog/scripts/aggregate.sh
   --mermaid
 
   Then open backlog/portfolio.md in VS Code with Cmd+Shift+V (markdown preview).
@@ -91,7 +91,7 @@ UAT 1 — Lint rule: Status: blocked without an open dep
 
   BACKLOG_ROOTS="/mnt/raid-storage/src/git/gh/eposforge:/mnt/raid-storage/src/git/
   local/GraceEnterprisesArchitecture/eposforge" \
-    bash instance/installed/13-backlog/file-based-backlog/scripts/aggregate.sh
+    bash instance/backlog/file-based-backlog/scripts/aggregate.sh
   --critical-path GEA-013
 
   Expect: a chain ending at GEA-013, with the EF-043 node shown as resolved (not
@@ -126,9 +126,9 @@ UAT 1 — Lint rule: Status: blocked without an open dep
   adopter under /tmp so nothing real is touched. (No on-disk adopter currently
   vendors the scripts — GEA is data-only — so a sandbox is the way to test this.)
 
-  SRC=instance/installed/13-backlog/file-based-backlog/scripts
+  SRC=instance/backlog/file-based-backlog/scripts
   SANDBOX=/tmp/uat-adopter
-  DEST=$SANDBOX/instance/installed/13-backlog/file-based-backlog/scripts
+  DEST=$SANDBOX/instance/backlog/file-based-backlog/scripts
   rm -rf "$SANDBOX" && mkdir -p "$DEST"
   cp "$SRC"/*.sh "$DEST"/ && cp "$SRC"/VERSION "$DEST"/
   echo "0.1.0" > "$DEST"/VERSION                        # make version stale

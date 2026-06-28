@@ -16,7 +16,7 @@ research catalogs, reference adapters, and tooling are all welcome.
    both work):
 
 ```bash
-bash instance/installed/09-source-control-ci/github-and-actions/scripts/install-hooks.sh
+bash instance/source-control-ci/github-and-actions/scripts/install-hooks.sh
 ```
 
 4. Sign your commits with `git commit -s` (see DCO below).
@@ -63,12 +63,12 @@ Run the one-time setup script for your platform (it only writes your local
 
 ```bash
 # Linux / macOS / Git Bash
-bash instance/installed/09-source-control-ci/github-and-actions/scripts/setup-signed-commits.sh
+bash instance/source-control-ci/github-and-actions/scripts/setup-signed-commits.sh
 ```
 
 ```powershell
 # Windows PowerShell
-instance\installed\09-source-control-ci\github-and-actions\scripts\setup-signed-commits.ps1
+instance\installed\source-control-ci\github-and-actions\scripts\setup-signed-commits.ps1
 ```
 
 The script configures `gpg.format ssh`, points `user.signingkey` at your public

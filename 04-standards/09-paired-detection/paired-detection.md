@@ -21,7 +21,7 @@ source_of_truth: yes
 This standard governs the **detection half** of a kernel: the habit that
 mints, and then keeps, the one-command check that proves an element is
 still good. It is the working practice behind the
-[Stabilization & Kernels](../../01-architecture/04-stabilization-and-kernels.md)
+[Stabilization & Kernels](../../01-architecture/04-stabilization-and-kernels/stabilization-and-kernels.md)
 concept — specifically Lehman's "deliberate work" that holds entropy off a
 layer in active use.
 
@@ -72,7 +72,7 @@ are rubrics (EF-050), the complement to deterministic detection.
    check to a layer is always-valid work and MUST NOT wait on the layers
    beneath it being kernels. (Trusting that layer's *autonomy* does wait —
    that is the bootstrap rule, a separate concern. See
-   [Autonomy Modes — Loop A vs Loop B](../../01-architecture/03-autonomy-modes.md#two-loops-autonomy-vs-self-detection).)
+   [Autonomy Modes — Loop A vs Loop B](../../01-architecture/03-autonomy-modes/autonomy-modes.md#two-loops-autonomy-vs-self-detection).)
 
 7. **External dependencies carry their own detection.** A check that
    depends on an un-kernelable External-tier dependency MUST detect that
@@ -93,13 +93,13 @@ are rubrics (EF-050), the complement to deterministic detection.
 
 ## Related
 
-- [../../01-architecture/04-stabilization-and-kernels.md](../../01-architecture/04-stabilization-and-kernels.md)
+- [../../01-architecture/04-stabilization-and-kernels/stabilization-and-kernels.md](../../01-architecture/04-stabilization-and-kernels/stabilization-and-kernels.md)
   — the kernel concept this standard operationalizes.
-- [../../01-architecture/03-autonomy-modes.md](../../01-architecture/03-autonomy-modes.md)
+- [../../01-architecture/03-autonomy-modes/autonomy-modes.md](../../01-architecture/03-autonomy-modes/autonomy-modes.md)
   — Loop A vs Loop B; why detection is ungated while autonomy is gated.
 - [08-agent-coding-guidelines/agent-coding-guidelines.md](../08-agent-coding-guidelines/agent-coding-guidelines.md)
   — §4 goal-driven execution (loop until success criteria verified).
-- [../../01-architecture/02-components/09-source-control-ci.md](../../01-architecture/02-components/09-source-control-ci.md)
+- [../../01-architecture/02-components/source-control-ci.md](../../01-architecture/02-components/source-control-ci.md)
   — where ratchets run as required PR status checks.
-- [../../01-architecture/02-components/11-audit-observability.md](../../01-architecture/02-components/11-audit-observability.md)
+- [../../01-architecture/02-components/audit-observability.md](../../01-architecture/02-components/audit-observability.md)
   — where gate results are recorded.

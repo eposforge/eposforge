@@ -12,7 +12,7 @@ This skill owns *running* the update. Editing the ontology TTL itself is a
 separate concern owned by [maintain-ontology](../maintain-ontology/SKILL.md):
 edit the TTL there, then come here to rebuild. Adapter-level deployment topology,
 API behavior, and recovery procedures live in
-[cognee.md](../../instance/installed/06-spec-graph/cognee/cognee.md).
+[cognee.md](../../instance/spec-graph/cognee/cognee.md).
 
 ## Pick the path first: incremental vs full
 
@@ -36,9 +36,9 @@ changed ontology without wiping the KG.
 
 - `dkr-cgnee-api` container running and healthy (the KG owner; the MCP container
   is only a proxy — never ingest against it). See cognee.md §Deployment topology.
-- `epos-secrets` on PATH (or at `instance/installed/12-secrets-key-management/bin/`)
+- `epos-secrets` on PATH (or at `instance/secrets-key-management/bin/`)
   to inject `COGNEE_API_URL` / `COGNEE_API_TOKEN`.
-- `uv` available; run from `instance/installed/06-spec-graph/cognee/sync`.
+- `uv` available; run from `instance/spec-graph/cognee/sync`.
 - Check the inference budget before a full rebuild (~180K–200K embedding tokens
   for the full corpus): `instance/.audit/inference-budget-counters.json`.
 - The ontology key is `eposforge` (override via `$COGNEE_ONTOLOGY_KEY`).
@@ -54,7 +54,7 @@ ADDED=$(git diff --name-only --diff-filter=A "$BASE..HEAD" -- '*.md' '*.ttl' | g
 MODIFIED=$(git diff --name-only --diff-filter=M "$BASE..HEAD" -- '*.md' '*.ttl' | grep -vxF '00-vision/01-ontology.ttl')
 DELETED=$(git diff --name-only --diff-filter=D "$BASE..HEAD" -- '*.md' '*.ttl' | grep -vxF '00-vision/01-ontology.ttl')
 
-cd instance/installed/06-spec-graph/cognee/sync
+cd instance/spec-graph/cognee/sync
 epos-secrets uv run cognee-sync --ontology-key eposforge \
     ${ADDED:+--added $ADDED} \
     ${MODIFIED:+--modified $MODIFIED} \
@@ -95,7 +95,7 @@ docker compose -f "$COMPOSE_FILE" start dkr-cgnee-api
 ### 2. Rebuild
 
 ```bash
-bash instance/installed/06-spec-graph/cognee/scripts/bulk-rebuild.sh
+bash instance/spec-graph/cognee/scripts/bulk-rebuild.sh
 ```
 
 `bulk-rebuild.sh` wipes the sync state DB, stages every tracked `*.md`/`*.ttl`

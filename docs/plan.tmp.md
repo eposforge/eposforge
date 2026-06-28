@@ -42,7 +42,7 @@ srv-docker-hp is to fix this.
   — transient and disconnected from `dkr-cgnee-api`'s embedded DBs
   (where cognee-sync writes). MCP queries therefore see an empty KG
   regardless of how much cognee-sync has ingested.
-- `instance/installed/05-tool-transport/mcp-stdio-and-http/mcp.servers.toml`
+- `instance/tool-transport/mcp-stdio-and-http/mcp.servers.toml`
   declares cognee as `transport = "sse"` at
   `https://cognee-mcp.grace.lan/sse`. The generated `.mcp.json` does NOT
   match — it has the old stdio-+-wrapper config. `sync-mcp.py` has no
@@ -139,7 +139,7 @@ Done on srv-docker-hp unless noted.
    `mcp.servers.toml`. The `--check` mode should be clean after.
 
 7. **Remove the stale stdio path.** Delete or archive
-   `instance/installed/05-tool-transport/mcp-stdio-and-http/scripts/cognee-mcp-win-wrapper.py`
+   `instance/tool-transport/mcp-stdio-and-http/scripts/cognee-mcp-win-wrapper.py`
    once nothing references it. Drop the NEO4J_* allowlist entries from
    the cognee server config (they'll be gone from the generated JSON
    automatically once TOML is the only source).
