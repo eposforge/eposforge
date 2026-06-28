@@ -10,7 +10,7 @@ source_of_truth: no
 > **Snapshot date:** 2026-04. Verify current details before adopting.
 
 Candidate approaches for the Living Spec slot
-([../../01-architecture/02-components/02-living-spec.md](../../01-architecture/02-components/02-living-spec.md)).
+([../../01-architecture/02-components/living-spec.md](../../01-architecture/02-components/living-spec.md)).
 A Living Spec Adapter defines the canonical spec format, enforces the
 paired-change rule in CI, and produces a projection consumable by the
 Spec Graph.

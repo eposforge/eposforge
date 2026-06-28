@@ -106,7 +106,7 @@ EposForge vocabulary.
 | `IMPLEMENTS` | Adapter implements a capability |
 | `SUPERSEDES` | A newer spec or adapter replaces an older one |
 
-These are declared in `instance/installed/06-spec-graph/graphrag/prompts/entity_extraction.txt` and
+These are declared in `instance/spec-graph/graphrag/prompts/entity_extraction.txt` and
 can be extended by the operator.
 
 ---
@@ -125,7 +125,7 @@ can be extended by the operator.
 ### One-time initialization
 
 ```bash
-cd eposforge/instance/installed/06-spec-graph/graphrag
+cd eposforge/instance/spec-graph/graphrag
 python -m venv .venv
 source .venv/bin/activate
 pip install graphrag neo4j pandas pyarrow
@@ -136,18 +136,18 @@ graphrag init --root .   # generates default prompts; custom prompts
 ### Indexing
 
 ```bash
-bash instance/installed/06-spec-graph/graphrag/scripts/index.sh
+bash instance/spec-graph/graphrag/scripts/index.sh
 ```
 
 This runs GraphRAG over all Markdown files in `00-vision/`,
 `01-architecture/`, `02-roadmap/`, `03-research/`, and any Living
-Spec files included via the `file_pattern` in `instance/installed/06-spec-graph/graphrag/settings.yaml`.
-Output Parquet files land in `instance/installed/06-spec-graph/graphrag/output/`.
+Spec files included via the `file_pattern` in `instance/spec-graph/graphrag/settings.yaml`.
+Output Parquet files land in `instance/spec-graph/graphrag/output/`.
 
 ### Import into Neo4j
 
 ```bash
-bash instance/installed/06-spec-graph/graphrag/scripts/import.sh
+bash instance/spec-graph/graphrag/scripts/import.sh
 ```
 
 Reads the Parquet output and batch-imports all Entity, Relationship,
@@ -157,18 +157,18 @@ for hybrid graph + semantic search.
 ### Full rebuild (index + import)
 
 ```bash
-bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh
+bash instance/spec-graph/graphrag/scripts/rebuild.sh
 ```
 
 ### Git post-commit hook (optional)
 
 ```bash
-bash instance/installed/09-source-control-ci/github-and-actions/scripts/install-hooks.sh
+bash instance/source-control-ci/github-and-actions/scripts/install-hooks.sh
 ```
 
 Sets a non-blocking `.needs-rebuild` flag when `*.md` files in the
 vision/architecture directories change. Run
-`instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` after significant doc batches.
+`instance/spec-graph/graphrag/scripts/rebuild.sh` after significant doc batches.
 
 ---
 
@@ -197,16 +197,16 @@ RETURN dep.name, dep.type;
 
 ## Maintenance recommendations
 
-- Re-run `instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` whenever more than a
+- Re-run `instance/spec-graph/graphrag/scripts/rebuild.sh` whenever more than a
   handful of docs change (GraphRAG fallback path only). The default Spec Graph
   adapter (Cognee) uses incremental sync via `cognee-sync` — see
-  `instance/installed/06-spec-graph/cognee/sync/README.md`.
-- Keep custom prompt files under `instance/installed/06-spec-graph/graphrag/prompts/` in version
+  `instance/spec-graph/cognee/sync/README.md`.
+- Keep custom prompt files under `instance/spec-graph/graphrag/prompts/` in version
   control. They encode the extraction vocabulary for the factory.
 - Keep Neo4j local. Scale to Neo4j Aura only if graph sharing
   across multiple operators is required; Aura introduces vendor
   dependency and data-residency considerations.
-- Monitor `instance/installed/06-spec-graph/graphrag/output/reports/` after each index run. GraphRAG
+- Monitor `instance/spec-graph/graphrag/output/reports/` after each index run. GraphRAG
   emits per-document processing reports that surface extraction
   quality issues.
 
@@ -223,7 +223,7 @@ GraphRAG sends text chunks to the inference model for extraction.
 | Neo4j graph itself | `local` — stays on the operator's machine |
 
 For private instances, substitute the Gemini API key with an Ollama
-local model endpoint in `instance/installed/06-spec-graph/graphrag/settings.yaml` (set `api_base` to
+local model endpoint in `instance/spec-graph/graphrag/settings.yaml` (set `api_base` to
 the Ollama OpenAI-compatible endpoint and `api_key` to any string).
 
 ---
@@ -232,9 +232,9 @@ the Ollama OpenAI-compatible endpoint and `api_key` to any string).
 
 | File | Purpose |
 |---|---|
-| [`instance/installed/06-spec-graph/graphrag/settings.yaml`](../../instance/installed/06-spec-graph/graphrag/settings.yaml) | GraphRAG project config |
-| [`instance/installed/06-spec-graph/graphrag/prompts/`](../../instance/installed/06-spec-graph/graphrag/prompts/) | Custom entity/relationship extraction prompts |
-| [`instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh`](../../instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh) | Index + import in one command (GraphRAG fallback) |
+| [`instance/spec-graph/graphrag/settings.yaml`](../../instance/spec-graph/graphrag/settings.yaml) | GraphRAG project config |
+| [`instance/spec-graph/graphrag/prompts/`](../../instance/spec-graph/graphrag/prompts/) | Custom entity/relationship extraction prompts |
+| [`instance/spec-graph/graphrag/scripts/rebuild.sh`](../../instance/spec-graph/graphrag/scripts/rebuild.sh) | Index + import in one command (GraphRAG fallback) |
 | [`instance/SPEC.md`](../../instance/SPEC.md) | Living Spec for this tooling (Component 2 contract) |
 | [`instance/adrs/001-spec-graph-graphrag-neo4j.md`](../../instance/adrs/001-spec-graph-graphrag-neo4j.md) | ADR recording adapter decisions |
 

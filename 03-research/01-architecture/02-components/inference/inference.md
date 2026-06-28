@@ -12,7 +12,7 @@ source_of_truth: no
 > committing.
 
 Candidate Adapters for the Inference slot
-([../../01-architecture/02-components/10-inference.md](../../01-architecture/02-components/10-inference.md)).
+([../../01-architecture/02-components/inference.md](../../01-architecture/02-components/inference.md)).
 An Inference Adapter serves language-model (and related) inference
 to Adapters that need it — primarily Dev Products and the Router.
 Most factories install **multiple** Inference Adapters and pick per

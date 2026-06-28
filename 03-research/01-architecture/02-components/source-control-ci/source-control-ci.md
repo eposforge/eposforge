@@ -10,7 +10,7 @@ source_of_truth: no
 > **Snapshot date:** 2026-04. Verify current details before adopting.
 
 Candidate Adapters for the Source Control + CI slot
-([../../01-architecture/02-components/09-source-control-ci.md](../../01-architecture/02-components/09-source-control-ci.md)).
+([../../01-architecture/02-components/source-control-ci.md](../../01-architecture/02-components/source-control-ci.md)).
 A Source Control + CI Adapter provides the durable home for factory
 artifacts, enforces the paired-change rule, runs tests, applies
 merge-tier rules from Agent Policy, and triggers Spec Graph

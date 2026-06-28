@@ -10,7 +10,7 @@ source_of_truth: no
 > **Snapshot date:** 2026-04. Verify current details before adopting.
 
 Candidate Adapters for the Router slot
-([../../01-architecture/02-components/04-router.md](../../01-architecture/02-components/04-router.md)).
+([../../01-architecture/02-components/router.md](../../01-architecture/02-components/router.md)).
 A Router Adapter consumes normalized Spec Input, decomposes it into
 sub-tasks, picks Dev Product Adapters per sub-task, dispatches via
 Tool Transport, and iterates.
@@ -106,7 +106,7 @@ executors belong to the Dev Product slot.
 - **Cost tier:** free OSS.
 - **Decomposition strategy:** LLM-driven autonomous task execution.
 - **Capabilities:** self-directed multi-step development workflows.
-- **Notes:** also listed in [dev-products.md](../03-dev-product/dev-products.md);
+- **Notes:** also listed in [dev-products.md](../dev-product/dev-products.md);
   whether it fits the Router slot or the Dev Product slot depends on
   how the operator scopes its autonomy.
 
