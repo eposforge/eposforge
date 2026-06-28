@@ -4,7 +4,7 @@
 
 EposForge needs a top-level home for cross-cutting **adopted standards** (Agent Skills, MCP, naming conventions, vocabulary, canonical doc sources). Today these rules are scattered through `AGENTS.md` and `00-vision/01-ontology.ttl` with no single normative location.
 
-Adding the new section exposed a deeper structural issue: `03-research/` previously used a flat per-component layout that did **not** mirror where the architecture content actually lives (`01-architecture/02-components/01-spec-input.md`). The research catalog and the thing it's research *for* had drifted out of structural alignment.
+Adding the new section exposed a deeper structural issue: `03-research/` previously used a flat per-component layout that did **not** mirror where the architecture content actually lives (`01-architecture/02-components/spec-input.md`). The research catalog and the thing it's research *for* had drifted out of structural alignment.
 
 This plan makes three changes:
 
@@ -32,11 +32,11 @@ For any source file `<repo-root>/<path>/<file>.md`, its research lives at `03-re
 
 Examples:
 
-- `01-architecture/02-components/01-spec-input.md` → research at `03-research/01-architecture/02-components/01-spec-input/`
+- `01-architecture/02-components/spec-input.md` → research at `03-research/01-architecture/02-components/spec-input/`
 - `04-standards/01-naming-conventions/naming-conventions.md` → research at `03-research/04-standards/01-naming-conventions/`
-- `01-architecture/00-adapter-pattern.md` → research at `03-research/01-architecture/00-adapter-pattern/` (created only if/when research is added)
+- `01-architecture/00-adapter-pattern/adapter-pattern.md` → research at `03-research/01-architecture/00-adapter-pattern/adapter-pattern/` (created only if/when research is added)
 
-File names *inside* mirrored folders are content-descriptive — not pinned to match the source filename — matching the existing `03-research/01-architecture/02-components/03-dev-product/dev-products.md` convention.
+File names *inside* mirrored folders are content-descriptive — not pinned to match the source filename — matching the existing `03-research/01-architecture/02-components/dev-product/dev-products.md` convention.
 
 ## Target folder structure (after refactor)
 
@@ -56,18 +56,18 @@ File names *inside* mirrored folders are content-descriptive — not pinned to m
   landscape.md                                       (cross-cutting, stays at root)
   01-architecture/
     02-components/
-      01-spec-input/spec-input.md                    (moved from prior flat component folders)
-      02-living-spec/living-spec.md                  (moved)
-      03-dev-product/dev-products.md                 (moved)
-      04-router/router.md                            (moved)
-      05-tool-transport/tool-transport.md            (moved)
-      06-spec-graph/spec-graph.md                    (moved)
-      06-spec-graph/graphrag-neo4j-integration.md    (moved)
-      07-execution-sandbox/execution-sandbox.md      (moved)
-      09-source-control-ci/source-control-ci.md      (moved)
-      10-inference/inference.md                      (moved)
-      11-audit-observability/audit-observability.md  (moved)
-      12-secrets-key-management/secrets-key-management.md (moved)
+      spec-input/spec-input.md                    (moved from prior flat component folders)
+      living-spec/living-spec.md                  (moved)
+      dev-product/dev-products.md                 (moved)
+      router/router.md                            (moved)
+      tool-transport/tool-transport.md            (moved)
+      spec-graph/spec-graph.md                    (moved)
+      spec-graph/graphrag-neo4j-integration.md    (moved)
+      execution-sandbox/execution-sandbox.md      (moved)
+      source-control-ci/source-control-ci.md      (moved)
+      inference/inference.md                      (moved)
+      audit-observability/audit-observability.md  (moved)
+      secrets-key-management/secrets-key-management.md (moved)
   04-standards/
     01-naming-conventions/case-and-prefix-options.md
     (and one folder per populated standard)
@@ -111,17 +111,17 @@ Required H2 sections, in order:
 
 All under `03-research/` get prefixed with `01-architecture/02-components/`:
 
-- `01-spec-input/` → `01-architecture/02-components/01-spec-input/`
-- `02-living-spec/` → `01-architecture/02-components/02-living-spec/`
-- `03-dev-product/` → `01-architecture/02-components/03-dev-product/`
-- `04-router/` → `01-architecture/02-components/04-router/`
-- `05-tool-transport/` → `01-architecture/02-components/05-tool-transport/`
-- `06-spec-graph/` → `01-architecture/02-components/06-spec-graph/`
-- `07-execution-sandbox/` → `01-architecture/02-components/07-execution-sandbox/`
-- `09-source-control-ci/` → `01-architecture/02-components/09-source-control-ci/`
-- `10-inference/` → `01-architecture/02-components/10-inference/`
-- `11-audit-observability/` → `01-architecture/02-components/11-audit-observability/`
-- `12-secrets-key-management/` → `01-architecture/02-components/12-secrets-key-management/`
+- `spec-input/` → `01-architecture/02-components/spec-input/`
+- `living-spec/` → `01-architecture/02-components/living-spec/`
+- `dev-product/` → `01-architecture/02-components/dev-product/`
+- `router/` → `01-architecture/02-components/router/`
+- `tool-transport/` → `01-architecture/02-components/tool-transport/`
+- `spec-graph/` → `01-architecture/02-components/spec-graph/`
+- `execution-sandbox/` → `01-architecture/02-components/execution-sandbox/`
+- `source-control-ci/` → `01-architecture/02-components/source-control-ci/`
+- `inference/` → `01-architecture/02-components/inference/`
+- `audit-observability/` → `01-architecture/02-components/audit-observability/`
+- `secrets-key-management/` → `01-architecture/02-components/secrets-key-management/`
 
 Use `git mv` to preserve history.
 
@@ -131,7 +131,7 @@ Use `git mv` to preserve history.
 - `03-research/README.md` — rewrite the Organization section. Replace "Each subdirectory corresponds to a component" with the mirror rule: "Research paths mirror source paths. Research for `<path>.md` lives at `03-research/<path>/`. The mirror is need-based — folders exist only when populated. See `04-standards/06-research-mirror/` for the normative rule." Replace the per-component table with a generated/illustrative listing of currently-populated paths.
 - `README.md` — add `04-standards/` row to the §How to read code block and to the §Repository Layers table.
 - `00-vision/01-ontology.ttl` — add guidance note pointing at `04-standards/02-vocabulary/` when that standard lands.
-- `01-architecture/00-adapter-pattern.md` — `invocation_surface` bullet gains "see `04-standards/04-mcp/` and `04-standards/03-agent-skills/`" once those land.
+- `01-architecture/00-adapter-pattern/adapter-pattern.md` — `invocation_surface` bullet gains "see `04-standards/04-mcp/` and `04-standards/03-agent-skills/`" once those land.
 - `.github/workflows/doc-lint.yml` — extend glob from `03-research/**` to also cover `04-standards/**` and the new `03-research/01-architecture/**` deep paths.
 - Update internal cross-references to moved research files. Search pattern: `03-research/<old-component-folder>` across the entire repo.
 
@@ -153,7 +153,7 @@ After PR 1 (the structural change):
 1. Directory check: `04-standards/` exists with `00-standards-meta/`, `06-research-mirror/`, `README.md`. `03-research/` no longer has top-level component folders; they live under `01-architecture/02-components/`.
 2. Mirror conformance: for every `.md` file under `03-research/` (excluding the two cross-cutting root files), the path with `03-research/` stripped resolves to an existing `.md` at the repo root. Run a one-shot script that walks `03-research/` and stat-checks the corresponding source path.
 3. `grep -r "03-research/<legacy-flat-component-folder>" .` returns no hits.
-4. Rebuild the Spec Graph (`bash instance/installed/06-spec-graph/cognee/scripts/ingest_dual_container.sh`). Query Cognee: *"Which standards has EposForge adopted?"* — should return the mirror standard and the meta-standard. Verify research file entities now link under their new mirrored paths.
+4. Rebuild the Spec Graph (`bash instance/spec-graph/cognee/scripts/ingest_dual_container.sh`). Query Cognee: *"Which standards has EposForge adopted?"* — should return the mirror standard and the meta-standard. Verify research file entities now link under their new mirrored paths.
 5. Open `AGENTS.md` and confirm any reference to refactoring-discipline points at `04-standards/06-research-mirror/`.
 
 After each subsequent PR: confirm the lifted AGENTS.md / glossary section is now a pointer and no normative prose duplicate survives anywhere (`grep` the unique phrase).

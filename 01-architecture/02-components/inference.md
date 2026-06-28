@@ -40,7 +40,7 @@ Any Adapter for this slot must:
 ## Required Adapter metadata
 
 In addition to the universal fields in
-[../00-adapter-pattern.md](../00-adapter-pattern.md):
+[../00-adapter-pattern/adapter-pattern.md](../00-adapter-pattern/adapter-pattern.md):
 
 - `provider` — vendor name or "local."
 - `models` — list of model identifiers the Adapter can serve.

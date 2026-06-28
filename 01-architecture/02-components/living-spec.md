@@ -27,7 +27,7 @@ Any Adapter for this slot must:
   behavior must update both the Living Spec and the code in the same
   commit / PR.
 - Provide a paired-change check enforceable in CI (see component 9,
-  [Source Control + CI](./09-source-control-ci.md)).
+  [Source Control + CI](./source-control-ci.md)).
 - Define the minimum content of a Living Spec: purpose, observable
   behavior, inputs / outputs, dependencies, non-functional bounds,
   versioning policy.
@@ -42,7 +42,7 @@ Any Adapter for this slot must:
 ## Required Adapter metadata
 
 In addition to the universal fields in
-[../00-adapter-pattern.md](../00-adapter-pattern.md):
+[../00-adapter-pattern/adapter-pattern.md](../00-adapter-pattern/adapter-pattern.md):
 
 - `format` — markdown, YAML, structured doc, etc.
 - `paired_change_check` — identifier for the CI check that enforces the
@@ -54,7 +54,7 @@ In addition to the universal fields in
 
 - **Is:** the durable spec living inside the deliverable repo for the
   deliverable's entire lifetime.
-- **Is not:** the Spec Input ([01-spec-input.md](./01-spec-input.md)),
+- **Is not:** the Spec Input ([spec-input.md](./spec-input.md)),
   which is request-shaped and consumed by the Router.
 - **Is not:** API documentation, README, or operator runbook — though it
   may inform any of those.

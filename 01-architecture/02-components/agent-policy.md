@@ -51,7 +51,7 @@ Any Adapter for this slot must:
 ## Required Adapter metadata
 
 In addition to the universal fields in
-[../00-adapter-pattern.md](../00-adapter-pattern.md):
+[../00-adapter-pattern/adapter-pattern.md](../00-adapter-pattern/adapter-pattern.md):
 
 - `policy_format` — file format the Adapter consumes (e.g., YAML, OPA
   Rego, JSON, custom DSL).
@@ -72,7 +72,7 @@ In addition to the universal fields in
 - **Is not:** a runtime monitor. Audit & Observability handles
   observation; Agent Policy handles permission.
 - **Is not:** the ring governance model. Release Rings
-  ([09b-release-rings.md](./09b-release-rings.md)) declares what the
+  ([release-rings.md](./release-rings.md)) declares what the
   rings are and what the evidence thresholds are; Agent Policy enforces
   the access rules those rings require.
 

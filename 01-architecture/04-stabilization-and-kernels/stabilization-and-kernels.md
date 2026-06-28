@@ -24,7 +24,7 @@ concept governs a prior question: *"what is solid enough to build ON?"*
 
 > This is a **stabilization** view. It is distinct from, and must not be
 > confused with, the **functional** decomposition in
-> [01-reference-architecture.md](./01-reference-architecture.md) (the
+> [reference-architecture.md](../01-reference-architecture/reference-architecture.md) (the
 > Logical Tiers — Operator / Factory / Substrate / External). The
 > functional view answers *"what role does this play?"*; the stabilization
 > view answers *"what has to be solid before what?"* An element has a
@@ -91,7 +91,7 @@ Note the rule governs **trusting autonomy**, not **adding detection**. You
 may — and should — add detection to *any* layer at any time, including
 layers whose autonomy you do not yet trust. This asymmetry is the whole
 move, and it is spelled out as Loop A vs Loop B in
-[03-autonomy-modes.md](./03-autonomy-modes.md#two-loops-autonomy-vs-self-detection).
+[03-autonomy-modes.md](./autonomy-modes.md#two-loops-autonomy-vs-self-detection).
 
 ## Detection is the negentropy input
 
@@ -109,7 +109,7 @@ unnoticed. Without kernels, every layer is subject to Lehman drift at
 once; that simultaneity *is* the grind.
 
 The standard
-[09-paired-detection](../04-standards/09-paired-detection/paired-detection.md)
+[09-paired-detection](../../04-standards/09-paired-detection/paired-detection.md)
 turns this into a working habit: every fix ships the cheap, re-runnable
 check that proves it.
 
@@ -178,7 +178,7 @@ This document is the pattern. An instance applies it by:
 - Expressing its bootstrap order concretely (optionally as numbered
   stabilization layers).
 - Standing up one detection ratchet per layer per
-  [09-paired-detection](../04-standards/09-paired-detection/paired-detection.md).
+  [09-paired-detection](../../04-standards/09-paired-detection/paired-detection.md).
 
 Keep that map at the instance's adoption layer. It will name concrete
 hosts, containers, and services — none of which belong in this pattern
@@ -186,13 +186,13 @@ document.
 
 ## Related
 
-- [03-autonomy-modes.md](./03-autonomy-modes.md) — Loop A (autonomy,
+- [autonomy-modes.md](../03-autonomy-modes/autonomy-modes.md) — Loop A (autonomy,
   bootstrap-gated) vs Loop B (detection, allowed now); the autonomy
   progression the bootstrap rule governs.
-- [09-paired-detection](../04-standards/09-paired-detection/paired-detection.md)
+- [09-paired-detection](../../04-standards/09-paired-detection/paired-detection.md)
   — the habit that mints and keeps the detection half.
-- [01-reference-architecture.md](./01-reference-architecture.md) — the
+- [reference-architecture.md](../01-reference-architecture/reference-architecture.md) — the
   functional Logical Tiers this stabilization view is distinct from.
-- [02-components/09-source-control-ci.md](./02-components/09-source-control-ci.md),
-  [02-components/11-audit-observability.md](./02-components/11-audit-observability.md)
+- [02-components/source-control-ci.md](../02-components/source-control-ci.md),
+  [02-components/audit-observability.md](../02-components/audit-observability.md)
   — where one-command gates run and where their results are recorded.

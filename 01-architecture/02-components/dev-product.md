@@ -25,26 +25,26 @@ Any Adapter for this slot must:
 
 - Accept a normalized sub-task descriptor from the Router (input bounds
   defined by the Router contract, see
-  [04-router.md](./04-router.md)).
+  [router.md](./router.md)).
 - Execute the sub-task within the Execution Sandbox
-  ([07-execution-sandbox.md](./07-execution-sandbox.md)) and return one
+  ([execution-sandbox.md](./execution-sandbox.md)) and return one
   of: success-with-artifacts, partial-with-artifacts, or failure-with-
   diagnosis.
-- Honor agent policy ([08-agent-policy.md](./08-agent-policy.md)) on
+- Honor agent policy ([agent-policy.md](./agent-policy.md)) on
   every action. Touching a resource the policy forbids must fail.
 - Consume tool capabilities only via the configured Tool Transport
-  ([05-tool-transport.md](./05-tool-transport.md)).
+  ([tool-transport.md](./tool-transport.md)).
 - Read secrets only via the Secrets & Key Management slot
-  ([12-secrets-key-management.md](./12-secrets-key-management.md)).
+  ([secrets-key-management.md](./secrets-key-management.md)).
 - Emit audit events to Audit & Observability
-  ([11-audit-observability.md](./11-audit-observability.md)).
+  ([audit-observability.md](./audit-observability.md)).
 - Update the Living Spec on any change with observable behavior; refusal
   to do so is a contract violation.
 
 ## Required Adapter metadata
 
 In addition to the universal fields in
-[../00-adapter-pattern.md](../00-adapter-pattern.md):
+[../00-adapter-pattern/adapter-pattern.md](../00-adapter-pattern/adapter-pattern.md):
 
 - `task_shapes` — the kinds of sub-tasks the Adapter accepts (e.g.,
   `single-file-edit`, `multi-file-refactor`, `test-authoring`,
@@ -54,7 +54,7 @@ In addition to the universal fields in
 - `streaming` — whether the Adapter streams progress to the audit log.
 - `autonomy_tos_posture` — the highest autonomy mode the Adapter's
   licensing / terms of service permit, expressed as a threshold (see
-  [../03-autonomy-modes.md](../03-autonomy-modes.md)). OSS BYOK products
+  [../03-autonomy-modes/autonomy-modes.md](../03-autonomy-modes/autonomy-modes.md)). OSS BYOK products
   are typically `byok-clean-all-modes`; subscription / OAuth products are
   typically `subscription-ok-through-supervised;
   api-key-required-for-autonomous`. A factory running in `autonomous`
@@ -71,7 +71,7 @@ In addition to the universal fields in
 
 ## Reference implementations
 
-See [../../03-research/01-architecture/02-components/03-dev-product/dev-products.md](../../03-research/01-architecture/02-components/03-dev-product/dev-products.md)
-for the candidate catalog and [../../instance/installed/03-dev-product/](../../instance/installed/03-dev-product/)
+See [../../03-research/01-architecture/02-components/dev-product/dev-products.md](../../03-research/01-architecture/02-components/dev-product/dev-products.md)
+for the candidate catalog and [../../instance/dev-product/](../../instance/dev-product/)
 for what THIS repo installs.
 

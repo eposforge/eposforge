@@ -35,7 +35,7 @@ Any Adapter for this slot must:
 ## Required Adapter metadata
 
 In addition to the universal fields in
-[../00-adapter-pattern.md](../00-adapter-pattern.md):
+[../00-adapter-pattern/adapter-pattern.md](../00-adapter-pattern/adapter-pattern.md):
 
 - `isolation_mechanism` — container, VM, micro-VM, namespace, etc.
 - `network_policy_modes` — what egress controls the sandbox supports.

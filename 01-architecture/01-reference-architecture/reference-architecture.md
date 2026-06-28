@@ -12,9 +12,9 @@ components and the universal Adapter Pattern fit together. Concrete
 hardware, networks, hostnames, and tooling choices are out of scope —
 those are instance decisions.
 
-> Read first: [00-adapter-pattern.md](./00-adapter-pattern.md). Each
+> Read first: [adapter-pattern.md](../00-adapter-pattern/adapter-pattern.md). Each
 > component referenced here has a contract under
-> [02-components/](./02-components/).
+> [02-components/](.../02-components/).
 
 ---
 
@@ -71,7 +71,7 @@ play?* They are deliberately distinct from the **stabilization** view —
 bootstrap dependency and asks which are kernels. A self-improving factory
 needs both; for the stabilization view, the kernel definition, and the
 bootstrap rule, see
-[04-stabilization-and-kernels.md](./04-stabilization-and-kernels.md).
+[stabilization-and-kernels.md](../04-stabilization-and-kernels/stabilization-and-kernels.md).
 
 ---
 
@@ -82,39 +82,39 @@ The fourteen components fall into three roles:
 **Orchestration spine** — components that move work through the
 factory.
 
-- [01-spec-input.md](./02-components/01-spec-input.md) — accepts intent.
-- [04-router.md](./02-components/04-router.md) — decomposes and
+- [spec-input.md](../02-components/spec-input.md) — accepts intent.
+- [router.md](../02-components/router.md) — decomposes and
   dispatches.
-- [03-dev-product.md](./02-components/03-dev-product.md) — produces
+- [dev-product.md](../02-components/dev-product.md) — produces
   artifacts.
-- [05-tool-transport.md](./02-components/05-tool-transport.md) — exposes
+- [tool-transport.md](../02-components/tool-transport.md) — exposes
   capabilities to Dev Products.
-- [09-source-control-ci.md](./02-components/09-source-control-ci.md) —
+- [source-control-ci.md](../02-components/source-control-ci.md) —
   lands and gates artifacts.
-- [09b-release-rings.md](./02-components/09b-release-rings.md) —
+- [release-rings.md](../02-components/release-rings.md) —
   governs where artifacts run and who may put them there.
 
 **Memory and state** — components that record and project the factory's
 work over time.
 
-- [02-living-spec.md](./02-components/02-living-spec.md) — durable spec
+- [living-spec.md](../02-components/living-spec.md) — durable spec
   in each deliverable.
-- [06-spec-graph.md](./02-components/06-spec-graph.md) — queryable
+- [spec-graph.md](../02-components/spec-graph.md) — queryable
   projection of all Living Specs.
-- [11-audit-observability.md](./02-components/11-audit-observability.md)
+- [audit-observability.md](../02-components/audit-observability.md)
   — immutable record of what happened.
-- [13-backlog.md](./02-components/13-backlog.md) — durable, cross-repo
+- [backlog.md](../02-components/backlog.md) — durable, cross-repo
   work-item tracker for active, deferred, and archived items.
 
 **Cross-cutting controls** — components consulted by every other
 component.
 
-- [07-execution-sandbox.md](./02-components/07-execution-sandbox.md) —
+- [execution-sandbox.md](../02-components/execution-sandbox.md) —
   isolation for dispatched work.
-- [08-agent-policy.md](./02-components/08-agent-policy.md) — what
+- [agent-policy.md](../02-components/agent-policy.md) — what
   agents may do.
-- [10-inference.md](./02-components/10-inference.md) — model inference.
-- [12-secrets-key-management.md](./02-components/12-secrets-key-management.md)
+- [inference.md](../02-components/inference.md) — model inference.
+- [secrets-key-management.md](../02-components/secrets-key-management.md)
   — secret resolution and rotation.
 
 ---
@@ -177,7 +177,7 @@ re-project. Living Specs win.
 The factory runs autonomously within bounds set by humans. The degree of
 human presence in this loop is the factory's **autonomy mode** —
 `supervised` (human on the loop) or `autonomous` (off the loop); see
-[03-autonomy-modes.md](./03-autonomy-modes.md). The control plane has
+[autonomy-modes.md](../03-autonomy-modes/autonomy-modes.md). The control plane has
 three loops:
 
 **Observe.** Audit & Observability collects everything: every Adapter

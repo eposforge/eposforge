@@ -34,7 +34,7 @@ Any Adapter for this slot must:
   observable behavior, inputs/outputs, and non-functional bounds using
   equivalence partitioning and boundary value analysis — not from code
   internals.
-- Consult Agent Policy ([08-agent-policy.md](./08-agent-policy.md)) for
+- Consult Agent Policy ([agent-policy.md](./agent-policy.md)) for
   merge tier decisions. Tier-1 PRs may auto-merge on green; Tier-2 PRs
   require human approval.
 - Trigger Spec Graph re-projection (component 6) on every merge that
@@ -48,7 +48,7 @@ under which Agent Policy tier.
 ## Required Adapter metadata
 
 In addition to the universal fields in
-[../00-adapter-pattern.md](../00-adapter-pattern.md):
+[../00-adapter-pattern/adapter-pattern.md](../00-adapter-pattern/adapter-pattern.md):
 
 - `vcs` — the source control system (git, jj, etc.).
 - `host` — the hosting / forge (GitHub, Gitea, GitLab, self-hosted).
@@ -73,7 +73,7 @@ In addition to the universal fields in
   source-of-truth store).
 - **Is not:** the deploy target. Deploy is downstream and is governed
   by the Release Rings component
-  ([09b-release-rings.md](./09b-release-rings.md)). Ring promotion
+  ([release-rings.md](./release-rings.md)). Ring promotion
   pipelines are defined in source control and triggered from CI, but
   the ring governance contract — evidence thresholds, ring-lock rules,
   promotion authority — belongs to that component, not here.

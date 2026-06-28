@@ -37,7 +37,7 @@ Any Adapter for this slot must:
 ## Required Adapter metadata
 
 In addition to the universal fields in
-[../00-adapter-pattern.md](../00-adapter-pattern.md):
+[../00-adapter-pattern/adapter-pattern.md](../00-adapter-pattern/adapter-pattern.md):
 
 - `query_languages` — what query interfaces the Adapter exposes (e.g.,
   Cypher, GraphQL, SQL).

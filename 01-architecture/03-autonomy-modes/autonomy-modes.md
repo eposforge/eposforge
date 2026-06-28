@@ -71,7 +71,7 @@ Continue.dev, OpenAI Codex CLI, Goose, OpenHands) carry no such threshold.
 
 Dev Product Adapters declare the highest mode their licensing / ToS
 permits, as a threshold rather than a binary (see
-[02-components/03-dev-product.md](./02-components/03-dev-product.md)):
+[02-components/dev-product.md](../02-components/dev-product.md)):
 
 - `autonomy_tos_posture: byok-clean-all-modes`
   (aider, opencode, continue, codex-cli, goose, openhands)
@@ -86,7 +86,7 @@ permits, as a threshold rather than a binary (see
 `supervised` is the calibration ground for `autonomous`: an instance may
 not promote a Dev Product from `supervised` to `autonomous` until its
 observed behavior under supervision justifies the auto-grant profile the
-headless Agent Policy ([02-components/08-agent-policy.md](./02-components/08-agent-policy.md))
+headless Agent Policy ([02-components/agent-policy.md](../02-components/agent-policy.md))
 will enforce. Promotion is evidence-based, not scheduled.
 
 ## Two loops: autonomy vs self-detection
@@ -98,7 +98,7 @@ the false dilemma *"do I demote this component or invest in it?"*
 - **Loop A — autonomy.** The factory autonomously drains its backlog:
   builds products, fixes itself. This is the end state, and *trusting* it
   is governed by the **bootstrap order** in
-  [04-stabilization-and-kernels.md](./04-stabilization-and-kernels.md#the-bootstrap-rule):
+  [stabilization-and-kernels.md](../04-stabilization-and-kernels/stabilization-and-kernels.md#the-bootstrap-rule):
   a layer's Loop-A autonomy is trusted only once the layers beneath it are
   kernels.
 - **Loop B — self-detection.** The factory hardens *its own operating
@@ -116,5 +116,5 @@ trusted (Loop A), it cannot silently break itself. A component can be a
 whose Loop-A autonomy stays off — those are not in tension.
 
 The detection minted in Loop B is the subject of the
-[09-paired-detection](../04-standards/09-paired-detection/paired-detection.md)
+[09-paired-detection](../../04-standards/09-paired-detection/paired-detection.md)
 standard.

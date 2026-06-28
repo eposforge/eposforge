@@ -44,7 +44,7 @@ Any Adapter for this slot must:
 ## Required Adapter metadata
 
 In addition to the universal fields in
-[../00-adapter-pattern.md](../00-adapter-pattern.md):
+[../00-adapter-pattern/adapter-pattern.md](../00-adapter-pattern/adapter-pattern.md):
 
 - `log_backend` — log store (Loki, Elasticsearch, OpenSearch, custom).
 - `metrics_backend` — metrics store (Prometheus, etc.).

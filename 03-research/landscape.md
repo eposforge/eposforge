@@ -130,14 +130,14 @@ issue or a PR. Scope this doc to "what shapes of work exist," not
 
 Concrete Adapter candidates per component slot:
 
-- [spec-input.md](./01-spec-input/spec-input.md) — Spec Input slot (component 1).
-- [dev-products.md](./03-dev-product/dev-products.md) — Dev Product slot (component 3).
-- [router.md](./04-router/router.md) — Router slot (component 4).
-- [spec-graph.md](./06-spec-graph/spec-graph.md) — Spec Graph slot (component 6).
-- [execution-sandbox.md](./07-execution-sandbox/execution-sandbox.md) — Execution Sandbox slot (component 7).
-- [source-control-ci.md](./09-source-control-ci/source-control-ci.md) — Source Control + CI slot (component 9).
-- [inference.md](./10-inference/inference.md) — Inference slot (component 10).
-- [audit-observability.md](./11-audit-observability/audit-observability.md) — Audit & Observability slot (component 11).
-- [secrets-key-management.md](./12-secrets-key-management/secrets-key-management.md) — Secrets & Key Management slot (component 12).
+- [spec-input.md](./spec-input/spec-input.md) — Spec Input slot (component 1).
+- [dev-products.md](./dev-product/dev-products.md) — Dev Product slot (component 3).
+- [router.md](./router/router.md) — Router slot (component 4).
+- [spec-graph.md](./spec-graph/spec-graph.md) — Spec Graph slot (component 6).
+- [execution-sandbox.md](./execution-sandbox/execution-sandbox.md) — Execution Sandbox slot (component 7).
+- [source-control-ci.md](./source-control-ci/source-control-ci.md) — Source Control + CI slot (component 9).
+- [inference.md](./inference/inference.md) — Inference slot (component 10).
+- [audit-observability.md](./audit-observability/audit-observability.md) — Audit & Observability slot (component 11).
+- [secrets-key-management.md](./secrets-key-management/secrets-key-management.md) — Secrets & Key Management slot (component 12).
 - More to come as research surveys mature.
 

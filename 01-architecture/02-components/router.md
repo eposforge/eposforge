@@ -22,13 +22,13 @@ just a collection of Adapters.
 Any Adapter for this slot must:
 
 - Accept normalized output from a Spec Input Adapter
-  ([01-spec-input.md](./01-spec-input.md)).
+  ([spec-input.md](./spec-input.md)).
 - Decompose into sub-tasks of bounded scope; each sub-task must be
   executable by at least one installed Dev Product Adapter.
 - Select a Dev Product Adapter per sub-task using declared metadata
   (privacy, cost, capabilities), Agent Policy
-  ([08-agent-policy.md](./08-agent-policy.md)), and the Spec Graph
-  ([06-spec-graph.md](./06-spec-graph.md)) when reuse is possible.
+  ([agent-policy.md](./agent-policy.md)), and the Spec Graph
+  ([spec-graph.md](./spec-graph.md)) when reuse is possible.
 - Dispatch the sub-task and consume the result.
 - On failure, retry within policy limits, escalate to a different
   Adapter, or fail loudly to the operator. The Router never silently
@@ -41,7 +41,7 @@ Any Adapter for this slot must:
 ## Required Adapter metadata
 
 In addition to the universal fields in
-[../00-adapter-pattern.md](../00-adapter-pattern.md):
+[../00-adapter-pattern/adapter-pattern.md](../00-adapter-pattern/adapter-pattern.md):
 
 - `decomposition_strategy` — how the Router decomposes (LLM-driven,
   rule-based, hybrid).
