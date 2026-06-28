@@ -8,7 +8,7 @@
       "args": [
         "/user:gemini-runner",
         "/savecred",
-        "${workspaceFolder}\\instance\\installed\\07-execution-sandbox\\windows-acl-user\\scripts\\run-gemini-sandbox-as-runner.cmd"
+        "${workspaceFolder}\\instance\\installed\\execution-sandbox\\windows-acl-user\\scripts\\run-gemini-sandbox-as-runner.cmd"
       ],
       "problemMatcher": []
     },
@@ -21,7 +21,7 @@
         "-ExecutionPolicy",
         "Bypass",
         "-File",
-        "${workspaceFolder}\\instance\\installed\\05-tool-transport\\mcp-stdio-and-http\\scripts\\run-eposforge-mcp-http.ps1"
+        "${workspaceFolder}\\instance\\installed\\tool-transport\\mcp-stdio-and-http\\scripts\\run-eposforge-mcp-http.ps1"
       ],
       "isBackground": true,
       "problemMatcher": []

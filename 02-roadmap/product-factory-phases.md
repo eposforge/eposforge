@@ -33,7 +33,7 @@ By the end of Phase A:
 - An ADR records the routing policy: privacy posture, cost ceiling,
   capability requirements, soft preferences.
 - The Adapter set is queryable (the emergent registry described in
-  [../01-architecture/00-adapter-pattern.md](../01-architecture/00-adapter-pattern.md)).
+  [../01-architecture/00-adapter-pattern/adapter-pattern.md](../01-architecture/00-adapter-pattern/adapter-pattern.md)).
 
 **Risk:** low. Documentation and decisions, not code.
 
