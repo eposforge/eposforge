@@ -601,215 +601,316 @@ ef:ProductPromotion rdf:type ef:Concept, skos:Concept ;
 
 ### Individuals (The 14 Core Components)
 
-ef:SpecInput rdf:type ef:Component ;
+ef:SpecInput rdf:type ef:Component, skos:Concept ;
     rdfs:label "Spec Input" ;
+    skos:prefLabel "Spec Input" ;
+    skos:definition "Component contract defined (draft). No installed adapter in this instance. Spec input happens informally via backlog files; no tooling normalizes it for Router consumption." ;
+    skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindComponent ;
     ef:componentMaturity ef:MaturityIntent ;
     rdfs:comment "Component contract defined (draft). No installed adapter in this instance. Spec input happens informally via backlog files; no tooling normalizes it for Router consumption. See 03-research/ for candidate adapters." .
 
-ef:LivingSpecComponent rdf:type ef:Component ;
+ef:LivingSpecComponent rdf:type ef:Component, skos:Concept ;
     rdfs:label "Living Spec" ;
+    skos:prefLabel "Living Spec" ;
+    skos:definition "Living Spec format is in active use across all repos (every adapter card and component doc follows the pattern). No formal installed adapter in instance/installed/02-living-spec/; the paired-change CI check and graph-projection contract are not yet formally enforced." ;
+    skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindComponent ;
     ef:componentMaturity ef:MaturityPartial ;
     rdfs:comment "Living Spec format is in active use across all repos (every adapter card and component doc follows the pattern). No formal installed adapter in instance/installed/02-living-spec/; the paired-change CI check and graph-projection contract are not yet formally enforced." .
 
-ef:DevProductComponent rdf:type ef:Component ;
+ef:DevProductComponent rdf:type ef:Component, skos:Concept ;
     rdfs:label "Dev Product" ;
+    skos:prefLabel "Dev Product" ;
+    skos:definition "Multiple adapters installed: claude-code (approved), copilot (approved), gemini-cli (experimental). All are operational." ;
+    skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindComponent ;
     ef:componentMaturity ef:MaturityShipped ;
     rdfs:comment "Multiple adapters installed: claude-code (approved), copilot (approved), gemini-cli (experimental). All are operational." .
 
-ef:RouterComponent rdf:type ef:Component ;
+ef:RouterComponent rdf:type ef:Component, skos:Concept ;
     rdfs:label "Router" ;
+    skos:prefLabel "Router" ;
+    skos:definition "No reference implementation installed in this EposForge instance. EF-013 (Router v0) is slated, gated on EF-011 and EF-012 recall quality. Adopters may install their own adapter (e.g. Gas Town at the GEA adopter instance) — that is an adopter-side installation, not this framework layer. Do not present Router patterns as currently operational at the framework level." ;
+    skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindComponent ;
     ef:componentMaturity ef:MaturityIntent ;
     rdfs:comment "No reference implementation installed in this EposForge instance. EF-013 (Router v0) is slated, gated on EF-011 and EF-012 recall quality. Adopters may install their own adapter (e.g. Gas Town at the GEA adopter instance) — that is an adopter-side installation, not this framework layer. Do not present Router patterns as currently operational at the framework level." .
 
-ef:ToolTransportComponent rdf:type ef:Component ;
+ef:ToolTransportComponent rdf:type ef:Component, skos:Concept ;
     rdfs:label "Tool Transport" ;
+    skos:prefLabel "Tool Transport" ;
+    skos:definition "mcp-stdio-and-http adapter installed and in active use. MCP is the adopted Tool Transport standard." ;
+    skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindComponent ;
     ef:componentMaturity ef:MaturityShipped ;
     rdfs:comment "mcp-stdio-and-http adapter installed and in active use. MCP is the adopted Tool Transport standard." .
 
-ef:SpecGraphComponent rdf:type ef:Component ;
+ef:SpecGraphComponent rdf:type ef:Component, skos:Concept ;
     rdfs:label "Spec Graph" ;
+    skos:prefLabel "Spec Graph" ;
+    skos:definition "Cognee adapter installed and running against Azure Foundry (EF-017 resolved 2026-05-26). graphrag adapter also present. EF-020 (KG sync validation) is still slated — treat recall as operational but not yet drift-verified over time." ;
+    skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindComponent ;
     ef:componentMaturity ef:MaturityShipped ;
     rdfs:comment "Cognee adapter installed and running against Azure Foundry (EF-017 resolved 2026-05-26). graphrag adapter also present. EF-020 (KG sync validation) is still slated — treat recall as operational but not yet drift-verified over time." .
 
-ef:ExecutionSandboxComponent rdf:type ef:Component ;
+ef:ExecutionSandboxComponent rdf:type ef:Component, skos:Concept ;
     rdfs:label "Execution Sandbox" ;
+    skos:prefLabel "Execution Sandbox" ;
+    skos:definition "windows-acl-user adapter installed (experimental): Windows OS-user + NTFS-ACL isolation via runas. Platform-specific — Windows only. No Linux or container sandbox adapter exists. Adopters on Linux or Docker MUST treat this slot as intent-only for their platform. The Gas Town container boundary is NOT an Execution Sandbox (GEA-006 confirmed this is an EF-012 conflation)." ;
+    skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindComponent ;
     ef:componentMaturity ef:MaturityPartial ;
     rdfs:comment "windows-acl-user adapter installed (experimental): Windows OS-user + NTFS-ACL isolation via runas. Platform-specific — Windows only. No Linux or container sandbox adapter exists. Adopters on Linux or Docker MUST treat this slot as intent-only for their platform. The Gas Town container boundary is NOT an Execution Sandbox (GEA-006 confirmed this is an EF-012 conflation)." .
 
-ef:AgentPolicyComponent rdf:type ef:Component ;
+ef:AgentPolicyComponent rdf:type ef:Component, skos:Concept ;
     rdfs:label "Agent Policy" ;
+    skos:prefLabel "Agent Policy" ;
+    skos:definition "tier-yaml adapter installed: generates .claude/settings.json allowlist from policy.tiers.yaml tier-0 rules. Tier-0 (auto-approved) generation is operational. Higher tiers (tier-1 human-review, tier-2 blocked) and formal enforcement are design intent; no runtime enforcement exists beyond the generated settings file." ;
+    skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindComponent ;
     ef:componentMaturity ef:MaturityPartial ;
     rdfs:comment "tier-yaml adapter installed: generates .claude/settings.json allowlist from policy.tiers.yaml tier-0 rules. Tier-0 (auto-approved) generation is operational. Higher tiers (tier-1 human-review, tier-2 blocked) and formal enforcement are design intent; no runtime enforcement exists beyond the generated settings file." .
 
-ef:ReleaseRingsComponent rdf:type ef:Component ;
+ef:ReleaseRingsComponent rdf:type ef:Component, skos:Concept ;
     rdfs:label "Release Rings" ;
+    skos:prefLabel "Release Rings" ;
+    skos:definition "Component contract defined. No installed adapter in this instance. Release ring enforcement (alpha/beta/stable gating, ring-lock) is design intent only — no tooling enforces ring membership today." ;
+    skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindComponent ;
     ef:componentMaturity ef:MaturityIntent ;
     rdfs:comment "Component contract defined. No installed adapter in this instance. Release ring enforcement (alpha/beta/stable gating, ring-lock) is design intent only — no tooling enforces ring membership today." .
 
-ef:SourceControlCIComponent rdf:type ef:Component ;
+ef:SourceControlCIComponent rdf:type ef:Component, skos:Concept ;
     rdfs:label "Source Control + CI" ;
+    skos:prefLabel "Source Control + CI" ;
+    skos:definition "github-and-actions adapter installed. Gitea self-hosted + GitHub Actions are active and operational." ;
+    skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindComponent ;
     ef:componentMaturity ef:MaturityShipped ;
     rdfs:comment "github-and-actions adapter installed. Gitea self-hosted + GitHub Actions are active and operational." .
 
-ef:InferenceLayerComponent rdf:type ef:Component ;
+ef:InferenceLayerComponent rdf:type ef:Component, skos:Concept ;
     rdfs:label "Inference Layer" ;
+    skos:prefLabel "Inference Layer" ;
+    skos:definition "Azure Foundry routing adapter live (EF-017 resolved 2026-05-26); Anthropic and OpenAI adapters also installed. Per-repo budget enforcement active. All inference routes through Foundry gateway." ;
+    skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindComponent ;
     ef:componentMaturity ef:MaturityShipped ;
     rdfs:comment "Azure Foundry routing adapter live (EF-017 resolved 2026-05-26); Anthropic and OpenAI adapters also installed. Per-repo budget enforcement active. All inference routes through Foundry gateway." .
 
-ef:AuditObservabilityComponent rdf:type ef:Component ;
+ef:AuditObservabilityComponent rdf:type ef:Component, skos:Concept ;
     rdfs:label "Audit & Observability" ;
+    skos:prefLabel "Audit & Observability" ;
+    skos:definition "jsonl-event-sink adapter installed (experimental): append-only structured event log. Full OTEL/trace backend stack is NOT deployed — GEA-001 (stand up C11 backend on srv-docker-hp) is in-progress. EF-015 defined the adapter contract (resolved 2026-05-24) but the backend that ingests and queries the events is design intent." ;
+    skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindComponent ;
     ef:componentMaturity ef:MaturityPartial ;
     rdfs:comment "jsonl-event-sink adapter installed (experimental): append-only structured event log. Full OTEL/trace backend stack is NOT deployed — GEA-001 (stand up C11 backend on srv-docker-hp) is in-progress. EF-015 defined the adapter contract (resolved 2026-05-24) but the backend that ingests and queries the events is design intent." .
 
-ef:SecretsKeyManagementComponent rdf:type ef:Component ;
+ef:SecretsKeyManagementComponent rdf:type ef:Component, skos:Concept ;
     rdfs:label "Secrets & Key Management" ;
+    skos:prefLabel "Secrets & Key Management" ;
+    skos:definition "sops-age adapter installed and operational: vault at instance/installed/12-secrets-key-management/sops-age/, resolver at bin/epos-secrets. Note: epos-secrets is a repo-local script, not a standalone installable artifact (EF-022 tracks making it relocatable). Adopters in mode-B must copy the script; a stable independent install does not yet exist." ;
+    skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindComponent ;
     ef:componentMaturity ef:MaturityShipped ;
     rdfs:comment "sops-age adapter installed and operational: vault at instance/installed/12-secrets-key-management/sops-age/, resolver at bin/epos-secrets. Note: epos-secrets is a repo-local script, not a standalone installable artifact (EF-022 tracks making it relocatable). Adopters in mode-B must copy the script; a stable independent install does not yet exist." .
 
-ef:BacklogComponent rdf:type ef:Component ;
+ef:BacklogComponent rdf:type ef:Component, skos:Concept ;
     rdfs:label "Backlog" ;
+    skos:prefLabel "Backlog" ;
+    skos:definition "file-based-backlog adapter installed: per-repo markdown backlog files under backlog/ with EF-/GEA- IDs. Beads (bd, Dolt-backed) is available via Gas Town at adopter instances as a complementary agent-facing ledger." ;
+    skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindComponent ;
     ef:componentMaturity ef:MaturityShipped ;
     rdfs:comment "file-based-backlog adapter installed: per-repo markdown backlog files under backlog/ with EF-/GEA- IDs. Beads (bd, Dolt-backed) is available via Gas Town at adopter instances as a complementary agent-facing ledger." .
 
 ### Adapter Status Individuals
 
-ef:AdapterStatusExperimental rdf:type ef:AdapterStatus ;
+ef:AdapterStatusExperimental rdf:type ef:AdapterStatus, skos:Concept ;
     rdfs:label "experimental" ;
-    rdfs:comment "Adapter is under active development or evaluation." .
+    skos:prefLabel "experimental" ;
+    skos:definition "Adapter is under active development or evaluation." ;
+    skos:inScheme ef:KnowledgeTree ;
 
-ef:AdapterStatusApproved rdf:type ef:AdapterStatus ;
+ef:AdapterStatusApproved rdf:type ef:AdapterStatus, skos:Concept ;
     rdfs:label "approved" ;
-    rdfs:comment "Adapter is production-ready and recommended for use." .
+    skos:prefLabel "approved" ;
+    skos:definition "Adapter is production-ready and recommended for use." ;
+    skos:inScheme ef:KnowledgeTree ;
 
-ef:AdapterStatusDeprecated rdf:type ef:AdapterStatus ;
+ef:AdapterStatusDeprecated rdf:type ef:AdapterStatus, skos:Concept ;
     rdfs:label "deprecated" ;
-    rdfs:comment "Adapter is no longer recommended and may be removed." .
+    skos:prefLabel "deprecated" ;
+    skos:definition "Adapter is no longer recommended and may be removed." ;
+    skos:inScheme ef:KnowledgeTree ;
 
-ef:AdapterStatusShelved rdf:type ef:AdapterStatus ;
+ef:AdapterStatusShelved rdf:type ef:AdapterStatus, skos:Concept ;
     rdfs:label "shelved" ;
-    rdfs:comment "Adapter is not being worked on but retained for possible future reactivation. Agents MUST NOT select or invoke shelved adapters." .
+    skos:prefLabel "shelved" ;
+    skos:definition "Adapter is not being worked on but retained for possible future reactivation. Agents MUST NOT select or invoke shelved adapters." ;
+    skos:inScheme ef:KnowledgeTree ;
 
 ### Platform Factory Phase Individuals
 
-ef:PlatformPhase0 rdf:type ef:Phase ;
+ef:PlatformPhase0 rdf:type ef:Phase, skos:Concept ;
     rdfs:label "Phase 0: Foundation" ;
-    rdfs:comment "Everything-as-Code plus observability." ;
+    skos:prefLabel "Phase 0: Foundation" ;
+    skos:definition "Everything-as-Code plus observability." ;
+    skos:inScheme ef:KnowledgeTree ;
     ef:maturesTo ef:PlatformPhase1 .
 
-ef:PlatformPhase1 rdf:type ef:Phase ;
+ef:PlatformPhase1 rdf:type ef:Phase, skos:Concept ;
     rdfs:label "Phase 1: Agent Observation" ;
-    rdfs:comment "Agents query, propose, wait." ;
+    skos:prefLabel "Phase 1: Agent Observation" ;
+    skos:definition "Agents query, propose, wait." ;
+    skos:inScheme ef:KnowledgeTree ;
     ef:maturesTo ef:PlatformPhase2 .
 
-ef:PlatformPhase2 rdf:type ef:Phase ;
+ef:PlatformPhase2 rdf:type ef:Phase, skos:Concept ;
     rdfs:label "Phase 2: Agent Proposals" ;
-    rdfs:comment "Agents open PRs, humans review and apply." ;
+    skos:prefLabel "Phase 2: Agent Proposals" ;
+    skos:definition "Agents open PRs, humans review and apply." ;
+    skos:inScheme ef:KnowledgeTree ;
     ef:maturesTo ef:PlatformPhase3 .
 
-ef:PlatformPhase3 rdf:type ef:Phase ;
+ef:PlatformPhase3 rdf:type ef:Phase, skos:Concept ;
     rdfs:label "Phase 3: Supervised Autonomy" ;
-    rdfs:comment "Maturity rung (irreversible, reached via ef:maturesTo): agents execute pre-approved actions. For the reversible operating posture at this level, see ef:AutonomyModeSupervised." ;
-    rdfs:seeAlso ef:AutonomyModeSupervised ;
+    skos:prefLabel "Phase 3: Supervised Autonomy" ;
+    skos:definition "Maturity rung (irreversible, reached via ef:maturesTo): agents execute pre-approved actions. For the reversible operating posture at this level, see ef:AutonomyModeSupervised." ;
+    skos:inScheme ef:KnowledgeTree ;
     ef:maturesTo ef:PlatformPhase4 .
 
-ef:PlatformPhase4 rdf:type ef:Phase ;
+ef:PlatformPhase4 rdf:type ef:Phase, skos:Concept ;
     rdfs:label "Phase 4: Full Autonomy" ;
-    rdfs:comment "Maturity rung (irreversible, reached via ef:maturesTo): agents self-update, coordinate, optimize. For the reversible operating posture at this level, see ef:AutonomyModeAutonomous." ;
-    rdfs:seeAlso ef:AutonomyModeAutonomous .
+    skos:prefLabel "Phase 4: Full Autonomy" ;
+    skos:definition "Maturity rung (irreversible, reached via ef:maturesTo): agents self-update, coordinate, optimize. For the reversible operating posture at this level, see ef:AutonomyModeAutonomous." ;
+    skos:inScheme ef:KnowledgeTree ;
+    ef:maturesTo ef:PlatformPhase5 .  # note: extended for completeness
 
 ### Product Factory Phase Individuals
 
-ef:ProductPhaseA rdf:type ef:Phase ;
+ef:ProductPhaseA rdf:type ef:Phase, skos:Concept ;
     rdfs:label "Phase A: Registry as ground truth" ;
+    skos:prefLabel "Phase A: Registry as ground truth" ;
+    skos:definition "Initial registry-driven state for product factory." ;
+    skos:inScheme ef:KnowledgeTree ;
     ef:maturesTo ef:ProductPhaseB .
 
-ef:ProductPhaseB rdf:type ef:Phase ;
+ef:ProductPhaseB rdf:type ef:Phase, skos:Concept ;
     rdfs:label "Phase B: Tool transport foundation" ;
+    skos:prefLabel "Phase B: Tool transport foundation" ;
+    skos:definition "MCP and tool transport established." ;
+    skos:inScheme ef:KnowledgeTree ;
     ef:maturesTo ef:ProductPhaseC .
 
-ef:ProductPhaseC rdf:type ef:Phase ;
+ef:ProductPhaseC rdf:type ef:Phase, skos:Concept ;
     rdfs:label "Phase C: Living Spec rollout" ;
+    skos:prefLabel "Phase C: Living Spec rollout" ;
+    skos:definition "Living Specs become standard across deliverables." ;
+    skos:inScheme ef:KnowledgeTree ;
     ef:maturesTo ef:ProductPhaseD .
 
-ef:ProductPhaseD rdf:type ef:Phase ;
+ef:ProductPhaseD rdf:type ef:Phase, skos:Concept ;
     rdfs:label "Phase D: Router v0" ;
+    skos:prefLabel "Phase D: Router v0" ;
+    skos:definition "Basic decomposition and dispatch via Router." ;
+    skos:inScheme ef:KnowledgeTree ;
     ef:maturesTo ef:ProductPhaseE .
 
-ef:ProductPhaseE rdf:type ef:Phase ;
+ef:ProductPhaseE rdf:type ef:Phase, skos:Concept ;
     rdfs:label "Phase E: Spec Graph" ;
+    skos:prefLabel "Phase E: Spec Graph" ;
+    skos:definition "Full ontology-grounded Spec Graph for agent memory." ;
+    skos:inScheme ef:KnowledgeTree ;
     ef:maturesTo ef:ProductPhaseF .
 
-ef:ProductPhaseF rdf:type ef:Phase ;
+ef:ProductPhaseF rdf:type ef:Phase, skos:Concept ;
     rdfs:label "Phase F: Level 5 gate" ;
-    rdfs:comment "Auto-merge tier-1 changes." .
+    skos:prefLabel "Phase F: Level 5 gate" ;
+    skos:definition "Auto-merge tier-1 changes." ;
+    skos:inScheme ef:KnowledgeTree ;
 
 ### Standard Individuals
 
-ef:StandardsMeta rdf:type ef:Standard ;
+ef:StandardsMeta rdf:type ef:Standard, skos:Concept ;
     rdfs:label "Standards Meta" ;
-    rdfs:comment "Adopted standard governing the shape, status, and conformance language of all other standards under 04-standards/." .
+    skos:prefLabel "Standards Meta" ;
+    skos:definition "Adopted standard governing the shape, status, and conformance language of all other standards under 04-standards/." ;
+    skos:inScheme ef:KnowledgeTree ;
+    ef:kind ef:NodeKindComponent ;  # standards as cross-cutting component-like
 
-ef:NamingConventions rdf:type ef:Standard ;
+ef:NamingConventions rdf:type ef:Standard, skos:Concept ;
     rdfs:label "Naming Conventions" ;
-    rdfs:comment "Adopted standard governing repo-wide naming (files, directories, identifiers)." .
+    skos:prefLabel "Naming Conventions" ;
+    skos:definition "Adopted standard governing repo-wide naming (files, directories, identifiers)." ;
+    skos:inScheme ef:KnowledgeTree ;
 
-ef:ResearchMirror rdf:type ef:Standard ;
+ef:ResearchMirror rdf:type ef:Standard, skos:Concept ;
     rdfs:label "Research Mirror" ;
-    rdfs:comment "Adopted standard governing how external research is mirrored into the repo." .
+    skos:prefLabel "Research Mirror" ;
+    skos:definition "Adopted standard governing how external research is mirrored into the repo." ;
+    skos:inScheme ef:KnowledgeTree ;
 
 ### Vision Pillar Individuals
 
-ef:PillarSubstrateAgnosticPlatform rdf:type ef:Pillar ;
+ef:PillarSubstrateAgnosticPlatform rdf:type ef:Pillar, skos:Concept ;
     rdfs:label "Substrate-Agnostic Platform" ;
-    rdfs:comment "The dark-factory pattern is substrate-agnostic across software, platform, and future physical execution environments." .
+    skos:prefLabel "Substrate-Agnostic Platform" ;
+    skos:definition "The dark-factory pattern is substrate-agnostic across software, platform, and future physical execution environments." ;
+    skos:inScheme ef:KnowledgeTree ;
 
-ef:PillarAIFactory rdf:type ef:Pillar ;
+ef:PillarAIFactory rdf:type ef:Pillar, skos:Concept ;
     rdfs:label "AI Factory" ;
-    rdfs:comment "Agentic execution is the default operating model across factory workflows." .
+    skos:prefLabel "AI Factory" ;
+    skos:definition "Agentic execution is the default operating model across factory workflows." ;
+    skos:inScheme ef:KnowledgeTree ;
 
-ef:PillarProductEngine rdf:type ef:Pillar ;
+ef:PillarProductEngine rdf:type ef:Pillar, skos:Concept ;
     rdfs:label "Product Engine" ;
-    rdfs:comment "The factory produces durable deliverables with Living Specs and Spec Graph projection." .
+    skos:prefLabel "Product Engine" ;
+    skos:definition "The factory produces durable deliverables with Living Specs and Spec Graph projection." ;
+    skos:inScheme ef:KnowledgeTree ;
 
 ### Core Principle Individuals
 
-ef:PrincipleEverythingAsCode rdf:type ef:Principle ;
+ef:PrincipleEverythingAsCode rdf:type ef:Principle, skos:Concept ;
     rdfs:label "Everything-as-Code" ;
-    rdfs:comment "Git is source of truth; no manual clicks." .
+    skos:prefLabel "Everything-as-Code" ;
+    skos:definition "Git is source of truth; no manual clicks." ;
+    skos:inScheme ef:KnowledgeTree ;
 
-ef:PrincipleAIFirstOperations rdf:type ef:Principle ;
+ef:PrincipleAIFirstOperations rdf:type ef:Principle, skos:Concept ;
     rdfs:label "AI-First Operations" ;
-    rdfs:comment "Agents observe, reason, and act; humans set policy and audit." .
+    skos:prefLabel "AI-First Operations" ;
+    skos:definition "Agents observe, reason, and act; humans set policy and audit." ;
+    skos:inScheme ef:KnowledgeTree ;
 
-ef:PrincipleDefenseInDepth rdf:type ef:Principle ;
+ef:PrincipleDefenseInDepth rdf:type ef:Principle, skos:Concept ;
     rdfs:label "Defense in Depth" ;
-    rdfs:comment "Assume breach and limit blast radius with layered safeguards." .
+    skos:prefLabel "Defense in Depth" ;
+    skos:definition "Assume breach and limit blast radius with layered safeguards." ;
+    skos:inScheme ef:KnowledgeTree ;
 
-ef:PrincipleIncrementalComplexity rdf:type ef:Principle ;
+ef:PrincipleIncrementalComplexity rdf:type ef:Principle, skos:Concept ;
     rdfs:label "Incremental Complexity" ;
-    rdfs:comment "Start simple and add layers as needed." .
+    skos:prefLabel "Incremental Complexity" ;
+    skos:definition "Start simple and add layers as needed." ;
+    skos:inScheme ef:KnowledgeTree ;
 
-ef:PrincipleCloudAgnostic rdf:type ef:Principle ;
+ef:PrincipleCloudAgnostic rdf:type ef:Principle, skos:Concept ;
     rdfs:label "Cloud-Agnostic" ;
-    rdfs:comment "Workloads remain portable across environments." .
+    skos:prefLabel "Cloud-Agnostic" ;
+    skos:definition "Workloads remain portable across environments." ;
+    skos:inScheme ef:KnowledgeTree ;
 
-ef:PrincipleObservableAndTestable rdf:type ef:Principle ;
+ef:PrincipleObservableAndTestable rdf:type ef:Principle, skos:Concept ;
     rdfs:label "Observable and Testable" ;
-    rdfs:comment "State changes are observable and configurations are validated." .
+    skos:prefLabel "Observable and Testable" ;
+    skos:definition "State changes are observable and configurations are validated." ;
+    skos:inScheme ef:KnowledgeTree ;
 
 ### Pattern Individual and Top-Level Relationship Assertions
 
