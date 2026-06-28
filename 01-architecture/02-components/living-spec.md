@@ -14,8 +14,18 @@ Every deliverable repository carries a Living Spec that describes the
 exact behavior the deliverable implements. The Living Spec is the
 source of truth; the code is the implementation.
 
-Agents update the Living Spec and the code in the same change. A change
-that modifies behavior without updating the Living Spec is rejected.
+When developing new features, agents first update the Living Spec.
+Updating the Living Spec is the requirements-gathering step performed
+by the agent, analogous to the practice on traditional software
+development teams. The agent captures the intended observable behavior,
+inputs/outputs, dependencies, non-functional bounds, and acceptance
+criteria in the Living Spec before implementation work begins. The
+updated Living Spec then drives the implementation; subsequent code
+changes fulfill the Living Spec.
+
+Agents update the Living Spec and the code in the same change to satisfy
+the paired-change rule. A change that modifies behavior without updating
+the Living Spec is rejected.
 
 ## Contract
 
