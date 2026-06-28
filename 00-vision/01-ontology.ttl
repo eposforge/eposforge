@@ -733,25 +733,25 @@ ef:AdapterStatusExperimental rdf:type ef:AdapterStatus, skos:Concept ;
     rdfs:label "experimental" ;
     skos:prefLabel "experimental" ;
     skos:definition "Adapter is under active development or evaluation." ;
-    skos:inScheme ef:KnowledgeTree ;
+    skos:inScheme ef:KnowledgeTree .
 
 ef:AdapterStatusApproved rdf:type ef:AdapterStatus, skos:Concept ;
     rdfs:label "approved" ;
     skos:prefLabel "approved" ;
     skos:definition "Adapter is production-ready and recommended for use." ;
-    skos:inScheme ef:KnowledgeTree ;
+    skos:inScheme ef:KnowledgeTree .
 
 ef:AdapterStatusDeprecated rdf:type ef:AdapterStatus, skos:Concept ;
     rdfs:label "deprecated" ;
     skos:prefLabel "deprecated" ;
     skos:definition "Adapter is no longer recommended and may be removed." ;
-    skos:inScheme ef:KnowledgeTree ;
+    skos:inScheme ef:KnowledgeTree .
 
 ef:AdapterStatusShelved rdf:type ef:AdapterStatus, skos:Concept ;
     rdfs:label "shelved" ;
     skos:prefLabel "shelved" ;
     skos:definition "Adapter is not being worked on but retained for possible future reactivation. Agents MUST NOT select or invoke shelved adapters." ;
-    skos:inScheme ef:KnowledgeTree ;
+    skos:inScheme ef:KnowledgeTree .
 
 ### Platform Factory Phase Individuals
 
@@ -788,7 +788,7 @@ ef:PlatformPhase4 rdf:type ef:Phase, skos:Concept ;
     skos:prefLabel "Phase 4: Full Autonomy" ;
     skos:definition "Maturity rung (irreversible, reached via ef:maturesTo): agents self-update, coordinate, optimize. For the reversible operating posture at this level, see ef:AutonomyModeAutonomous." ;
     skos:inScheme ef:KnowledgeTree ;
-    ef:maturesTo ef:PlatformPhase5 .  # note: extended for completeness
+    ef:maturesTo ef:PlatformPhase5 .
 
 ### Product Factory Phase Individuals
 
@@ -831,7 +831,7 @@ ef:ProductPhaseF rdf:type ef:Phase, skos:Concept ;
     rdfs:label "Phase F: Level 5 gate" ;
     skos:prefLabel "Phase F: Level 5 gate" ;
     skos:definition "Auto-merge tier-1 changes." ;
-    skos:inScheme ef:KnowledgeTree ;
+    skos:inScheme ef:KnowledgeTree .
 
 ### Standard Individuals
 
@@ -840,19 +840,19 @@ ef:StandardsMeta rdf:type ef:Standard, skos:Concept ;
     skos:prefLabel "Standards Meta" ;
     skos:definition "Adopted standard governing the shape, status, and conformance language of all other standards under 04-standards/." ;
     skos:inScheme ef:KnowledgeTree ;
-    ef:kind ef:NodeKindComponent ;  # standards as cross-cutting component-like
+    ef:kind ef:NodeKindComponent .
 
 ef:NamingConventions rdf:type ef:Standard, skos:Concept ;
     rdfs:label "Naming Conventions" ;
     skos:prefLabel "Naming Conventions" ;
     skos:definition "Adopted standard governing repo-wide naming (files, directories, identifiers)." ;
-    skos:inScheme ef:KnowledgeTree ;
+    skos:inScheme ef:KnowledgeTree .
 
 ef:ResearchMirror rdf:type ef:Standard, skos:Concept ;
     rdfs:label "Research Mirror" ;
     skos:prefLabel "Research Mirror" ;
     skos:definition "Adopted standard governing how external research is mirrored into the repo." ;
-    skos:inScheme ef:KnowledgeTree ;
+    skos:inScheme ef:KnowledgeTree .
 
 ### Vision Pillar Individuals
 
@@ -860,19 +860,19 @@ ef:PillarSubstrateAgnosticPlatform rdf:type ef:Pillar, skos:Concept ;
     rdfs:label "Substrate-Agnostic Platform" ;
     skos:prefLabel "Substrate-Agnostic Platform" ;
     skos:definition "The dark-factory pattern is substrate-agnostic across software, platform, and future physical execution environments." ;
-    skos:inScheme ef:KnowledgeTree ;
+    skos:inScheme ef:KnowledgeTree .
 
 ef:PillarAIFactory rdf:type ef:Pillar, skos:Concept ;
     rdfs:label "AI Factory" ;
     skos:prefLabel "AI Factory" ;
     skos:definition "Agentic execution is the default operating model across factory workflows." ;
-    skos:inScheme ef:KnowledgeTree ;
+    skos:inScheme ef:KnowledgeTree .
 
 ef:PillarProductEngine rdf:type ef:Pillar, skos:Concept ;
     rdfs:label "Product Engine" ;
     skos:prefLabel "Product Engine" ;
     skos:definition "The factory produces durable deliverables with Living Specs and Spec Graph projection." ;
-    skos:inScheme ef:KnowledgeTree ;
+    skos:inScheme ef:KnowledgeTree .
 
 ### Core Principle Individuals
 
@@ -880,37 +880,37 @@ ef:PrincipleEverythingAsCode rdf:type ef:Principle, skos:Concept ;
     rdfs:label "Everything-as-Code" ;
     skos:prefLabel "Everything-as-Code" ;
     skos:definition "Git is source of truth; no manual clicks." ;
-    skos:inScheme ef:KnowledgeTree ;
+    skos:inScheme ef:KnowledgeTree .
 
 ef:PrincipleAIFirstOperations rdf:type ef:Principle, skos:Concept ;
     rdfs:label "AI-First Operations" ;
     skos:prefLabel "AI-First Operations" ;
     skos:definition "Agents observe, reason, and act; humans set policy and audit." ;
-    skos:inScheme ef:KnowledgeTree ;
+    skos:inScheme ef:KnowledgeTree .
 
 ef:PrincipleDefenseInDepth rdf:type ef:Principle, skos:Concept ;
     rdfs:label "Defense in Depth" ;
     skos:prefLabel "Defense in Depth" ;
     skos:definition "Assume breach and limit blast radius with layered safeguards." ;
-    skos:inScheme ef:KnowledgeTree ;
+    skos:inScheme ef:KnowledgeTree .
 
 ef:PrincipleIncrementalComplexity rdf:type ef:Principle, skos:Concept ;
     rdfs:label "Incremental Complexity" ;
     skos:prefLabel "Incremental Complexity" ;
     skos:definition "Start simple and add layers as needed." ;
-    skos:inScheme ef:KnowledgeTree ;
+    skos:inScheme ef:KnowledgeTree .
 
 ef:PrincipleCloudAgnostic rdf:type ef:Principle, skos:Concept ;
     rdfs:label "Cloud-Agnostic" ;
     skos:prefLabel "Cloud-Agnostic" ;
     skos:definition "Workloads remain portable across environments." ;
-    skos:inScheme ef:KnowledgeTree ;
+    skos:inScheme ef:KnowledgeTree .
 
 ef:PrincipleObservableAndTestable rdf:type ef:Principle, skos:Concept ;
     rdfs:label "Observable and Testable" ;
     skos:prefLabel "Observable and Testable" ;
     skos:definition "State changes are observable and configurations are validated." ;
-    skos:inScheme ef:KnowledgeTree ;
+    skos:inScheme ef:KnowledgeTree .
 
 ### Pattern Individual and Top-Level Relationship Assertions
 
