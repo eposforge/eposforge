@@ -141,6 +141,15 @@ def dedupe(paths):
     return out
 
 
+def get_visibility(root: Path) -> str:
+    # visibility = "public" | "private"; unset treated as "private" (fail-safe).
+    # Mirrors the model and parse in lint-backlog.sh (EF-047 boundary).
+    cfg = root / "backlog" / "config.toml"
+    text = cfg.read_text(encoding="utf-8") if cfg.exists() else ""
+    m = re.search(r'^\s*visibility\s*=\s*"(public|private)"\s*$', text, re.M)
+    return m.group(1) if m else "private"
+
+
 def discover_roots():
     # 1. CLI --roots (highest)
     if roots_cli:
@@ -569,7 +578,38 @@ if mode == "mermaid":
     lines.append("```")
     lines.append("")
 
-    portfolio_path = repo_sets[0] / "backlog" / "portfolio.md"
+    # Visibility-aware write target selection (prevents private data leak into public repo).
+    # - If any participating root declares (or defaults to) private visibility,
+    #   the generated diagram contains private adopter backlog items.
+    # - Such a diagram MUST NOT be written under a public root (framework).
+    # - Deterministic rule: when private data is present, write to the *first private root*
+    #   in the discovery order. This ensures e.g. BACKLOG_ROOTS starting with the public
+    #   framework will still land the full portfolio in the first adopter (GEA) instead of
+    #   the public tree.
+    # - Pure-public aggregations (framework only) continue to write to repo_sets[0].
+    # See: EF-047, .gitignore (portfolio.md), skills/portfolio-review, preferred-mode-adoption-plan.md
+    vis_of = {str(r): get_visibility(r) for r in repo_sets}
+    private_roots = [r for r in repo_sets if vis_of[str(r)] == "private"]
+
+    if private_roots:
+        write_root = private_roots[0]
+        target0 = repo_sets[0]
+        if str(write_root) != str(target0) and vis_of[str(target0)] == "public":
+            print(
+                f"Note: cross-repo aggregation includes private data; writing portfolio.md to "
+                f"first private root ({write_root}) rather than public root[0] ({target0}) "
+                "to guarantee no private-data leak into the public eposforge tree.",
+                file=sys.stderr,
+            )
+    else:
+        write_root = repo_sets[0]
+
+    # Hard safety gate: a diagram that saw any private root must never land under public.
+    if private_roots and get_visibility(write_root) != "private":
+        print("ERROR: internal selection error would write private-containing portfolio to a public root. Refusing to write.", file=sys.stderr)
+        sys.exit(2)
+
+    portfolio_path = write_root / "backlog" / "portfolio.md"
     content = "\n".join(lines) + "\n"
     portfolio_path.write_text(content, encoding="utf-8")
     print(f"Written: {portfolio_path}")

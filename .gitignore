@@ -49,3 +49,14 @@ scratchpad/
 
 # Generated machine authorization request artifact
 epos-machine-request.json
+
+# Generated portfolio diagrams (Mermaid cross-repo views from aggregate.sh --mermaid).
+# These MUST NOT contain private adopter data (GEA, IAC, Outreach*, etc.).
+# Enforcement:
+# - aggregate.sh --mermaid now selects the first `visibility=private` root as write target
+#   whenever any private root participates (prevents writing mixed/private diagrams into
+#   the public framework tree even if BACKLOG_ROOTS lists the public root first).
+# - Run framework-only when you want a public-safe diagram in the gh/eposforge tree.
+# - The public root .gitignore (portfolio.md + **/portfolio.md) is the final defense.
+portfolio.md
+**/portfolio.md

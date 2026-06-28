@@ -20,7 +20,7 @@ from structure and catches what capture missed.
 
 - `aggregate.sh --themes` output (grouped portfolio view)
 - `aggregate.sh --critical-path <anchor-ID>` for each active anchor item
-- `aggregate.sh --mermaid` to regenerate `backlog/portfolio.md`
+- `aggregate.sh --mermaid` to regenerate `backlog/portfolio.md` (the writer now enforces: if the aggregation crosses any `visibility=private` root, the file is written to the *first private root* in the list (e.g. GEA), never to a public root. Pure-public runs write to the framework as before. See aggregate.sh:575 and EF-047.)
 - `ready.sh` output (currently workable items)
 - `00-vision/` and `02-roadmap/` docs for vision alignment reference
 - Cognee MCP (for graph-backed context when available)

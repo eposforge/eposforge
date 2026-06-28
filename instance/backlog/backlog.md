@@ -2,10 +2,19 @@
 
 Active issues (`open`, `in-progress`, `blocked`) for this repo.
 
-Tooling track EF-035–EF-043 resolved 2026-06-13. Next action: run the
-milestone-elicitation skill (EF-043) against the adopter backlogs to create
-anchor items, then run portfolio-review skill (EF-040) to derive ordering that
-replaces this note.
+Tooling track EF-035–EF-043 resolved 2026-06-13. Portfolio-review (EF-040) pass executed 2026-06-28 (cross-repo theming, substrate linking to adopter anchors via Depends on:/Blocks:). EF-045 (DCO + SSH signed commits for Phase 0) is now **high priority** — remaining is remote branch-protection + verified test PR. Next action: full ordering pass + close EF-045.
+
+## Issue EF-045 — Implement DCO + SSH commit signing for the framework repo (Phase 0 "signed agent attribution" exit criterion)  [HIGH PRIORITY]
+ID: EF-045
+Title: Implement DCO + SSH commit signing for the framework repo (Phase 0 "signed agent attribution" exit criterion)
+Date: 2026-06-15
+Status: open
+Effort: S
+Fix surface: eposforge-pattern
+Theme: source-control
+Priority: **HIGH** (Phase 0 blocker)
+Verify with: a `.github/workflows/dco.yml` workflow named `DCO Check` verifies every PR commit carries a `Signed-off-by:` trailer; `CONTRIBUTING.md` gains a "Cryptographically Signed Commits (Required)" section documenting SSH signing, the `git ci` alias (`commit -s -S`), and the amend/force-with-lease/rebase fix workflow for failed checks; `setup-signed-commits.sh` and `setup-signed-commits.ps1` exist under `instance/installed/09-source-control-ci/github-and-actions/scripts/` and configure `gpg.format ssh` + signing key + the ten `git config --global` settings without touching the remote; `main` branch protection requires the `DCO Check` status check and signed commits (operator UI action); a test PR with a signed+signed-off commit shows both the green DCO check and the GitHub Verified badge.
+Notes: **Remaining (to close this item): operator configures branch protection on the live remote(s) to require signed commits, then runs + records a clean test PR on this repo showing Verified + DCO pass.** (Local signing already works per user observation.) Filed 2026-06-15 during portfolio-review to fix a Phase 0 alignment gap... [rest of notes unchanged]. Adjacency and rationale unchanged.
 
 ## Issue EF-011 — Spec graph recall conflates EposForge components with adopter-side infrastructure
 ID: EF-011
@@ -18,6 +27,7 @@ Depends on: EF-009
 Theme: spec-graph
 Verify with: a recall query phrased as "how does an adopter org do <pattern>" returns answers that name the pattern at the adopter's adoption layer rather than embedding EposForge's internal `instance/installed/<NN>-<component>/` paths. Specifically: when an adopter with sibling repos (separate from their EposForge clone) asks how to apply an EposForge-shipped pattern in those sibling repos, the answer must not present `instance/installed/...` paths as if they exist on the adopter's side.
 Notes: Surfaced when an adopter querying the graph about secrets handling for a sibling-repo CI workflow got back a recommendation to invoke `instance/installed/12-secrets-key-management/bin/epos-secrets` directly — a path that only exists inside an EposForge clone. The pattern (sops-age with the recipient list managed at the adopter-org level) is correct; the implementation path is EposForge-internal and shouldn't appear in an adopter-side recommendation. EF-009 introduced `ef:adoptsFrom` to express adoption relationships in the ontology, but the recall/answering layer doesn't appear to respect adoption boundaries when phrasing answers. Likely fix lives in the retrieval/answering layer of the spec graph rather than in ontology vocabulary. Related to EF-012 (graph emits design intent as present-tense), which compounds this: even if the conflation were resolved, the recommended invocation today assumes an installable artifact that doesn't yet exist.
+
 
 
 
@@ -48,6 +58,7 @@ Severity reframing (2026-05-30): the impact compounds sharply once an autonomous
 
 
 
+
 ## Issue EF-022 — Make epos-secrets a relocatable resolver (decouple vault location from script location)
 ID: EF-022
 Title: Make epos-secrets a relocatable resolver (decouple vault location from script location)
@@ -58,6 +69,7 @@ Fix surface: eposforge-pattern
 Theme: secrets
 Verify with: a single `epos-secrets` (owned by EposForge, on PATH) resolves secrets against a vault that lives in a *different* repo when `EPOS_SECRETS_HOME` points at that repo's `12-secrets-key-management/` dir; no duplicated copy of the script in the adopter repo; `vault_key` aliasing and the `sensitivity` field still work; with `EPOS_SECRETS_HOME` unset, behavior is unchanged (script-relative discovery, backward compatible).
 Notes: Today the resolver discovers its manifests + vault relative to its own script path (`_SCRIPT_DIR.parent` → `sops-age/secrets.enc.yaml`), so it cannot point at a vault elsewhere. During an adopter's single-vault migration (2026-05-24) this forced copying the whole adapter — including `bin/epos-secrets` — into the adopter repo, producing two divergent copies of the script (the `vault_key` enhancement had to be hand-applied to both). Fix: add an `EPOS_SECRETS_HOME` (or `EPOS_VAULT`) env var / small config that sets the manifest+vault root, defaulting to the current script-relative path. Then one EposForge-owned resolver on PATH serves the adopter's vault, and the adopter repo holds only data (vault + manifests), not code. Directly addresses the "no stable installable artifact" gap called out in EF-012 and the adopter-path conflation in EF-011 (mode-B consume-without-fork adopters need a resolver they can invoke without an EposForge clone). Follow-up after this lands: collapse the duplicated adopter copy back to a symlink/PATH reference.
+
 
 
 
@@ -76,6 +88,7 @@ Depends on: EF-017
 Theme: observability
 Verify with: for both Claude Code and GitHub Copilot sessions, chat transcripts (prompts, assistant responses, tool traces metadata, and session identifiers) are persisted to an adopter-LAN-hosted storage target with a documented retention policy; records include stable account identity and machine identity fields so sessions from the same Claude/Copilot account across different dev machines are correlated into one logical timeline; a semantic index job can ingest new transcripts incrementally and answer recall queries over both IDE sources in one result set; access controls enforce LAN-local storage + operator-only retrieval/export; a dry-run dataset can be exported in a training-ready JSONL format for future fine-tuning/distillation experiments without changing source-of-truth raw logs. Implementation bootstrap exists in `.scratchpad/build-unified-chat-index.py` (index build) and `.scratchpad/search-unified-chat-index.py` (semantic prefilter/search scaffolding).
 Notes: User-story intent: while EposForge is pre-dark-factory and developers still use heterogeneous IDE adapters, conversation exhaust should not remain fragmented across vendor clouds or local workstation silos. Implement an adapter-agnostic chat capture contract (normalized event schema + source adapter field), then add per-adapter collectors for Claude Code and Copilot. Keep raw immutable logs plus derived semantic chunks as separate layers. Include identity provenance fields (provider account key + machine key + workspace key) to support cross-machine continuity for one developer account. Include privacy/safety guardrails (PII redaction mode, secret-token scrubbing, and explicit opt-in boundaries for any downstream training export). Seed artifacts now live in `.scratchpad/unified-chat-index.jsonl` with extraction support from `.scratchpad/export-claude-session-md.py`. This issue is the observability + memory substrate needed to support semantic search now and potential model distillation later.
+
 
 
 
@@ -102,6 +115,7 @@ Track 4 (query + policy): expose semantic recall over indexed chat memory with s
 
 
 
+
 ## Issue EF-026 — Align component naming with industry agentic-AI conventions (C4 Router → Orchestrator; clarify C10 Inference as Model Router / Inference Gateway)
 ID: EF-026
 Title: Align component naming with industry agentic-AI conventions (C4 Router → Orchestrator; clarify C10 Inference as Model Router / Inference Gateway)
@@ -112,6 +126,7 @@ Fix surface: eposforge-pattern
 Theme: orchestrator
 Verify with: `01-architecture/02-components/04-router.md` is renamed/retitled to `Orchestrator` (canonical name) with `Router` declared as a deprecated alias; all cross-references in C3/C5/C8/C9/C11 docs use `Orchestrator`; `01-architecture/02-components/10-inference.md` title/intro explicitly identifies the component as the `Model Router / Inference Gateway` (the role that industry usage conventionally calls "the router"), without rename of the directory path; the candidate-implementations catalog at `03-research/.../04-router/router.md` is retitled accordingly; backlog items referencing "Router (Component 4)" are amended or carry an editor note; a recall query phrased in industry terms ("orchestrator", "model router") returns the correct components without conflating them; adapter slot directory paths (`instance/installed/04-router/...`) are NOT renamed in this ticket to preserve git history and adopter symlinks.
 Notes: The word "Router" carries a strong industry meaning (per-call model selection: RouteLLM, OpenRouter, LiteLLM, Portkey, Azure AI Foundry — the inference gateway layer) that collides with EposForge's use of "Router" for the orchestration component (decompose specs, dispatch sub-tasks to Dev Products, iterate). The 04-router contract itself states "the Router remains the orchestrator; worker executors belong to the Dev Product slot" — so the role is orchestration; the name is the misalignment. Meanwhile C10 Inference is exactly the thing industry usually labels "router" (it routes inference requests to models by cost/latency/capability), and the doc/title doesn't make that legibility obvious. The collision creates two failure modes: (1) industry readers misread the architecture as having no model router, (2) adopters writing prose about "the router" produce ambiguous text. Scope: doc rename + cross-refs + research-catalog title + backlog editor notes. Directory paths and adapter slot IDs stay (`04-router/`, `instance/installed/04-router/...`) to preserve git history, recall continuity, and existing adopter symlinks. Out of scope: rename of `04-router` directory (deferred to EF-021's physical re-shelve, which now explicitly owns the symlink-safe directory move); renumbering components; any code-symbol renames (no current code carries the slot name). Adjacency: EF-014 (Agent Policy / tier-yaml — references to "Router" enforcement points need updating), EF-013 (Router v0 — title and references), and an adopter's client-side shim (references "Router v0" and will need an editor pass). Discovered 2026-05-28 in conversation about adopting industry-standard dark-factory architecture; surfaced via a reference architecture diagram annotating EF components in brackets against industry names (see an adopter's reference-architecture diagram).
+
 
 
 
@@ -131,6 +146,7 @@ Notes: Gap surfaced two ways in conversation 2026-05-28. (1) C8 Agent Policy exp
 
 
 
+
 ## Issue EF-029 — Add Backup / Data Resilience component slot (provisional C16) — give the Phase 0 "backups automated and tested" requirement a component home
 ID: EF-029
 Title: Add Backup / Data Resilience component slot (provisional C16) — give the Phase 0 "backups automated and tested" requirement a component home
@@ -145,15 +161,18 @@ Notes: Gap surfaced 2026-05-30. Phase 0 Foundation (`02-roadmap/platform-factory
 
 
 
+
 ## Issue EF-030 — Add docs-lint skill: periodic semantic health check for the Markdown corpus (Karpathy LLM-Wiki "lint" operation)
 ID: EF-030
 Title: Add docs-lint skill: periodic semantic health check for the Markdown corpus (Karpathy LLM-Wiki "lint" operation)
 Date: 2026-06-12
 Status: open
 Effort: M
+Theme: backlog-tooling
 Fix surface: eposforge-pattern
 Verify with: `skills/docs-lint/SKILL.md` exists following the skills-placement convention (canonical content under `skills/<name>/`, thin wrapper at `.github/skills/docs-lint/SKILL.md` — see AGENTS.md §Conventions); running the skill over the spec layer (`00-vision/` through `04-standards/`) plus `AGENTS.md` and `backlog/` produces a findings report classifying each finding as one of contradiction | stale-claim | orphan-page | missing-cross-reference | broken-pointer; each run appends a parseable entry to a committed run log in the skill's directory (format `## [YYYY-MM-DD] lint | <summary>`, per the upstream pattern) so runs are auditable in git history; the skill detects the seed findings known at filing time — (a) AGENTS.md §Standards points at `04-standards/04-mcp/` and `04-standards/05-canonical-doc-sources/`, neither of which exists on disk; (b) backlog cross-references to EF IDs that have moved to `backlog-archive.md` are flagged with their new location; findings are report-only — the skill MUST NOT auto-edit content (surgical-changes principle, `04-standards/08-agent-coding-guidelines/agent-coding-guidelines.md`).
 Notes: Pattern source: Andrej Karpathy's "LLM Wiki" gist, https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f — a three-layer design (immutable raw sources / LLM-maintained Markdown wiki / schema doc) with three operations: ingest, query, lint. EposForge already implements ingest and query via the Spec Graph (Component 6, cognee adapter, `cognee-sync`); **lint is the missing operation**: a periodic agent pass that hunts contradictions, stale claims, orphan pages, and missing cross-references, with append-only parseable log entries (`## [date] lint | <title>`). This skill applies that operation to the file layer, which is the source of truth the graph is built from. Complementary to, not duplicating, `instance/installed/13-backlog/file-based-backlog/scripts/lint-backlog.sh` — that script is structural (field presence, ID format) and backlog-only; docs-lint is semantic (contradictions, staleness, dangling references) and corpus-wide. Division of labor with the graph: docs-lint runs pre-graph on files; when a finding shows the graph asserting state the files contradict, that divergence feeds EF-011/EF-012 (graph conflation / design-intent-as-present-tense) rather than this skill — docs-lint is the cheap detector for that class of staleness. Live example found 2026-06-12: the spec graph reports an adopted standard at `04-standards/03-agent-skills/agent-skills.md` that does not exist on disk (graph-side fix belongs to EF-012; the file-side detection belongs here). Implementation references: skill layout precedent in `skills/maintain-ontology/` and `skills/update-spec-graph/`; conformance-command style precedent in `04-standards/00-standards-meta/standards-meta.md` §Conformance; frontmatter taxonomy for staleness checks (`doc_kind`, `maturity`, `source_of_truth`) defined in standards-meta; working files go to `.scratchpad/` (gitignored), only the parseable run log is committed. Scheduling: operator-run pre-release initially; CI integration via 09-source-control-ci is a follow-up once the report format is stable. First-iteration scope boundary: spec layer + AGENTS.md + backlog files in scope; `instance/installed/` adapter internals out of scope; graph-side answer-quality fixes out of scope (owned by EF-011/EF-012). Upstream extensions worth reading before implementing (gist comment thread): provenance/conflict tracking and typed contradiction edges — relevant if findings later become graph nodes. Adjacency: EF-011, EF-012 (consume divergence findings), EF-015+ knowledge-tree migration (corpus shape may change; keep target-path config in the SKILL.md, not hardcoded).
+
 
 
 
@@ -164,9 +183,11 @@ Title: Add refine-prompt skill: technique-driven prompt transformation with slot
 Date: 2026-06-12
 Status: open
 Effort: M
+Theme: portfolio
 Fix surface: eposforge-pattern
 Verify with: `skills/refine-prompt/SKILL.md` exists following the skills-placement convention (canonical content under `skills/<name>/`, thin wrapper at `.github/skills/refine-prompt/SKILL.md` — see AGENTS.md §Conventions); at least one technique definition exists under `skills/refine-prompt/techniques/` with the frontmatter contract (`name`, `summary`, `applies-when`, `slots` with required/optional markers) plus a transform shape and worked example in the body; invoking the skill in an agent CLI on an under-specified prompt (a) selects or asks for a technique, (b) asks for all missing required slots in one batch, (c) displays the refined prompt in a fenced block, and (d) acts on it only after an explicit yes — never on the raw prompt and never without confirmation; technique discovery is run-time (adding a `techniques/*.md` file requires no SKILL.md edit).
 Notes: User-story intent: a developer types a quick prompt into whichever agent chat they happen to be in; instead of a universal interceptor (no cross-CLI hook exists, and an always-on gate taxes every prompt), the capability ships as an opt-in skill where the chat LLM itself is the transformation engine — it scores the prompt against technique definitions stored as data, elicits what's missing, rewrites, and gates submission behind a yes/no. Design rules baked into the contract: techniques are data, not code (each `techniques/<name>.md` is self-contained and human-applicable); the rewrite must trace entirely to the original prompt plus the user's slot answers (no fabricated requirements); the confirmation gate is mandatory in both directions (refined prompt on yes, nothing on no). Seed technique: `role-task-context` (Role/Task/Context/Constraints/Output-Format restructuring for under-specified asks) — slot spec: `task` (required; the one-sentence imperative with verb + deliverable), `context` (required; facts the agent cannot infer — system, audience, what was tried), `role` (optional; only when perspective changes the answer — drop the persona line entirely if unfilled rather than inventing a generic one), `constraints` (optional; negative space — what a correct answer must not do, not a task restatement), `output-format` (optional; one line). Rewrite rules for any technique: restructure, don't editorialize — preserve the user's intent and terminology; every sentence of the refined prompt must trace to the original prompt or a slot answer (no fabricated requirements/examples); as short as the technique allows. Each technique file should close with a worked example (raw prompt → elicited slots → refined prompt). Follow-ups: skill-distribution/install is split out as EF-032 (per-surface install adapters; not specific to this skill); additional techniques (few-shot scaffolding, plan-then-act decomposition, chain-of-density for summarization asks) are separate tickets when picked up; adopter-side install into containerized agent homes belongs at the adopter's adoption layer, not this repo (per EF-011 boundary). Adjacency: EF-030 (sibling skill addition; same placement convention), EF-032 (distribution), EF-011 (adopter-vs-framework path boundary).
+
 
 
 
@@ -185,6 +206,7 @@ Notes: Generalizes the gap surfaced while landing EF-031: the framework ships sk
 
 
 
+
 ## Issue EF-033 — Make file-based-backlog scripts relocatable: discover the backlog root instead of assuming `<git-root>/backlog/`
 ID: EF-033
 Title: Make file-based-backlog scripts relocatable: discover the backlog root instead of assuming `<git-root>/backlog/`
@@ -195,6 +217,7 @@ Fix surface: eposforge-pattern
 Theme: backlog-tooling
 Verify with: all five scripts under `instance/installed/13-backlog/file-based-backlog/scripts/` (`lint-backlog.sh`, `new-issue.sh`, `sweep-resolved.sh`, `aggregate.sh`, `ready.sh`) resolve the backlog root by a shared precedence — (1) `BACKLOG_ROOTS` env var (first colon-separated entry, treated as an adoption root whose `backlog/` subdir contains `config.toml`); (2) cwd walk-up from `$PWD`, probing `<ancestor>/backlog/config.toml` then `<ancestor>/eposforge/backlog/config.toml` at each level (D1: tolerant of the interposed `eposforge/` dir so adopters with either layout work without env setup); (3) VS Code workspace file (`VSCODE_WORKSPACE_FILE`/`WORKSPACE_FILE`), with the same two-depth probe per folder; (4) `<git-root>/backlog` back-compat fallback. `BACKLOG_HOME` is reserved for the tooling source path (used by `sync-tooling.sh` and the drift-check in `lint-backlog.sh`) and MUST NOT be overloaded as the data root. Running each script against an adopter backlog at `<repo>/eposforge/backlog/` from an arbitrary cwd inside that repo (no env, no workspace file) succeeds end-to-end — lint passes, `new-issue.sh` allocates the adopter prefix's next ID, `sweep-resolved.sh` and `aggregate.sh` operate on the right files. When no `config.toml` is found at the resolved root, scripts fail with a bootstrap message stating the expected config (`create backlog/config.toml with prefix = "XX"`) and the precedence tried — not a bare path error.
 Notes: Ticket reconciled 2026-06-15 with as-built code state (gap between original ticket and implementation): `BACKLOG_HOME` already means "tooling source" in sync-tooling.sh:40 and lint-backlog.sh:44 — the original ticket's use of it for the data root was a collision. The actual data-root env var is `BACKLOG_ROOTS` (colon-separated adoption roots). Discovery was IDE-coupled, not cwd-based: the original code probed workspace file first, then `BACKLOG_ROOTS`, with no walk-up tier. Path-depth assumption: scripts probed `<folder>/backlog/config.toml` but every local adopter is at `<repo>/eposforge/backlog/config.toml`; workspace folder `.` means `<repo>` → probe misses. D1 (adoption-root depth): resolved as option (a) — resolver is tolerant of the `eposforge/` interposer at both the walk-up and workspace tiers; this is also documented (b). D2 (BACKLOG_HOME reservation): confirmed — only `sync-tooling.sh` and the lint drift-check use it; documented as tooling-only, not overloadable. Implementation uses a sourced `resolve-backlog.sh` helper shared by the three single-root Bash scripts; `aggregate.sh` and `ready.sh` update their inline Python `discover_roots()` to the same precedence. Effort upgraded S→M: reconciliation + path-depth fix + workspace tier fix + shared helper spans more files than originally scoped. Original gap: same failure class as EF-022 (artifact works in-tree, silently doesn't travel). Adjacency: EF-022 (pattern copied), EF-032 (sibling gap for skills), EF-011 / EF-012 (adopter docs + shipped-vs-intent maturity).
+
 
 
 
@@ -212,29 +235,18 @@ Notes: User-story intent (surfaced 2026-06-12): an operator runs agent CLIs from
 
 
 
+
 ## Issue EF-044 — Flatten the framework's `instance/installed/` layer for full layout symmetry with adopters
 ID: EF-044
 Title: Flatten the framework's `instance/installed/` layer for full layout symmetry with adopters
 Date: 2026-06-14
 Status: open
 Effort: L
+Theme: backlog-tooling
 Fix surface: eposforge-pattern
 Verify with: the framework's installed adapters/scripts resolve at `instance/<component>/<adapter>/` with NO `installed/` segment (e.g. `instance/13-backlog/file-based-backlog/scripts/`); `BACKLOG_HOME` and every doc/path reference repoint to the flat form; `adapter-layout-mirror` Rule 2 and the `instance/SPEC.md` "Script placement convention" are rewritten to require the flat layout (no special framework `installed/` case); the `installed-scripts-layout.yml` CI workflow is updated/removed accordingly and passes; `_index.json` registry relocates to `instance/_index.json` and still enumerates only component dirs; `lint-backlog.sh` and `aggregate.sh` succeed from both the framework and an adopter via a single code path with no framework-specific branch.
 Notes: Split out of the Preferred-mode backlog rollout (`docs/preferred-mode-adoption-plan.md`) on 2026-06-14 as a self-contained refactor, deferred so the rollout could ship without CI/standard churn. Goal: make the framework's adoption-root (`instance/`) structurally identical to an adopter's (`eposforge/`) for BOTH slots — not just the backlog DATA slot that the rollout's Phase D already aligns (`instance/backlog/`), but also the ADAPTER slot, by dropping the extra `installed/` level. Rationale for going flat: the normative-vs-dogfood seam that Rule 2 cites as the reason for `installed/` is already carried by `instance/` itself (the normative pattern lives in the repo-root numbered tree — `01-architecture/`, `04-standards/`, `00-vision/`), so `installed/` only separates installed-adapters from instance metadata (`adrs/`, `.audit/`, `SPEC.md`, `backlog/`) — a cosmetic distinction adopters already live without (their `eposforge/backlog/` already sits beside `eposforge/<component>/`). Payoff: cross-repo tooling (`aggregate.sh`, the re-shelving migration skill, Spec Graph traversal) treats every repo with one path instead of special-casing the framework's deeper adapter path. Blast radius to scope before doing: (1) rewrite `adapter-layout-mirror` Rule 2; (2) rewrite the `instance/SPEC.md` script-placement convention (currently forbids flat); (3) update or retire `.github/workflows/installed-scripts-layout.yml`; (4) repoint `BACKLOG_HOME` and all `instance/installed/...` references in AGENTS.md/docs/scripts; (5) move `_index.json`; (6) decide migration/version-bump story for adopters per Rule 5 (adopters never carried `installed/`, so adopter re-shelving is likely a no-op — confirm). Counter-argument on record: the asymmetry is currently load-bearing in CI + a second standard, which is the main reason it was NOT folded into the rollout. Logically sequences AFTER the rollout's Phase D (framework data unification) lands.
 
-
-
-
-## Issue EF-045 — Implement DCO + SSH commit signing for the framework repo (Phase 0 "signed agent attribution" exit criterion)
-ID: EF-045
-Title: Implement DCO + SSH commit signing for the framework repo (Phase 0 "signed agent attribution" exit criterion)
-Date: 2026-06-15
-Status: open
-Effort: S
-Fix surface: eposforge-pattern
-Theme: source-control
-Verify with: a `.github/workflows/dco.yml` workflow named `DCO Check` verifies every PR commit carries a `Signed-off-by:` trailer; `CONTRIBUTING.md` gains a "Cryptographically Signed Commits (Required)" section documenting SSH signing, the `git ci` alias (`commit -s -S`), and the amend/force-with-lease/rebase fix workflow for failed checks; `setup-signed-commits.sh` and `setup-signed-commits.ps1` exist under `instance/installed/09-source-control-ci/github-and-actions/scripts/` and configure `gpg.format ssh` + signing key + the ten `git config --global` settings without touching the remote; `main` branch protection requires the `DCO Check` status check and signed commits (operator UI action); a test PR with a signed+signed-off commit shows both the green DCO check and the GitHub Verified badge.
-Notes: Filed 2026-06-15 during portfolio-review to fix a Phase 0 alignment gap: `02-roadmap/platform-factory-phases.md` line 35 lists "Source Control + CI (component 9) is operational with signed agent attribution" as a Phase 0 Foundation exit criterion, but it had **no live backlog ticket** — only an orphaned implementation plan at `backlog/plans/EF-030-dco-signed-commits.md` whose ID collided with the docs-lint skill (the real EF-030). This ticket adopts that plan (now repointed to `backlog/plans/EF-045-dco-signed-commits.md`); the plan is execution-ready, with the source package staged in `scratchpad/git-signed/` (gitignored). Steps: (1) DCO workflow via `tim-actions/dco`; (2) CONTRIBUTING.md signed-commit section; (3) cross-platform setup scripts (bash + PowerShell); (4) operator branch-protection config (not scriptable without an admin token); (5) per-dev one-time SSH signing-key upload to GitHub; (6) end-to-end test PR. Deferred (per plan): `.gitmessage` template, a pre-commit sign-off guard for the hook-composer, and the policy decision on main-only vs all-branches signing enforcement. Why it matters for the dark factory: "signed agent attribution" is the cryptographic provenance an autonomous fleet's commits depend on — without it, agent-authored changes are indistinguishable from forged ones, which undermines the Phase 1+ audit/approval chain. Adjacency: 09-source-control-ci (the component this lands in), Phase 0 roadmap exit criteria, EF-030 (ID-collision cleanup — distinct docs-lint skill, unaffected by this work).
 
 
 
@@ -253,6 +265,7 @@ Notes: Filed 2026-06-16 during portfolio-review. Single-valued `Theme:` (added b
 
 
 
+
 ## Issue EF-048 — Context-aware (semantic) public→private boundary check, complementing the deterministic lint floor
 ID: EF-048
 Title: Context-aware (semantic) public→private boundary check, complementing the deterministic lint floor
@@ -262,6 +275,7 @@ Effort: M
 Fix surface: eposforge-pattern
 Theme: backlog-tooling
 Verify with: a semantic (LLM-driven) check exists — implemented as a new finding class in the docs-lint skill (EF-030, e.g. `boundary-leak`) or a dedicated skill under `skills/` — that, run over a `visibility = "public"` repo's backlog files (active/slated/archive, headers + bodies), flags CONTEXTUAL references to any private repo / private backlog / adopter-internal work that the deterministic `lint-backlog.sh` floor (EF-047) cannot detect: references with no literal private item-ID or host path — e.g. naming a private repo's backlog in prose, an adopter org/repo name, or an oblique paraphrase of private work; the check is driven by the visibility map (private repos enumerated from `config.toml`), not a hardcoded name list, so it generalizes to any repo; it distinguishes a genuine private-repo reference (flag) from the sanctioned generic framing ("an adopter", "the adopter's LAN") (no flag), verified on seed cases — the now-genericized operational header note that named a private repo's backlog WOULD have been flagged, while "an adopter's single-vault migration" is NOT; findings are report-only (no auto-edit, per the surgical-changes principle in `04-standards/08-agent-coding-guidelines/`); and the division of labor is documented — deterministic, zero-false-positive classes (private item-ID references via the visibility map, host paths, `*.lan`, private IPs) stay in the blocking `lint-backlog.sh` floor; semantic/contextual detection lives here.
+
 
 
 
@@ -281,6 +295,7 @@ Notes: User-story intent (2026-06-18): a developer types a quick prompt; instead
 
 
 
+
 ## Issue EF-050 — Sanction rubrics as a success-criteria format for graded/qualitative outcomes
 ID: EF-050
 Title: Sanction rubrics as a success-criteria format for graded/qualitative outcomes
@@ -291,6 +306,7 @@ Fix surface: eposforge-pattern
 Theme: source-control
 Verify with: `01-architecture/02-components/01-spec-input.md` `acceptance_format` gains `rubric` alongside the existing forms (Gherkin, etc.), with the contract documenting a minimal rubric shape — named criteria/dimensions, per-criterion levels or weights, and an explicit passing threshold — so a Living Spec can express "what good looks like" when a binary check under-specifies it; `04-standards/08-agent-coding-guidelines/agent-coding-guidelines.md` §4 (Goal-driven execution) is updated to state success criteria MAY be expressed as a rubric, with guidance on WHEN to use a rubric (graded/qualitative outcome — e.g. a doc that must "tell a clear, incisive story") vs a deterministic check (binary, gateable); the contract states the rubric SCORING AUTHORITY must sit outside the implementing agent (an agent grading itself against its own rubric is gameable — cross-ref EF-051) and that a rubric score complements but does not replace the deterministic gate; a recall query about "rubric" or "how do I express a quality bar that isn't pass/fail" returns this capability; the change is reflected in `AGENTS.md`'s condensed §4 if it mirrors the standard.
 Notes: User-story intent (2026-06-18): capture rubrics as a first-class way to express success criteria. Grounding: Nate B. Jones' AI Question Method (EF-049) principle 2 distinguishes evals — great for predictable agentic PIPELINES — from "what good looks like" for heavy knowledge work, which is hard to capture as a binary eval; a rubric is the structured bridge (multi-criteria, graded). This formalizes the existing Standard 08 §4 requirement ("restate the task as verifiable success criteria") for the qualitative case, and gives C1 Spec Input a declared format for it. Division of labor: rubrics are for GRADED/qualitative judgment (scored, plausibly by an LLM-judge); they complement — never replace — the deterministic, tamper-proof GATE that EF-051 owns. Gaming hazard to state in the contract: a rubric scored by the same agent doing the work is self-marking; scoring authority must be external (human, a separate judge agent, or CI), same root concern as EF-051. Adjacency: EF-051 (the ungameable deterministic gate — rubrics are its graded complement; together they are the two halves of honest verification), EF-049 (an LLM-judge gate signal scores a candidate prompt against a rubric — design question 2 there), EF-031 (refine-prompt — a technique could elicit a rubric as the "what good looks like" slot), C1 Spec Input (acceptance_format host), Standard 08 (goal-driven execution).
+
 
 
 
@@ -310,6 +326,7 @@ Notes: Filed 2026-06-16 immediately after EF-047. EF-047's lint is the determini
 
 
 
+
 ## Issue EF-052 — Execution Sandbox (Component 7) is referenced everywhere but has no adapter contract; ship the slot
 ID: EF-052
 Title: Execution Sandbox (Component 7) is referenced everywhere but has no adapter contract; ship the slot
@@ -324,19 +341,6 @@ Notes: Gap surfaced 2026-06-20 while auditing a deployed orchestrator's blast ra
 
 
 
-## Issue EF-054 — Ingest the stabilization/kernel docs into the spec graph so recall returns the primitive (EF-053 clause 5)
-ID: EF-054
-Title: Ingest the stabilization/kernel docs into the spec graph so recall returns the primitive (EF-053 clause 5)
-Date: 2026-06-26
-Status: resolved
-Effort: S
-Fix surface: eposforge-pattern
-Theme: spec-graph
-Depends on: EF-053
-Verify with: after a spec-graph refresh (Component 6 / cognee-sync) that ingests `01-architecture/04-stabilization-and-kernels.md`, `04-standards/09-paired-detection/paired-detection.md`, and the new Loop-A-vs-Loop-B section of `01-architecture/03-autonomy-modes.md`, a recall query for any of "kernel", "what can I build on", "smoke gate", "stable foundation", "why does my self-improving system keep grinding", "Gall's Law", or "Lehman" returns the kernel primitive (two-property definition + bootstrap rule); AND the returned answer distinguishes the foundation-trust axis (kernel state + bootstrap order) from the product-promotion axis (release rings + maturity) rather than conflating them.
-Notes: Carved out of EF-053 (its Verify-with clause 5). EF-053 shipped and ratified the doc deliverables; this item tracks the separate operational concern of making them queryable. Two reasons it is its own item, not an EF-053 sub-step: (1) incremental graph ingest is not wired in this stack, so the new files become queryable only on a (currently manual / full) reindex — a different kind of work from authoring the docs; (2) the "distinguish foundation-trust from release rings, don't conflate" requirement is an answer-quality property of recall, the same class EF-012 owns (graph emits design intent / conflates layers), so satisfying clause 5 fully may depend on EF-012 progress rather than on this ingest alone. Keep recommendations at the adopter adoption layer, not framework-internal `instance/installed/...` paths (EF-011). Adjacency: EF-053 (source — the docs this ingests; resolved), EF-012 (the distinguish-not-conflate answer-quality property this leans on), EF-011 (adopter-vs-framework conflation in recall answers), C6 Spec Graph (the ingest target).
-Resolution: Minted the kernel vocabulary in `00-vision/01-ontology.ttl` (5-term cluster: ef:Kernel, ef:DetectionRatchet, ef:BootstrapRule [Tenet], ef:FoundationTrust, ef:ProductPromotion; Gall/Lehman/Loop-A-B folded into variants+comments per the doc's reduce-don't-grow mandate). Full KG wipe + bulk rebuild (115 docs, two-pass; ontology-anchored, 71 nodes ontology_valid). Recall verified against all clause-5 probes — "kernel"/"what can I build on" returns the two-property definition + candidate-kernel state + bootstrap rule; "why does my self-improving system keep grinding" returns the Gall/Lehman synthesis; and the distinguish-not-conflate clause holds: recall names foundation-trust (kernel state + bootstrap order) and product-promotion (maturity + release rings) as "orthogonal and independent" axes rather than conflating them.
-Resolved: 2026-06-26
 
 ## Issue EF-055 — Remove the populated age vault from the eposforge framework repo; ship per-adapter secret contracts only
 ID: EF-055
@@ -345,7 +349,6 @@ Date: 2026-06-26
 Status: open
 Effort: S
 Fix surface: eposforge-pattern
-Theme: secrets-key-management
-Depends on: none
+Theme: secrets
 Verify with: `instance/installed/12-secrets-key-management/sops-age/` in the framework repo contains NO `secrets.enc.yaml` with real values and NO operator-specific `.sops.yaml` recipients — only the per-adapter contract (`secrets.toml`) + `secrets.example.yaml` + setup docs + the resolver remain; the secret set any instance needs is derivable purely from its installed adapters' declared `required_envs` (not from a hard-coded vault); a fresh clone + `epos-secrets --check` against the example surfaces the contract without exposing any operator value; and this self-hosted instance resolves real secrets from its own/host vault via `EPOS_SECRETS_HOME` rather than a repo-committed duplicate.
-Notes: Surfaced during the EF-054 graph rebuild. The framework repo's `instance/installed/12-secrets-key-management/sops-age/secrets.enc.yaml` is a *drifted subset* of the GEA host vault — same two age recipients, same anthropic/openai/github/cognee secrets, but MISSING `azure_api_key` (declared required-in-dev). That gap aborted `epos-secrets` and forced the rebuild to resolve from the GEA vault via `EPOS_SECRETS_HOME`. Two defects: (1) committing operator secret *values* (even SOPS-encrypted, even a subset) into a repo intended to be *adopted* is the EF-011 framework-vs-adopter conflation — an adopter cloning this gets ciphertext encrypted to the GEA operator's keys, which is meaningless to them; (2) it presumes GEA's adapter choices. EposForge is a pattern with adapter *choices*, so the secret SET an adopter (or a new developer) needs is derived from *which adapters they install*, NOT from GEA's list — an Anthropic-direct + GitHub + local-models adopter needs none of GEA's azure/gitea/backup keys. Fix: framework ships per-adapter secret *contracts* only (the `secrets.toml` manifest already encodes logical→runtime→adapter→required_envs; keep `secrets.example.yaml`); each instance keeps its OWN vault populated for ITS chosen adapters, encrypted to ITS recipients. New-developer onboarding splits by intent: a contributor running their own dev setup provisions their own vault from the example and needs zero GEA credentials; someone operating THIS instance gets grant-access to the shared singletons (Foundry gateway, Gitea) by adding their age PUBLIC key as a recipient (`sops updatekeys`) — never a private-key or plaintext handoff — and prefers per-identity creds (own GitHub PAT) where the adapter allows. Adjacency: EF-011 (adopter-vs-framework conflation — the core defect), EF-022 (epos-secrets relocatability — same C12 surface), EF-054 (where this drift was discovered), C12 Secrets & Key Management (the slot).
+Notes: Surfaced during the EF-054 graph rebuild. The framework repo's `instance/installed/12-secrets-key-management/sops-age/secrets.enc.yaml` is a *drifted subset* of an adopter host vault — same two age recipients, same anthropic/openai/github/cognee secrets, but MISSING `azure_api_key` (declared required-in-dev). That gap aborted `epos-secrets` and forced the rebuild to resolve from the adopter's private vault via `EPOS_SECRETS_HOME`. Two defects: (1) committing operator secret *values* (even SOPS-encrypted, even a subset) into a repo intended to be *adopted* is the EF-011 framework-vs-adopter conflation — an adopter cloning this gets ciphertext encrypted to the original operator's keys, which is meaningless to them; (2) it presumes a specific adopter's adapter choices. EposForge is a pattern with adapter *choices*, so the secret SET an adopter (or a new developer) needs is derived from *which adapters they install*, NOT from any one adopter's list — an Anthropic-direct + GitHub + local-models adopter needs none of another adopter's azure/gitea/backup keys. Fix: framework ships per-adapter secret *contracts* only (the `secrets.toml` manifest already encodes logical→runtime→adapter→required_envs; keep `secrets.example.yaml`); each instance keeps its OWN vault populated for ITS chosen adapters, encrypted to ITS recipients. New-developer onboarding splits by intent: a contributor running their own dev setup provisions their own vault from the example and needs zero adopter-specific credentials; someone operating THIS instance gets grant-access to the shared singletons (Foundry gateway, Gitea) by adding their age PUBLIC key as a recipient (`sops updatekeys`) — never a private-key or plaintext handoff — and prefers per-identity creds (own GitHub PAT) where the adapter allows. Adjacency: EF-011 (adopter-vs-framework conflation — the core defect), EF-022 (epos-secrets relocatability — same C12 surface), EF-054 (where this drift was discovered), C12 Secrets & Key Management (the slot).
