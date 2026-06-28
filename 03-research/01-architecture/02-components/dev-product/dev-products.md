@@ -11,7 +11,7 @@ source_of_truth: no
 > change frequently. Verify current details before installing.
 
 Candidate Adapters for the Dev Product slot
-([../../01-architecture/02-components/03-dev-product.md](../../01-architecture/02-components/03-dev-product.md)).
+([../../01-architecture/02-components/dev-product.md](../../01-architecture/02-components/dev-product.md)).
 A Dev Product accepts a sub-task descriptor from the Router and
 produces artifacts. Many products listed here can plug into the slot
 once an Adapter exists for them.
@@ -24,7 +24,7 @@ posture** — to the directly-installable dev tools (CLI agents and
 AI-native IDEs). These two axes are gating for the dark factory: a
 product can be technically headless yet contractually barred from
 running unattended. See
-[../../01-architecture/03-autonomy-modes.md](../../01-architecture/03-autonomy-modes.md)
+[../../01-architecture/03-autonomy-modes/autonomy-modes.md](../../01-architecture/03-autonomy-modes/autonomy-modes.md)
 for the mode spectrum and the ToS threshold. Enterprise-platform
 entries below were not re-scored on these axes in this pass.
 
@@ -46,7 +46,7 @@ Each entry includes (where known):
   and invocation surface permit (`byok-clean-all-modes`,
   `subscription-ok-through-supervised; api-key-required-for-autonomous`,
   `supervised-max`, etc.). See
-  [../../01-architecture/03-autonomy-modes.md](../../01-architecture/03-autonomy-modes.md).
+  [../../01-architecture/03-autonomy-modes/autonomy-modes.md](../../01-architecture/03-autonomy-modes/autonomy-modes.md).
 - **Notes** — anything notable for Adapter authors.
 
 A product is a strong Dev Product candidate if it:
@@ -173,7 +173,7 @@ A strong **dark-factory** (`autonomous`-mode) candidate additionally:
   live read/write access to the Spec Graph; operators can issue
   natural-language consistency checks and spec-generation commands
   against the full knowledge graph. See
-  [../06-spec-graph/graphrag-neo4j-integration.md](../06-spec-graph/graphrag-neo4j-integration.md)
+  [../spec-graph/graphrag-neo4j-integration.md](../spec-graph/graphrag-neo4j-integration.md)
   for the recommended pipeline. Reference Dev Product for the
   GraphRAG + Neo4j integration pattern, though any MCP-compatible
   Dev Product (Claude Code, Cursor, Goose, OpenCode) is a drop-in
@@ -271,7 +271,7 @@ A strong **dark-factory** (`autonomous`-mode) candidate additionally:
 - **Privacy posture:** depends on provider.
 - **Capabilities:** intent-to-spec-to-tasks workflow.
 - **Notes:** may better fit the **Spec Input** slot
-  ([../../01-architecture/02-components/01-spec-input.md](../../01-architecture/02-components/01-spec-input.md))
+  ([../../01-architecture/02-components/spec-input.md](../../01-architecture/02-components/spec-input.md))
   than the Dev Product slot. Listed here for awareness.
 
 ### OpenClaw
@@ -292,7 +292,7 @@ A strong **dark-factory** (`autonomous`-mode) candidate additionally:
 - **Notes:** dual-fit — operates as a Dev Product for browser-heavy
   sub-tasks, and is the canonical **Execution Sandbox** in instances
   that adopt it. See
-  [execution-sandbox.md](../07-execution-sandbox/execution-sandbox.md). Adapter must
+  [execution-sandbox.md](../execution-sandbox/execution-sandbox.md). Adapter must
   declare which slot it fills in a given factory instance.
 
 ---
@@ -433,7 +433,7 @@ Graph (e.g., cognee), not as workers.
 
 Products whose terms or invocation surface restrict autonomous /
 headless / automated operation. These gate `autonomous` mode (see
-[../../01-architecture/03-autonomy-modes.md](../../01-architecture/03-autonomy-modes.md)).
+[../../01-architecture/03-autonomy-modes/autonomy-modes.md](../../01-architecture/03-autonomy-modes/autonomy-modes.md)).
 This space evolves rapidly — verify the live ToS before relying on any
 entry.
 

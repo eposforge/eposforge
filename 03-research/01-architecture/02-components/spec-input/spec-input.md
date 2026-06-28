@@ -10,7 +10,7 @@ source_of_truth: no
 > **Snapshot date:** 2026-04. Verify current details before adopting.
 
 Candidate Adapters for the Spec Input slot
-([../../01-architecture/02-components/01-spec-input.md](../../01-architecture/02-components/01-spec-input.md)).
+([../../01-architecture/02-components/spec-input.md](../../01-architecture/02-components/spec-input.md)).
 A Spec Input Adapter accepts human-authored declarative intent and
 normalizes it into a structured form the Router can decompose.
 
@@ -53,7 +53,7 @@ Each entry includes (where known):
 - **Input format:** structured spec → tasks workflow inside the IDE.
 - **Capabilities:** intent → spec → task decomposition, with
   IDE-native authoring affordances.
-- **Notes:** also listed in [dev-products.md](../03-dev-product/dev-products.md) for
+- **Notes:** also listed in [dev-products.md](../dev-product/dev-products.md) for
   awareness; better fit for Spec Input in most instances.
 
 ### Custom markdown briefs

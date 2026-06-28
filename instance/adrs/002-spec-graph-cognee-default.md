@@ -12,7 +12,7 @@ source_of_truth: yes
 | Status | Accepted (with implementation drift — see note below) |
 | Date | 2026-05 |
 | Supersedes | [ADR 001](001-spec-graph-graphrag-neo4j.md) |
-| Components affected | 06-spec-graph, 05-tool-transport, 03-dev-product, 10-inference |
+| Components affected | spec-graph, tool-transport, dev-product, inference |
 
 ---
 
@@ -22,8 +22,8 @@ source_of_truth: yes
 > below have diverged and are kept here only as a historical record of
 > the choice at the time it was made; the authoritative current state
 > lives in [`instance/SPEC.md`](../SPEC.md),
-> [`instance/installed/06-spec-graph/cognee/cognee.md`](../installed/06-spec-graph/cognee/cognee.md),
-> and [`instance/installed/06-spec-graph/cognee/sync/README.md`](../installed/06-spec-graph/cognee/sync/README.md).
+> [`instance/spec-graph/cognee/cognee.md`](../installed/spec-graph/cognee/cognee.md),
+> and [`instance/spec-graph/cognee/sync/README.md`](../installed/spec-graph/cognee/sync/README.md).
 > Differences from the description below:
 >
 > - **Storage backend:** cognee no longer writes to Neo4j. As of cognee
@@ -106,7 +106,7 @@ emerged:
 
 **Chosen:** Cognee 1.0 as the default Spec Graph extraction engine;
 Microsoft GraphRAG retained as an opt-in fallback via
-`instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh`.
+`instance/spec-graph/graphrag/scripts/rebuild.sh`.
 
 **Rationale:**
 
@@ -135,20 +135,20 @@ cleared separately. Incremental update is not yet validated.
 
 **Sync command (Cognee default — incremental):**
 ```sh
-# From instance/installed/06-spec-graph/cognee/sync:
+# From instance/spec-graph/cognee/sync:
 epos-secrets uv run cognee-sync --added <new-files>
 epos-secrets uv run cognee-sync --modified <changed-files>
 epos-secrets uv run cognee-sync --deleted <removed-files>
 
 # Full-corpus seed (all tracked .md files, Linux/macOS):
-cd instance/installed/06-spec-graph/cognee/sync
+cd instance/spec-graph/cognee/sync
 epos-secrets uv run cognee-sync --added $(git -C ../../../.. ls-files '*.md')
 ```
-See `instance/installed/06-spec-graph/cognee/sync/README.md` for setup and secrets.
+See `instance/spec-graph/cognee/sync/README.md` for setup and secrets.
 
 **Rebuild command (GraphRAG fallback — full nuke-and-reproject):**
 ```sh
-bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh
+bash instance/spec-graph/graphrag/scripts/rebuild.sh
 ```
 
 **Required environment variables (never committed):**
@@ -226,7 +226,7 @@ Addressed and ruled out in ADR 001. The structural query requirement
   ADR-era `cognee==1.0.3` pin. Patches to the upstream image are
   carried in `Dockerfile` / `Dockerfile.mcp` in the compose project.)*
 - **Negative:** Windows long-path limit (260 chars) prevents venv
-  installation in the repo's deep `instance/installed/06-spec-graph/cognee/.venv`
+  installation in the repo's deep `instance/spec-graph/cognee/.venv`
   path. Use `COGNEE_VENV=D:\venv\cognee` as a workaround until the
   repo is relocated to a shorter path or Windows long-path support is
   enabled system-wide.

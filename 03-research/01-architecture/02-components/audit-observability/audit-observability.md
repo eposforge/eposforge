@@ -10,7 +10,7 @@ source_of_truth: no
 > **Snapshot date:** 2026-04. Verify current details before adopting.
 
 Candidate Adapters for the Audit & Observability slot
-([../../01-architecture/02-components/11-audit-observability.md](../../01-architecture/02-components/11-audit-observability.md)).
+([../../01-architecture/02-components/audit-observability.md](../../01-architecture/02-components/audit-observability.md)).
 An Audit & Observability Adapter accepts structured events from
 every other component and exposes log, metric, and trace surfaces.
 A factory without this slot installed is uncontrolled.

@@ -11,7 +11,7 @@ source_of_truth: yes
 |---|---|
 | Status | Superseded by [ADR 002](002-spec-graph-cognee-default.md) |
 | Date | 2026-04 |
-| Components affected | 06-spec-graph, 05-tool-transport, 03-dev-product, 10-inference |
+| Components affected | spec-graph, tool-transport, dev-product, inference |
 
 ---
 
@@ -50,7 +50,7 @@ Edition (graph store).
 - Neo4j CE is free OSS, runs locally, and provides mature Cypher
   pattern matching well-suited to the dependency/impact query shapes
   required by the Spec Graph contract.
-- Custom extraction prompts in `instance/installed/06-spec-graph/graphrag/prompts/` encode the
+- Custom extraction prompts in `instance/spec-graph/graphrag/prompts/` encode the
   EposForge vocabulary (Component, Adapter, Phase, Pillar,
   FULFILLS_SLOT, MATURES_TO, etc.) and travel with the repo,
   so extraction quality is consistent across rebuilds.
@@ -107,14 +107,14 @@ implementation for documentation and examples.
   lower the barrier to entry for contributors.
 - Instances with privacy requirements should substitute a local Dev
   Product (e.g., Goose + Ollama) and update the inference backend in
-  `instance/installed/06-spec-graph/graphrag/settings.yaml` accordingly.
+  `instance/spec-graph/graphrag/settings.yaml` accordingly.
 
 ---
 
 ## Decision: Automation — Non-blocking post-commit flag + manual rebuild
 
-**Chosen:** post-commit hook writes `instance/installed/06-spec-graph/.needs-rebuild` flag;
-operator runs `instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` after significant batches.
+**Chosen:** post-commit hook writes `instance/spec-graph/.needs-rebuild` flag;
+operator runs `instance/spec-graph/graphrag/scripts/rebuild.sh` after significant batches.
 
 **Rationale:**
 
@@ -123,15 +123,15 @@ operator runs `instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` aft
 - A CI-triggered rebuild (optional extension) adds complexity that is
   not yet warranted for a single-operator repo. It can be added by
   adding a scheduled workflow job that runs
-  `instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh` on the CI host.
+  `instance/spec-graph/graphrag/scripts/rebuild.sh` on the CI host.
 - The non-blocking flag preserves the reminder without blocking
   developer flow. The post-commit hook is installed manually via
-  `instance/installed/09-source-control-ci/github-and-actions/scripts/install-hooks.sh`
+  `instance/source-control-ci/github-and-actions/scripts/install-hooks.sh`
   rather than forced on all contributors; this respects the DCO-based
   contribution model.
   **Note:** this ADR is superseded by ADR 002, which replaces GraphRAG with Cognee
   as the default engine. The rebuild script referenced here now lives at
-  `instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh`.
+  `instance/spec-graph/graphrag/scripts/rebuild.sh`.
 
 ---
 
@@ -176,10 +176,10 @@ Deferred: acceptable for a future scale-out option; see
   grounded in the actual documented structure.
 - **Positive:** native Neo4j vector indexes (three: `entity_embedding`,
   `text_unit_embedding`, `community_report_embedding`) are created by
-  `instance/installed/06-spec-graph/graphrag/scripts/import.sh` using embeddings sourced from LanceDB
-  (`instance/installed/06-spec-graph/graphrag/output/lancedb`). Hybrid Cypher queries that combine
+  `instance/spec-graph/graphrag/scripts/import.sh` using embeddings sourced from LanceDB
+  (`instance/spec-graph/graphrag/output/lancedb`). Hybrid Cypher queries that combine
   structural traversal with semantic similarity are supported without
-  any MCP-layer changes. See `instance/installed/06-spec-graph/graphrag/README.md` for example queries.
+  any MCP-layer changes. See `instance/spec-graph/graphrag/README.md` for example queries.
 - **Positive:** all configuration, prompts, and scripts are in the
   repo; the graph is fully reproducible from source.
 - **Negative:** rebuild requires a Gemini API key and a running Neo4j

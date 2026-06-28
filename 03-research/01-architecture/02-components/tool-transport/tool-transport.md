@@ -10,7 +10,7 @@ source_of_truth: no
 > **Snapshot date:** 2026-04. Verify current details before adopting.
 
 Candidate Adapters for the Tool Transport slot
-([../../01-architecture/02-components/05-tool-transport.md](../../01-architecture/02-components/05-tool-transport.md)).
+([../../01-architecture/02-components/tool-transport.md](../../01-architecture/02-components/tool-transport.md)).
 A Tool Transport Adapter exposes capabilities (git, fs, shell,
 graph-query, browser, http) to Dev Products through a defined
 protocol. One Transport serves all Dev Products in the factory;
@@ -68,7 +68,7 @@ Each entry includes (where known):
   Neo4j database. Required configuration: `NEO4J_URI`,
   `NEO4J_USERNAME`, `NEO4J_PASSWORD` as environment variables or
   MCP config block. See
-  [06-spec-graph/graphrag-neo4j-integration.md](../06-spec-graph/graphrag-neo4j-integration.md)
+  [spec-graph/graphrag-neo4j-integration.md](../spec-graph/graphrag-neo4j-integration.md)
   for the recommended setup. Privacy posture: `local` when the
   Neo4j instance is on the operator's machine.
 
