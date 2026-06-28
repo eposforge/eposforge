@@ -19,7 +19,7 @@ Prompt augmentation is owned by the **Router (Component 4)**: it augments prompt
 | **Adapters (C5)** | cognee, github, microsoft.docs MCP servers, plugged in behind Tool Transport. |
 | **Spec Graph (C6)** | cognee / `eposforge` dataset — the reuse/knowledge source. |
 
-**Recall caveats carried into this shim:** EF-011 (recall conflates EposForge-internal `instance/installed/...` paths with adopter-side infrastructure) and EF-012 (graph emits design intent as present-tense state). Both are *recall-quality* blockers on the full server-side Router; this client shim is usable before they land, but its injected cognee context inherits both. Live example from this design session: the graph asserted a "cognee REST→MCP retirement plan (EF-011)" as present fact — wrong per the authoritative backlog (EF-011 is the conflation bug), a textbook EF-012 symptom.
+**Recall caveats carried into this shim:** EF-011 (recall conflates EposForge-internal `instance/...` paths with adopter-side infrastructure) and EF-012 (graph emits design intent as present-tense state). Both are *recall-quality* blockers on the full server-side Router; this client shim is usable before they land, but its injected cognee context inherits both. Live example from this design session: the graph asserted a "cognee REST→MCP retirement plan (EF-011)" as present fact — wrong per the authoritative backlog (EF-011 is the conflation bug), a textbook EF-012 symptom.
 
 ---
 

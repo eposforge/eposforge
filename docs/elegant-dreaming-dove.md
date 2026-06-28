@@ -17,7 +17,7 @@ OutreachAssistant.
 
 ## Phase 1 — Component contract
 
-**File:** `01-architecture/02-components/13-backlog.md`
+**File:** `01-architecture/02-components/backlog.md`
 
 Component 13 is the next free slot. The contract covers:
 
@@ -52,7 +52,7 @@ Component 13 is the next free slot. The contract covers:
 
 ## Phase 2 — Adapter Living Spec
 
-**File:** `instance/installed/13-backlog/file-based-backlog/file-based-backlog.md`
+**File:** `instance/backlog/file-based-backlog/file-based-backlog.md`
 
 Declares all universal and component-specific metadata fields. Key repo-specific
 fields for this instance:
@@ -70,7 +70,7 @@ description, operator commands, cross-host portability note, contract gaps.
 
 ## Phase 3 — Schema doc
 
-**File:** `instance/installed/13-backlog/file-based-backlog/docs/schema.md`
+**File:** `instance/backlog/file-based-backlog/docs/schema.md`
 
 Defines the canonical field set (solves schema-drift problem):
 
@@ -178,7 +178,7 @@ Output modes:
 Runs `lint-backlog.sh --staged` only when `backlog/backlog.md` or
 `backlog/backlog-slated.md` are staged. Discovered by the install-hooks.sh
 composer at:
-`instance/installed/13-backlog/file-based-backlog/scripts/hooks/pre-commit`
+`instance/backlog/file-based-backlog/scripts/hooks/pre-commit`
 (depth 6 from `instance/installed` — within the 4–6 range the composer scans).
 
 ---
@@ -207,7 +207,7 @@ fix_surfaces = ["eposforge-pattern", "repo-instance", "infrastructure", "process
   `aggregate.sh` before planning the next iteration"
 - Operator commands: new-issue, sweep-resolved, lint, aggregate
 
-**instance/SPEC.md:** Add `13-backlog` row to adapter registry table.
+**instance/SPEC.md:** Add `backlog` row to adapter registry table.
 
 ---
 
@@ -217,7 +217,7 @@ OA migration is out of scope for this session. The adapter scripts produced in
 Phase 5 are written to be repo-agnostic (driven by `backlog/config.toml`), so
 migration to OutreachAssistant is a mechanical follow-up:
 
-1. `cp -r instance/installed/13-backlog/file-based-backlog/scripts/ <OA-repo>/instance/installed/13-backlog/file-based-backlog/scripts/`
+1. `cp -r instance/backlog/file-based-backlog/scripts/ <OA-repo>/instance/backlog/file-based-backlog/scripts/`
 2. Create `<OA-repo>/backlog/config.toml` with `prefix = "OA"`.
 3. Rename `issue-findings*.md` → `backlog/backlog*.md`, add `OA-` prefixes,
    uniform headers, year-month archive sections.
@@ -244,14 +244,14 @@ migration to OutreachAssistant is a mechanical follow-up:
 ## Files created / modified (summary)
 
 **New files — eposforge:**
-- `01-architecture/02-components/13-backlog.md`
-- `instance/installed/13-backlog/file-based-backlog/file-based-backlog.md`
-- `instance/installed/13-backlog/file-based-backlog/docs/schema.md`
-- `instance/installed/13-backlog/file-based-backlog/scripts/new-issue.sh`
-- `instance/installed/13-backlog/file-based-backlog/scripts/sweep-resolved.sh`
-- `instance/installed/13-backlog/file-based-backlog/scripts/lint-backlog.sh`
-- `instance/installed/13-backlog/file-based-backlog/scripts/aggregate.sh`
-- `instance/installed/13-backlog/file-based-backlog/scripts/hooks/pre-commit`
+- `01-architecture/02-components/backlog.md`
+- `instance/backlog/file-based-backlog/file-based-backlog.md`
+- `instance/backlog/file-based-backlog/docs/schema.md`
+- `instance/backlog/file-based-backlog/scripts/new-issue.sh`
+- `instance/backlog/file-based-backlog/scripts/sweep-resolved.sh`
+- `instance/backlog/file-based-backlog/scripts/lint-backlog.sh`
+- `instance/backlog/file-based-backlog/scripts/aggregate.sh`
+- `instance/backlog/file-based-backlog/scripts/hooks/pre-commit`
 - `backlog/config.toml`
 - `backlog/backlog.md` (seeded with EF-001 through EF-004)
 - `backlog/backlog-slated.md` (empty template)
@@ -260,6 +260,6 @@ migration to OutreachAssistant is a mechanical follow-up:
 
 **Modified — eposforge:**
 - `AGENTS.md` (add backlog section)
-- `instance/SPEC.md` (add 13-backlog to adapter registry)
+- `instance/SPEC.md` (add backlog to adapter registry)
 
 **OutreachAssistant migration:** deferred — see Phase 8 notes above.

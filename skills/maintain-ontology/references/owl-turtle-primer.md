@@ -117,6 +117,41 @@ Examples in this ontology:
 - `ef:AdapterStatus` is a **Class** - the category of status values
 - `ef:AdapterStatusShelved` is an **Individual** - the specific status "shelved"
 
+## Adding SKOS for the Knowledge Taxonomy (in addition to OWL)
+
+The ontology mixes two concerns:
+
+- **Domain ontology (OWL)**: The formal model of the *dark factory pattern* itself (ef:Component, ef:Adapter, ef:fulfillsSlot, phases, constraints). Use `owl:Class`, `owl:ObjectProperty`, `rdfs:subClassOf`, domain/range.
+
+- **Knowledge taxonomy (SKOS)**: How we *organize* EposForge's own knowledge (the canonical tree of pillars, groups, concepts, guidance, tenets). Use `skos:Concept`, `skos:ConceptScheme`, `skos:prefLabel`, `skos:altLabel`, `skos:definition`, and later `skos:broader`/`skos:narrower` for hierarchy.
+
+We declare both in the same file because Cognee anchors to one uploaded ontology. SKOS concepts can also be typed as OWL individuals or our ef: kinds.
+
+Example (see 01-ontology.ttl):
+
+```turtle
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+ef:NodeKind rdf:type owl:Class, skos:ConceptScheme ;
+    skos:prefLabel "Node Kind" .
+
+ef:NodeKindConcept rdf:type ef:NodeKind, skos:Concept ;
+    skos:prefLabel "concept" ;
+    skos:definition "..." .
+
+ef:SomeConcept rdf:type ef:Concept, skos:Concept ;
+    skos:prefLabel "Rule of Fundamentality" ;
+    skos:altLabel "essential characteristic" ;
+    ef:kind ef:NodeKindConcept .
+```
+
+**When to use which:**
+- New *pattern concept* (e.g. a new type of Adapter or relation) → OWL class or property.
+- New *knowledge item* in the tree (a specific concept, guidance, or tenet we teach agents) → primarily SKOS Concept + our ef:kind and lifecycle.
+- Need hierarchy or preferred labels for the tree → SKOS.
+
+This makes extraction more precise and gives agents richer structured data (labels, definitions, broader/narrower paths).
+
 ---
 
 ## The `ef:` namespace

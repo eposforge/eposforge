@@ -29,11 +29,17 @@ This standard does not govern an adopter's own application source layout.
    knowledge-tree component nodes by **node identity**, not by a hardcoded
    numbered path. A path is a projection of its tree node ("directory mirrors
    the knowledge tree"); the node name is the stable anchor across re-shelving.
-2. eposforge (the pattern repo) installs its self-implementation under
-   `instance/installed/<component>/<adapter>/` to separate the normative pattern
-   from its dogfooded implementation. A pure ADOPTER has only implementation and
-   MUST NOT reproduce the `instance/installed/` layer — components sit directly
-   at the adoption root: `<adoption-root>/<component>/<adapter>/`.
+2. The framework installs its self-implementation (adapters) under
+   `instance/<component>/<adapter>/` . A pure ADOPTER has only implementation
+   and uses `<adoption-root>/<component>/<adapter>/` directly (container is
+   `eposforge/`). Component directories use the stable node name (no numeric
+   prefixes). The authoritative component node names are: spec-input,
+   living-spec, dev-product, router, tool-transport, spec-graph,
+   execution-sandbox, agent-policy, source-control-ci, release-rings,
+   inference, audit-observability, secrets-key-management, backlog.
+   For the backlog component the adapter implementation lives at
+   `<container>/backlog/file-based-backlog/` (co-located under the data root
+   for that component; data files live as siblings at the `backlog/` level).
    - **Adopter container name:** `eposforge/` — all eposforge-owned content for
      an adopting repo lives under this single top-level directory. The framework
      repo uses `instance/` for the same role (to avoid a confusing self-duplicate).
@@ -63,16 +69,17 @@ This standard does not govern an adopter's own application source layout.
    - Adopters: workspace `folders` must include `./eposforge` and
      `../../gh/eposforge` (the framework clone, for cross-repo aggregation).
    - Framework repo: workspace `folders` must include `.` and `./instance`.
+   (The framework's `instance/` is its adoption-root / container equivalent.)
    - `BACKLOG_ROOTS` remains the pure-CLI fallback when no workspace file is active.
 
 ## Conformance
 
 - Adopter-layout check: each installed component/adapter path resolves to a live
-  tree node by identity; orphans (no matching node) fail.
+  tree node by identity (using the stable node names listed above); orphans fail.
 - Backlog-location check: data at `<adoption-root>/backlog/` (i.e.
   `eposforge/backlog/` for adopters, `instance/backlog/` for the framework);
-  adapter at its component path. A workspace file declaring the adoption-root
-  must be present.
+  the file-based-backlog adapter at `.../backlog/file-based-backlog/`. A
+  workspace file declaring the adoption-root must be present.
 - `aggregate.sh` discovers per-repo backlogs via workspace / `BACKLOG_ROOTS` and
   rolls them into one cross-repo view.
 
@@ -80,4 +87,4 @@ This standard does not govern an adopter's own application source layout.
 
 - [../00-standards-meta/standards-meta.md](../00-standards-meta/standards-meta.md)
 - [../06-research-mirror/research-mirror.md](../06-research-mirror/research-mirror.md) (sibling mirror standard)
-- [../../01-architecture/00-adapter-pattern.md](../../01-architecture/00-adapter-pattern.md)
+- [../../01-architecture/00-adapter-pattern/adapter-pattern.md](../../01-architecture/00-adapter-pattern/adapter-pattern.md)

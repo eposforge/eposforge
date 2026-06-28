@@ -34,7 +34,7 @@ Instances pick implementations.
 What better way to build an AI driven dark factory than to have AI build it for you?
 
 EposForge delivers value via a Cognee MCP server which LLMs can use for a GraphRag grounding.  
-eposforge/instance/installed/06-spec-graph/cognee is the implementation
+eposforge/instance/spec-graph/cognee is the implementation
 
 Once agents have access to the server, they can ground their chats and actions by accessing the EposForge ontology grounded knowledge graph through Cognee MCP.
 
@@ -78,7 +78,7 @@ Required conventions:
 - Use machine-readable doc classification metadata (for example:
   `doc_kind`, `scope`, `maturity`, `source_of_truth`).
 - Require adapter metadata for each adapter per
-  [01-architecture/00-adapter-pattern.md](01-architecture/00-adapter-pattern.md).
+  [01-architecture/00-adapter-pattern/adapter-pattern.md](01-architecture/00-adapter-pattern/adapter-pattern.md).
 - Maintain a single adapter registry view that shows candidate vs implemented
   vs active status per component slot.
 
@@ -102,8 +102,8 @@ and gains graph-augmented memory of the full architecture for
 spec generation, ADR authoring, and consistency checks.
 
 See [instance/SPEC.md](./instance/SPEC.md) for the Living Spec and
-adapter registry, [instance/installed/06-spec-graph/cognee/cognee.md](./instance/installed/06-spec-graph/cognee/cognee.md)
-for the default adapter, and [instance/installed/06-spec-graph/graphrag/README.md](./instance/installed/06-spec-graph/graphrag/README.md)
+adapter registry, [instance/spec-graph/cognee/cognee.md](./instance/spec-graph/cognee/cognee.md)
+for the default adapter, and [instance/spec-graph/graphrag/README.md](./instance/spec-graph/graphrag/README.md)
 for the fallback adapter and current invocation surface.
 
 ## Status

@@ -30,15 +30,15 @@ from structure and catches what capture missed.
 Run the views:
 
 ```bash
-bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/instance/installed/13-backlog/file-based-backlog/scripts/aggregate.sh --themes
-bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/instance/installed/13-backlog/file-based-backlog/scripts/ready.sh
-bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/instance/installed/13-backlog/file-based-backlog/scripts/aggregate.sh --mermaid
+bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/instance/backlog/file-based-backlog/scripts/aggregate.sh --themes
+bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/instance/backlog/file-based-backlog/scripts/ready.sh
+bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/instance/backlog/file-based-backlog/scripts/aggregate.sh --mermaid
 ```
 
 For each anchor item identified in the backlog, also run:
 
 ```bash
-bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/instance/installed/13-backlog/file-based-backlog/scripts/aggregate.sh --critical-path <anchor-ID>
+bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/instance/backlog/file-based-backlog/scripts/aggregate.sh --critical-path <anchor-ID>
 ```
 
 If Cognee MCP is available, recall recent portfolio and roadmap state:
@@ -136,7 +136,7 @@ For each proposal the operator accepts during the review session:
 Run lint after applying edits:
 
 ```bash
-bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/instance/installed/13-backlog/file-based-backlog/scripts/lint-backlog.sh
+bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/instance/backlog/file-based-backlog/scripts/lint-backlog.sh
 ```
 
 ## Outputs

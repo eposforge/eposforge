@@ -85,7 +85,7 @@ cross-repo host-stack coordination, and the migration design source
 | **Living Spec** | A machine-readable spec that travels with an artifact and drives agent behavior. |
 | **Spec Graph** | Component 6: the queryable knowledge graph of this repo's corpus. |
 
-- Vocabulary: `00-vision/01-ontology.ttl` is the authoritative ontology. Editorial workflow is governed by `04-standards/02-vocabulary/vocabulary.md` and executed via the `maintain-ontology` skill.
+- Ontology + Taxonomy: `00-vision/01-ontology.ttl` is the source combining the domain ontology (dark factory pattern in OWL) and knowledge taxonomy (SKOS + ef:kind for the canonical tree). Editorial workflow is governed by the maintain-ontology skill (and evolving 04-standards policy).
 - MCP-first and canonical source policy: `04-standards/05-canonical-doc-sources/` and `04-standards/04-mcp/`
 - Naming and documentation hygiene: `04-standards/01-naming-conventions/naming-conventions.md`
 - Refactoring discipline for mirrored research paths: `04-standards/06-research-mirror/research-mirror.md`
@@ -100,18 +100,18 @@ cross-repo host-stack coordination, and the migration design source
 02-roadmap/         Phase plans
 03-research/        Domain research including spec-graph integration notes
 instance/           Self-host implementation for this repo
-instance/installed/06-spec-graph/graphrag/  GraphRAG project (settings, prompts, output/)
-instance/installed/06-spec-graph/cognee/    Cognee ontology-grounded extraction adapter
-instance/installed/06-spec-graph/cognee/scripts/   Cognee adapter scripts
-instance/installed/06-spec-graph/graphrag/scripts/ GraphRAG adapter scripts (rebuild.sh, index.sh, import.sh)
-instance/installed/06-spec-graph/scripts/hooks/    Spec-graph hook fragments composed into .git/hooks/
-instance/installed/09-source-control-ci/github-and-actions/scripts/ SCM/CI checks, hook composer, hook fragments
+instance/spec-graph/graphrag/  GraphRAG project (settings, prompts, output/)
+instance/spec-graph/cognee/    Cognee ontology-grounded extraction adapter
+instance/spec-graph/cognee/scripts/   Cognee adapter scripts
+instance/spec-graph/graphrag/scripts/ GraphRAG adapter scripts (rebuild.sh, index.sh, import.sh)
+instance/spec-graph/scripts/hooks/    Spec-graph hook fragments composed into .git/hooks/
+instance/source-control-ci/github-and-actions/scripts/ SCM/CI checks, hook composer, hook fragments
 instance/SPEC.md    Living Spec for this repo's Spec Graph adapter (Component 6)
 ```
 
 Paired-change rule: changes to the specific files enumerated in the
 `instance/SPEC.md §Paired-change rule` section must update `instance/SPEC.md`
-in the same commit. Additions to `instance/installed/06-spec-graph/` that
+in the same commit. Additions to `instance/spec-graph/` that
 are not in that list do not require an `instance/SPEC.md` update.
 
 ---
@@ -127,7 +127,7 @@ Use this workflow when the user provides a description of additions, deletions, 
 2.  **Clarify:**
   *   Prompt the user for clarification if the intent is ambiguous (e.g., if a new entity should be a `component` or an `adapter`, or which `phase` it matures to).
 3.  **Implement (Graph-Influence Checklist):**
-  *   **Reserved Vocabulary:** Use exactly the terms from the [Vocabulary standard](04-standards/02-vocabulary/vocabulary.md) (`component`, `adapter`, `phase`, `pillar`, `principle`, `factory`, `deliverable`, `constraint`, `concept`, `guidance`, `tenet`, `group`) as entity types. Canonical definitions for `concept`, `guidance`, `tenet`, and `group` are in `00-vision/01-ontology.ttl`.
+  *   **Reserved Taxonomic Kinds + Domain Terms:** Use the node kinds from the knowledge taxonomy (`pillar`, `group`, `component`, `concept`, `guidance`, `tenet`) exactly when tagging in prose or docs. Use domain ontology terms (`component`, `adapter`, `phase`, etc.) for the pattern itself. The distinction and canonical list live in `00-vision/01-ontology.ttl` (see maintain-ontology skill and owl-turtle-primer for SKOS/OWL guidance). Definitions are in the TTL.
   *   **Relationship Keywords:** Use these exact keywords so Cognee's ontology-grounded extraction maps edges correctly:
     *   `FULFILLS_SLOT`: "fulfills", "fills slot", "candidate adapter".
     *   `DEPENDS_ON`: "depends on", "dependency", "requires".
@@ -137,11 +137,11 @@ Use this workflow when the user provides a description of additions, deletions, 
     *   `KIND`: node kind discriminator (pillar|group|component|concept|guidance|tenet).
     *   `LIFECYCLE_STATUS`: lifecycle state of a Concept/Guidance/Tenet (proposed|adopted|retired).
   *   **Living Spec Contract:** If creating or updating a spec (e.g., `instance/SPEC.md` or `01-architecture/02-components/*.md`), ensure it contains: Purpose, Observable Behavior, Inputs/Outputs, Dependencies, Non-functional Bounds (Metadata Table), and Versioning Policy.
-  *   **Metadata Tables:** Ensure every Adapter and Component doc includes a machine-readable metadata table per the [Adapter Pattern](01-architecture/00-adapter-pattern.md).
+  *   **Metadata Tables:** Ensure every Adapter and Component doc includes a machine-readable metadata table per the [Adapter Pattern](01-architecture/00-adapter-pattern/adapter-pattern.md).
 4.  **Validate & Rebuild:**
   *   Once files are updated, offer to perform the required steps to rebuild the Spec Graph:
-      - Cognee (default): from `instance/installed/06-spec-graph/cognee/sync`, run `epos-secrets uv run cognee-sync --modified <changed-files>` (see sync/README.md for setup; use `--added` for new files, `--deleted` for removed files)
-      - GraphRAG (fallback): `bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh`
+      - Cognee (default): from `instance/spec-graph/cognee/sync`, run `epos-secrets uv run cognee-sync --modified <changed-files>` (see sync/README.md for setup; use `--added` for new files, `--deleted` for removed files)
+      - GraphRAG (fallback): `bash instance/spec-graph/graphrag/scripts/rebuild.sh`
 
 ---
 
@@ -154,24 +154,24 @@ Conventions are standardized under `04-standards/`.
 
 Operational conventions retained here:
 
-- Do not commit `instance/installed/06-spec-graph/graphrag/output/`, `instance/installed/06-spec-graph/graphrag/cache/`, `instance/installed/06-spec-graph/graphrag/.venv/`, `instance/installed/06-spec-graph/cognee/.venv/`, `instance/installed/06-spec-graph/cognee/.cognee/`,
+- Do not commit `instance/spec-graph/graphrag/output/`, `instance/spec-graph/graphrag/cache/`, `instance/spec-graph/graphrag/.venv/`, `instance/spec-graph/cognee/.venv/`, `instance/spec-graph/cognee/.cognee/`,
   `.env`, or any file containing API keys or passwords.
-- Never edit generated output under `instance/installed/06-spec-graph/graphrag/output/`.
+- Never edit generated output under `instance/spec-graph/graphrag/output/`.
 - **Adapter script placement (enforced).** All scripts owned by an installed
   adapter — hooks, runners, helpers — live under
-  `instance/installed/<component>/scripts/` (or
-  `instance/installed/<component>/<adapter>/scripts/` when a component has
+  `instance/<component>/scripts/` (or
+  `instance/<component>/<adapter>/scripts/` when a component has
   multiple adapters). The flat `instance/scripts/` directory is not permitted.
   The check at
-  `instance/installed/09-source-control-ci/github-and-actions/scripts/check-installed-scripts-layout.sh`
+  `instance/source-control-ci/github-and-actions/scripts/check-installed-scripts-layout.sh`
   enforces this from the `pre-commit` hook and the
   `installed-scripts-layout` GitHub Actions workflow; both fail any commit
   that puts files under `instance/scripts/`.
 - **Git hooks are component-owned and composed.** Each installed adapter that
   needs git-hook behaviour places a fragment at
-  `instance/installed/<component>/scripts/hooks/<git-hook-name>` (or
+  `instance/<component>/scripts/hooks/<git-hook-name>` (or
   `<component>/<adapter>/scripts/hooks/<git-hook-name>`). The composer at
-  `instance/installed/09-source-control-ci/github-and-actions/scripts/install-hooks.sh`
+  `instance/source-control-ci/github-and-actions/scripts/install-hooks.sh`
   discovers all fragments and writes a dispatcher into `.git/hooks/<name>`
   that runs every fragment in order. Developers run the composer once per
   clone, per host; it is portable between srv-docker-hp (native bash) and
@@ -184,14 +184,14 @@ Operational conventions retained here:
 - Skills placement: store canonical skill content under `skills/<name>/`.
   Keep `.github/skills/<name>/SKILL.md` as a thin wrapper that points to the
   canonical location.
-- Syncing to the Spec Graph (Cognee, default): from `instance/installed/06-spec-graph/cognee/sync`, run `epos-secrets uv run cognee-sync --modified <files>` (use `--added`/`--deleted` as appropriate; see sync/README.md for setup and full-corpus seed).
-- Rebuilding the Spec Graph (GraphRAG, fallback): `python instance/installed/12-secrets-key-management/bin/epos-secrets -- bash instance/installed/06-spec-graph/graphrag/scripts/rebuild.sh`
-  (secrets are declared in [instance/installed/12-secrets-key-management/sops-age/secrets.toml](instance/installed/12-secrets-key-management/sops-age/secrets.toml)).
+- Syncing to the Spec Graph (Cognee, default): from `instance/spec-graph/cognee/sync`, run `epos-secrets uv run cognee-sync --modified <files>` (use `--added`/`--deleted` as appropriate; see sync/README.md for setup and full-corpus seed).
+- Rebuilding the Spec Graph (GraphRAG, fallback): `python instance/secrets-key-management/bin/epos-secrets -- bash instance/spec-graph/graphrag/scripts/rebuild.sh`
+  (secrets are declared in [instance/secrets-key-management/sops-age/secrets.toml](instance/secrets-key-management/sops-age/secrets.toml)).
 - **Technical findings go in the repo, not personal memory.** When you discover
   vendor bugs, version-specific behavior, API quirks, or diagnostic recipes for
   a system this repo integrates with (Cognee, Anthropic SDK, Kuzu, etc.),
   document them in the relevant adapter doc under
-  `instance/installed/<component>/<adapter>/` (e.g. `cognee/cognee.md`).
+  `instance/<component>/<adapter>/` (e.g. `cognee/cognee.md`).
   Operational and access setup belongs in the relevant repo skill. Personal
   memory is for pointers to where the canonical info lives, not for the info
   itself.
@@ -213,15 +213,15 @@ Operational conventions retained here:
   - Load `instance/backlog/backlog-archive-index.md` first for regression checks;
     open `instance/backlog/backlog-archive.md` only for full historical detail.
 - Cross-repo planning: when multiple working directories are present,
-  run `bash instance/installed/13-backlog/file-based-backlog/scripts/aggregate.sh --plan`
+  run `bash instance/backlog/file-based-backlog/scripts/aggregate.sh --plan`
   before planning the next iteration.
 - Operator commands:
-  - `bash instance/installed/13-backlog/file-based-backlog/scripts/new-issue.sh`
-  - `bash instance/installed/13-backlog/file-based-backlog/scripts/lint-backlog.sh`
-  - `bash instance/installed/13-backlog/file-based-backlog/scripts/sweep-resolved.sh`
-  - `bash instance/installed/13-backlog/file-based-backlog/scripts/aggregate.sh --plan`
-  - `bash instance/installed/13-backlog/file-based-backlog/scripts/aggregate.sh --regressions <keyword>`
-  - `bash instance/installed/13-backlog/file-based-backlog/scripts/aggregate.sh --graph`
+  - `bash instance/backlog/file-based-backlog/scripts/new-issue.sh`
+  - `bash instance/backlog/file-based-backlog/scripts/lint-backlog.sh`
+  - `bash instance/backlog/file-based-backlog/scripts/sweep-resolved.sh`
+  - `bash instance/backlog/file-based-backlog/scripts/aggregate.sh --plan`
+  - `bash instance/backlog/file-based-backlog/scripts/aggregate.sh --regressions <keyword>`
+  - `bash instance/backlog/file-based-backlog/scripts/aggregate.sh --graph`
 
 ---
 
@@ -252,7 +252,7 @@ status: active
 3. **Run cognee-sync**:
    - Navigate to the `cognee/sync` directory:
      ```bash
-     cd instance/installed/06-spec-graph/cognee/sync
+     cd instance/spec-graph/cognee/sync
      ```
    - Always include the ontology file when adding or modifying files:
      - **Add new files and ontology**:
@@ -293,7 +293,7 @@ a container migration, or any time incremental state is suspect.
 
 ```bash
 # From repo root:
-bash instance/installed/06-spec-graph/cognee/scripts/bulk-rebuild.sh
+bash instance/spec-graph/cognee/scripts/bulk-rebuild.sh
 ```
 
 The script collects all git-tracked `*.md` and `*.ttl` files, wipes the
@@ -309,7 +309,7 @@ explicit operator confirmation using the exact phrase **"I authorize KG wipe"**.
 Note: the Ladybug version-code error is unreliable as a wipe trigger — it has
 appeared on already-empty databases and does not by itself indicate corruption.
 The wipe procedure is in
-`instance/installed/06-spec-graph/cognee/MAINTENANCE.md`.
+`instance/spec-graph/cognee/MAINTENANCE.md`.
 
 ---
 

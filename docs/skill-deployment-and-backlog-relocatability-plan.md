@@ -24,8 +24,8 @@ Component 13 scripts by **repo-relative path**, e.g. in
 `skills/portfolio-review/SKILL.md`:
 
 ```
-bash instance/installed/13-backlog/file-based-backlog/scripts/aggregate.sh --mermaid
-bash instance/installed/13-backlog/file-based-backlog/scripts/lint-backlog.sh
+bash instance/backlog/file-based-backlog/scripts/aggregate.sh --mermaid
+bash instance/backlog/file-based-backlog/scripts/lint-backlog.sh
 ```
 
 and those scripts then resolve the backlog they operate on. So "works anywhere"
@@ -45,7 +45,7 @@ B is a small gap no current ticket cleanly owns.
 ## 1. As-built reality (verified 2026-06-15) — read before editing EF-033
 
 The scripts under
-`instance/installed/13-backlog/file-based-backlog/scripts/` are **already
+`instance/backlog/file-based-backlog/scripts/` are **already
 partially relocatable**, but the implementation diverged from the EF-033 ticket
 and does not handle the real adopter layout:
 
@@ -143,7 +143,7 @@ Also: `sync-tooling.sh` propagates the new scripts to adopters; run
 ## 3. Skill anchoring (coupling B) — make script-calling skills cwd-independent
 
 **Problem:** even with EF-033, `SKILL.md` calls
-`instance/installed/13-backlog/.../aggregate.sh` relatively, which only resolves
+`instance/backlog/.../aggregate.sh` relatively, which only resolves
 at the eposforge repo root.
 
 **Fix:** the skills resolve the tooling via an explicit anchor, not a relative
@@ -152,7 +152,7 @@ path. Define **`EPOSFORGE_HOME`** (default to the canonical clone
 commands as:
 
 ```
-bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/instance/installed/13-backlog/file-based-backlog/scripts/aggregate.sh --mermaid
+bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/instance/backlog/file-based-backlog/scripts/aggregate.sh --mermaid
 ```
 
 Combined with EF-033 (scripts then find the *backlog* via cwd/`BACKLOG_ROOTS`),
