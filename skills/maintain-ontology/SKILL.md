@@ -9,6 +9,11 @@ This skill implements the editorial workflow. Distinguish:
 - Domain ontology (OWL classes like ef:Component, properties like fulfillsSlot) — the *pattern*.
 - Knowledge taxonomy (SKOS for labels/hierarchy on tree items + our NodeKind discriminator) — how we *organize what we know*.
 
+When maintaining the taxonomy, also maintain discoverable usage guidance for adopter agents via the EposForge Cognee MCP:
+- Add/update skos:scopeNote on ef:KnowledgeTree and ef:NodeKind with current access model (SKOS for tree navigation; OWL + ef:kind for pattern semantics).
+- Keep ef:EposForgeMCPUsage (and similar guidance nodes) accurate and linked.
+- Ensure new items have clear skos:prefLabel / skos:definition suitable for recall.
+
 The TTL remains the single source of truth. See also the updated owl-turtle-primer for SKOS usage. The ontology & taxonomy policy is now at `04-standards/02-ontology-taxonomy/ontology-taxonomy.md` (supersedes the previous vocabulary standard).
 
 Primary purpose: keep the ontology internally coherent and aligned with installed adapter cards so entities extracted by Cognee remain anchored to stable EposForge IRIs. This enables external EposForge consumers to point their agents at the EposForge Cognee MCP server and use graph-backed guidance to automate dark-factory design and creation.
@@ -151,7 +156,18 @@ Omit domain/range when open.
 ef:MyConcept rdf:type ef:Concept, skos:Concept ;
     skos:prefLabel "My Concept" ;
     skos:definition "..." ;
+    skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindConcept ;
+    ef:lifecycleStatus ef:StatusAdopted .
+```
+
+**MCP usage / agent guidance node** (high-signal entry point for adopter agents):
+```turtle
+ef:MyUsage rdf:type ef:Guidance, skos:Concept ;
+    skos:prefLabel "My Usage Guide" ;
+    skos:definition "How agents should query this area via the EposForge Cognee MCP..." ;
+    skos:inScheme ef:KnowledgeTree ;
+    ef:kind ef:NodeKindGuidance ;
     ef:lifecycleStatus ef:StatusAdopted .
 ```
 
@@ -170,6 +186,7 @@ ef:MyThing rdf:type ef:MyClass ;
 - New node kind individuals -> add under `### Node Kind Discriminator`
 - New lifecycle status individuals -> add under `### Lifecycle Status`
 - New Concept/Guidance/Tenet individuals -> add under a new `### Knowledge-Tree Individuals` section before the `### Adapter Status Individuals` section
+- Usage / agent guidance nodes (ef:XXXMCPUsage style) -> place early in the main Knowledge-Tree Individuals section so they are highly recallable; link from ef:KnowledgeTree via skos:related or scopeNote.
 
 After editing, verify the file is syntactically valid Turtle (no unclosed blocks, every statement ends with `.`).
 
@@ -187,7 +204,9 @@ Load `[owl-turtle-primer](./references/owl-turtle-primer.md)` (now includes SKOS
 - SKOS for *knowledge taxonomy* (labels, definitions, hierarchy on tree items + ef:kind)
 - Triple structure, shortcuts, Class vs Individual vs Property
 - When a knowledge item should be typed as both ef:XXX and skos:Concept
+- Adding skos:scopeNote on schemes and maintaining ef:EposForgeMCPUsage-style nodes so adopter agents can discover proper MCP usage patterns via recall
 - How Cognee uses the combined ontology (anchoring + richer properties)
+- Preferred navigation for agents: SKOS layer for tree/hierarchy; OWL + ef:kind for pattern relationships
 
 ## Outputs
 
