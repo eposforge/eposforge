@@ -5,13 +5,12 @@ maturity: adopted
 source_of_truth: yes
 ---
 
-# Ontology & Knowledge Taxonomy Policy (formerly "Vocabulary")
+# Ontology and Knowledge Taxonomy Policy
 
 ## Status
 
-- adopted: 2026-05-18
-- revised: 2026-06 (clarified domain ontology vs. knowledge taxonomy layers; SKOS introduced alongside OWL)
-- supersedes: none
+- adopted: 2026-06-28
+- supersedes: the previous "vocabulary" standard (see git history under 04-standards/02-vocabulary/)
 - declined-options: none
 - spec-version: n/a
 
@@ -50,3 +49,7 @@ Markdown may describe terms but must not redefine semantics. This standard does 
 - [../../skills/maintain-ontology/SKILL.md](../../skills/maintain-ontology/SKILL.md) (now coaches SKOS)
 - [../../skills/maintain-ontology/references/owl-turtle-primer.md](../../skills/maintain-ontology/references/owl-turtle-primer.md) (SKOS section added)
 - [../../AGENTS.md](../../AGENTS.md)
+
+## Notes on superseded standards
+
+Superseded standards (such as the prior `02-vocabulary/vocabulary.md`) are removed from the working tree for readability. The supersession is declared in this file's Status section. Complete prior content is preserved in the git history. See `00-standards-meta/standards-meta.md` for the current policy.

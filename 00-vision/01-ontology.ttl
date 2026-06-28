@@ -550,8 +550,11 @@ ef:DetectionRatchet rdf:type ef:Concept ;
     ef:kind ef:NodeKindConcept ;
     ef:lifecycleStatus ef:StatusAdopted .
 
-ef:Kernel rdf:type ef:Concept ;
+ef:Kernel rdf:type ef:Concept, skos:Concept ;
     rdfs:label "kernel" ;
+    skos:prefLabel "kernel" ;
+    skos:altLabel "candidate kernel", "stable foundation", "trustworthy foundation", "what can I build on", "what is solid enough to build on" ;
+    skos:definition "A substrate or control-layer element that is both stable and detectable — confirmable good in a single command — and is therefore trustworthy to build on." ;
     rdfs:comment "The primitive that prevents the self-improvement grind (using a not-yet-working tool to fix a not-yet-working tool). A kernel needs two properties, not one: stable (pinned/frozen/source-controlled — it does not change under you) AND detectable (confirmable good in one command). Stability without detection is only 'code you haven't broken yet.' Yields three states — kernel (stable+detectable), candidate kernel (stable, detection partial/just added), not-a-kernel (fast-moving) — where the candidate->kernel promotion is exactly the event 'detection was added.' Kernel state is the maturity model applied to substrate, not a new lifecycle vocabulary. External-tier dependencies (frontier-model / vendor APIs) are inherently un-kernelable — they change on the vendor's schedule and cannot be pinned, so they must be wrapped by an Adapter that carries its own detection and never trusted as foundation." ;
     ef:adoptedDefinition "A substrate or control-layer element that is both stable and detectable — confirmable good in a single command — and is therefore trustworthy to build on." ;
     ef:variants "candidate kernel", "stable foundation", "trustworthy foundation", "what can I build on", "what is solid enough to build on" ;
