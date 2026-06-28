@@ -2,11 +2,12 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 @prefix ef: <http://eposforge.org/ontology/> .
 
 ef:Ontology rdf:type owl:Ontology ;
     rdfs:label "EposForge Dark Factory Ontology" ;
-    rdfs:comment "Formal vocabulary, taxonomy, and relationships for the EposForge dark factory pattern. Source of truth: this file. To add a term, declare it here; use it elsewhere by reference. See the maintain-ontology skill for editorial workflow." .
+    rdfs:comment "Domain ontology (OWL) + knowledge taxonomy (SKOS) for the EposForge dark factory pattern. The domain model (classes like Component/Adapter, relations like fulfillsSlot) defines the pattern. The taxonomy organizes the knowledge tree (kinds: pillar/group/component/concept/guidance/tenet) using SKOS where appropriate for labels, hierarchy, and concepts. Source of truth: this file. To add a term, declare it here; use it elsewhere by reference. See the maintain-ontology skill for editorial workflow." .
 
 ### Classes
 
@@ -204,35 +205,55 @@ ef:Tenet rdf:type owl:Class ;
     rdfs:label "Tenet" ;
     rdfs:comment "A governing rule or principle — doctrine the factory operates under. Normative: do this / choose this way. Distinct from ef:Concept (a term) and from ef:Guidance (a how-to essay). The constitution is the set of Tenets. Examples: serve adopters by grounding their agents, plan where known iterate where unknown, one canonical tree many projected views." .
 
-### Node Kind Discriminator
+### Node Kind Discriminator (Knowledge Tree Taxonomy)
 
-ef:NodeKind rdf:type owl:Class ;
+# The node kinds form the taxonomic classification system for the canonical knowledge tree.
+# We model this using both OWL (for the discriminator) and SKOS (for concept organization, labels, and future hierarchy via broader/narrower).
+# This separation lets us use OWL for the dark factory domain model while using SKOS for organizing knowledge items.
+
+ef:NodeKind rdf:type owl:Class, skos:ConceptScheme ;
     rdfs:label "Node Kind" ;
-    rdfs:comment "A discriminator classifying what a node IS in the canonical knowledge tree. Kind is structural identity, not file type or representation. Allowed values: pillar, group, component, concept, guidance, tenet." .
+    skos:prefLabel "Node Kind" ;
+    rdfs:comment "A discriminator classifying what a node IS in the canonical knowledge tree. Kind is structural identity, not file type or representation. Allowed values: pillar, group, component, concept, guidance, tenet. This is the root of the knowledge taxonomy." .
 
-ef:NodeKindPillar rdf:type ef:NodeKind ;
+ef:NodeKindPillar rdf:type ef:NodeKind, skos:Concept ;
     rdfs:label "pillar" ;
+    skos:prefLabel "pillar" ;
+    skos:definition "Load-bearing structural division. Essential to the meaning of its parent; the parent could not be what it is without each pillar." ;
     rdfs:comment "Load-bearing structural division. Essential to the meaning of its parent; the parent could not be what it is without each pillar." .
 
-ef:NodeKindGroup rdf:type ef:NodeKind ;
+ef:NodeKindGroup rdf:type ef:NodeKind, skos:Concept ;
     rdfs:label "group" ;
+    skos:prefLabel "group" ;
+    skos:definition "Organizational sub-container. Provides grouping for related items but is not itself load-bearing." ;
     rdfs:comment "Organizational sub-container. Provides grouping for related items but is not itself load-bearing." .
 
-ef:NodeKindComponent rdf:type ef:NodeKind ;
+ef:NodeKindComponent rdf:type ef:NodeKind, skos:Concept ;
     rdfs:label "component" ;
+    skos:prefLabel "component" ;
+    skos:definition "Operational subsystem of the factory. Filled by one or more Adapters via the Adapter Pattern." ;
     rdfs:comment "Operational subsystem of the factory. Filled by one or more Adapters via the Adapter Pattern." .
 
-ef:NodeKindConcept rdf:type ef:NodeKind ;
+ef:NodeKindConcept rdf:type ef:NodeKind, skos:Concept ;
     rdfs:label "concept" ;
+    skos:prefLabel "concept" ;
+    skos:definition "A defined term carrying a canonical adopted definition. The ontology TTL is the authoritative home." ;
     rdfs:comment "A defined term carrying a canonical adopted definition. The ontology TTL is the authoritative home." .
 
-ef:NodeKindGuidance rdf:type ef:NodeKind ;
+ef:NodeKindGuidance rdf:type ef:NodeKind, skos:Concept ;
     rdfs:label "guidance" ;
+    skos:prefLabel "guidance" ;
+    skos:definition "A how-to document: essay or playbook consulted and applied by agents and humans." ;
     rdfs:comment "A how-to document: essay or playbook consulted and applied by agents and humans." .
 
-ef:NodeKindTenet rdf:type ef:NodeKind ;
+ef:NodeKindTenet rdf:type ef:NodeKind, skos:Concept ;
     rdfs:label "tenet" ;
+    skos:prefLabel "tenet" ;
+    skos:definition "A governing rule or principle — doctrine the factory operates under. Normative." ;
     rdfs:comment "A governing rule or principle — doctrine the factory operates under. Normative." .
+
+# Example: future use of SKOS hierarchy (add skos:broader between specific knowledge items when modeling the tree structure).
+# ef:SomeConcept skos:broader ef:SomeBroaderConcept .
 
 ### Lifecycle Status
 
@@ -455,8 +476,11 @@ ef:relationshipEdge rdf:type owl:DatatypeProperty ;
 
 ### Knowledge-Tree Individuals
 
-ef:RandianConceptFormation rdf:type ef:Tenet ;
+ef:RandianConceptFormation rdf:type ef:Tenet, skos:Concept ;
     rdfs:label "Randian concept formation" ;
+    skos:prefLabel "Randian concept formation" ;
+    skos:altLabel "Objectivist concept formation", "Randian epistemology" ;
+    skos:definition "The engineering-relevant doctrine adopted by EposForge for ontology editing: select terms by explanatory roots rather than surface similarities. Included as governing editorial doctrine for the canonical ontology, not as an attempt to model Objectivism in full." ;
     rdfs:comment "The engineering-relevant doctrine adopted by EposForge for ontology editing: select terms by explanatory roots rather than surface similarities. Included as governing editorial doctrine for the canonical ontology, not as an attempt to model Objectivism in full." ;
     ef:statement "Form ontology terms around the deepest available explanatory characteristic, using context-aware abstraction rather than surface resemblance." ;
     ef:variants "Objectivist concept formation", "Randian epistemology" ;
