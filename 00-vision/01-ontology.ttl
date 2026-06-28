@@ -7,7 +7,11 @@
 
 ef:Ontology rdf:type owl:Ontology ;
     rdfs:label "EposForge Dark Factory Ontology" ;
-    rdfs:comment "Domain ontology (OWL) + knowledge taxonomy (SKOS) for the EposForge dark factory pattern. The domain model (classes like Component/Adapter, relations like fulfillsSlot) defines the pattern. The taxonomy organizes the knowledge tree (kinds: pillar/group/component/concept/guidance/tenet) using SKOS where appropriate for labels, hierarchy, and concepts. Source of truth: this file. To add a term, declare it here; use it elsewhere by reference. See the maintain-ontology skill for editorial workflow." .
+    rdfs:comment """Domain ontology (OWL) + knowledge taxonomy (SKOS) for the EposForge dark factory pattern.
+The domain model defines the pattern (Component, Adapter, fulfillsSlot, etc.).
+The taxonomy organizes the knowledge tree for navigation.
+Adopter agents accessing via the EposForge Cognee MCP should prefer SKOS relations (inScheme, broader, prefLabel) for knowledge structure queries and start with recall of 'EposForge MCP usage'.
+Source of truth: this file. See maintain-ontology skill for editorial workflow and usage patterns.""" .
 
 ### Classes
 
@@ -213,12 +217,17 @@ ef:Tenet rdf:type owl:Class ;
 
 ef:KnowledgeTree rdf:type skos:ConceptScheme ;
     skos:prefLabel "EposForge Canonical Knowledge Tree" ;
-    skos:definition "The structured taxonomy of EposForge knowledge: pillars and groups for architecture, plus concepts, guidance, and tenets with explicit definitions and relationships. Governed by the ontology and taxonomy policy." .
+    skos:definition "The structured taxonomy of EposForge knowledge: pillars and groups for architecture, plus concepts, guidance, and tenets with explicit definitions and relationships. Governed by the ontology and taxonomy policy." ;
+    skos:scopeNote """For agents using the EposForge Cognee MCP: prefer SKOS relations (skos:inScheme, skos:broader, skos:prefLabel) when navigating knowledge structure and hierarchy. Use ef:kind and OWL classes/properties when working with the dark factory pattern semantics (e.g. fulfillsSlot, maturesTo).
+Start navigation with recall("EposForge MCP usage") or recall on this scheme's label.
+See ef:EposForgeMCPUsage for current recommended query patterns and access model.""" ;
+    skos:related ef:EposForgeMCPUsage .
 
 ef:NodeKind rdf:type owl:Class, skos:ConceptScheme ;
     rdfs:label "Node Kind" ;
     skos:prefLabel "Node Kind" ;
     skos:inScheme ef:KnowledgeTree ;
+    skos:scopeNote "This is the root discriminator for the knowledge taxonomy. Agents should use the SKOS view (inScheme, prefLabel) for navigation. The ef:kind property connects domain instances to these kinds." ;
     rdfs:comment "A discriminator classifying what a node IS in the canonical knowledge tree. Kind is structural identity, not file type or representation. Allowed values: pillar, group, component, concept, guidance, tenet. This is the root of the knowledge taxonomy." .
 
 ef:NodeKindPillar rdf:type ef:NodeKind, skos:Concept ;
@@ -480,6 +489,18 @@ ef:relationshipEdge rdf:type owl:DatatypeProperty ;
     rdfs:range xsd:string .
 
 ### Knowledge-Tree Individuals
+
+ef:EposForgeMCPUsage rdf:type ef:Guidance, skos:Concept ;
+    rdfs:label "EposForge MCP usage" ;
+    skos:prefLabel "EposForge MCP usage" ;
+    skos:definition """Adopter agents should start here. The EposForge Spec Graph is exposed via the Cognee MCP (recall, graph queries).
+Preferred access: Use SKOS (skos:inScheme on ef:KnowledgeTree, skos:broader/narrower, skos:prefLabel) for knowledge tree navigation and classification.
+Use OWL domain model (ef:kind, ef:fulfillsSlot, ef:maturesTo, etc.) for the dark factory pattern itself.
+Always begin with recall("EposForge MCP usage") or recall("EposForge Canonical Knowledge Tree").
+See the scopeNote on ef:KnowledgeTree for current access model. This node is the canonical entry point for proper MCP usage.""" ;
+    skos:inScheme ef:KnowledgeTree ;
+    ef:kind ef:NodeKindGuidance ;
+    ef:lifecycleStatus ef:StatusAdopted .
 
 ef:RandianConceptFormation rdf:type ef:Tenet, skos:Concept ;
     rdfs:label "Randian concept formation" ;

@@ -53,3 +53,13 @@ Markdown may describe terms but must not redefine semantics. This standard does 
 ## Notes on superseded standards
 
 Superseded standards (such as the prior `02-vocabulary/vocabulary.md`) are removed from the working tree for readability. The supersession is declared in this file's Status section. Complete prior content is preserved in the git history. See `00-standards-meta/standards-meta.md` for the current policy.
+
+## Agent and MCP Usage Model
+
+Adopter agents access the EposForge knowledge via the Cognee MCP (recall, graph search).
+- Prefer the SKOS layer (skos:inScheme on ef:KnowledgeTree, skos:broader/narrower, skos:prefLabel) for navigating the knowledge tree structure and classification.
+- Use the OWL domain model and ef:kind for the dark factory pattern relationships and semantics.
+- Agents should start with recall("EposForge MCP usage") or recall on the KnowledgeTree label.
+A dedicated usage node (ef:EposForgeMCPUsage) and scopeNotes on the main schemes encode the current contract. These must be maintained when extending the taxonomy.
+
+When editing, ensure new knowledge-tree items are linked into the SKOS scheme and have clear labels/definitions suitable for agent recall. See maintain-ontology skill for workflow.
