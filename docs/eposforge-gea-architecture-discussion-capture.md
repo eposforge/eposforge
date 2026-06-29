@@ -137,7 +137,7 @@ Existing partial mechanisms:
 
 **Prioritized capture/implementation ideas** (from turns):
 1. Explicit ingestion boundaries (update bulk-rebuild.sh, update-spec-graph skill, post-commit hook, CORPUS section in cognee.md). Exclude backlog items by default from main graph.
-2. "Repository roles & ownership" section (in 00-vision or 01-architecture). Leverage existing substrate/product language.
+2. "Repository roles & ownership" section (in 00-vision or 01-architecture). Leverage existing substrate/product language. **Done**: see `00-vision/02-roles-ownership.md`.
 3. Backlog-KG prototype.
 4. Update Living Spec docs for distributed reality.
 5. Terminology fixes in ontology, vision, EF-011/EF-012 notes.
