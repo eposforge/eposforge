@@ -620,6 +620,24 @@ ef:ProductPromotion rdf:type ef:Concept, skos:Concept ;
     ef:lifecycleStatus ef:StatusAdopted ;
     ef:dependsOn ef:ReleaseRingsComponent .
 
+### Knowledge-Tree Individuals — Multi-Graph and Backlog Separation (EF-056)
+
+ef:MultiGraphArchitecture rdf:type ef:Concept, skos:Concept ;
+    skos:prefLabel "Multi-Graph Architecture" ;
+    skos:definition "One graph per scope (EposForge pattern + references, Adopter Platform Spec such as GEA repo, IAC, product repos). Graphs are connected by the shared ontology (as the mapping layer using ef:fulfillsSlot, ef:adoptsFrom, etc.) plus explicit mappings and deliberate agent orchestration (query relevant dataset(s) and synthesize). Enables scoped GraphRAG over pure file RAG. Disk (Living Specs + backlog markup) remains canonical. See EF-056/057 and the architecture capture." ;
+    skos:inScheme ef:KnowledgeTree ;
+    ef:kind ef:NodeKindConcept ;
+    ef:lifecycleStatus ef:StatusAdopted ;
+    skos:related ef:SpecGraphComponent, ef:BacklogComponent .
+
+ef:IndependentBacklogGraph rdf:type ef:Concept, skos:Concept ;
+    skos:prefLabel "Independent File-Based Backlog Graph" ;
+    skos:definition "Backlog items (the work) live in their own independent file-based graph, separate from the main Spec Graph (Component 6; see EF-056 / EF-057). Structured Markdown provides the explicit skeleton: issues are nodes (Status, Effort, Tags, Fix surface, etc. attributes); Depends on:/Blocks:/Supersedes: are directed edges; Tags supply communities. GraphRAG-style capabilities (critical-path, thematic views, traversal) are supplied by separate tooling and skills over the files (aggregate.sh, portfolio-review, etc.). The capability lives in the tooling layer. Disk (the Markdown) is canonical; no Cognee dependency for the core backlog graph. See instance/backlog/file-based-backlog/file-based-backlog.md and EF-056/057." ;
+    skos:inScheme ef:KnowledgeTree ;
+    ef:kind ef:NodeKindConcept ;
+    ef:lifecycleStatus ef:StatusAdopted ;
+    skos:related ef:BacklogComponent .
+
 ### Individuals (The 14 Core Components)
 
 ef:SpecInput rdf:type ef:Component, skos:Concept ;
@@ -742,11 +760,11 @@ ef:SecretsKeyManagementComponent rdf:type ef:Component, skos:Concept ;
 ef:BacklogComponent rdf:type ef:Component, skos:Concept ;
     rdfs:label "Backlog" ;
     skos:prefLabel "Backlog" ;
-    skos:definition "file-based-backlog adapter installed: per-repo markdown backlog files under backlog/ with EF-/GEA- IDs. Beads (bd, Dolt-backed) is available via Gas Town at adopter instances as a complementary agent-facing ledger." ;
+    skos:definition "Backlog data lives in its own independent file-based graph (separate from the main Spec Graph in Component 6; see EF-056 / EF-057 and ef:IndependentBacklogGraph). Structured Markdown supplies explicit nodes (issues with attributes), directed edges (Depends on, Blocks), and Tag communities; GraphRAG-style views are provided by separate tooling (aggregate, portfolio-review). Disk (Markdown) is canonical." ;
     skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindComponent ;
     ef:componentMaturity ef:MaturityShipped ;
-    rdfs:comment "file-based-backlog adapter installed: per-repo markdown backlog files under backlog/ with EF-/GEA- IDs. Beads (bd, Dolt-backed) is available via Gas Town at adopter instances as a complementary agent-facing ledger." .
+    rdfs:comment "file-based-backlog adapter installed: per-repo markdown backlog files under backlog/ with EF-/GEA- IDs (EF-/GEA- prefixes). Beads (bd, Dolt-backed) is available via Gas Town at adopter instances as a complementary agent-facing ledger. The independent backlog graph (items) is distinct from backlog mechanics projected into the main Spec Graph. See ef:MultiGraphArchitecture, ef:IndependentBacklogGraph, and the file-based-backlog Living Spec." .
 
 ### Adapter Status Individuals
 

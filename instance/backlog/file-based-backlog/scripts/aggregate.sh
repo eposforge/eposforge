@@ -301,6 +301,7 @@ for issue in all_active + all_slated + all_archive:
         "status": fields.get("Status", "").strip().lower(),
         "title": fields.get("Title", issue["header_title"]),
         "tags": tag_list,
+        "theme": tag_list[0] if tag_list else "",  # first tag for mermaid Option A (primary subgraph); see EF-046
         "effort": fields.get("Effort", "").strip(),
         "depends_on": csv_ids(fields.get("Depends on", "")),
         "blocks": csv_ids(fields.get("Blocks", "")),
@@ -517,10 +518,10 @@ if mode == "critical-path":
     raise SystemExit(0)
 
 if mode == "mermaid":
-    # Collect themes vocab
+    # Collect themes vocab (tags= preferred post-EF-046; themes= legacy alias)
     all_themes_vocab = []
     for issue in all_active:
-        for t in issue.get("themes_vocab", []):
+        for t in issue.get("tags_vocab", []) or issue.get("themes_vocab", []):
             if t not in all_themes_vocab:
                 all_themes_vocab.append(t)
 
@@ -537,10 +538,10 @@ if mode == "mermaid":
             if dep in active_set:
                 edges.append((dep, iid))
 
-    # Theme grouping for subgraph coloring
+    # Theme grouping for subgraph coloring (first tag per Option A; see EF-046)
     theme_members: dict[str, list] = {}
     for iid in active_open_ids:
-        t = all_issues_index[iid]["theme"]
+        t = all_issues_index[iid].get("theme") or (all_issues_index[iid].get("tags", [""])[0] if all_issues_index[iid].get("tags") else "")
         if t:
             theme_members.setdefault(t, []).append(iid)
 
@@ -570,7 +571,7 @@ if mode == "mermaid":
         lines.append("  end")
 
     # Unthemed nodes
-    unthemed = [iid for iid in active_open_ids if not all_issues_index[iid]["theme"]]
+    unthemed = [iid for iid in active_open_ids if not (all_issues_index[iid].get("theme") or (all_issues_index[iid].get("tags", [""])[0] if all_issues_index[iid].get("tags") else ""))]
     if unthemed:
         lines.append("  subgraph unanchored[\"(unanchored)\"]")
         for iid in sorted(unthemed):
