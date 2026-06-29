@@ -221,53 +221,55 @@ ef:KnowledgeTree rdf:type skos:ConceptScheme ;
     skos:scopeNote """For agents using the EposForge Cognee MCP: prefer SKOS relations (skos:inScheme, skos:broader, skos:prefLabel) when navigating knowledge structure and hierarchy. Use ef:kind and OWL classes/properties when working with the dark factory pattern semantics (e.g. fulfillsSlot, maturesTo).
 Start navigation with recall("EposForge MCP usage") or recall on this scheme's label.
 See ef:EposForgeMCPUsage for current recommended query patterns and access model.""" ;
-    skos:related ef:EposForgeMCPUsage .
+    skos:related ef:EposForgeMCPUsage ;
+    skos:hasTopConcept ef:EposForgeMCPUsage,
+        ef:PillarSubstrateAgnosticPlatform, ef:PillarAIFactory, ef:PillarProductEngine .
 
 ef:NodeKind rdf:type owl:Class, skos:ConceptScheme ;
-    rdfs:label "Node Kind" ;
     skos:prefLabel "Node Kind" ;
     skos:inScheme ef:KnowledgeTree ;
     skos:scopeNote "This is the root discriminator for the knowledge taxonomy. Agents should use the SKOS view (inScheme, prefLabel) for navigation. The ef:kind property connects domain instances to these kinds." ;
     rdfs:comment "A discriminator classifying what a node IS in the canonical knowledge tree. Kind is structural identity, not file type or representation. Allowed values: pillar, group, component, concept, guidance, tenet. This is the root of the knowledge taxonomy." .
 
 ef:NodeKindPillar rdf:type ef:NodeKind, skos:Concept ;
-    rdfs:label "pillar" ;
     skos:prefLabel "pillar" ;
     skos:definition "Load-bearing structural division. Essential to the meaning of its parent; the parent could not be what it is without each pillar." ;
+    skos:inScheme ef:KnowledgeTree ;
     rdfs:comment "Load-bearing structural division. Essential to the meaning of its parent; the parent could not be what it is without each pillar." .
 
 ef:NodeKindGroup rdf:type ef:NodeKind, skos:Concept ;
-    rdfs:label "group" ;
     skos:prefLabel "group" ;
     skos:definition "Organizational sub-container. Provides grouping for related items but is not itself load-bearing." ;
+    skos:inScheme ef:KnowledgeTree ;
     rdfs:comment "Organizational sub-container. Provides grouping for related items but is not itself load-bearing." .
 
 ef:NodeKindComponent rdf:type ef:NodeKind, skos:Concept ;
-    rdfs:label "component" ;
     skos:prefLabel "component" ;
     skos:definition "Operational subsystem of the factory. Filled by one or more Adapters via the Adapter Pattern." ;
+    skos:inScheme ef:KnowledgeTree ;
     rdfs:comment "Operational subsystem of the factory. Filled by one or more Adapters via the Adapter Pattern." .
 
 ef:NodeKindConcept rdf:type ef:NodeKind, skos:Concept ;
-    rdfs:label "concept" ;
     skos:prefLabel "concept" ;
     skos:definition "A defined term carrying a canonical adopted definition. The ontology TTL is the authoritative home." ;
+    skos:inScheme ef:KnowledgeTree ;
     rdfs:comment "A defined term carrying a canonical adopted definition. The ontology TTL is the authoritative home." .
 
 ef:NodeKindGuidance rdf:type ef:NodeKind, skos:Concept ;
-    rdfs:label "guidance" ;
     skos:prefLabel "guidance" ;
     skos:definition "A how-to document: essay or playbook consulted and applied by agents and humans." ;
+    skos:inScheme ef:KnowledgeTree ;
     rdfs:comment "A how-to document: essay or playbook consulted and applied by agents and humans." .
 
 ef:NodeKindTenet rdf:type ef:NodeKind, skos:Concept ;
-    rdfs:label "tenet" ;
     skos:prefLabel "tenet" ;
     skos:definition "A governing rule or principle — doctrine the factory operates under. Normative." ;
+    skos:inScheme ef:KnowledgeTree ;
     rdfs:comment "A governing rule or principle — doctrine the factory operates under. Normative." .
 
-# Example: future use of SKOS hierarchy (add skos:broader between specific knowledge items when modeling the tree structure).
-# ef:SomeConcept skos:broader ef:SomeBroaderConcept .
+### SKOS Hierarchy (built with skos:broader / narrower)
+# See maintain-ontology skill and the recommended remaining work for ongoing expansion.
+# Pillars and entry points are hasTopConcept. Components, concepts, and recent items linked via broader below and skos:related.
 
 ### Lifecycle Status
 
@@ -491,7 +493,6 @@ ef:relationshipEdge rdf:type owl:DatatypeProperty ;
 ### Knowledge-Tree Individuals
 
 ef:EposForgeMCPUsage rdf:type ef:Guidance, skos:Concept ;
-    rdfs:label "EposForge MCP usage" ;
     skos:prefLabel "EposForge MCP usage" ;
     skos:definition """Adopter agents should start here. The EposForge Spec Graph is exposed via the Cognee MCP (recall, graph queries).
 Preferred access: Use SKOS (skos:inScheme on ef:KnowledgeTree, skos:broader/narrower, skos:prefLabel) for knowledge tree navigation and classification.
@@ -500,21 +501,20 @@ Always begin with recall("EposForge MCP usage") or recall("EposForge Canonical K
 See the scopeNote on ef:KnowledgeTree for current access model. This node is the canonical entry point for proper MCP usage.""" ;
     skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindGuidance ;
-    ef:lifecycleStatus ef:StatusAdopted .
+    ef:lifecycleStatus ef:StatusAdopted ;
+    skos:broader ef:KnowledgeTree .
 
 ef:RandianConceptFormation rdf:type ef:Tenet, skos:Concept ;
-    rdfs:label "Randian concept formation" ;
     skos:prefLabel "Randian concept formation" ;
     skos:altLabel "Objectivist concept formation", "Randian epistemology" ;
     skos:definition "The engineering-relevant doctrine adopted by EposForge for ontology editing: select terms by explanatory roots rather than surface similarities. Included as governing editorial doctrine for the canonical ontology, not as an attempt to model Objectivism in full." ;
-    rdfs:comment "The engineering-relevant doctrine adopted by EposForge for ontology editing: select terms by explanatory roots rather than surface similarities. Included as governing editorial doctrine for the canonical ontology, not as an attempt to model Objectivism in full." ;
     ef:statement "Form ontology terms around the deepest available explanatory characteristic, using context-aware abstraction rather than surface resemblance." ;
     ef:variants "Objectivist concept formation", "Randian epistemology" ;
     ef:kind ef:NodeKindTenet ;
-    ef:lifecycleStatus ef:StatusAdopted .
+    ef:lifecycleStatus ef:StatusAdopted ;
+    skos:broader ef:EposForgeMCPUsage .
 
 ef:RuleOfFundamentality rdf:type ef:Concept, skos:Concept ;
-    rdfs:label "Rule of Fundamentality" ;
     skos:prefLabel "Rule of Fundamentality" ;
     skos:definition "A candidate concept distinction is justified when its defining characteristic explains the greatest number of other characteristics of the units it groups." ;
     skos:broader ef:RandianConceptFormation ;
@@ -522,10 +522,10 @@ ef:RuleOfFundamentality rdf:type ef:Concept, skos:Concept ;
     ef:variants "essential characteristic", "fundamental characteristic" ;
     ef:kind ef:NodeKindConcept ;
     ef:lifecycleStatus ef:StatusAdopted ;
-    ef:dependsOn ef:RandianConceptFormation .
+    ef:dependsOn ef:RandianConceptFormation ;
+    skos:related ef:RandianConceptFormation .
 
 ef:MeasurementOmission rdf:type ef:Concept, skos:Concept ;
-    rdfs:label "measurement-omission" ;
     skos:prefLabel "measurement-omission" ;
     skos:definition "Concepts may abstract over differences in degree or measurement while retaining that the defining characteristic exists in some measure." ;
     skos:broader ef:RandianConceptFormation ;
@@ -533,10 +533,10 @@ ef:MeasurementOmission rdf:type ef:Concept, skos:Concept ;
     ef:variants "concept-formation via measurement-omission", "measurement omission" ;
     ef:kind ef:NodeKindConcept ;
     ef:lifecycleStatus ef:StatusAdopted ;
-    ef:dependsOn ef:RandianConceptFormation .
+    ef:dependsOn ef:RandianConceptFormation ;
+    skos:related ef:RandianConceptFormation .
 
 ef:ContextualEssentiality rdf:type ef:Concept, skos:Concept ;
-    rdfs:label "contextual essentiality" ;
     skos:prefLabel "contextual essentiality" ;
     skos:definition "The essential characteristic of a concept is selected relative to the current state of knowledge; better knowledge may justify a better distinction later." ;
     skos:broader ef:RuleOfFundamentality ;
@@ -544,10 +544,10 @@ ef:ContextualEssentiality rdf:type ef:Concept, skos:Concept ;
     ef:variants "contextual essentials", "contextual essence" ;
     ef:kind ef:NodeKindConcept ;
     ef:lifecycleStatus ef:StatusAdopted ;
-    ef:dependsOn ef:RandianConceptFormation, ef:RuleOfFundamentality .
+    ef:dependsOn ef:RandianConceptFormation, ef:RuleOfFundamentality ;
+    skos:related ef:RuleOfFundamentality .
 
 ef:ExplanatoryPower rdf:type ef:Concept, skos:Concept ;
-    rdfs:label "explanatory power" ;
     skos:prefLabel "explanatory power" ;
     skos:definition "The strength of a concept's defining characteristic is judged by how much of the grouped units' downstream behavior, lifecycle, and relationships it explains." ;
     skos:broader ef:RuleOfFundamentality ;
@@ -555,28 +555,30 @@ ef:ExplanatoryPower rdf:type ef:Concept, skos:Concept ;
     ef:variants "explanatory root", "explanatory depth" ;
     ef:kind ef:NodeKindConcept ;
     ef:lifecycleStatus ef:StatusAdopted ;
-    ef:dependsOn ef:RuleOfFundamentality .
+    ef:dependsOn ef:RuleOfFundamentality ;
+    skos:related ef:RuleOfFundamentality .
 
 ef:EssentialCharacteristicNodeSelection rdf:type ef:Guidance, skos:Concept ;
-    rdfs:label "essential-characteristic node selection" ;
     skos:prefLabel "essential-characteristic node selection" ;
     skos:definition "A guidance rule for ontology editing: admit a node only when its defining characteristic explains the greatest number of other characteristics of the units it groups; otherwise keep it out of the ontology or treat it as guidance rather than a canonical term." ;
     ef:adoptedDefinition "A guidance rule for ontology editing: admit a node only when its defining characteristic explains the greatest number of other characteristics of the units it groups; otherwise keep it out of the ontology or treat it as guidance rather than a canonical term." ;
     ef:kind ef:NodeKindGuidance ;
     ef:lifecycleStatus ef:StatusAdopted ;
     ef:governedBy ef:RandianConceptFormation ;
-    ef:dependsOn ef:MeasurementOmission, ef:ExplanatoryPower .
+    ef:dependsOn ef:MeasurementOmission, ef:ExplanatoryPower ;
+    skos:related ef:RandianConceptFormation, ef:MeasurementOmission, ef:ExplanatoryPower .
 
 ### Knowledge-Tree Individuals — Stabilization & Kernels (EF-053 / EF-054)
 
 ef:BootstrapRule rdf:type ef:Tenet, skos:Concept ;
-    rdfs:label "bootstrap rule" ;
     skos:prefLabel "bootstrap rule" ;
     skos:definition "The doctrine that prevents the self-improvement grind: a factory may trust a layer's autonomy only once the layers beneath it are kernels. Gall's Law operationalized — a complex system that works is invariably found to have evolved from a simple system that worked, so autonomy is grown upward from a trustworthy foundation, never built from scratch over un-kernelled substrate. Governs Loop A (trusting autonomy), not Loop B (adding detection), which is always-valid work on any layer regardless of the bootstrap order." ;
     ef:statement "A layer's autonomy may be trusted only once the layers beneath it are kernels." ;
     ef:variants "bootstrap order", "trust autonomy upward only", "Gall's Law" ;
     ef:kind ef:NodeKindTenet ;
-    ef:lifecycleStatus ef:StatusAdopted .
+    ef:lifecycleStatus ef:StatusAdopted ;
+    skos:broader ef:PillarSubstrateAgnosticPlatform ;
+    skos:related ef:Kernel .
 
 ef:DetectionRatchet rdf:type ef:Concept, skos:Concept ;
     rdfs:label "detection ratchet" ;
@@ -588,37 +590,37 @@ ef:DetectionRatchet rdf:type ef:Concept, skos:Concept ;
     ef:lifecycleStatus ef:StatusAdopted .
 
 ef:Kernel rdf:type ef:Concept, skos:Concept ;
-    rdfs:label "kernel" ;
     skos:prefLabel "kernel" ;
     skos:altLabel "candidate kernel", "stable foundation", "trustworthy foundation", "what can I build on", "what is solid enough to build on" ;
     skos:definition "A substrate or control-layer element that is both stable and detectable — confirmable good in a single command — and is therefore trustworthy to build on." ;
-    rdfs:comment "The primitive that prevents the self-improvement grind (using a not-yet-working tool to fix a not-yet-working tool). A kernel needs two properties, not one: stable (pinned/frozen/source-controlled — it does not change under you) AND detectable (confirmable good in one command). Stability without detection is only 'code you haven't broken yet.' Yields three states — kernel (stable+detectable), candidate kernel (stable, detection partial/just added), not-a-kernel (fast-moving) — where the candidate->kernel promotion is exactly the event 'detection was added.' Kernel state is the maturity model applied to substrate, not a new lifecycle vocabulary. External-tier dependencies (frontier-model / vendor APIs) are inherently un-kernelable — they change on the vendor's schedule and cannot be pinned, so they must be wrapped by an Adapter that carries its own detection and never trusted as foundation." ;
     ef:adoptedDefinition "A substrate or control-layer element that is both stable and detectable — confirmable good in a single command — and is therefore trustworthy to build on." ;
     ef:variants "candidate kernel", "stable foundation", "trustworthy foundation", "what can I build on", "what is solid enough to build on" ;
     ef:kind ef:NodeKindConcept ;
     ef:lifecycleStatus ef:StatusAdopted ;
     ef:governedBy ef:BootstrapRule ;
-    ef:dependsOn ef:DetectionRatchet .
+    ef:dependsOn ef:DetectionRatchet ;
+    skos:broader ef:PillarSubstrateAgnosticPlatform ;
+    skos:related ef:BootstrapRule, ef:DetectionRatchet .
 
 ef:FoundationTrust rdf:type ef:Concept, skos:Concept ;
-    rdfs:label "foundation-trust" ;
     skos:prefLabel "foundation-trust" ;
     skos:definition "One of the two orthogonal axes a factory uses to grade 'how solid is this?'. Foundation-trust answers 'what may I build on?' and is governed by kernel state plus the bootstrap order; it applies to the substrate and control layers. It is independent of, and MUST NOT be conflated with, the product-promotion axis: whether the substrate an artifact runs on is a kernel is a different question from whether that artifact is safe to ship. Trust in a foundation comes from kernels, not from ring promotion." ;
     ef:adoptedDefinition "The axis that grades what may be built upon — governed by kernel state and the bootstrap order — held distinct from whether a product is safe to ship." ;
     ef:variants "foundation-trust axis", "what may I build on" ;
     ef:kind ef:NodeKindConcept ;
     ef:lifecycleStatus ef:StatusAdopted ;
-    ef:dependsOn ef:Kernel, ef:BootstrapRule .
+    ef:dependsOn ef:Kernel, ef:BootstrapRule ;
+    skos:related ef:Kernel, ef:BootstrapRule .
 
 ef:ProductPromotion rdf:type ef:Concept, skos:Concept ;
-    rdfs:label "product-promotion" ;
     skos:prefLabel "product-promotion" ;
     skos:definition "One of the two orthogonal axes a factory uses to grade 'how solid is this?'. Product-promotion answers 'is this artifact safe to ship?' and is governed by the maturity model plus release rings; it applies to the products the factory builds. It is independent of, and MUST NOT be conflated with, the foundation-trust axis: a product moving alpha->beta->GA is a separate question from whether the substrate beneath it is a kernel. Quality of a shipped product comes from rings and feedback-minted checks, not from being frozen." ;
     ef:adoptedDefinition "The axis that grades whether a product is safe to ship — governed by the maturity model and release rings — held distinct from what may be built upon." ;
     ef:variants "product-promotion axis", "is this safe to ship" ;
     ef:kind ef:NodeKindConcept ;
     ef:lifecycleStatus ef:StatusAdopted ;
-    ef:dependsOn ef:ReleaseRingsComponent .
+    ef:dependsOn ef:ReleaseRingsComponent ;
+    skos:related ef:ReleaseRingsComponent .
 
 ### Knowledge-Tree Individuals — Multi-Graph and Backlog Separation (EF-056)
 
@@ -636,12 +638,14 @@ ef:IndependentBacklogGraph rdf:type ef:Concept, skos:Concept ;
     skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindConcept ;
     ef:lifecycleStatus ef:StatusAdopted ;
-    skos:related ef:BacklogComponent .
+    skos:related ef:BacklogComponent ;
+    skos:broader ef:BacklogComponent .
+
+ef:MultiGraphArchitecture skos:broader ef:SpecGraphComponent .
 
 ### Individuals (The 14 Core Components)
 
 ef:SpecInput rdf:type ef:Component, skos:Concept ;
-    rdfs:label "Spec Input" ;
     skos:prefLabel "Spec Input" ;
     skos:definition "Component contract defined (draft). No installed adapter in this instance. Spec input happens informally via backlog files; no tooling normalizes it for Router consumption." ;
     skos:inScheme ef:KnowledgeTree ;
@@ -650,7 +654,6 @@ ef:SpecInput rdf:type ef:Component, skos:Concept ;
     rdfs:comment "Component contract defined (draft). No installed adapter in this instance. Spec input happens informally via backlog files; no tooling normalizes it for Router consumption. See 03-research/ for candidate adapters." .
 
 ef:LivingSpecComponent rdf:type ef:Component, skos:Concept ;
-    rdfs:label "Living Spec" ;
     skos:prefLabel "Living Spec" ;
     skos:definition "Living Spec format is in active use across all repos (every adapter card and component doc follows the pattern). No formal installed adapter in instance/installed/02-living-spec/; the paired-change CI check and graph-projection contract are not yet formally enforced." ;
     skos:inScheme ef:KnowledgeTree ;
@@ -659,7 +662,6 @@ ef:LivingSpecComponent rdf:type ef:Component, skos:Concept ;
     rdfs:comment "Living Spec format is in active use across all repos (every adapter card and component doc follows the pattern). No formal installed adapter in instance/installed/02-living-spec/; the paired-change CI check and graph-projection contract are not yet formally enforced." .
 
 ef:DevProductComponent rdf:type ef:Component, skos:Concept ;
-    rdfs:label "Dev Product" ;
     skos:prefLabel "Dev Product" ;
     skos:definition "Multiple adapters installed: claude-code (approved), copilot (approved), gemini-cli (experimental). All are operational." ;
     skos:inScheme ef:KnowledgeTree ;
@@ -668,7 +670,6 @@ ef:DevProductComponent rdf:type ef:Component, skos:Concept ;
     rdfs:comment "Multiple adapters installed: claude-code (approved), copilot (approved), gemini-cli (experimental). All are operational." .
 
 ef:RouterComponent rdf:type ef:Component, skos:Concept ;
-    rdfs:label "Router" ;
     skos:prefLabel "Router" ;
     skos:definition "No reference implementation installed in this EposForge instance. EF-013 (Router v0) is slated, gated on EF-011 and EF-012 recall quality. Adopters may install their own adapter (e.g. Gas Town at the GEA adopter instance) — that is an adopter-side installation, not this framework layer. Do not present Router patterns as currently operational at the framework level." ;
     skos:inScheme ef:KnowledgeTree ;
@@ -677,7 +678,6 @@ ef:RouterComponent rdf:type ef:Component, skos:Concept ;
     rdfs:comment "No reference implementation installed in this EposForge instance. EF-013 (Router v0) is slated, gated on EF-011 and EF-012 recall quality. Adopters may install their own adapter (e.g. Gas Town at the GEA adopter instance) — that is an adopter-side installation, not this framework layer. Do not present Router patterns as currently operational at the framework level." .
 
 ef:ToolTransportComponent rdf:type ef:Component, skos:Concept ;
-    rdfs:label "Tool Transport" ;
     skos:prefLabel "Tool Transport" ;
     skos:definition "mcp-stdio-and-http adapter installed and in active use. MCP is the adopted Tool Transport standard." ;
     skos:inScheme ef:KnowledgeTree ;
@@ -686,13 +686,13 @@ ef:ToolTransportComponent rdf:type ef:Component, skos:Concept ;
     rdfs:comment "mcp-stdio-and-http adapter installed and in active use. MCP is the adopted Tool Transport standard." .
 
 ef:SpecGraphComponent rdf:type ef:Component, skos:Concept ;
-    rdfs:label "Spec Graph" ;
     skos:prefLabel "Spec Graph" ;
     skos:definition "Cognee adapter installed and running against Azure Foundry (EF-017 resolved 2026-05-26). graphrag adapter also present. EF-020 (KG sync validation) is still slated — treat recall as operational but not yet drift-verified over time." ;
     skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindComponent ;
     ef:componentMaturity ef:MaturityShipped ;
-    rdfs:comment "Cognee adapter installed and running against Azure Foundry (EF-017 resolved 2026-05-26). graphrag adapter also present. EF-020 (KG sync validation) is still slated — treat recall as operational but not yet drift-verified over time." .
+    rdfs:comment "Cognee adapter installed and running against Azure Foundry (EF-017 resolved 2026-05-26). graphrag adapter also present. EF-020 (KG sync validation) is still slated — treat recall as operational but not yet drift-verified over time." ;
+    skos:broader ef:PillarAIFactory .
 
 ef:ExecutionSandboxComponent rdf:type ef:Component, skos:Concept ;
     rdfs:label "Execution Sandbox" ;
@@ -758,36 +758,32 @@ ef:SecretsKeyManagementComponent rdf:type ef:Component, skos:Concept ;
     rdfs:comment "sops-age adapter installed and operational: vault at instance/installed/12-secrets-key-management/sops-age/, resolver at bin/epos-secrets. Note: epos-secrets is a repo-local script, not a standalone installable artifact (EF-022 tracks making it relocatable). Adopters in mode-B must copy the script; a stable independent install does not yet exist." .
 
 ef:BacklogComponent rdf:type ef:Component, skos:Concept ;
-    rdfs:label "Backlog" ;
     skos:prefLabel "Backlog" ;
     skos:definition "Backlog data lives in its own independent file-based graph (separate from the main Spec Graph in Component 6; see EF-056 / EF-057 and ef:IndependentBacklogGraph). Structured Markdown supplies explicit nodes (issues with attributes), directed edges (Depends on, Blocks), and Tag communities; GraphRAG-style views are provided by separate tooling (aggregate, portfolio-review). Disk (Markdown) is canonical." ;
     skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindComponent ;
     ef:componentMaturity ef:MaturityShipped ;
-    rdfs:comment "file-based-backlog adapter installed: per-repo markdown backlog files under backlog/ with EF-/GEA- IDs (EF-/GEA- prefixes). Beads (bd, Dolt-backed) is available via Gas Town at adopter instances as a complementary agent-facing ledger. The independent backlog graph (items) is distinct from backlog mechanics projected into the main Spec Graph. See ef:MultiGraphArchitecture, ef:IndependentBacklogGraph, and the file-based-backlog Living Spec." .
+    rdfs:comment "file-based-backlog adapter installed: per-repo markdown backlog files under backlog/ with EF-/GEA- IDs (EF-/GEA- prefixes). Beads (bd, Dolt-backed) is available via Gas Town at adopter instances as a complementary agent-facing ledger. The independent backlog graph (items) is distinct from backlog mechanics projected into the main Spec Graph. See ef:MultiGraphArchitecture, ef:IndependentBacklogGraph, and the file-based-backlog Living Spec." ;
+    skos:broader ef:PillarProductEngine .
 
 ### Adapter Status Individuals
 
 ef:AdapterStatusExperimental rdf:type ef:AdapterStatus, skos:Concept ;
-    rdfs:label "experimental" ;
     skos:prefLabel "experimental" ;
     skos:definition "Adapter is under active development or evaluation." ;
     skos:inScheme ef:KnowledgeTree .
 
 ef:AdapterStatusApproved rdf:type ef:AdapterStatus, skos:Concept ;
-    rdfs:label "approved" ;
     skos:prefLabel "approved" ;
     skos:definition "Adapter is production-ready and recommended for use." ;
     skos:inScheme ef:KnowledgeTree .
 
 ef:AdapterStatusDeprecated rdf:type ef:AdapterStatus, skos:Concept ;
-    rdfs:label "deprecated" ;
     skos:prefLabel "deprecated" ;
     skos:definition "Adapter is no longer recommended and may be removed." ;
     skos:inScheme ef:KnowledgeTree .
 
 ef:AdapterStatusShelved rdf:type ef:AdapterStatus, skos:Concept ;
-    rdfs:label "shelved" ;
     skos:prefLabel "shelved" ;
     skos:definition "Adapter is not being worked on but retained for possible future reactivation. Agents MUST NOT select or invoke shelved adapters." ;
     skos:inScheme ef:KnowledgeTree .
@@ -795,35 +791,30 @@ ef:AdapterStatusShelved rdf:type ef:AdapterStatus, skos:Concept ;
 ### Platform Factory Phase Individuals
 
 ef:PlatformPhase0 rdf:type ef:Phase, skos:Concept ;
-    rdfs:label "Phase 0: Foundation" ;
     skos:prefLabel "Phase 0: Foundation" ;
     skos:definition "Everything-as-Code plus observability." ;
     skos:inScheme ef:KnowledgeTree ;
     ef:maturesTo ef:PlatformPhase1 .
 
 ef:PlatformPhase1 rdf:type ef:Phase, skos:Concept ;
-    rdfs:label "Phase 1: Agent Observation" ;
     skos:prefLabel "Phase 1: Agent Observation" ;
     skos:definition "Agents query, propose, wait." ;
     skos:inScheme ef:KnowledgeTree ;
     ef:maturesTo ef:PlatformPhase2 .
 
 ef:PlatformPhase2 rdf:type ef:Phase, skos:Concept ;
-    rdfs:label "Phase 2: Agent Proposals" ;
     skos:prefLabel "Phase 2: Agent Proposals" ;
     skos:definition "Agents open PRs, humans review and apply." ;
     skos:inScheme ef:KnowledgeTree ;
     ef:maturesTo ef:PlatformPhase3 .
 
 ef:PlatformPhase3 rdf:type ef:Phase, skos:Concept ;
-    rdfs:label "Phase 3: Supervised Autonomy" ;
     skos:prefLabel "Phase 3: Supervised Autonomy" ;
     skos:definition "Maturity rung (irreversible, reached via ef:maturesTo): agents execute pre-approved actions. For the reversible operating posture at this level, see ef:AutonomyModeSupervised." ;
     skos:inScheme ef:KnowledgeTree ;
     ef:maturesTo ef:PlatformPhase4 .
 
 ef:PlatformPhase4 rdf:type ef:Phase, skos:Concept ;
-    rdfs:label "Phase 4: Full Autonomy" ;
     skos:prefLabel "Phase 4: Full Autonomy" ;
     skos:definition "Maturity rung (irreversible, reached via ef:maturesTo): agents self-update, coordinate, optimize. For the reversible operating posture at this level, see ef:AutonomyModeAutonomous." ;
     skos:inScheme ef:KnowledgeTree ;
@@ -832,42 +823,36 @@ ef:PlatformPhase4 rdf:type ef:Phase, skos:Concept ;
 ### Product Factory Phase Individuals
 
 ef:ProductPhaseA rdf:type ef:Phase, skos:Concept ;
-    rdfs:label "Phase A: Registry as ground truth" ;
     skos:prefLabel "Phase A: Registry as ground truth" ;
     skos:definition "Initial registry-driven state for product factory." ;
     skos:inScheme ef:KnowledgeTree ;
     ef:maturesTo ef:ProductPhaseB .
 
 ef:ProductPhaseB rdf:type ef:Phase, skos:Concept ;
-    rdfs:label "Phase B: Tool transport foundation" ;
     skos:prefLabel "Phase B: Tool transport foundation" ;
     skos:definition "MCP and tool transport established." ;
     skos:inScheme ef:KnowledgeTree ;
     ef:maturesTo ef:ProductPhaseC .
 
 ef:ProductPhaseC rdf:type ef:Phase, skos:Concept ;
-    rdfs:label "Phase C: Living Spec rollout" ;
     skos:prefLabel "Phase C: Living Spec rollout" ;
     skos:definition "Living Specs become standard across deliverables." ;
     skos:inScheme ef:KnowledgeTree ;
     ef:maturesTo ef:ProductPhaseD .
 
 ef:ProductPhaseD rdf:type ef:Phase, skos:Concept ;
-    rdfs:label "Phase D: Router v0" ;
     skos:prefLabel "Phase D: Router v0" ;
     skos:definition "Basic decomposition and dispatch via Router." ;
     skos:inScheme ef:KnowledgeTree ;
     ef:maturesTo ef:ProductPhaseE .
 
 ef:ProductPhaseE rdf:type ef:Phase, skos:Concept ;
-    rdfs:label "Phase E: Spec Graph" ;
     skos:prefLabel "Phase E: Spec Graph" ;
     skos:definition "Full ontology-grounded Spec Graph for agent memory." ;
     skos:inScheme ef:KnowledgeTree ;
     ef:maturesTo ef:ProductPhaseF .
 
 ef:ProductPhaseF rdf:type ef:Phase, skos:Concept ;
-    rdfs:label "Phase F: Level 5 gate" ;
     skos:prefLabel "Phase F: Level 5 gate" ;
     skos:definition "Auto-merge tier-1 changes." ;
     skos:inScheme ef:KnowledgeTree .
@@ -875,20 +860,17 @@ ef:ProductPhaseF rdf:type ef:Phase, skos:Concept ;
 ### Standard Individuals
 
 ef:StandardsMeta rdf:type ef:Standard, skos:Concept ;
-    rdfs:label "Standards Meta" ;
     skos:prefLabel "Standards Meta" ;
     skos:definition "Adopted standard governing the shape, status, and conformance language of all other standards under 04-standards/." ;
     skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindComponent .
 
 ef:NamingConventions rdf:type ef:Standard, skos:Concept ;
-    rdfs:label "Naming Conventions" ;
     skos:prefLabel "Naming Conventions" ;
     skos:definition "Adopted standard governing repo-wide naming (files, directories, identifiers)." ;
     skos:inScheme ef:KnowledgeTree .
 
 ef:ResearchMirror rdf:type ef:Standard, skos:Concept ;
-    rdfs:label "Research Mirror" ;
     skos:prefLabel "Research Mirror" ;
     skos:definition "Adopted standard governing how external research is mirrored into the repo." ;
     skos:inScheme ef:KnowledgeTree .
@@ -896,57 +878,56 @@ ef:ResearchMirror rdf:type ef:Standard, skos:Concept ;
 ### Vision Pillar Individuals
 
 ef:PillarSubstrateAgnosticPlatform rdf:type ef:Pillar, skos:Concept ;
-    rdfs:label "Substrate-Agnostic Platform" ;
     skos:prefLabel "Substrate-Agnostic Platform" ;
     skos:definition "The dark-factory pattern is substrate-agnostic across software, platform, and future physical execution environments." ;
     skos:inScheme ef:KnowledgeTree .
 
 ef:PillarAIFactory rdf:type ef:Pillar, skos:Concept ;
-    rdfs:label "AI Factory" ;
     skos:prefLabel "AI Factory" ;
     skos:definition "Agentic execution is the default operating model across factory workflows." ;
     skos:inScheme ef:KnowledgeTree .
 
 ef:PillarProductEngine rdf:type ef:Pillar, skos:Concept ;
-    rdfs:label "Product Engine" ;
     skos:prefLabel "Product Engine" ;
     skos:definition "The factory produces durable deliverables with Living Specs and Spec Graph projection." ;
     skos:inScheme ef:KnowledgeTree .
 
+ef:CoreVisionPillars rdf:type skos:Collection ;
+    skos:prefLabel "Core Vision Pillars" ;
+    skos:definition "The three load-bearing pillars of the EposForge dark factory vision." ;
+    skos:member ef:PillarSubstrateAgnosticPlatform, ef:PillarAIFactory, ef:PillarProductEngine ;
+    skos:inScheme ef:KnowledgeTree .
+
+ef:KnowledgeTree skos:related ef:CoreVisionPillars .
+
 ### Core Principle Individuals
 
 ef:PrincipleEverythingAsCode rdf:type ef:Principle, skos:Concept ;
-    rdfs:label "Everything-as-Code" ;
     skos:prefLabel "Everything-as-Code" ;
     skos:definition "Git is source of truth; no manual clicks." ;
     skos:inScheme ef:KnowledgeTree .
 
 ef:PrincipleAIFirstOperations rdf:type ef:Principle, skos:Concept ;
-    rdfs:label "AI-First Operations" ;
     skos:prefLabel "AI-First Operations" ;
     skos:definition "Agents observe, reason, and act; humans set policy and audit." ;
     skos:inScheme ef:KnowledgeTree .
 
 ef:PrincipleDefenseInDepth rdf:type ef:Principle, skos:Concept ;
-    rdfs:label "Defense in Depth" ;
     skos:prefLabel "Defense in Depth" ;
     skos:definition "Assume breach and limit blast radius with layered safeguards." ;
     skos:inScheme ef:KnowledgeTree .
 
 ef:PrincipleIncrementalComplexity rdf:type ef:Principle, skos:Concept ;
-    rdfs:label "Incremental Complexity" ;
     skos:prefLabel "Incremental Complexity" ;
     skos:definition "Start simple and add layers as needed." ;
     skos:inScheme ef:KnowledgeTree .
 
 ef:PrincipleCloudAgnostic rdf:type ef:Principle, skos:Concept ;
-    rdfs:label "Cloud-Agnostic" ;
     skos:prefLabel "Cloud-Agnostic" ;
     skos:definition "Workloads remain portable across environments." ;
     skos:inScheme ef:KnowledgeTree .
 
 ef:PrincipleObservableAndTestable rdf:type ef:Principle, skos:Concept ;
-    rdfs:label "Observable and Testable" ;
     skos:prefLabel "Observable and Testable" ;
     skos:definition "State changes are observable and configurations are validated." ;
     skos:inScheme ef:KnowledgeTree .
@@ -958,7 +939,8 @@ ef:EposForgePattern rdf:type ef:DarkFactory ;
     ef:hasPillar ef:PillarSubstrateAgnosticPlatform, ef:PillarAIFactory, ef:PillarProductEngine ;
     ef:governedBy ef:EssentialCharacteristicNodeSelection, ef:RandianConceptFormation ;
     ef:guidedByPrinciple ef:PrincipleEverythingAsCode, ef:PrincipleAIFirstOperations, ef:PrincipleDefenseInDepth,
-        ef:PrincipleIncrementalComplexity, ef:PrincipleCloudAgnostic, ef:PrincipleObservableAndTestable .
+        ef:PrincipleIncrementalComplexity, ef:PrincipleCloudAgnostic, ef:PrincipleObservableAndTestable ;
+    skos:related ef:EssentialCharacteristicNodeSelection, ef:RandianConceptFormation .
 
 ef:Ontology ef:governedBy ef:EssentialCharacteristicNodeSelection, ef:RandianConceptFormation .
 
