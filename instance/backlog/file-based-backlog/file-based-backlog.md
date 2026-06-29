@@ -18,7 +18,7 @@ source_of_truth: yes
 |---|---|
 | `name` | `file-based-backlog` |
 | `component` | `backlog` |
-| `version` | `0.2.0` |
+| `version` | `0.3.0` (Tags: multi-valued; Theme: legacy alias) |
 | `status` | `experimental` |
 | `privacy_posture` | `local` |
 | `cost_hint` | `free` |
@@ -91,6 +91,26 @@ readers); making the elicitation and portfolio tooling refuse to place anchors i
 anchor, is a natural enforcement follow-up. Repos that are neither (e.g. the
 framework/pattern repo itself) may omit the field.
 
+## Independent File-based Graph for Agents
+
+The backlog data is stored in structured Markdown files that explicitly encode a graph (see EF-056 / EF-057 for the architecture evolution):
+
+- Individual issues are nodes carrying attributes (`Status`, `Effort`, `Tags`, `Fix surface`, etc.).
+- `Depends on:`, `Blocks:`, and `Supersedes:` define directed edges.
+- `Tags:` (multi-valued; see EF-046) provide natural community groupings.
+
+This explicit structure gives agents a high-quality, deterministic graph skeleton without requiring LLM entity extraction.
+
+GraphRAG-style capabilities (dependency traversal, impact analysis, tag-based communities, thematic summarization, semantic search over items) are provided by separate tooling and skills that read and process these files. Examples include `aggregate.sh --tags/--critical-path/--mermaid` (themes, critical-path, portfolio graphs) and the `portfolio-review` skill. Additional dedicated skills or a lightweight GraphRAG processor can be added for richer queries.
+
+The GraphRAG capability lives in the tooling layer, not in the Markdown files themselves. This keeps the core data format (plain Markdown following the schema) completely portable and free of heavy runtime dependencies such as Cognee.
+
+### Design goals
+- **Separation**: Backlog items and their graph live outside the main EposForge Spec Graph (Component 6). The main graph may reference backlog *mechanics* via the ontology but does not ingest the items.
+- **Agent access**: Agents obtain graph-augmented results by calling the appropriate tools/skills rather than performing raw file-based RAG across multiple repos.
+- **Portability**: The file format + schema can be adopted independently (e.g., as a standalone open-source backlog system) with minimal or no dependencies. Tooling that adds GraphRAG features is optional and pluggable.
+- **Multi-graph model**: Each major scope (EposForge pattern, adopter implementation, product repos, backlog) can maintain its own graph. Shared ontology terms provide the mapping between them. (See capture for "Adopter Platform Spec" terminology.)
+
 ## Operator commands
 
 From repo root (preferred: run-from-clone via `BACKLOG_HOME`; these paths are the vendored-copy fallback):
@@ -101,7 +121,7 @@ From repo root (preferred: run-from-clone via `BACKLOG_HOME`; these paths are th
 - `bash instance/backlog/file-based-backlog/scripts/aggregate.sh --plan`
 - `bash instance/backlog/file-based-backlog/scripts/aggregate.sh --regressions <keyword>`
 - `bash instance/backlog/file-based-backlog/scripts/aggregate.sh --graph`
-- `bash instance/backlog/file-based-backlog/scripts/aggregate.sh --themes`
+- `bash instance/backlog/file-based-backlog/scripts/aggregate.sh --tags` (or `--themes` alias)
 - `bash instance/backlog/file-based-backlog/scripts/aggregate.sh --critical-path <ID>`
 - `bash instance/backlog/file-based-backlog/scripts/ready.sh`
 - `bash instance/backlog/file-based-backlog/scripts/ready.sh --json`
