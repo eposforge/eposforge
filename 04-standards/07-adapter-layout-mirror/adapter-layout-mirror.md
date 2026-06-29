@@ -21,7 +21,16 @@ mirrors eposforge's and cross-repo tooling (`aggregate.sh`, the Spec Graph) can
 traverse repos uniformly. Anchored on node identity in the canonical knowledge
 tree, NOT on any hardcoded numbered path.
 
-This standard does not govern an adopter's own application source layout.
+This standard does not govern an adopter's own application source layout. However, EposForge recommends (and adopters should follow) a clear pattern for the primary repo:
+
+An adopter designates **one primary repo** as the "Adopter Platform Spec" for the environment. This single repo:
+- Contains the documentation describing the adopter's overall eposforge implementation (both the Platform Factory and Product Factory sides).
+- Includes the `eposforge/` bucket (the adopted pattern slice with stable component/adapter layout).
+- Acts as the anchor for cross-repo views such as portfolio reviews.
+
+GEA is the canonical example of this primary repo. Product repos and other implementation repos remain separate but can be discovered from the primary via workspace files or BACKLOG_ROOTS for a unified portfolio view.
+
+See the architecture capture and implementation plan (tracked by EF-056) for the multi-graph and boundaries model. The adapter-layout-mirror rules below ensure the `eposforge/` slice is uniform so tooling works.
 
 ## Normative requirements
 
@@ -89,4 +98,4 @@ This standard does not govern an adopter's own application source layout.
 - [../06-research-mirror/research-mirror.md](../06-research-mirror/research-mirror.md) (sibling mirror standard)
 - [../../01-architecture/00-adapter-pattern/adapter-pattern.md](../../01-architecture/00-adapter-pattern/adapter-pattern.md)
 
-See `docs/eposforge-gea-architecture-discussion-capture.md` and `docs/implementation-plan-eposforge-gea-architecture.md` (tracked by EF-056). This standard covers the adopted `eposforge/` slice; broader single-repo adopter layout guidance (targeted mirroring levels, file-RAG discoverability, runtime/LAN naming) is in progress via the strangler rollout. AGENTS.md is the SSoT for agent instructions on using dedicated backlog-graph tools + explicit markup over raw file RAG (complements per-skill SKILL.md). See also EF-047/048 for public/private concerns in cross-repo views.
+See `docs/eposforge-gea-architecture-discussion-capture.md` and `docs/implementation-plan-eposforge-gea-architecture.md` (tracked by EF-056). This standard covers the technical rules for the `eposforge/` slice inside an adopter's primary repo. The primary repo itself (e.g. GEA) is the place where overall eposforge implementation documentation lives and where portfolio reviews are performed. AGENTS.md is the SSoT for agent instructions on using dedicated backlog-graph tools + explicit markup over raw file RAG. See also EF-047/048 for public/private concerns.

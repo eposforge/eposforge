@@ -63,20 +63,9 @@ Spec Graph (and any backlog KG) are tools *used by* the factories; they are not 
 - How GEA agents are told to ground: "always consult upstream eposforge MCP first for pattern, then local adoption graph for our state".
 - Living Spec contract update: allow "declared corpus of contracts + cards" for pattern and large adopters instead of mandating single root SPEC.md.
 
-**Superseded**: Full evolved discussion is in `eposforge-gea-architecture-discussion-capture.md`. This note is retained for history. Phase 0 (EF-056+) now active; see implementation plan and current backlog items for status. Terminology alignment (Adopter Platform Spec vs Platform Instance) is part of EF-058.
+**Superseded**: Full evolved discussion is in `eposforge-gea-architecture-discussion-capture.md`. This note is retained for history. Phase 0 alignment complete (EF-056 master + children); see implementation plan and current backlog items for status. Terminology, primary-repo model (portfolio reviews in the Adopter Platform Spec repo), and initial ingestion boundary work (EF-057) documented in the main files.
 
-## Next actions (smallest effective steps)
-
-1. Make ingestion boundaries explicit (edit bulk-rebuild.sh + update-spec-graph skill + post-commit hook + a CORPUS.md or section in cognee.md). Exclude raw backlog item files by default.
-2. Add a one-page "Repository roles & ownership" section (put it in 00-vision or new short doc under 01-architecture). Point to existing substrate/product language in backlog adapter.
-3. Decide backlog-KG path and prototype one small dataset (e.g. `backlog-items` cognee dataset or GraphRAG on backlog/ only).
-4. Update Living Spec contract + research catalog to note the distributed-corpus reality for patterns.
-5. Pick terminology fix and apply in ontology comments, vision, and EF-011/EF-012 notes.
-6. Update adopter-recall.py and any "how GEA uses the graph" runbooks to reflect the two-graph model.
-
-See also: EF-011, EF-012, backlog component, platform-factory-phases, product-factory-phases, instance/backlog/file-based-backlog.md (role section), aggregate.sh visibility logic.
-
-This note is the thing "set aside" so the model does not have to live only in heads.
+This early note is kept only for historical context. Current SSoT is the capture + plan + the four maintained files.
 
 **Forward plan (2026-06)**: See the dedicated implementation-plan file. Uses strangler fig (opportunistic + visibility + commitment) for the full scope to prevent losing track. All phases tracked as EF- items in the backlog itself + regular portfolio reviews. Start small per scope/component.
 

@@ -2,7 +2,7 @@
 
 **Source**: Consolidated from full discussion capture in `docs/eposforge-gea-architecture-discussion-capture.md`.
 
-**Goal**: Clarify boundaries, enable multi-graph + ontology-as-mapping, targeted mirroring for humans/extraction, reliable projection, and graph-first agent access while keeping disk canonical. Use strangler fig pattern (see 02-roadmap/adoption-strategy.md) for incremental rollout so we don't lose track.
+**Goal**: Clarify boundaries so that an adopter maintains a single primary repo (the "Adopter Platform Spec", e.g. GEA) that documents the overall eposforge implementation for both product and platform factories and contains the `eposforge/` adopted slice. Enable multi-graph + ontology-as-mapping, targeted mirroring, reliable projection, and graph-first agent access while keeping disk canonical. Portfolio reviews happen from that primary repo. Use strangler fig pattern (see 02-roadmap/adoption-strategy.md) for incremental rollout so we don't lose track.
 
 **Tracking to avoid losing the thread**:
 - Create EF- backlog items for each phase/milestone (use the file-based backlog itself).
@@ -47,7 +47,8 @@ Start narrow (one adopter + one area), prove, then expand. Track everything as E
 - Create EF- items for each major thread (multi-graph, backlog independence, layout mirroring, agent access, sync reliability).
 - Update the 4 maintained files only (no open docs yet).
 - Align terminology in capture (Adopter Platform Spec vs Instance).
-- Checkpoint: portfolio-review run that surfaces this as a theme.
+- Explicitly document that adopters designate one primary repo as the Adopter Platform Spec containing overall implementation docs (product + platform factories) + the eposforge/ slice; this is where portfolio reviews are performed.
+- Checkpoint: portfolio-review run that surfaces this as a theme (run from the primary repo when possible).
 
 **Milestone**: Clear, visible backlog of the work. No drift in our own tracking.
 
@@ -167,6 +168,14 @@ Update this plan and the capture after every phase or significant discussion. St
 
 This plan is derived directly from the captured discussion. Prioritize Phases 0-2 for quickest impact on agent experience and consistency. 
 
-**Phase 0 status (2026-06-28)**: Tracked by EF-056 (master) + children (EF-057 ingestion boundaries + GraphRAG layer pilot, EF-058 terminology/roles, more to follow). The four files are the maintained record. Implementation edits now proceed only against the backlog items and the four files (or as explicitly called for by a child EF-). Existing file-based backlog pieces (aggregate, explicit markup, portfolio-review) are treated as partial alignment / foundation. See capture for full context.
+**Phase 0 status (2026-06-29)**: Complete. 
+- EF-056 master + children EF-057 (ingestion boundaries + GraphRAG layer pilot), EF-058 (terminology + repository roles + primary Adopter Platform Spec model) created with full verify criteria in backlog.
+- Four maintained files (this plan, capture, boundaries-layers-2026-06.md, 04-standards/07-adapter-layout-mirror) + related docs (backlog component, file-based-backlog.md, preferred-mode-adoption-plan.md) updated: EF refs, "planning only" language removed, explicit primary-repo model (single Adopter Platform Spec repo holds overall product+platform docs + eposforge/ slice; portfolio reviews run there; GEA example). 
+- Terminology aligned (Adopter Platform Spec vs Platform Instance, multi-graph, independent backlog graph) in docs, ontology (new ef:MultiGraphArchitecture + ef:IndependentBacklogGraph), skills (portfolio-review, update-spec-graph), and standards.
+- Ontology enhanced pre-review.
+- Portfolio-review executed as checkpoint (initially in framework; clarified real view from primary adopter repo).
+- Related tooling advanced (EF-046 Tags full migration, EF-047 visibility/private roots).
+- EF-057 starter: explicit exclusion of raw backlog items added to bulk-rebuild.sh, update-spec-graph skill, and documented in cognee.md (main Spec Graph excludes raw items; mechanics via ontology OK).
+- All changes tracked via the backlog's own graph + four files as SSoT.
 
-Update this plan (and the capture) after each significant step or portfolio checkpoint.
+Implementation edits now proceed only against the backlog items and the four files (or as explicitly called for by a child EF-). Update this plan (and the capture) after each significant step or portfolio checkpoint. Phase 0 milestone achieved; entering execution of children starting with EF-057.

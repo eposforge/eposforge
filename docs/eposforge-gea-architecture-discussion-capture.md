@@ -26,7 +26,7 @@ User listed 7 core problems:
 
 Additional context:
 - EposForge = pattern + reference implementations (in `instance/`).
-- GEA = adopter platform factory (with GEA- backlog items, private visibility in aggregation).
+- GEA = the adopter's primary repo (Adopter Platform Spec) that documents the overall eposforge implementation for both factories and contains the eposforge/ slice (with GEA- backlog items, private visibility in aggregation).
 - Existing partials: backlog adapter has `role = "substrate"` vs "product"; `aggregate.sh` handles private roots (writes to first private like GEA); ontology distinguishes PlatformFactory/ProductFactory; platform vs product phase roadmaps.
 
 ## 3. Encapsulation & Layout Problems (GEA's eposforge/ Folder)
@@ -128,7 +128,10 @@ Existing partial mechanisms:
 - Deployment for multi-graphs: single cognee with many datasets vs per-scope instances.
 - How much mapping data in upstream graph vs only in adopter graphs.
 - Living Spec contract updates for distributed corpora.
-- Terminology: "Adopter Platform Spec (GEA repo)" vs "Platform Instance (concrete LAN)".
+- Terminology (to be used consistently):
+  - "Adopter Platform Spec (e.g. GEA repo)": the single primary repo that acts as the primary eposforge implementer in the adopter's environment. It contains documentation about the overall eposforge implementation for both product and platform factories + the `eposforge/` adopted slice. This is where portfolio reviews happen.
+  - "Platform Instance (concrete LAN)": the actual running substrate (srv-docker-hp + IaC etc.).
+- EposForge instructs adopters to set up their environment with one such primary repo. Product repos are separate but can be included in views from the primary.
 - Sync reliability: verification steps, easy agent-triggered rebuilds, "graph knows about disk" checks.
 - Precise layout guidelines for adopter repos (bucket + knowledge sections + runtime naming).
 
@@ -158,7 +161,17 @@ See also: EF-011, EF-012 (recall quality), backlog component, platform/product p
 - GEA-specific: `GraceEnterprisesArchitecture/eposforge/`, servers/, hardware/, etc. (examples of bleed).
 - Backlog: `instance/backlog/`, `backlog/file-based-backlog/scripts/aggregate.sh`.
 
-**Phase 0 status (tracked by EF-056)**: Design captured; Phase 0 items created and first related backlog-tooling work (EF-046/047) advanced. Draft edits to component/adapter docs have been resolved into clean target-shape language (see the three maintained files + this capture). The four files remain the SSoT for the evolution state. Existing pieces (file-based schema + aggregate/portfolio-review) are foundation and are being incrementally enhanced via the EF- items.
+**Phase 0 status (tracked by EF-056)**: Complete (as of 2026-06-29). 
+- EF-056 master + EF-057 (ingestion boundaries + minimal GraphRAG layer pilot), EF-058 (terminology + roles + primary repo model) created with detailed verify criteria.
+- Four maintained files (plan, this capture, boundaries-layers, adapter-layout-mirror) + related (backlog.md component doc, file-based-backlog.md, preferred-mode-adoption-plan.md) updated with EF references, removed planning-only language, and full primary-repo model: adopter's single primary repo (Adopter Platform Spec, e.g. GEA) contains overall eposforge implementation docs for product + platform factories + the eposforge/ slice; this is where portfolio reviews happen. EposForge now instructs adopters to set it up this way.
+- Terminology aligned across docs, ontology (ef:MultiGraphArchitecture + ef:IndependentBacklogGraph), skills (portfolio-review, update-spec-graph), and standards.
+- Ontology enhanced with the new concepts before the review.
+- Portfolio-review executed as checkpoint (framework view first; clarified that the real combined portfolio view belongs in the primary adopter repo).
+- Related backlog-tooling (EF-046 Tags, EF-047 visibility) advanced.
+- EF-057 starter work: raw backlog item exclusion implemented in bulk-rebuild.sh + update-spec-graph skill; documented in cognee.md (main Spec Graph excludes raw items by default; still allows ontology references to backlog mechanics).
+- The four files + backlog items remain the SSoT. Existing pieces (file-based schema + aggregate/portfolio-review tooling) are foundation and being enhanced via the EF- items.
+
+See plan for full current status and next. The four files remain the maintained record for the evolution.
 
 ## 8. Status & Usage
 This file + `docs/boundaries-layers-2026-06.md` + the standards above contain the captured thinking. Use for:
@@ -169,7 +182,7 @@ This file + `docs/boundaries-layers-2026-06.md` + the standards above contain th
 
 **Model is not final** — discussion evolved from "narrow fixes" to "multi-graph + ontology-as-mapping + targeted mirroring + graph-first agent access."
 
-**Forward plan (zoomed out)**: See `docs/implementation-plan-eposforge-gea-architecture.md` (updated to use the repo's own strangler fig pattern for incremental rollout). This avoids losing track of the large scope by treating the evolution itself as a tracked strangler migration in the backlog + regular portfolio reviews. Track via EF- items, the four files, and visibility mechanisms.
+**Forward plan (zoomed out)**: See `docs/implementation-plan-eposforge-gea-architecture.md`. The adopter's single primary repo (Adopter Platform Spec, e.g. GEA) contains the overall eposforge implementation documentation (product + platform factories) plus the `eposforge/` slice; this is where portfolio reviews are run. Use the repo's own strangler fig pattern for incremental rollout. Track via EF- items, the four files, and visibility mechanisms. EposForge instructs adopters to set up their primary repo this way.
 
 Cross-cutting: Follow EposForge's AGENTS.md / SKILL.md / agent-coding-guidelines patterns for all agent/skills design work on the backlog graph. Plan to fill gaps in that guidance. Bake strangler fig concepts (Migration, LEGACY_SHAPE_OF, TARGET_SHAPE_OF, visibility of debt, etc.) into the backlog semantic layer (schema/fields) so agents can use the GraphRAG to implement strangler migrations especially well.
 

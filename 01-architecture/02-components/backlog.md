@@ -123,6 +123,8 @@ Agents obtain graph-augmented answers by calling the appropriate tools/skills ra
 
 See `instance/backlog/file-based-backlog/file-based-backlog.md` (Living Spec), `docs/eposforge-gea-architecture-capture*.md`, and EF-046/047/056–058.
 
+Adopters designate one primary repo (the Adopter Platform Spec) that documents their overall eposforge implementation for product and platform factories and contains the `eposforge/` slice. Portfolio reviews are performed from that primary repo using the aggregate tooling (with appropriate BACKLOG_ROOTS).
+
 ## Reference implementations
 
 See repo-instance adapter docs under

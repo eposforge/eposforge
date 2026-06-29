@@ -109,7 +109,7 @@ The GraphRAG capability lives in the tooling layer, not in the Markdown files th
 - **Separation**: Backlog items and their graph live outside the main EposForge Spec Graph (Component 6). The main graph may reference backlog *mechanics* via the ontology but does not ingest the items.
 - **Agent access**: Agents obtain graph-augmented results by calling the appropriate tools/skills rather than performing raw file-based RAG across multiple repos.
 - **Portability**: The file format + schema can be adopted independently (e.g., as a standalone open-source backlog system) with minimal or no dependencies. Tooling that adds GraphRAG features is optional and pluggable.
-- **Multi-graph model**: Each major scope (EposForge pattern, adopter implementation, product repos, backlog) can maintain its own graph. Shared ontology terms provide the mapping between them. (See capture for "Adopter Platform Spec" terminology.)
+- **Multi-graph model**: Each major scope (EposForge pattern, adopter's primary repo / Adopter Platform Spec, product repos, backlog) can maintain its own graph. Shared ontology terms provide the mapping between them. The adopter's primary repo (e.g. GEA) is the single repo containing overall eposforge implementation documentation for both factories plus the `eposforge/` slice; portfolio reviews are run from there. (See capture/plan for terminology and EF-056.)
 
 ## Operator commands
 
