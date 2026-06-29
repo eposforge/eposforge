@@ -36,8 +36,8 @@ Effort: S
 Fix surface: eposforge-pattern
 Depends on: EF-056
 Tags: spec-graph
-Verify with: a short "Repository roles & ownership" section exists (under 00-vision/ or 01-architecture/02-components/); "Adopter Platform Spec (e.g. GEA repo)" vs "Platform Instance (srv-docker-hp + IaC + concrete LAN)" terminology used consistently in vision, ontology comments, capture files, and EF-011/012 notes; Living Spec contract notes the distributed-corpus reality for pattern-scale and adopter-scale work; no change to single SPEC.md rule for ordinary deliverables.
-Notes: Reduces conflation. Part of Phase 0 alignment. Adjacency: EF-056, boundaries capture, 00-vision/01-ontology.ttl.
+Verify with: a short "Repository roles & ownership" section exists (under 00-vision/ or 01-architecture/02-components/); the model is stated that the adopter has a single primary repo (the Adopter Platform Spec) that contains documentation about the overall eposforge implementation for both product and platform factories plus the `eposforge/` slice, and that portfolio reviews happen there (GEA fills the role); "Adopter Platform Spec (e.g. GEA repo)" vs "Platform Instance (srv-docker-hp + IaC + concrete LAN)" terminology used consistently; EposForge instructs adopters to set it up this way; Living Spec contract notes the distributed-corpus reality; no change to single SPEC.md rule for ordinary deliverables.
+Notes: Reduces conflation. The primary repo (Adopter Platform Spec) is the place for overall documentation and portfolio reviews. Part of Phase 0 alignment. Adjacency: EF-056, boundaries capture, 00-vision/01-ontology.ttl, adapter-layout-mirror.
 
 ## Issue EF-045 — Implement DCO + SSH commit signing for the framework repo (Phase 0 "signed agent attribution" exit criterion)  [RESOLVED]
 ID: EF-045
