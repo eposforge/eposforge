@@ -1,6 +1,6 @@
 ---
 name: portfolio-review
-description: Periodic architect review of the combined backlog portfolio — produces a conceptual model, proposes supersessions, triages unanchored items, checks vision alignment, and generates a re-entry briefing. Requires EF-039 portfolio views (aggregate.sh --themes, --critical-path, --mermaid).
+description: Periodic architect review of the combined backlog portfolio — produces a conceptual model, proposes supersessions, triages unanchored items, checks vision alignment, and generates a re-entry briefing. Requires EF-039 portfolio views (aggregate.sh --tags/--themes, --critical-path, --mermaid).
 ---
 
 Runs the periodic semantic garbage-collection pass that keeps the backlog corpus
@@ -18,7 +18,7 @@ from structure and catches what capture missed.
 
 ## Prerequisites
 
-- `aggregate.sh --themes` output (grouped portfolio view)
+- `aggregate.sh --tags` (or `--themes` alias) output (grouped portfolio view)
 - `aggregate.sh --critical-path <anchor-ID>` for each active anchor item
 - `aggregate.sh --mermaid` to regenerate `backlog/portfolio.md` (the writer now enforces: if the aggregation crosses any `visibility=private` root, the file is written to the *first private root* in the list (e.g. GEA), never to a public root. Pure-public runs write to the framework as before. See aggregate.sh:575 and EF-047.)
 - `ready.sh` output (currently workable items)
@@ -30,7 +30,7 @@ from structure and catches what capture missed.
 Run the views:
 
 ```bash
-bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/instance/backlog/file-based-backlog/scripts/aggregate.sh --themes
+bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/instance/backlog/file-based-backlog/scripts/aggregate.sh --tags
 bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/instance/backlog/file-based-backlog/scripts/ready.sh
 bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/instance/backlog/file-based-backlog/scripts/aggregate.sh --mermaid
 ```
@@ -49,8 +49,8 @@ mcp__cognee__recall: "backlog milestones themes critical path portfolio"
 
 ## Step 2 — Build the conceptual model
 
-Using the `--themes` output and the critical-path chains, describe in one paragraph
-per theme:
+Using the `--tags` (or `--themes`) output and the critical-path chains, describe in one paragraph
+per tag:
 
 - What the theme is trying to achieve
 - Which anchor items it flows toward
@@ -75,11 +75,11 @@ mechanical edits the operator applies after the review.
 
 ## Step 4 — Unanchored item triage
 
-From the `--themes` unanchored section, for each item that carries no `Theme:` and
+From the `--tags` unanchored section, for each item that carries no `Tags:` and
 no `Blocks:` link toward an anchor:
 
 - Ask: which theme or anchor does this item serve?
-- If it clearly fits a theme: propose adding `Theme: <value>`
+- If it clearly fits a tag: propose adding `Tags: <value>` (or append to existing)
 - If it has no near-term anchor: propose slating it with a `Re-evaluate by:` date
 - If it is clearly obsolete: propose archiving it as resolved with a `Validation:` note
 
@@ -128,7 +128,7 @@ replaying conversation history or prior session context.
 
 For each proposal the operator accepts during the review session:
 
-- `Theme:` additions: add the field to the relevant item in `backlog.md`
+- `Tags:` additions/appends: add or extend the field to the relevant item in `backlog.md`
 - `Supersedes:` links: add to the newer item; add `Blocks: <newer-id>` to the older
 - Slating: move the item to `backlog-slated.md` and set `Slated:` + `Re-evaluate by:`
 - Archive: add `Validation:` + `Resolved:` + `Status: resolved` then run `sweep-resolved.sh`

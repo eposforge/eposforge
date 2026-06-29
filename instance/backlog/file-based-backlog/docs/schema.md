@@ -30,7 +30,7 @@ Example:
 |---|---|---|
 | `Depends on:` | Dependencies exist | Comma-separated IDs |
 | `Blocks:` | Dependents exist | Comma-separated IDs |
-| `Theme:` | Item belongs to a theme | Per-repo vocabulary from `backlog/config.toml`; omit if none; set at creation time so grouping is data, not inference |
+| `Tags:` | Item belongs to one or more tags | Comma-separated per-repo vocabulary from `backlog/config.toml` (multi-valued); `Theme:` accepted as legacy alias with deprecation warning in lint. Omit if none. |
 | `Supersedes:` | Item replaces an older one | Comma-separated IDs; the superseded item should add `Blocks: <this-id>` for bidirectional traceability |
 | `Bundle hint:` | Co-scheduling intent exists | Omit if none |
 | `Validation:` | `Status: resolved` | Summary of confirmation |

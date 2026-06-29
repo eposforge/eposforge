@@ -26,7 +26,7 @@ while [[ $# -gt 0 ]]; do
       MODE="graph"
       shift
       ;;
-    --themes)
+    --themes|--tags)
       MODE="themes"
       shift
       ;;
@@ -86,11 +86,14 @@ def parse_config(path: Path):
     text = path.read_text(encoding="utf-8") if path.exists() else ""
     prefix_match = re.search(r'^\s*prefix\s*=\s*"([A-Z]+)"\s*$', text, re.M)
     prefix = prefix_match.group(1) if prefix_match else ""
+    tags_match = re.search(r"^\s*tags\s*=\s*\[(.*?)\]\s*$", text, re.M)
     themes_match = re.search(r"^\s*themes\s*=\s*\[(.*?)\]\s*$", text, re.M)
-    themes = []
-    if themes_match:
-        themes = [s.strip().strip('"') for s in themes_match.group(1).split(",") if s.strip()]
-    return prefix, themes
+    tags = []
+    if tags_match:
+        tags = [s.strip().strip('"') for s in tags_match.group(1).split(",") if s.strip()]
+    elif themes_match:
+        tags = [s.strip().strip('"') for s in themes_match.group(1).split(",") if s.strip()]
+    return prefix, tags
 
 
 def parse_issues(path: Path):
@@ -214,7 +217,7 @@ for root in roots:
     if not config.exists():
         continue
 
-    prefix, themes = parse_config(config)
+    prefix, tags = parse_config(config)
     active = parse_issues(backlog_dir / "backlog.md")
     slated = parse_issues(backlog_dir / "backlog-slated.md")
     archive = parse_issues(backlog_dir / "backlog-archive.md")
@@ -222,7 +225,7 @@ for root in roots:
     for issue in active:
         issue["repo"] = root.name
         issue["prefix"] = prefix
-        issue["themes_vocab"] = themes
+        issue["tags_vocab"] = tags
         all_active.append(issue)
     for issue in slated:
         issue["repo"] = root.name
@@ -292,10 +295,12 @@ all_issues_index = {}
 for issue in all_active + all_slated + all_archive:
     fields = issue["fields"]
     iid = fields.get("ID", issue["header_id"])
+    raw_tags = fields.get("Tags", fields.get("Theme", "")).strip()
+    tag_list = [t.strip() for t in raw_tags.split(",") if t.strip()] if raw_tags else []
     all_issues_index[iid] = {
         "status": fields.get("Status", "").strip().lower(),
         "title": fields.get("Title", issue["header_title"]),
-        "theme": fields.get("Theme", "").strip(),
+        "tags": tag_list,
         "effort": fields.get("Effort", "").strip(),
         "depends_on": csv_ids(fields.get("Depends on", "")),
         "blocks": csv_ids(fields.get("Blocks", "")),
@@ -338,34 +343,35 @@ def item_is_ready(iid):
     return all(is_ready(dep, set()) for dep in entry["depends_on"])
 
 
-if mode == "themes":
-    # Collect known themes vocabulary from any root's config
-    all_themes_vocab = []
+if mode == "themes" or mode == "tags":
+    # Collect known tags vocabulary from any root's config (tags= preferred, themes= alias)
+    all_tags_vocab = []
     for issue in all_active:
-        for t in issue.get("themes_vocab", []):
-            if t not in all_themes_vocab:
-                all_themes_vocab.append(t)
+        for t in issue.get("tags_vocab", []):
+            if t not in all_tags_vocab:
+                all_tags_vocab.append(t)
 
     active_open = [
         iid for iid, e in all_issues_index.items()
         if e["status"] in {"open", "in-progress", "blocked"}
     ]
 
-    # Group by theme
+    # Group by tag (multi-valued support: item appears under every tag)
     themed: dict[str, list] = {}
     unanchored = []
     for iid in sorted(active_open):
         e = all_issues_index[iid]
-        theme = e["theme"]
-        if theme:
-            themed.setdefault(theme, []).append(iid)
+        tags = e.get("tags", [])
+        if tags:
+            for t in tags:
+                themed.setdefault(t, []).append(iid)
         else:
-            # Unanchored: no theme and no Blocks: link toward any item
+            # Unanchored: empty tags AND no Blocks: link toward any item
             unanchored.append(iid)
 
     if emit_json:
         out = {
-            "themes": {
+            "tags": {
                 t: [
                     {
                         "id": i,
@@ -393,11 +399,11 @@ if mode == "themes":
         }
         print(json.dumps(out, indent=2))
     else:
-        for theme in all_themes_vocab:
-            ids = themed.get(theme, [])
+        for tag in all_tags_vocab:
+            ids = themed.get(tag, [])
             if not ids:
                 continue
-            print(f"## {theme}")
+            print(f"## {tag}")
             print("")
             bundles: dict[str, list] = {}
             solo = []
@@ -419,11 +425,11 @@ if mode == "themes":
                     print(f"    {iid} [{e['status']}][{e['effort']}]{ready_mark} {e['title']}  ({e['repo']})")
             print("")
 
-        # Any themes not in vocab (items with non-vocab theme values)
-        extra_themes = [t for t in themed if t not in all_themes_vocab]
-        for theme in sorted(extra_themes):
-            ids = themed[theme]
-            print(f"## {theme} (not in vocab)")
+        # Any tags not in vocab (items with non-vocab tag values)
+        extra_tags = [t for t in themed if t not in all_tags_vocab]
+        for tag in sorted(extra_tags):
+            ids = themed[tag]
+            print(f"## {tag} (not in vocab)")
             print("")
             for iid in ids:
                 e = all_issues_index[iid]
@@ -432,7 +438,7 @@ if mode == "themes":
             print("")
 
         if unanchored:
-            print(f"## (unanchored — no Theme and no Blocks: path to an anchor)")
+            print(f"## (unanchored — no Tags and no Blocks: path to an anchor)")
             print("")
             for iid in unanchored:
                 e = all_issues_index[iid]
