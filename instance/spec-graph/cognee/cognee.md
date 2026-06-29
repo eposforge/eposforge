@@ -202,12 +202,14 @@ unanchored runs keep their LLM-improvised `EntityType` taxonomy.
 
 - **Full rebuild** — `scripts/bulk-rebuild.sh`. Uploads `00-vision/01-ontology.ttl`
   as the `eposforge` anchor (`--upload-ontology`), stages every tracked `*.md`/`*.ttl`
-  **except** the ontology TTL itself, and cognifies with `ontologyKey=[eposforge]`.
+  **except** the ontology TTL itself **and raw backlog items** (`backlog/`, `instance/backlog/`, `plans/` — see EF-057), and cognifies with `ontologyKey=[eposforge]`.
   The ontology is the anchor, not a corpus document — ingesting it as a document
   produced an isolated `rdf_type`/`fulfillsSlot` island and is no longer done.
+  Raw backlog item content stays out of the main Spec Graph (independent file-based backlog graph instead); mechanics are still referenceable via ontology (ef:BacklogComponent etc.).
 - **Incremental** — on push, `cognee-sync --ontology-key eposforge --added/--modified/--deleted ...`.
   Assumes the ontology is already uploaded; just threads the key into the per-run
   cognify so new/changed docs anchor against the current ontology.
+  Raw backlog paths are filtered at the caller (see update-spec-graph skill and bulk-rebuild).
 
 **The uploaded ontology must be RDF/XML, not Turtle (cognee 1.0.7-local quirk).**
 `RDFLibOntologyResolver`'s file-object load path (the one the upload endpoint

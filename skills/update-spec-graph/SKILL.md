@@ -50,9 +50,9 @@ Always pass `--ontology-key` so cognify anchors entities to the ontology.
 
 ```bash
 # From repo root. BASE = last commit whose changes are already in the KG.
-ADDED=$(git diff --name-only --diff-filter=A "$BASE..HEAD" -- '*.md' '*.ttl' | grep -vxF '00-vision/01-ontology.ttl')
-MODIFIED=$(git diff --name-only --diff-filter=M "$BASE..HEAD" -- '*.md' '*.ttl' | grep -vxF '00-vision/01-ontology.ttl')
-DELETED=$(git diff --name-only --diff-filter=D "$BASE..HEAD" -- '*.md' '*.ttl' | grep -vxF '00-vision/01-ontology.ttl')
+ADDED=$(git diff --name-only --diff-filter=A "$BASE..HEAD" -- '*.md' '*.ttl' | grep -vxF '00-vision/01-ontology.ttl' | grep -vE '(^|/)(backlog/|instance/backlog/|plans/)')
+MODIFIED=$(git diff --name-only --diff-filter=M "$BASE..HEAD" -- '*.md' '*.ttl' | grep -vxF '00-vision/01-ontology.ttl' | grep -vE '(^|/)(backlog/|instance/backlog/|plans/)')
+DELETED=$(git diff --name-only --diff-filter=D "$BASE..HEAD" -- '*.md' '*.ttl' | grep -vxF '00-vision/01-ontology.ttl' | grep -vE '(^|/)(backlog/|instance/backlog/|plans/)')
 
 cd instance/spec-graph/cognee/sync
 epos-secrets uv run cognee-sync --ontology-key eposforge \
@@ -65,6 +65,7 @@ Notes:
 - The ontology TTL is the **anchor, not a corpus document** — exclude it from
   `--added`/`--modified`. If it changed, you are on the wrong path (use full
   rebuild).
+- Raw backlog items (`backlog/`, `instance/backlog/`, `plans/`) are excluded from the main Spec Graph by default (EF-057). They live in the independent file-based backlog graph. The main graph may still reference backlog *mechanics* via ontology terms. Use aggregate.sh / portfolio-review for backlog GraphRAG views.
 - The incremental path assumes the ontology is already uploaded. If unsure,
   add `--upload-ontology 00-vision/01-ontology.ttl` once (it is idempotent:
   delete + re-upload).
@@ -99,7 +100,7 @@ bash instance/spec-graph/cognee/scripts/bulk-rebuild.sh
 ```
 
 `bulk-rebuild.sh` wipes the sync state DB, stages every tracked `*.md`/`*.ttl`
-**except** the ontology TTL, uploads the ontology as the `eposforge` anchor, and
+**except** the ontology TTL and raw backlog items (`backlog/`, `instance/backlog/`, `plans/` per EF-057), uploads the ontology as the `eposforge` anchor, and
 cognifies with `ontologyKey=[eposforge]`. Use `--dry-run` to preview.
 
 **Bulk cognify is two-pass.** The first pass over 80+ docs may emit ~10 SQLite

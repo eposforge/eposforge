@@ -59,16 +59,19 @@ if [[ "${1:-}" == "--dry-run" ]]; then
   DRY_RUN=1
 fi
 
-# Collect all tracked *.md and *.ttl files, excluding the ontology TTL
-# (it is uploaded as the anchor below, not ingested as a corpus document).
+# Collect all tracked *.md and *.ttl files, excluding:
+# - the ontology TTL (anchor, not corpus)
+# - raw backlog items (per EF-057: main Spec Graph gets mechanics via ontology only;
+#   raw EF-/GEA- item text stays in the independent file-based backlog graph)
 mapfile -t FILES < <(
   cd "$REPO_ROOT" &&
   git ls-files '*.md' '*.ttl' |
   grep -vxF "$ONTOLOGY_REL" |
+  grep -vE '(^|/)(backlog/|instance/backlog/|plans/)' |
   sed "s|^|${REPO_ROOT}/|"
 )
 
-echo "bulk-rebuild: ${#FILES[@]} files staged from ${REPO_ROOT}"
+echo "bulk-rebuild: ${#FILES[@]} files staged from ${REPO_ROOT} (backlog/ + plans/ + ontology excluded)"
 echo "bulk-rebuild: ontology anchor: ${ONTOLOGY_REL} (key=${ONTOLOGY_KEY})"
 
 if [[ "$DRY_RUN" == "1" ]]; then
