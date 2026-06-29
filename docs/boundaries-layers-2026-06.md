@@ -1,0 +1,85 @@
+# Boundaries & Layers (Spec Graph, Backlog, Adopters) — 2026-06 capture
+
+**Note**: This was an early capture. The full, evolved discussion (including multi-graph architecture, mapping as ontology/graph, agent access model, disk vs graph canonicality, targeted mirroring, and GEA encapsulation details) is now in the comprehensive file:
+
+`docs/eposforge-gea-architecture-discussion-capture.md`
+
+This file is the recommended starting point for handoff or fresh chats. It supersedes and extends this note.
+
+---
+
+Short note to externalize the smells and proposed model. Source of the discussion: user + spec-graph.md confusion.
+
+## Condensed problems
+
+1. Backlog *mechanics* (schema, load rules, aggregation, roles, how file-based works) belong in the eposforge Spec Graph. Individual EF-/GEA- item text does not.
+2. Backlog needs to be a first-class queryable KG for agents (file-based backend is acceptable). GraphRAG (or equivalent) is the natural tool for traversing the work-item corpus + dependencies.
+3. Adopters (GEA) must be able to run the identical projection machinery against (a) upstream EposForge pattern + (b) their local adoption state docs.
+4. Current cognee "eposforge graph" ingests far more than Living Specs (research, plans, backlog items via bulk-rebuild, etc.).
+5. Living Spec contract example ("SPEC.md at the repo root") does not match reality for pattern-scale or adopter-scale work: EposForge and GEA are distributed collections of contracts, adapter cards, ontology, instance docs, and backlogs.
+6. Layering is underspecified: EposForge framework repo owns the *pattern* + reference adapters only. GEA + IaC (srv-docker-hp compose, volumes, host config) owns *this adopter's platform factory implementation*. Product repos own product factory implementations. No single repo "implements EposForge".
+7. "GEA" is overloaded: it names both the adopter's platform-factory living spec / backlog repo *and* the concrete running platform. This conflates spec with implementation.
+
+Already some good partial language exists (backlog adapter has `role = "substrate"` vs `"product"`; aggregate.sh respects private roots and writes GEA portfolios to private side; platform vs product phase docs; ontology distinguishes PlatformFactory / ProductFactory).
+
+## Current state snapshot (facts)
+
+- **Spec Graph active path**: cognee-ontology-preprocessor. `cognee-sync` + cognify on `eposforge-sync` dataset. Bulk-rebuild ingests *all* tracked `*.md` + `*.ttl` except ontology. Incremental post-commit hook is narrower (excludes `backlog/`, `instance/backlog/` currently).
+- **Backlog adapter**: file-based (split active/slates/archive + index for context load rules). Cross-repo aggregation with visibility (public EF vs private GEA). Already records substrate vs product roles. Beads/Dolt via Gas Town mentioned as complementary.
+- **GraphRAG**: shelved fallback for Spec Graph. Still present in research/.
+- **Living Spec practice here**: distributed (component contracts in 01-architecture/, per-adapter `*.md` cards under instance/, instance/SPEC.md for certain tools, ontology). Paired-change is selective, not universal. No formal Living Spec *Adapter* installed yet (Phase C).
+- **Platform / Product**: Explicitly split in 00-vision, two roadmap files, ontology classes. Substrate repos (IaC, platform) link via backlog deps toward product anchors.
+- **Recall quality issues** already tracked (EF-011 conflation of internals with adopter paths; EF-012 design-intent presented as shipped; adopter-recall.py wrapper with sanitization + maturity tags).
+
+The graph's *structural knowledge* says backlog items do not belong in Spec Graph. The implementation (bulk) sometimes puts them there.
+
+## Target model (tight)
+
+Four layers with clear ownership:
+
+1. **Pattern + References (EposForge framework repo)**  
+   Contracts, ontology, reference adapter living specs (the `*.md` cards), "how the slot works", research that informs contracts.  
+   → Feeds the canonical eposforge Spec Graph (cognee). This is the "living spec of the pattern".
+
+2. **Backlog System Mechanics**  
+   Schema, file layout, load rules, aggregation rules, role=substrate/product, dependency linking.  
+   → Belongs in Backlog component contract + its adapter Living Spec → projected into Spec Graph (as "how backlog works").
+
+3. **Backlog Items (the work)**  
+   Individual issues with text, state, effort, verifies. Per-repo (or Beads).  
+   → Not in Spec Graph. Use an independent **file-based** backlog graph (parse explicit markup into nodes/edges + GraphRAG layers). The GraphRAG capability lives in separate tooling/skills that process the files (not embedded in the MD). No Cognee dep for portability. See master capture for details on where the capability lives and effectiveness vs Cognee.
+
+4. **Adopter Implementation**  
+   - GEA repo (or equivalent): the adopter's *living spec of its platform adoption* (which EF components adopted, custom adapters, substrate decisions, GEA- items, links to EF). Can run its own cognee/GraphRAG instance(s) on its corpus + selective upstream pulls.  
+   - Concrete substrate (srv-docker-hp IaC, compose, volumes, host config, Gas Town, etc.): the actual Everything-as-Code implementation of the platform factory.  
+   - Product repos: separate, role=product, their own Living Specs + backlogs.
+
+Spec Graph (and any backlog KG) are tools *used by* the factories; they are not the factories.
+
+## Open decisions to resolve
+
+- Exact inclusion list or exclusion list for "Spec Graph corpus" (pattern contracts + adapter cards + component docs only?).
+- Backlog items as KG: revive GraphRAG as "backlog-rag" adapter? Or dedicated cognee dataset + separate MCP surface? Or rely on markdown + future Beads + graph queries over deps?
+- How GEA agents are told to ground: "always consult upstream eposforge MCP first for pattern, then local adoption graph for our state".
+- Living Spec contract update: allow "declared corpus of contracts + cards" for pattern and large adopters instead of mandating single root SPEC.md.
+
+**Superseded**: Full evolved discussion is in `eposforge-gea-architecture-discussion-capture.md`. This note is retained for history. Phase 0 (EF-056+) now active; see implementation plan and current backlog items for status. Terminology alignment (Adopter Platform Spec vs Platform Instance) is part of EF-058.
+
+## Next actions (smallest effective steps)
+
+1. Make ingestion boundaries explicit (edit bulk-rebuild.sh + update-spec-graph skill + post-commit hook + a CORPUS.md or section in cognee.md). Exclude raw backlog item files by default.
+2. Add a one-page "Repository roles & ownership" section (put it in 00-vision or new short doc under 01-architecture). Point to existing substrate/product language in backlog adapter.
+3. Decide backlog-KG path and prototype one small dataset (e.g. `backlog-items` cognee dataset or GraphRAG on backlog/ only).
+4. Update Living Spec contract + research catalog to note the distributed-corpus reality for patterns.
+5. Pick terminology fix and apply in ontology comments, vision, and EF-011/EF-012 notes.
+6. Update adopter-recall.py and any "how GEA uses the graph" runbooks to reflect the two-graph model.
+
+See also: EF-011, EF-012, backlog component, platform-factory-phases, product-factory-phases, instance/backlog/file-based-backlog.md (role section), aggregate.sh visibility logic.
+
+This note is the thing "set aside" so the model does not have to live only in heads.
+
+**Forward plan (2026-06)**: See the dedicated implementation-plan file. Uses strangler fig (opportunistic + visibility + commitment) for the full scope to prevent losing track. All phases tracked as EF- items in the backlog itself + regular portfolio reviews. Start small per scope/component.
+
+Cross-cutting plan items: Follow AGENTS.md and SKILL.md patterns for agent/skills work. Plan to fill gaps in guidance. Bake strangler fig (Migration, legacy/target shapes, debt visibility) into the backlog semantic layer (fields/schema) for excellent support when agents use the GraphRAG.
+
+**AGENTS.md**: EposForge has AGENTS.md as SSoT (with 04-standards/08-agent-coding-guidelines). Applicable to backlog graphrag for global agent instructions on using the dedicated tools vs raw files. Contrast to SKILL.md (per-skill). See capture for details.
