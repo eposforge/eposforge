@@ -124,7 +124,7 @@ Update this plan and the capture after every phase or significant discussion. St
    - Align `eposforge/` more closely where it makes sense.
    - Improve naming in `servers/`, `hardware/`, container defs.
    - Keep GEA's natural numbering for its knowledge but document mappings.
-3. Document in 00-vision or new "Repository roles & ownership" section (see boundaries capture).
+3. Document in 00-vision or new "Repository roles & ownership" section (see boundaries capture). **Done**: see `00-vision/02-roles-ownership.md`.
 
 **Success**: Operators can match disk/LAN to EposForge model at a glance. Projection quality improves. Agents using file tools (narrow scopes) find things easily.
 
