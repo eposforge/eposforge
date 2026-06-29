@@ -4,4 +4,5 @@ prefix = "EF"
 # (adopter) backlog ID. See eposforge:EF-047 and `lint-backlog.sh --help`.
 visibility = "public"
 fix_surfaces = ["eposforge-pattern", "repo-instance", "infrastructure", "process", "external"]
-themes = ["backlog-tooling", "spec-graph", "agent-policy", "secrets", "inference", "observability", "source-control", "distribution", "portfolio", "orchestrator", "resilience", "security-isolation"]
+tags = ["backlog-tooling", "spec-graph", "agent-policy", "secrets", "inference", "observability", "source-control", "distribution", "portfolio", "orchestrator", "resilience", "security-isolation", "simplification", "skills", "content-safety"]
+# themes = [...] kept as alias for one-version transition (EF-046)

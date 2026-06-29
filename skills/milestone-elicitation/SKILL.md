@@ -49,7 +49,7 @@ Before the interview begins, load:
 3. **Roadmap and vision** — read `02-roadmap/` and `00-vision/` to ground the
    interview in the current phase structure.
 
-4. **Aggregated backlog** — run `aggregate.sh --themes` (via `$EPOSFORGE_HOME`) to see the current theme
+4. **Aggregated backlog** — run `aggregate.sh --tags` (or `--themes` alias via `$EPOSFORGE_HOME`) to see the current tags
    clusters and what work is already in flight.
 
 5. **Cognee MCP** (if available) — recall roadmap milestones and anchor items from
@@ -83,7 +83,7 @@ value-harvest point, note:
 
 ## Step 3 — Walk active themes
 
-For each theme in the `--themes` output that contains open items:
+For each tag in the `--tags` (or `--themes`) output that contains open items:
 
 > "If everything in the [theme] cluster landed tomorrow, what could you do that
 > you can't do today? Would you actually use that capability?"
@@ -137,7 +137,7 @@ Date: <today>
 Status: open
 Effort: S
 Fix surface: process
-Theme: <most-relevant-theme>
+Tags: <most-relevant-tag>
 Notes: Anchor item — <architect's distilled rationale for why this milestone
   represents harvestable value>. Elicitation session: <date>.
 Verify with: <observable signal that the milestone has been reached>

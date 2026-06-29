@@ -143,12 +143,15 @@ def parse_config(path: Path):
     surfaces = []
     if surfaces_match:
         surfaces = [s.strip().strip('"') for s in surfaces_match.group(1).split(",") if s.strip()]
+    tags_match = re.search(r"^\s*tags\s*=\s*\[(.*?)\]\s*$", text, re.M)
     themes_match = re.search(r"^\s*themes\s*=\s*\[(.*?)\]\s*$", text, re.M)
-    themes = []
-    if themes_match:
-        themes = [s.strip().strip('"') for s in themes_match.group(1).split(",") if s.strip()]
+    tags = []
+    if tags_match:
+        tags = [s.strip().strip('"') for s in tags_match.group(1).split(",") if s.strip()]
+    elif themes_match:
+        tags = [s.strip().strip('"') for s in themes_match.group(1).split(",") if s.strip()]
     visibility = parse_visibility(text)
-    return prefix, surfaces, themes, visibility
+    return prefix, surfaces, tags, visibility
 
 
 def parse_visibility(text: str) -> str:
@@ -312,7 +315,7 @@ def csv_ids(raw: str):
     return [x.strip() for x in raw.split(",") if x.strip()]
 
 
-prefix, fix_surfaces, themes, local_visibility = parse_config(config_file)
+prefix, fix_surfaces, tags, local_visibility = parse_config(config_file)
 roots = discover_roots(repo_root)
 all_ids, id_status, superseded_by = collect_all_issues(roots)
 visibility_map = build_visibility_map(roots)
@@ -410,11 +413,16 @@ for path in check_files:
                 f"{issue_ref} invalid `Fix surface:` `{surface}` (expected one of: {', '.join(fix_surfaces)})"
             )
 
-        theme = fields.get("Theme", "").strip()
-        if theme and themes and theme not in themes:
-            errors.append(
-                f"{issue_ref} invalid `Theme:` `{theme}` (expected one of: {', '.join(themes)})"
-            )
+        # Tags (multi) with Theme fallback + deprecation (EF-046)
+        raw_tags = fields.get("Tags", fields.get("Theme", "")).strip()
+        tag_list = [t.strip() for t in raw_tags.split(",") if t.strip()] if raw_tags else []
+        for t in tag_list:
+            if tags and t not in tags:
+                errors.append(
+                    f"{issue_ref} invalid tag `{t}` (expected one of: {', '.join(tags)})"
+                )
+        if fields.get("Theme") and not fields.get("Tags"):
+            print(f"WARNING: {issue_ref} uses legacy `Theme:`; migrate to `Tags:` (EF-046)", file=sys.stderr)
 
         for sup_id in csv_ids(fields.get("Supersedes", "")):
             if sup_id not in all_ids:
