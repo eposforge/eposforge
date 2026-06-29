@@ -113,6 +113,16 @@ In addition to the universal fields in
 - **Is not:** a replacement for public issue trackers such as GitHub
   Issues.
 
+## Graph Projection
+
+The backlog data lives in its own independent file-based graph (separate from the main Spec Graph in Component 6; see EF-056 / EF-057). Structured Markdown provides an explicit graph skeleton: issues are nodes (with `Status`, `Effort`, `Tags`, `Fix surface`, etc. attributes); `Depends on:`, `Blocks:`, and `Supersedes:` are directed edges; `Tags:` supply associative groupings/communities.
+
+GraphRAG-style capabilities (dependency traversal, impact/critical-path analysis, thematic summarization, semantic search over items) are supplied by separate tooling and skills (`aggregate.sh --tags/--critical-path/--mermaid`, `portfolio-review`, `ready.sh`, and future dedicated processors) that read the files. The capability lives in the tooling layer, not the Markdown — keeping the data format pure, portable, and free of heavy runtime dependencies (e.g. no Cognee requirement for core backlog use).
+
+Agents obtain graph-augmented answers by calling the appropriate tools/skills rather than performing broad raw file RAG. The shared ontology supplies cross-scope mapping when needed. Disk (the Markdown) is canonical; the graph is a projection for reasoning.
+
+See `instance/backlog/file-based-backlog/file-based-backlog.md` (Living Spec), `docs/eposforge-gea-architecture-capture*.md`, and EF-046/047/056–058.
+
 ## Reference implementations
 
 See repo-instance adapter docs under

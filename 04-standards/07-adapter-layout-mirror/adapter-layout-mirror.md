@@ -88,3 +88,5 @@ This standard does not govern an adopter's own application source layout.
 - [../00-standards-meta/standards-meta.md](../00-standards-meta/standards-meta.md)
 - [../06-research-mirror/research-mirror.md](../06-research-mirror/research-mirror.md) (sibling mirror standard)
 - [../../01-architecture/00-adapter-pattern/adapter-pattern.md](../../01-architecture/00-adapter-pattern/adapter-pattern.md)
+
+See `docs/eposforge-gea-architecture-discussion-capture.md` and `docs/implementation-plan-eposforge-gea-architecture.md` (tracked by EF-056). This standard covers the adopted `eposforge/` slice; broader single-repo adopter layout guidance (targeted mirroring levels, file-RAG discoverability, runtime/LAN naming) is in progress via the strangler rollout. AGENTS.md is the SSoT for agent instructions on using dedicated backlog-graph tools + explicit markup over raw file RAG (complements per-skill SKILL.md). See also EF-047/048 for public/private concerns in cross-repo views.
