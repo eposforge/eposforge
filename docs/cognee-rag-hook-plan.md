@@ -1,8 +1,8 @@
 # Plan: client-side Router v0 — multi-MCP, per-domain, deterministic prompt augmentation
 
-**Scope:** GEA / srv-docker-hp host-local Claude Code config. Internal only — references `grace.lan` hosts; do **not** push to public EposForge.
+**Scope:** primary adopter / host-local Claude Code config. Internal only — references private hosts; do **not** push to public EposForge.
 **Status:** Draft plan, 2026-05-27.
-**Backlog:** GEA-004 (instance — this work) · eposforge:EF-013 (Router v0 pattern) · eposforge:EF-011 (recall conflates internal/adopter paths — recall caveat) · eposforge:EF-012 (emits design intent as present state — recall caveat) · eposforge:EF-022 (relocatable `epos-secrets`, for the github PAT).
+**Backlog:** <adopter-ID>-004 (instance — this work) · eposforge:EF-013 (Router v0 pattern) · eposforge:EF-011 (recall conflates internal/adopter paths — recall caveat) · eposforge:EF-012 (emits design intent as present state — recall caveat) · eposforge:EF-022 (relocatable `epos-secrets`, for the github PAT).
 **Diagrams (same dir):** `cognee-rag-hook-architecture.mmd`, `cognee-rag-hook-flow.mmd`.
 **Touches:** `~/.claude/hooks/`, `~/.claude/settings.json`.
 
@@ -56,7 +56,7 @@ Multiple domains may match one prompt → run **all** matched adapters, concaten
 
 | Adapter | Gate — fires when… | Retrieval call (via Tool Transport) | Injected block | Notes |
 |---|---|---|---|---|
-| **cognee** (Spec Graph) | Topical match: GEA, EposForge, grace.lan, srv-docker-hp, repo names, dev-env/tooling/infra, "this stack" | `search` tool (sse), `eposforge` dataset, `searchType` CHUNKS or GRAPH_COMPLETION, top_k 5 | `<cognee-context>` | Always-relevant source; broadest gate. Inherits EF-011/EF-012 recall-quality caveats. |
+| **cognee** (Spec Graph) | Topical match: primary adopter, EposForge, private hosts, repo names, dev-env/tooling/infra, "this stack" | `search` tool (sse), `eposforge` dataset, `searchType` CHUNKS or GRAPH_COMPLETION, top_k 5 | `<cognee-context>` | Always-relevant source; broadest gate. Inherits EF-011/EF-012 recall-quality caveats. |
 | **microsoft.docs** | Topical match: .NET, C#, ASP.NET, Azure, Entra, Microsoft product/API names | `microsoft_docs_search` (http) with the prompt as query, take top 3–4 chunks | `<msdocs-context>` | Clean search→chunks; safe to auto-fire on topical match. |
 | **github** | **Entity-triggered only**: explicit `owner/repo` slug, `#<PR>`, issue number, file path, or a named symbol **+** OSS context | Targeted: `search_code` / `search_issues` / `get_file_contents` keyed on the entity; top 3 hits | `<github-context>` | Multi-tool surface — a blind topical search is noisy/expensive. Strict gate: fire only on a concrete entity, never on a vague "github" mention. Needs PAT (vault). |
 
@@ -116,8 +116,8 @@ residual reminder: only for surfaces NOT auto-retrieved (e.g. HF), kept as a thi
     ```json
     "UserPromptSubmit": [
       { "hooks": [
-        { "type": "command", "command": "cat /home/cdfadmin/.claude/hooks/residual-reminder.md" },
-        { "type": "command", "command": "/home/cdfadmin/.claude/hooks/router.sh" }
+        { "type": "command", "command": "cat <home-dir>/.claude/hooks/residual-reminder.md" },
+        { "type": "command", "command": "<home-dir>/.claude/hooks/router.sh" }
       ]}
     ]
     ```

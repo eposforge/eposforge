@@ -160,7 +160,7 @@ After each subsequent PR: confirm the lifted AGENTS.md / glossary section is now
 
 ## Out of scope
 
-- GEA-side changes. GEA depends on EposForge; if GEA wants to consume these standards, that change happens in GEA.
+- Primary-adopter-side changes. The primary adopter depends on EposForge; if the primary adopter wants to consume these standards, that change happens in the adopter tree.
 - Lint tooling beyond extending the existing doc-lint glob and adding the mirror tree-diff script.
 - Renumbering or restructuring `01-architecture/02-components/` itself.
 - Promotion-lifecycle automation. Manual Status-block edits are sufficient at this stage.

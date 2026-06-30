@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# commit-msg fragment owned by source-control-ci.
+# Appends canonical DCO trailer (for agent runtime) when absent.
+# Composed into .git/hooks/commit-msg by:
+#   bash .eposforge/source-control-ci/github-and-actions/scripts/install-hooks.sh
+#
+# Idempotent. Adds the trailer only when no Signed-off-by line is present.
+# Preserves any existing trailer (e.g. from git -s).
+# Exact trailer identity per spec.
+set -euo pipefail
+
+TRAILER="Signed-off-by: Dialedin2014 <7587722+dialedin2014@users.noreply.github.com>"
+
+append_trailer() {
+  local f="$1"
+  # Skip if any trailer already present (idempotent across human/agent usage).
+  if grep -q '^Signed-off-by:' "$f" 2>/dev/null; then
+    return 0
+  fi
+  # Ensure a trailing newline before append.
+  if [ -s "$f" ]; then
+    last_char=$(tail -c 1 "$f" | od -An -tx1 | tr -d ' \n')
+    if [ "$last_char" != "0a" ]; then
+      echo >> "$f"
+    fi
+  fi
+  echo "$TRAILER" >> "$f"
+}
+
+main() {
+  local msg_file="${1:-}"
+  if [ -z "$msg_file" ] || [ "$msg_file" = "-" ]; then
+    # Filter mode for demos/tests: echo 'msg' | hook  (and piped twice)
+    local tmp
+    tmp="$(mktemp)"
+    cat >"$tmp"
+    append_trailer "$tmp"
+    cat "$tmp"
+    rm -f "$tmp"
+    return 0
+  fi
+  if [ ! -f "$msg_file" ]; then
+    echo "commit-msg: message file not found: $msg_file" >&2
+    exit 1
+  fi
+  append_trailer "$msg_file"
+}
+
+main "$@"

@@ -3,7 +3,7 @@ UAT 1 — Lint rule: Status: blocked without an open dep
   This exercises the EF-042 rule. Temporarily append a bad item, run lint, then
   undo.
 
-  cat >> instance/backlog/backlog.md << 'EOF'
+  cat >> .eposforge/backlog/backlog.md << 'EOF'
 
   ## Issue EF-999 — UAT test item
   ID: EF-999
@@ -14,22 +14,22 @@ UAT 1 — Lint rule: Status: blocked without an open dep
   Fix surface: eposforge-pattern
   Verify with: n/a
   EOF
-  bash instance/backlog/file-based-backlog/scripts/lint-backlog.sh
+  bash .eposforge/backlog/file-based-backlog/scripts/lint-backlog.sh
 
   Expect: error on EF-999 — Status: blocked requires at least one open Depends on:
   item.
 
   Then remove the item and confirm lint returns to clean:
   # Remove the last 10 lines (the appended item)
-  head -n -10 instance/backlog/backlog.md > /tmp/bl.tmp && mv /tmp/bl.tmp
-  instance/backlog/backlog.md
-  bash instance/backlog/file-based-backlog/scripts/lint-backlog.sh
+  head -n -10 .eposforge/backlog/backlog.md > /tmp/bl.tmp && mv /tmp/bl.tmp
+  .eposforge/backlog/backlog.md
+  bash .eposforge/backlog/file-based-backlog/scripts/lint-backlog.sh
 
   ---
   UAT 2 — Lint rule: invalid Theme: value
 
   # Append to EF-999-style temp item (reuse last approach):
-  cat >> instance/backlog/backlog.md << 'EOF'
+  cat >> .eposforge/backlog/backlog.md << 'EOF'
 
   ## Issue EF-999 — UAT test item
   ID: EF-999
@@ -41,19 +41,19 @@ UAT 1 — Lint rule: Status: blocked without an open dep
   Theme: nonexistent-theme
   Verify with: n/a
   EOF
-  bash instance/backlog/file-based-backlog/scripts/lint-backlog.sh
+  bash .eposforge/backlog/file-based-backlog/scripts/lint-backlog.sh
 
   Expect: error — invalid Theme: value not in vocabulary.
 
   Cleanup:
-  head -n -11 instance/backlog/backlog.md > /tmp/bl.tmp && mv /tmp/bl.tmp
-  instance/backlog/backlog.md
-  bash instance/backlog/file-based-backlog/scripts/lint-backlog.sh
+  head -n -11 .eposforge/backlog/backlog.md > /tmp/bl.tmp && mv /tmp/bl.tmp
+  .eposforge/backlog/backlog.md
+  bash .eposforge/backlog/file-based-backlog/scripts/lint-backlog.sh
 
   ---
   UAT 3 — Lint rule: Supersedes: without back-pointer
 
-  cat >> instance/backlog/backlog.md << 'EOF'
+  cat >> .eposforge/backlog/backlog.md << 'EOF'
 
   ## Issue EF-999 — UAT test item
   ID: EF-999
@@ -65,21 +65,21 @@ UAT 1 — Lint rule: Status: blocked without an open dep
   Supersedes: EF-022
   Verify with: n/a
   EOF
-  bash instance/backlog/file-based-backlog/scripts/lint-backlog.sh
+  bash .eposforge/backlog/file-based-backlog/scripts/lint-backlog.sh
 
   Expect two errors:
   1. EF-022 is still open — can't be superseded yet
   2. EF-022 lacks a Superseded by: EF-999 back-pointer
 
   Cleanup:
-  head -n -11 instance/backlog/backlog.md > /tmp/bl.tmp && mv /tmp/bl.tmp
-  instance/backlog/backlog.md
-  bash instance/backlog/file-based-backlog/scripts/lint-backlog.sh
+  head -n -11 .eposforge/backlog/backlog.md > /tmp/bl.tmp && mv /tmp/bl.tmp
+  .eposforge/backlog/backlog.md
+  bash .eposforge/backlog/file-based-backlog/scripts/lint-backlog.sh
 
   ---
   UAT 4 — Portfolio diagram in VS Code preview
 
-  bash instance/backlog/file-based-backlog/scripts/aggregate.sh
+  bash .eposforge/backlog/file-based-backlog/scripts/aggregate.sh
   --mermaid
 
   Then open backlog/portfolio.md in VS Code with Cmd+Shift+V (markdown preview).
@@ -89,8 +89,8 @@ UAT 1 — Lint rule: Status: blocked without an open dep
   ---
   UAT 5 — Critical-path against a primary adopter anchor (multi-root)
 
-  BACKLOG_ROOTS="/mnt/raid-storage/src/git/gh/eposforge:/path/to/primary-adopter/eposforge" \
-    bash instance/backlog/file-based-backlog/scripts/aggregate.sh
+  BACKLOG_ROOTS="<framework-root>:/path/to/primary-adopter/.eposforge" \
+    bash .eposforge/backlog/file-based-backlog/scripts/aggregate.sh
   --critical-path ADOPTER-013
 
   Expect: a chain ending at the adopter item, with the EF-043 node shown as resolved (not
@@ -113,8 +113,8 @@ UAT 1 — Lint rule: Status: blocked without an open dep
   Don't run this one outright — it appends to the file. Instead, just verify what
   the next ID would be:
 
-  grep -ohE "EF-[0-9]{3,}" instance/backlog/backlog.md instance/backlog/backlog-slated.md
-  instance/backlog/backlog-archive.md | sort -t- -k2 -n | tail -3
+  grep -ohE "EF-[0-9]{3,}" .eposforge/backlog/backlog.md .eposforge/backlog/backlog-slated.md
+  .eposforge/backlog/backlog-archive.md | sort -t- -k2 -n | tail -3
 
   Expect: highest should be EF-043. Next run of new-issue.sh would produce EF-044.
 
@@ -125,9 +125,9 @@ UAT 1 — Lint rule: Status: blocked without an open dep
   adopter under /tmp so nothing real is touched. (No on-disk adopter currently
   vendors the scripts — a primary adopter may be data-only in some setups — so a sandbox is the way to test this.)
 
-  SRC=instance/backlog/file-based-backlog/scripts
+  SRC=.eposforge/backlog/file-based-backlog/scripts
   SANDBOX=/tmp/uat-adopter
-  DEST=$SANDBOX/instance/backlog/file-based-backlog/scripts
+  DEST=$SANDBOX/.eposforge/backlog/file-based-backlog/scripts
   rm -rf "$SANDBOX" && mkdir -p "$DEST"
   cp "$SRC"/*.sh "$DEST"/ && cp "$SRC"/VERSION "$DEST"/
   echo "0.1.0" > "$DEST"/VERSION                        # make version stale

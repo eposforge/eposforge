@@ -1,10 +1,10 @@
 %% Client-side Router v0 augmentation shim - architecture
 %% Plan: cognee-rag-hook-plan.md
-%% Backlog: GEA-004 (instance) / eposforge:EF-013 (pattern)
+%% Backlog: <adopter-ID>-004 (instance) / eposforge:EF-013 (pattern)
 flowchart TB
     U["User prompt"] --> UP["UserPromptSubmit hook"]
 
-    subgraph SHIM["Claude Code client - srv-docker-hp / GEA-004"]
+    subgraph SHIM["Claude Code client - host / <adopter-ID>-004"]
         UP --> R["router.sh - Router v0 (C4): classify, gate, label, cap"]
         R --> T["mcp_retrieve.py - Tool Transport (C5): one MCP client, http+sse, fail-open"]
     end

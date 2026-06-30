@@ -10,12 +10,12 @@ source_of_truth: yes
 Plan to bring four adopter repos onto the **Preferred** tooling-distribution mode
 of the Component 13 backlog adapter (`file-based-backlog`), scaffold two of them
 ahead of a later issue-doc migration, and unify the framework's own backlog under
-its `instance/` container so the framework and adopters share one layout.
+its `.eposforge/` container so the framework and adopters share one layout.
 
 - **Date:** 2026-06-14
 - **Status:** draft — decisions settled (§8); **do not implement until ordered**
 - **Framework clone (source of truth for tooling):**
-  `/mnt/raid-storage/src/git/gh/eposforge`
+  `<framework-repo-root>`
 - **Adopter repos in scope:** the primary adopter, IAC, OutreachApi, OutreachAssistant
 
 ---
@@ -27,37 +27,37 @@ framework clone** (Preferred mode) — no vendored copy of the scripts in the
 adopter. the primary adopter and IAC already hold backlog data and get *completed*; OutreachApi
 and OutreachAssistant get *scaffolded* (empty, migration-ready) without moving
 their existing issue content yet. The framework's own backlog data moves from the
-repo root into `instance/backlog/` (Phase D) so that `instance/` (framework) and
-`eposforge/` (adopter) are structurally identical adoption-roots.
+repo root into `.eposforge/backlog/` (Phase D) so that `.eposforge/` (framework) and
+`.eposforge/` (adopter, post EF-059) are structurally identical adoption-roots.
 
 ---
 
 ## 2. Settled design decisions (rationale, so they are not re-litigated)
 
 1. **Preferred mode, not Vendored-copy.** Scripts run from the framework clone via
-   `BACKLOG_HOME=<framework>/instance/backlog/file-based-backlog`.
+   `BACKLOG_HOME=<framework>/.eposforge/backlog/file-based-backlog`.
    Adopters do **not** vendor `scripts/`. (Ref: `file-based-backlog.md` §"Tooling
    distribution".)
-2. **One container per adopter, named `eposforge/`.** Everything an adopter takes
-   from the eposforge architecture lives under a single top-level `eposforge/`
+2. **One container per adopter, named `.eposforge/` (uniform post-EF-059/060).** Everything an adopter takes
+   from the eposforge architecture lives under a single top-level `.eposforge/` (legacy names were `eposforge/` for adopters and `instance/` for framework).
    directory, namespaced away from the repo's own files. The framework repo's
-   equivalent container is `instance/`; it is named differently only because a
+   equivalent container is `.eposforge/`; it is named differently only because a
    folder named `eposforge` inside the eposforge repo would be a confusing
-   self-duplicate. Adopters **must not** reproduce the `instance/`
+   self-duplicate. Adopters **must not** reproduce the `.eposforge/`
    wrapper (adapter-layout-mirror Rule 2).
 3. **Prescriptive core per installed adapter = data + config** (Living Spec is part
    of the model but **deferred** in this rollout — see decision §8.2). Everything
-   else in the framework's `instance/` (`README.md` slot-table, `adrs/`, `.audit/`)
+   else in the framework's `.eposforge/` (`README.md` slot-table, `adrs/`, `.audit/`)
    is a framework convenience and is **not** prescribed by any contract or standard
    — verified against `00-vision/`, `01-architecture/`, `04-standards/`. Adopters
    omit them.
 4. **Data location:** `<adoption-root>/backlog/` (adapter-layout-mirror Rule 3) —
-   i.e. `eposforge/backlog/` for adopters and `instance/backlog/` for the framework
+   i.e. `eposforge/backlog/` for adopters and `.eposforge/backlog/` for the framework
    after Phase D.
 5. **Discovery:** the adapter scripts find a backlog root by
    workspace-file → `BACKLOG_ROOTS` env → `--roots` CLI → git-root fallback. The
    git-root fallback checks `<repo-root>/backlog/config.toml`, which **fails** when
-   the backlog is nested under a container (`eposforge/` for adopters, `instance/`
+   the backlog is nested under a container (`eposforge/` for adopters, `.eposforge/`
    for the framework after Phase D). So each repo must *declare* its adoption-root
    via a `.code-workspace`: adopters list `./eposforge` + `../../gh/eposforge`;
    the framework lists `.` + `./instance`. `BACKLOG_ROOTS` remains the pure-CLI
@@ -90,11 +90,11 @@ The adopter designates one primary repo as the single source for their overall e
 
 When the primary repo is not in the workspace, the tooling can still operate on the current repo's backlog, but this is only a single-project view — not the adopter's portfolio.
 
-Framework (eposforge repo) after Phase D — same shape, container named `instance/`:
+Framework (eposforge repo) after Phase D — same shape, container named `.eposforge/`:
 
 ```text
 eposforge/                                     # the framework repo
-  instance/
+  .eposforge/
     backlog/                                   # MOVED here from repo root in Phase D
       config.toml  backlog.md  backlog-slated.md
       backlog-archive.md  backlog-archive-index.md  portfolio.md
@@ -105,7 +105,7 @@ eposforge/                                     # the framework repo
 Operator invocation (Preferred mode), from any repo root:
 
 ```bash
-export BACKLOG_HOME=/mnt/raid-storage/src/git/gh/eposforge/instance/backlog/file-based-backlog
+export BACKLOG_HOME=<framework-repo-root>/.eposforge/backlog/file-based-backlog  # (will become .eposforge/ after EF-059/060 rename)
 bash "$BACKLOG_HOME/scripts/lint-backlog.sh"            # discovery via workspace file
 bash "$BACKLOG_HOME/scripts/ready.sh"
 # pure-CLI fallback if no workspace file is active:
@@ -123,7 +123,7 @@ BACKLOG_ROOTS="$PWD/instance" bash "$BACKLOG_HOME/scripts/ready.sh"    # framewo
 | **IAC** | `local/IAC` | ✅ `eposforge/` | ✅ (items use `IAC-`) | ❌ missing | ❌ none | **Complete** |
 | **OutreachApi** | `local/OutreachApi` | ❌ none | ❌ | ❌ | ❌ none | **Scaffold** |
 | **OutreachAssistant** | `local/OutreachAssistant` | ❌ none | ❌ | ❌ | ⚠️ has `.code-workspace` (no eposforge folder) | **Scaffold** |
-| **framework** | `gh/eposforge` | `instance/` | ⚠️ at repo root `backlog/` | ✅ | `.` only (no `./instance`) | **Unify (Phase D)** |
+| **framework** | `gh/eposforge` | `.eposforge/` | ⚠️ at repo root `backlog/` | ✅ | `.` only (no `./instance`) | **Unify (Phase D)** |
 
 Existing issue docs (for the *later* migration phase, **not** touched now):
 - **OutreachApi:** GitHub/Gitea issues + speckit `specs/NNN-issue-*` dirs; `agents/fix-issue.md`.
@@ -148,7 +148,7 @@ themes = []   # populate on first portfolio-review pass
 reserved headroom.)
 
 ### A2. the primary adopter — repair the workspace file
-`primary-adopter/GraceEnvironment.code-workspace` folders →
+`primary-adopter/.eposforge` (or legacy `primary-adopter/eposforge`) in the workspace folders →
 ```json
 { "folders": [ { "path": "./eposforge" }, { "path": "../../gh/eposforge" } ] }
 ```
@@ -205,7 +205,7 @@ items"; the repo's prefix appears in `aggregate.sh --plan`. Exit 0 throughout.
 In `04-standards/07-adapter-layout-mirror/adapter-layout-mirror.md`, add the parts
 discovered during this work so they are not rediscovered each adoption:
 - Name the adopter container convention (`eposforge/`) and the framework's
-  equivalent (`instance/`).
+  equivalent (`.eposforge/`).
 - State the prescriptive core (**data + config** per installed adapter; Living Spec
   part of the model) vs. conveniences (README slot-table / `adrs/` / `.audit/`).
 - State the discovery requirement: a `.code-workspace` declaring the adoption-root,
@@ -216,45 +216,45 @@ Phase D step, not here, to keep the two standard edits coherent.)
 
 ---
 
-## 8. Phase D — Framework backlog unification (move data into `instance/`)
+## 8. Phase D — Framework backlog unification (move data into `.eposforge/`)
 
 Make the framework match the adopter shape: its backlog data moves from repo-root
-`backlog/` to `instance/backlog/`, so every adoption-root has `<root>/backlog/`.
+`backlog/` to `.eposforge/backlog/`, so every adoption-root has `<root>/backlog/`.
 
 > **Scope boundary:** Phase D aligns the **data** slot only. Flattening the
-> framework's `instance/` **adapter** slot for full symmetry is
+> framework's `.eposforge/` **adapter** slot for full symmetry is
 > deliberately *out of scope* here and is tracked separately as **EF-044** (it
 > reaches CI + a second standard; sequences after Phase D).
 
 ### D1. Move the data
-`git mv` the six files from `backlog/` → `instance/backlog/`:
+`git mv` the six files from `backlog/` → `.eposforge/backlog/`:
 `config.toml`, `backlog.md`, `backlog-slated.md`, `backlog-archive.md`,
 `backlog-archive-index.md`, `portfolio.md`. Remove the now-empty repo-root
 `backlog/`.
 
 ### D2. Declare the adoption-root for discovery
 Update `eposforge.code-workspace` folders → `.` **and** `./instance` (so script
-discovery finds `instance/backlog/config.toml`; the git-root fallback now misses,
+discovery finds `.eposforge/backlog/config.toml`; the git-root fallback now misses,
 exactly as for adopters).
 
 ### D3. Rewrite the standard's anchor (mandatory)
 In `adapter-layout-mirror.md`:
 - Rule 3: change *"(mirroring eposforge's repo-root `backlog/`)"* → *"(mirroring
-  eposforge's `instance/backlog/`)"*; keep the formula `<adoption-root>/backlog/`.
+  eposforge's `.eposforge/backlog/`)"*; keep the formula `<adoption-root>/backlog/`.
 - Conformance "Backlog-location check" (line ~54): ensure it reads the adoption-root
   form, not a hardcoded repo-root path.
 
 ### D4. Update the framework's own operator paths
-- `AGENTS.md` (lines ~209–216): `backlog/backlog.md` → `instance/backlog/backlog.md`,
+- `AGENTS.md` (lines ~209–216): `backlog/backlog.md` → `.eposforge/backlog/backlog.md`,
   and the sibling `backlog/backlog-slated.md` / `-archive-index.md` / `-archive.md`
-  load lines. (The `instance/.../scripts/...` invocation lines are already
+  load lines. (The `.eposforge/.../scripts/...` invocation lines are already
   correct and unchanged.)
-- `docs/backlog-uat.md`: repoint the `backlog/...` paths to `instance/backlog/...`
+- `docs/backlog-uat.md`: repoint the `backlog/...` paths to `.eposforge/backlog/...`
   (UAT/test doc; update so the walkthrough still runs).
 
 ### D5. Verify the move
 - From the framework repo root with the workspace active: `lint-backlog.sh`,
-  `ready.sh`, `aggregate.sh --plan` all find `instance/backlog/` and see `EF` items.
+  `ready.sh`, `aggregate.sh --plan` all find `.eposforge/backlog/` and see `EF` items.
 - **Pre-commit hook:** confirm the installed `pre-commit` staged-path glob (it keys
   on `backlog/backlog.md` / `backlog-slated.md` being staged — see
   `docs/elegant-dreaming-dove.md`) still fires after the move; update its path if it
@@ -298,12 +298,12 @@ Tracked separately once scaffolding lands:
   (no vendored `scripts/` anywhere in the adopter), discover the repo's `eposforge/`
   backlog root, and `lint-backlog.sh` exits 0.
 - Each adopter has `eposforge/backlog/config.toml` with the correct prefix.
-- Framework backlog lives at `instance/backlog/`; `eposforge.code-workspace` declares
+- Framework backlog lives at `.eposforge/backlog/`; `eposforge.code-workspace` declares
   `./instance`; `adapter-layout-mirror` Rule 3 no longer says "repo-root"; framework
   `lint-backlog.sh` exits 0 against the moved data.
 - A single `aggregate.sh` invocation from any adopter rolls up that repo's items plus
   `EF` items via the framework folder.
-- No adopter contains `instance/`, `adrs/`, `.audit/`, or a vendored
+- No adopter contains `.eposforge/`, `adrs/`, `.audit/`, or a vendored
   `scripts/` directory.
 
 ---
@@ -313,7 +313,7 @@ Tracked separately once scaffolding lands:
 All phases implemented and verified.
 
 - A1: `IAC/eposforge/backlog/config.toml` (prefix `IAC`) — done.
-- A2: `primary-adopter/GraceEnvironment.code-workspace` repaired — done.
+- A2: primary adopter workspace repaired — done.
 - A3: `IAC/IAC.code-workspace` created — done.
 - B1: `OutreachApi/eposforge/backlog/` seeded (config.toml + 4 empty `.md` files) — done.
 - B2: `OutreachApi/OutreachApi.code-workspace` created — done.
@@ -322,11 +322,11 @@ All phases implemented and verified.
 - C: `adapter-layout-mirror.md` updated — container naming convention, prescriptive
   core vs conveniences, discovery wiring requirement (Rule 2 sub-bullet, Rule 3
   annotation, new Rule 6, Conformance backlog-location check) — done.
-- D1: `backlog/` → `instance/backlog/` (`git mv` + mv for untracked `portfolio.md`) — done.
+- D1: `backlog/` → `.eposforge/backlog/` (`git mv` + mv for untracked `portfolio.md`) — done.
 - D2: `eposforge.code-workspace` updated (`./instance` folder added) — done.
-- D3: `adapter-layout-mirror.md` Rule 3 anchor changed to `instance/backlog/` — done (same edit as Phase C).
-- D4: `AGENTS.md` load-rule paths updated to `instance/backlog/…`; `docs/backlog-uat.md` paths updated — done.
-- D5: Pre-commit hook glob updated (`instance/backlog/…`); scripts updated for workspace-based
+- D3: `adapter-layout-mirror.md` Rule 3 anchor changed to `.eposforge/backlog/` — done (same edit as Phase C).
+- D4: `AGENTS.md` load-rule paths updated to `.eposforge/backlog/…`; `docs/backlog-uat.md` paths updated — done.
+- D5: Pre-commit hook glob updated (`.eposforge/backlog/…`); scripts updated for workspace-based
   adoption-root discovery (`lint-backlog.sh`, `new-issue.sh`, `sweep-resolved.sh`) — done.
 
 Verification results:

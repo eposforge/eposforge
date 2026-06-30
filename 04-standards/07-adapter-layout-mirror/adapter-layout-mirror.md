@@ -25,12 +25,12 @@ This standard does not govern an adopter's own application source layout. Howeve
 
 An adopter designates **one primary repo** as the "Adopter Platform Spec" for the environment. This single repo:
 - Contains the documentation describing the adopter's overall eposforge implementation (both the Platform Factory and Product Factory sides).
-- Includes the `eposforge/` bucket (the adopted pattern slice with stable component/adapter layout).
+- Includes the `.eposforge/` container (the adopted pattern slice with stable component/adapter layout).
 - Acts as the anchor for cross-repo views such as portfolio reviews.
 
 The primary adopter (the single "Adopter Platform Spec" repo designated for an environment) is the canonical example. Product repos and other implementation repos remain separate but can be discovered from the primary via workspace files or BACKLOG_ROOTS for a unified portfolio view.
 
-See the architecture capture and implementation plan (tracked by EF-056) for the multi-graph and boundaries model. The adapter-layout-mirror rules below ensure the `eposforge/` slice is uniform so tooling works.
+See the architecture capture and implementation plan (tracked by EF-056) for the multi-graph and boundaries model. The adapter-layout-mirror rules below ensure the `.eposforge/` container slice is uniform so tooling works.
 
 ## Normative requirements
 
@@ -39,9 +39,9 @@ See the architecture capture and implementation plan (tracked by EF-056) for the
    numbered path. A path is a projection of its tree node ("directory mirrors
    the knowledge tree"); the node name is the stable anchor across re-shelving.
 2. The framework installs its self-implementation (adapters) under
-   `instance/<component>/<adapter>/` . A pure ADOPTER has only implementation
-   and uses `<adoption-root>/<component>/<adapter>/` directly (container is
-   `eposforge/`). Component directories use the stable node name (no numeric
+   `.eposforge/<component>/<adapter>/` . A pure ADOPTER uses the same
+   under its `<adoption-root>/.eposforge/<component>/<adapter>/` (container is
+   `.eposforge/`). Component directories use the stable node name (no numeric
    prefixes). The authoritative component node names are: spec-input,
    living-spec, dev-product, router, tool-transport, spec-graph,
    execution-sandbox, agent-policy, source-control-ci, release-rings,
@@ -49,17 +49,15 @@ See the architecture capture and implementation plan (tracked by EF-056) for the
    For the backlog component the adapter implementation lives at
    `<container>/backlog/file-based-backlog/` (co-located under the data root
    for that component; data files live as siblings at the `backlog/` level).
-   - **Adopter container name:** `eposforge/` — all eposforge-owned content for
-     an adopting repo lives under this single top-level directory. The framework
-     repo uses `instance/` for the same role (to avoid a confusing self-duplicate).
+   - **Adopter (and framework) container name:** `.eposforge/` — all eposforge-owned content for an adopting repo (or the framework's self-host layer) lives under this single top-level dot-directory. This produces a uniform layout across framework and adopters (conforming to dot-dir conventions like `.github/`).
 3. Backlog DATA (the issue files) MUST live at `<adoption-root>/backlog/`
-   (mirroring eposforge's `instance/backlog/`), distinct from the
+   (mirroring the framework's `.eposforge/backlog/`), distinct from the
    file-based-backlog ADAPTER (scripts + living spec) at its component path.
    Data is repo content; the adapter is the tool that operates on it.
    - **Prescriptive core per installed adapter:** data files + `config.toml`.
      The Living Spec (`file-based-backlog.md`) is part of the model but may be
-     deferred on first adoption. Framework conveniences (`instance/README.md`
-     slot-table, `instance/adrs/`, `instance/`.audit/`) are NOT prescribed —
+     deferred on first adoption. Framework conveniences (`.eposforge/README.md`
+     slot-table, `.eposforge/adrs/`, `.eposforge/.audit/`) are NOT prescribed —
      adopters omit them.
 4. Each repo carries exactly one backlog instance with a repo-scoped ID prefix.
    Cross-repo dependency references MUST name the **bare ID only**; a public repo
@@ -72,13 +70,12 @@ See the architecture capture and implementation plan (tracked by EF-056) for the
 6. **Discovery wiring (required):** each repo MUST declare its adoption-root via
    a `.code-workspace` file. The adapter scripts' git-root fallback checks
    `<repo-root>/backlog/config.toml`, which misses when the backlog is nested
-   under a container (`eposforge/backlog/` for adopters, `instance/backlog/` for
-   the framework). Without a workspace file, Preferred-mode invocations silently
+   under a container (`.eposforge/backlog/` for adopters and the framework). Without a workspace file, Preferred-mode invocations silently
    find zero items.
-   - Adopters: workspace `folders` must include `./eposforge` and
+   - Adopters: workspace `folders` must include `./.eposforge` and
      `../../gh/eposforge` (the framework clone, for cross-repo aggregation).
-   - Framework repo: workspace `folders` must include `.` and `./instance`.
-   (The framework's `instance/` is its adoption-root / container equivalent.)
+   - Framework repo: workspace `folders` must include `.` and `./.eposforge`.
+   (The framework's `.eposforge/` is its adoption-root / container.)
    - `BACKLOG_ROOTS` remains the pure-CLI fallback when no workspace file is active.
 
 ## Conformance
@@ -86,7 +83,7 @@ See the architecture capture and implementation plan (tracked by EF-056) for the
 - Adopter-layout check: each installed component/adapter path resolves to a live
   tree node by identity (using the stable node names listed above); orphans fail.
 - Backlog-location check: data at `<adoption-root>/backlog/` (i.e.
-  `eposforge/backlog/` for adopters, `instance/backlog/` for the framework);
+  `.eposforge/backlog/` for adopters and the framework);
   the file-based-backlog adapter at `.../backlog/file-based-backlog/`. A
   workspace file declaring the adoption-root must be present.
 - `aggregate.sh` discovers per-repo backlogs via workspace / `BACKLOG_ROOTS` and
@@ -98,4 +95,4 @@ See the architecture capture and implementation plan (tracked by EF-056) for the
 - [../06-research-mirror/research-mirror.md](../06-research-mirror/research-mirror.md) (sibling mirror standard)
 - [../../01-architecture/00-adapter-pattern/adapter-pattern.md](../../01-architecture/00-adapter-pattern/adapter-pattern.md)
 
-See the architecture discussion capture, implementation plan, and `00-vision/02-roles-ownership.md` (tracked by EF-056/058). This standard covers the technical rules for the `eposforge/` slice inside an adopter's primary repo. The primary repo (the Adopter Platform Spec) is the place where overall eposforge implementation documentation lives and where portfolio reviews are performed. AGENTS.md is the SSoT for agent instructions on using dedicated backlog-graph tools + explicit markup over raw file RAG. See also EF-047/048 for public/private concerns.
+See the architecture discussion capture, implementation plan, and `00-vision/02-roles-ownership.md` (tracked by EF-056/058). This standard covers the technical rules for the `.eposforge/` container slice inside an adopter's primary repo. The primary repo (the Adopter Platform Spec) is the place where overall eposforge implementation documentation lives and where portfolio reviews are performed. AGENTS.md is the SSoT for agent instructions on using dedicated backlog-graph tools + explicit markup over raw file RAG. See also EF-047/048 for public/private concerns.

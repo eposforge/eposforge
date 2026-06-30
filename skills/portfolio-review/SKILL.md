@@ -2,7 +2,7 @@
 name: portfolio-review
 description: Periodic architect review of the combined backlog portfolio — produces a conceptual model, proposes supersessions, triages unanchored items, checks vision alignment, and generates a re-entry briefing. Requires EF-039 portfolio views (aggregate.sh --tags/--themes, --critical-path, --mermaid).
 
-**Important**: For an adopter, run this from the **primary repo** that acts as the Adopter Platform Spec (the single repo containing documentation of the overall eposforge implementation for both product and platform factories, plus the `eposforge/` adopted slice). This is where the real portfolio view lives. If your workspace only contains the framework or a sub-project, the tool can still operate on what is present, but that yields only a partial (single-project) backlog view rather than the adopter's portfolio.
+**Important**: For an adopter, run this from the **primary repo** that acts as the Adopter Platform Spec (the single repo containing documentation of the overall eposforge implementation for both product and platform factories, plus the `.eposforge/` adopted slice). This is where the real portfolio view lives. If your workspace only contains the framework or a sub-project, the tool can still operate on what is present, but that yields only a partial (single-project) backlog view rather than the adopter's portfolio.
 ---
 
 Runs the periodic semantic garbage-collection pass that keeps the backlog corpus
@@ -22,12 +22,12 @@ from structure and catches what capture missed.
 
 - `aggregate.sh --tags` (or `--themes` alias) output (grouped portfolio view)
 - `aggregate.sh --critical-path <anchor-ID>` for each active anchor item
-- `aggregate.sh --mermaid` to regenerate `backlog/portfolio.md` (the writer now enforces: if the aggregation crosses any `visibility=private` root, the file is written to the *first private root* in the list (e.g. GEA), never to a public root. Pure-public runs write to the framework as before. See aggregate.sh and EF-047.)
+- `aggregate.sh --mermaid` to regenerate `backlog/portfolio.md` (the writer now enforces: if the aggregation crosses any `visibility=private` root, the file is written to the *first private root* in the list (e.g. the primary adopter root), never to a public root. Pure-public runs write to the framework as before. See aggregate.sh and EF-047.)
 - `ready.sh` output (currently workable items)
 - `00-vision/` and `02-roadmap/` docs (from the primary repo or framework) for vision alignment reference
 - Cognee MCP (for graph-backed context when available)
 
-**Invocation context**: Run from (or point tooling at) the adopter's primary repo (the Adopter Platform Spec). Set `BACKLOG_ROOTS` (or use `.code-workspace`) so that the primary repo's `eposforge/backlog` (and any other project backlogs it tracks) are discovered. The framework clone supplies the `aggregate.sh` / scripts. See the adapter-layout-mirror standard and EF-056 plan.
+**Invocation context**: Run from (or point tooling at) the adopter's primary repo (the Adopter Platform Spec). Set `BACKLOG_ROOTS` (or use `.code-workspace`) so that the primary repo's `..eposforge/backlog` (and any other project backlogs it tracks) are discovered. The framework clone supplies the `aggregate.sh` / scripts. See the adapter-layout-mirror standard and EF-056 plan.
 
 ## Step 1 — Gather portfolio state
 
@@ -35,16 +35,16 @@ Run the views (adjust paths for your primary adopter repo; the framework clone p
 
 ```bash
 # From (or with EPOSFORGE_HOME pointing to) the framework
-# BACKLOG_ROOTS includes the primary repo's eposforge/backlog (and any other roots)
-bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/instance/backlog/file-based-backlog/scripts/aggregate.sh --tags
-bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/instance/backlog/file-based-backlog/scripts/ready.sh
-bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/instance/backlog/file-based-backlog/scripts/aggregate.sh --mermaid
+# BACKLOG_ROOTS includes the primary repo's .eposforge/backlog (and any other roots)
+bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/..eposforge/backlog/file-based-backlog/scripts/aggregate.sh --tags
+bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/..eposforge/backlog/file-based-backlog/scripts/ready.sh
+bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/..eposforge/backlog/file-based-backlog/scripts/aggregate.sh --mermaid
 ```
 
 For each anchor item identified in the backlog, also run:
 
 ```bash
-bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/instance/backlog/file-based-backlog/scripts/aggregate.sh --critical-path <anchor-ID>
+bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/..eposforge/backlog/file-based-backlog/scripts/aggregate.sh --critical-path <anchor-ID>
 ```
 
 If Cognee MCP is available, recall recent portfolio and roadmap state:
@@ -142,7 +142,7 @@ For each proposal the operator accepts during the review session:
 Run lint after applying edits:
 
 ```bash
-bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/instance/backlog/file-based-backlog/scripts/lint-backlog.sh
+bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/..eposforge/backlog/file-based-backlog/scripts/lint-backlog.sh
 ```
 
 ## Outputs

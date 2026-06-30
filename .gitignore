@@ -11,7 +11,7 @@
 **/keys.txt
 
 # Audit log — local only
-instance/.audit/
+.eposforge/.audit/
 
 # Plaintext secrets staging file — deleted after encryption but gitignore as safety net
 **/secrets.plaintext.yaml
@@ -31,13 +31,13 @@ graphrag/cache/
 graphrag/.venv/
 graphrag/__pycache__/
 graphrag/*.pyc
-instance/installed/06-spec-graph/graphrag/output/
-instance/installed/06-spec-graph/graphrag/cache/
-instance/installed/06-spec-graph/graphrag/.venv/
-instance/installed/06-spec-graph/graphrag/__pycache__/
-instance/installed/06-spec-graph/cognee/.venv/
-instance/installed/06-spec-graph/cognee/__pycache__/
-instance/installed/06-spec-graph/cognee/.cognee/
+.eposforge/spec-graph/graphrag/output/
+.eposforge/spec-graph/graphrag/cache/
+.eposforge/spec-graph/graphrag/.venv/
+.eposforge/spec-graph/graphrag/__pycache__/
+.eposforge/spec-graph/cognee/.venv/
+.eposforge/spec-graph/cognee/__pycache__/
+.eposforge/spec-graph/cognee/.cognee/
 
 # Scratchpad — never commit (temp files, plans, scratch notes, diffs, logs)
 .scratchpad/
@@ -51,7 +51,7 @@ scratchpad/
 epos-machine-request.json
 
 # Generated portfolio diagrams (Mermaid cross-repo views from aggregate.sh --mermaid).
-# These MUST NOT contain private adopter data (GEA, IAC, Outreach*, etc.).
+# These MUST NOT contain private adopter data (use only generics in public tree; private details stay in adopter trees).
 # Enforcement:
 # - aggregate.sh --mermaid now selects the first `visibility=private` root as write target
 #   whenever any private root participates (prevents writing mixed/private diagrams into

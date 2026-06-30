@@ -1,0 +1,161 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix ef: <http://eposforge.org/ontology/> .
+@prefix efi: <http://eposforge.org/instance/> .
+
+# Instance-scoped individuals for installed adapters in this repo.
+# All individuals use the efi: namespace; ef: is reserved for ontology terms.
+
+efi:claude-code rdf:type ef:ReferenceImplementation ;
+    rdfs:label "claude-code" ;
+    ef:adapterName "claude-code" ;
+    ef:adapterVersion "unpinned (latest release)" ;
+    ef:privacyPosture "vendor-no-training" ;
+    ef:costHint "consumer-paid" ;
+    ef:invocationSurface "CLI" ;
+    ef:capabilities "multi-file-edit", "terminal-ops", "browser-ops", "agentic-autonomy", "mcp-tool-use" ;
+    ef:fulfillsSlot ef:DevProductComponent ;
+    ef:hasStatus ef:AdapterStatusApproved .
+
+efi:copilot rdf:type ef:ReferenceImplementation ;
+    rdfs:label "copilot" ;
+    ef:adapterName "copilot" ;
+    ef:adapterVersion "unpinned (latest VS Code extension release)" ;
+    ef:privacyPosture "vendor-no-training" ;
+    ef:costHint "consumer-paid" ;
+    ef:invocationSurface "IDE-extension" ;
+    ef:capabilities "inline-autocomplete", "chat", "agent-mode", "multi-file-edit", "mcp-tool-use" ;
+    ef:fulfillsSlot ef:DevProductComponent ;
+    ef:hasStatus ef:AdapterStatusApproved .
+
+efi:gemini-cli rdf:type ef:ReferenceImplementation ;
+    rdfs:label "gemini-cli" ;
+    ef:adapterName "gemini-cli" ;
+    ef:adapterVersion "unpinned (latest @google/gemini-cli release)" ;
+    ef:privacyPosture "vendor-default" ;
+    ef:costHint "free" ;
+    ef:invocationSurface "CLI" ;
+    ef:capabilities "very-large-context", "multi-file-edit", "terminal-ops", "mcp-extensible" ;
+    ef:fulfillsSlot ef:DevProductComponent ;
+    ef:hasStatus ef:AdapterStatusExperimental .
+
+efi:mcp-stdio-and-http rdf:type ef:ReferenceImplementation ;
+    rdfs:label "mcp-stdio-and-http" ;
+    ef:adapterName "mcp-stdio-and-http" ;
+    ef:adapterVersion "0.1.0" ;
+    ef:privacyPosture "mixed" ;
+    ef:costHint "free + metered" ;
+    ef:invocationSurface "MCP (stdio and http)" ;
+    ef:capabilities "graph-query", "repo-query", "docs-query", "memory" ;
+    ef:fulfillsSlot ef:ToolTransportComponent ;
+    ef:hasStatus ef:AdapterStatusExperimental .
+
+efi:cognee-ontology-preprocessor rdf:type ef:ReferenceImplementation ;
+    rdfs:label "cognee-ontology-preprocessor" ;
+    ef:adapterName "cognee-ontology-preprocessor" ;
+    ef:adapterVersion "unpinned (latest cognee release)" ;
+    ef:privacyPosture "vendor-default" ;
+    ef:costHint "metered" ;
+    ef:invocationSurface "cognee-sync CLI (.eposforge/06-spec-graph/cognee/sync/), per-file --added/--modified/--deleted via HTTP to dkr-cgnee-api" ;
+    ef:capabilities "ontology-grounded-extraction", "entity-normalization", "synonym-collapse", "embedded-graph-write" ;
+    ef:fulfillsSlot ef:SpecGraphComponent ;
+    ef:hasStatus ef:AdapterStatusExperimental .
+
+efi:graphrag rdf:type ef:ReferenceImplementation ;
+    rdfs:label "graphrag" ;
+    ef:adapterName "graphrag" ;
+    ef:adapterVersion "graphrag==3.0.9" ;
+    ef:privacyPosture "vendor-default" ;
+    ef:costHint "metered" ;
+    ef:invocationSurface "CLI script (.eposforge/06-spec-graph/graphrag/scripts/rebuild.sh)" ;
+    ef:capabilities "entity-extraction", "community-detection", "global-search", "neo4j-write", "vector-index" ;
+    ef:fulfillsSlot ef:SpecGraphComponent ;
+    ef:hasStatus ef:AdapterStatusShelved .
+
+efi:windows-acl-user rdf:type ef:ReferenceImplementation ;
+    rdfs:label "windows-acl-user" ;
+    ef:adapterName "windows-acl-user" ;
+    ef:adapterVersion "0.1.0" ;
+    ef:privacyPosture "local" ;
+    ef:costHint "free" ;
+    ef:invocationSurface "OS-user-account" ;
+    ef:capabilities "filesystem-isolation", "identity-separation" ;
+    ef:fulfillsSlot ef:ExecutionSandboxComponent ;
+    ef:hasStatus ef:AdapterStatusExperimental .
+
+efi:github-and-actions rdf:type ef:ReferenceImplementation ;
+    rdfs:label "github-and-actions" ;
+    ef:adapterName "github-and-actions" ;
+    ef:adapterVersion "0.1.0" ;
+    ef:privacyPosture "vendor-default" ;
+    ef:costHint "free + metered" ;
+    ef:invocationSurface "github.com + GitHub Actions" ;
+    ef:capabilities "version-control", "pr-review", "workflow-runs" ;
+    ef:fulfillsSlot ef:SourceControlCIComponent ;
+    ef:hasStatus ef:AdapterStatusApproved .
+
+efi:anthropic rdf:type ef:ReferenceImplementation ;
+    rdfs:label "anthropic" ;
+    ef:adapterName "anthropic" ;
+    ef:adapterVersion "0.1.0" ;
+    ef:privacyPosture "vendor-default" ;
+    ef:costHint "metered" ;
+    ef:invocationSurface "GraphRAG pipeline config, Cognee pipeline config" ;
+    ef:capabilities "text-extraction", "entity-generation" ;
+    ef:fulfillsSlot ef:InferenceLayerComponent ;
+    ef:hasStatus ef:AdapterStatusExperimental .
+
+efi:openai rdf:type ef:ReferenceImplementation ;
+    rdfs:label "openai" ;
+    ef:adapterName "openai" ;
+    ef:adapterVersion "0.1.0" ;
+    ef:privacyPosture "vendor-default" ;
+    ef:costHint "metered" ;
+    ef:invocationSurface "GraphRAG pipeline config" ;
+    ef:capabilities "embedding-generation" ;
+    ef:fulfillsSlot ef:InferenceLayerComponent ;
+    ef:hasStatus ef:AdapterStatusExperimental .
+
+efi:env-vars rdf:type ef:ReferenceImplementation ;
+    rdfs:label "env-vars" ;
+    ef:adapterName "env-vars" ;
+    ef:adapterVersion "0.1.0" ;
+    ef:privacyPosture "local" ;
+    ef:costHint "free" ;
+    ef:invocationSurface "process environment" ;
+    ef:capabilities "runtime-config-injection", "bootstrap-passthrough" ;
+    ef:fulfillsSlot ef:SecretsKeyManagementComponent ;
+    ef:hasStatus ef:AdapterStatusExperimental .
+
+efi:sops-age rdf:type ef:ReferenceImplementation ;
+    rdfs:label "sops-age" ;
+    ef:adapterName "sops-age" ;
+    ef:adapterVersion "0.1.0" ;
+    ef:privacyPosture "local" ;
+    ef:costHint "free" ;
+    ef:invocationSurface "sops CLI + age keying; runtime injection via epos-secrets resolver" ;
+    ef:capabilities "encrypted-file-store", "multi-machine-sharing", "two-state-rotation", "cross-platform" ;
+    ef:fulfillsSlot ef:SecretsKeyManagementComponent ;
+    ef:hasStatus ef:AdapterStatusExperimental .
+
+efi:windows-credential-manager rdf:type ef:ReferenceImplementation ;
+    rdfs:label "windows-credential-manager" ;
+    ef:adapterName "windows-credential-manager" ;
+    ef:adapterVersion "0.1.0" ;
+    ef:privacyPosture "local" ;
+    ef:costHint "free" ;
+    ef:invocationSurface "Windows Credential Manager via cmdkey / PowerShell" ;
+    ef:capabilities "per-user-credential-isolation", "least-privilege-scoping" ;
+    ef:fulfillsSlot ef:SecretsKeyManagementComponent ;
+    ef:hasStatus ef:AdapterStatusExperimental .
+
+efi:file-based-backlog rdf:type ef:ReferenceImplementation ;
+    rdfs:label "file-based-backlog" ;
+    ef:adapterName "file-based-backlog" ;
+    ef:adapterVersion "0.1.0" ;
+    ef:privacyPosture "local" ;
+    ef:costHint "free" ;
+    ef:invocationSurface "bash scripts" ;
+    ef:capabilities "issue-tracking", "dependency-linking", "cross-repo-aggregation", "archive-indexing", "linting" ;
+    ef:fulfillsSlot ef:BacklogComponent ;
+    ef:hasStatus ef:AdapterStatusExperimental .

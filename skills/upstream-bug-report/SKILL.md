@@ -139,7 +139,7 @@ $EDITOR backlog/backlog.md   # find the item by ID and append:
 If no backlog item exists yet, create one with `new-issue.sh`:
 
 ```bash
-bash instance/backlog/file-based-backlog/scripts/new-issue.sh
+bash .eposforge/backlog/file-based-backlog/scripts/new-issue.sh
 # Title: Track upstream fix for {defect summary}
 # Fix surface: repo-instance (or eposforge-pattern if it affects all adopters)
 # Dependencies: link to whichever EposForge item is blocked

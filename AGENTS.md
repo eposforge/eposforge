@@ -24,7 +24,7 @@ There is no application code; the artefacts are Markdown files.
 This repo has two layers that must stay explicit:
 
 - **Spec layer**: `00-vision/`, `01-architecture/`, `02-roadmap/`, `03-research/`, `04-standards/`.
-- **Self-host layer**: `instance/` (the concrete adapter choices for this repo).
+- **Self-host layer**: `.eposforge/` (the concrete adapter choices for this repo; uniform container name across framework and adopters).
 
 ---
 
@@ -100,20 +100,20 @@ cross-repo host-stack coordination, and the migration design source
 01-architecture/    Component contracts, adapter pattern, pattern ADRs
 02-roadmap/         Phase plans
 03-research/        Domain research including spec-graph integration notes
-instance/           Self-host implementation for this repo
-instance/spec-graph/graphrag/  GraphRAG project (settings, prompts, output/)
-instance/spec-graph/cognee/    Cognee ontology-grounded extraction adapter
-instance/spec-graph/cognee/scripts/   Cognee adapter scripts
-instance/spec-graph/graphrag/scripts/ GraphRAG adapter scripts (rebuild.sh, index.sh, import.sh)
-instance/spec-graph/scripts/hooks/    Spec-graph hook fragments composed into .git/hooks/
-instance/source-control-ci/github-and-actions/scripts/ SCM/CI checks, hook composer, hook fragments
-instance/SPEC.md    Living Spec for this repo's Spec Graph adapter (Component 6)
+.eposforge/           Self-host implementation for this repo (uniform container)
+.eposforge/spec-graph/graphrag/  GraphRAG project (settings, prompts, output/)
+.eposforge/spec-graph/cognee/    Cognee ontology-grounded extraction adapter
+.eposforge/spec-graph/cognee/scripts/   Cognee adapter scripts
+.eposforge/spec-graph/graphrag/scripts/ GraphRAG adapter scripts (rebuild.sh, index.sh, import.sh)
+.eposforge/spec-graph/scripts/hooks/    Spec-graph hook fragments composed into .git/hooks/
+.eposforge/source-control-ci/github-and-actions/scripts/ SCM/CI checks, hook composer, hook fragments
+.eposforge/SPEC.md    Living Spec for this repo's Spec Graph adapter (Component 6)
 ```
 
 Paired-change rule: changes to the specific files enumerated in the
-`instance/SPEC.md §Paired-change rule` section must update `instance/SPEC.md`
-in the same commit. Additions to `instance/spec-graph/` that
-are not in that list do not require an `instance/SPEC.md` update.
+`.eposforge/SPEC.md §Paired-change rule` section must update `.eposforge/SPEC.md`
+in the same commit. Additions to `.eposforge/spec-graph/` that
+are not in that list do not require an `.eposforge/SPEC.md` update.
 
 ---
 
@@ -137,12 +137,12 @@ Use this workflow when the user provides a description of additions, deletions, 
     *   `IMPLEMENTS`: "implements", "implementation of".
     *   `KIND`: node kind discriminator (pillar|group|component|concept|guidance|tenet).
     *   `LIFECYCLE_STATUS`: lifecycle state of a Concept/Guidance/Tenet (proposed|adopted|retired).
-  *   **Living Spec Contract:** If creating or updating a spec (e.g., `instance/SPEC.md` or `01-architecture/02-components/*.md`), ensure it contains: Purpose, Observable Behavior, Inputs/Outputs, Dependencies, Non-functional Bounds (Metadata Table), and Versioning Policy.
+  *   **Living Spec Contract:** If creating or updating a spec (e.g., `.eposforge/SPEC.md` or `01-architecture/02-components/*.md`), ensure it contains: Purpose, Observable Behavior, Inputs/Outputs, Dependencies, Non-functional Bounds (Metadata Table), and Versioning Policy.
   *   **Metadata Tables:** Ensure every Adapter and Component doc includes a machine-readable metadata table per the [Adapter Pattern](01-architecture/00-adapter-pattern/adapter-pattern.md).
 4.  **Validate & Rebuild:**
   *   Once files are updated, offer to perform the required steps to rebuild the Spec Graph:
-      - Cognee (default): from `instance/spec-graph/cognee/sync`, run `epos-secrets uv run cognee-sync --modified <changed-files>` (see sync/README.md for setup; use `--added` for new files, `--deleted` for removed files)
-      - GraphRAG (fallback): `bash instance/spec-graph/graphrag/scripts/rebuild.sh`
+      - Cognee (default): from `.eposforge/spec-graph/cognee/sync`, run `epos-secrets uv run cognee-sync --modified <changed-files>` (see sync/README.md for setup; use `--added` for new files, `--deleted` for removed files)
+      - GraphRAG (fallback): `bash .eposforge/spec-graph/graphrag/scripts/rebuild.sh`
 
 ---
 
@@ -155,24 +155,24 @@ Conventions are standardized under `04-standards/`.
 
 Operational conventions retained here:
 
-- Do not commit `instance/spec-graph/graphrag/output/`, `instance/spec-graph/graphrag/cache/`, `instance/spec-graph/graphrag/.venv/`, `instance/spec-graph/cognee/.venv/`, `instance/spec-graph/cognee/.cognee/`,
+- Do not commit `.eposforge/spec-graph/graphrag/output/`, `.eposforge/spec-graph/graphrag/cache/`, `.eposforge/spec-graph/graphrag/.venv/`, `.eposforge/spec-graph/cognee/.venv/`, `.eposforge/spec-graph/cognee/.cognee/`,
   `.env`, or any file containing API keys or passwords.
-- Never edit generated output under `instance/spec-graph/graphrag/output/`.
+- Never edit generated output under `.eposforge/spec-graph/graphrag/output/`.
 - **Adapter script placement (enforced).** All scripts owned by an installed
   adapter — hooks, runners, helpers — live under
-  `instance/<component>/scripts/` (or
-  `instance/<component>/<adapter>/scripts/` when a component has
-  multiple adapters). The flat `instance/scripts/` directory is not permitted.
+  `.eposforge/<component>/scripts/` (or
+  `.eposforge/<component>/<adapter>/scripts/` when a component has
+  multiple adapters). The flat `.eposforge/scripts/` directory is not permitted.
   The check at
-  `instance/source-control-ci/github-and-actions/scripts/check-installed-scripts-layout.sh`
+  `.eposforge/source-control-ci/github-and-actions/scripts/check-installed-scripts-layout.sh`
   enforces this from the `pre-commit` hook and the
   `installed-scripts-layout` GitHub Actions workflow; both fail any commit
-  that puts files under `instance/scripts/`.
+  that puts files under `.eposforge/scripts/`.
 - **Git hooks are component-owned and composed.** Each installed adapter that
   needs git-hook behaviour places a fragment at
-  `instance/<component>/scripts/hooks/<git-hook-name>` (or
+  `.eposforge/<component>/scripts/hooks/<git-hook-name>` (or
   `<component>/<adapter>/scripts/hooks/<git-hook-name>`). The composer at
-  `instance/source-control-ci/github-and-actions/scripts/install-hooks.sh`
+  `.eposforge/source-control-ci/github-and-actions/scripts/install-hooks.sh`
   discovers all fragments and writes a dispatcher into `.git/hooks/<name>`
   that runs every fragment in order. Developers run the composer once per
   clone, per host; it is portable between srv-docker-hp (native bash) and
@@ -185,14 +185,14 @@ Operational conventions retained here:
 - Skills placement: store canonical skill content under `skills/<name>/`.
   Keep `.github/skills/<name>/SKILL.md` as a thin wrapper that points to the
   canonical location.
-- Syncing to the Spec Graph (Cognee, default): from `instance/spec-graph/cognee/sync`, run `epos-secrets uv run cognee-sync --modified <files>` (use `--added`/`--deleted` as appropriate; see sync/README.md for setup and full-corpus seed).
-- Rebuilding the Spec Graph (GraphRAG, fallback): `python instance/secrets-key-management/bin/epos-secrets -- bash instance/spec-graph/graphrag/scripts/rebuild.sh`
-  (secrets are declared in [instance/secrets-key-management/sops-age/secrets.toml](instance/secrets-key-management/sops-age/secrets.toml)).
+- Syncing to the Spec Graph (Cognee, default): from `.eposforge/spec-graph/cognee/sync`, run `epos-secrets uv run cognee-sync --modified <files>` (use `--added`/`--deleted` as appropriate; see sync/README.md for setup and full-corpus seed).
+- Rebuilding the Spec Graph (GraphRAG, fallback): `python .eposforge/secrets-key-management/bin/epos-secrets -- bash .eposforge/spec-graph/graphrag/scripts/rebuild.sh`
+  (secrets are declared in [.eposforge/secrets-key-management/sops-age/secrets.toml](.eposforge/secrets-key-management/sops-age/secrets.toml)).
 - **Technical findings go in the repo, not personal memory.** When you discover
   vendor bugs, version-specific behavior, API quirks, or diagnostic recipes for
   a system this repo integrates with (Cognee, Anthropic SDK, Kuzu, etc.),
   document them in the relevant adapter doc under
-  `instance/<component>/<adapter>/` (e.g. `cognee/cognee.md`).
+  `.eposforge/<component>/<adapter>/` (e.g. `cognee/cognee.md`).
   Operational and access setup belongs in the relevant repo skill. Personal
   memory is for pointers to where the canonical info lives, not for the info
   itself.
@@ -207,22 +207,22 @@ Operational conventions retained here:
 ## Backlog management
 
 - Backlog load rules:
-  - Load `instance/backlog/backlog.md` during active fix work (open,
+  - Load `.eposforge/backlog/backlog.md` during active fix work (open,
     in-progress, blocked only).
-  - Load `instance/backlog/backlog-slated.md` during planning and deferral
+  - Load `.eposforge/backlog/backlog-slated.md` during planning and deferral
     decisions.
-  - Load `instance/backlog/backlog-archive-index.md` first for regression checks;
-    open `instance/backlog/backlog-archive.md` only for full historical detail.
+  - Load `.eposforge/backlog/backlog-archive-index.md` first for regression checks;
+    open `.eposforge/backlog/backlog-archive.md` only for full historical detail.
 - Cross-repo planning: when multiple working directories are present,
-  run `bash instance/backlog/file-based-backlog/scripts/aggregate.sh --plan`
+  run `bash .eposforge/backlog/file-based-backlog/scripts/aggregate.sh --plan`
   before planning the next iteration.
 - Operator commands:
-  - `bash instance/backlog/file-based-backlog/scripts/new-issue.sh`
-  - `bash instance/backlog/file-based-backlog/scripts/lint-backlog.sh`
-  - `bash instance/backlog/file-based-backlog/scripts/sweep-resolved.sh`
-  - `bash instance/backlog/file-based-backlog/scripts/aggregate.sh --plan`
-  - `bash instance/backlog/file-based-backlog/scripts/aggregate.sh --regressions <keyword>`
-  - `bash instance/backlog/file-based-backlog/scripts/aggregate.sh --graph`
+  - `bash .eposforge/backlog/file-based-backlog/scripts/new-issue.sh`
+  - `bash .eposforge/backlog/file-based-backlog/scripts/lint-backlog.sh`
+  - `bash .eposforge/backlog/file-based-backlog/scripts/sweep-resolved.sh`
+  - `bash .eposforge/backlog/file-based-backlog/scripts/aggregate.sh --plan`
+  - `bash .eposforge/backlog/file-based-backlog/scripts/aggregate.sh --regressions <keyword>`
+  - `bash .eposforge/backlog/file-based-backlog/scripts/aggregate.sh --graph`
 
 ---
 
@@ -253,7 +253,7 @@ status: active
 3. **Run cognee-sync**:
    - Navigate to the `cognee/sync` directory:
      ```bash
-     cd instance/spec-graph/cognee/sync
+     cd .eposforge/spec-graph/cognee/sync
      ```
    - Always include the ontology file when adding or modifying files:
      - **Add new files and ontology**:
@@ -294,7 +294,7 @@ a container migration, or any time incremental state is suspect.
 
 ```bash
 # From repo root:
-bash instance/spec-graph/cognee/scripts/bulk-rebuild.sh
+bash .eposforge/spec-graph/cognee/scripts/bulk-rebuild.sh
 ```
 
 The script collects all git-tracked `*.md` and `*.ttl` files, wipes the
@@ -310,7 +310,7 @@ explicit operator confirmation using the exact phrase **"I authorize KG wipe"**.
 Note: the Ladybug version-code error is unreliable as a wipe trigger — it has
 appeared on already-empty databases and does not by itself indicate corruption.
 The wipe procedure is in
-`instance/spec-graph/cognee/MAINTENANCE.md`.
+`.eposforge/spec-graph/cognee/MAINTENANCE.md`.
 
 ---
 

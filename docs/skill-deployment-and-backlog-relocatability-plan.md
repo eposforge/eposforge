@@ -24,8 +24,8 @@ Component 13 scripts by **repo-relative path**, e.g. in
 `skills/portfolio-review/SKILL.md`:
 
 ```
-bash instance/backlog/file-based-backlog/scripts/aggregate.sh --mermaid
-bash instance/backlog/file-based-backlog/scripts/lint-backlog.sh
+bash .eposforge/backlog/file-based-backlog/scripts/aggregate.sh --mermaid
+bash .eposforge/backlog/file-based-backlog/scripts/lint-backlog.sh
 ```
 
 and those scripts then resolve the backlog they operate on. So "works anywhere"
@@ -45,7 +45,7 @@ B is a small gap no current ticket cleanly owns.
 ## 1. As-built reality (verified 2026-06-15) — read before editing EF-033
 
 The scripts under
-`instance/backlog/file-based-backlog/scripts/` are **already
+`.eposforge/backlog/file-based-backlog/scripts/` are **already
 partially relocatable**, but the implementation diverged from the EF-033 ticket
 and does not handle the real adopter layout:
 
@@ -143,7 +143,7 @@ Also: `sync-tooling.sh` propagates the new scripts to adopters; run
 ## 3. Skill anchoring (coupling B) — make script-calling skills cwd-independent
 
 **Problem:** even with EF-033, `SKILL.md` calls
-`instance/backlog/.../aggregate.sh` relatively, which only resolves
+`.eposforge/backlog/.../aggregate.sh` relatively, which only resolves
 at the eposforge repo root.
 
 **Fix:** the skills resolve the tooling via an explicit anchor, not a relative
@@ -152,7 +152,7 @@ path. Define **`EPOSFORGE_HOME`** (default to the canonical clone
 commands as:
 
 ```
-bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/instance/backlog/file-based-backlog/scripts/aggregate.sh --mermaid
+bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/.eposforge/backlog/file-based-backlog/scripts/aggregate.sh --mermaid
 ```
 
 Combined with EF-033 (scripts then find the *backlog* via cwd/`BACKLOG_ROOTS`),
@@ -210,20 +210,20 @@ working symlink; re-run is idempotent; a tampered copy is reported as drift;
 
 ---
 
-## 5. GEA-015 (new) — roll the backlog skills onto srv-docker-hp surfaces
+## 5. <adopter>-015 (new) — roll the backlog skills onto srv-docker-hp surfaces
 
 **Repo:** primary adopter. **Effort:** M.
 **Depends on:** `eposforge:EF-032`, `eposforge:EF-033` (and §3 anchoring).
-**Sibling of:** GEA-012 (which covers only `refine-prompt`; this covers the
+**Sibling of:** <adopter>-012 (which covers only `refine-prompt`; this covers the
 backlog skills).
 
 Deploy `portfolio-review` + `milestone-elicitation` (and `refine-prompt` if
-co-scheduled) across the three host surfaces named in GEA-012:
+co-scheduled) across the three host surfaces named in <adopter>-012:
 1. **Claude Code user scope** — `~/.claude/skills/<name>` symlinked to the
    eposforge clone (matches the `faster-whisper` pattern), via EF-032's installer.
 2. **Copilot Remote-SSH user prompts** — `~/.vscode-server/data/User/prompts/`,
    copy-with-provenance via EF-032.
-3. **`dkr-gstwn-01` containerized CLIs** — via the **GEA overlay Dockerfile**
+3. **`dkr-gstwn-01` containerized CLIs** — via the **<adopter> overlay Dockerfile**
    (never by patching the gastownmirror base), persisted on the `/root` volume
    alongside the OAuth login files; bake a provenance comment (source path +
    commit) so drift is detectable; survives an image rebuild. Set
@@ -245,7 +245,7 @@ EF-033 (reconcile + cwd tier + path-depth)        ← load-bearing; unblocks fun
    │
 EF-032 (installer)                                ← uses anchoring; deploys files
    │
-GEA-015 (host rollout across 3 surfaces)          ← consumes EF-032 + EF-033
+<adopter>-015 (host rollout across 3 surfaces)          ← consumes EF-032 + EF-033
 ```
 
 Interim (today, no new code): symlink the two skills into `~/.claude/skills/`
@@ -259,8 +259,8 @@ not the finished state.
   with what ships.
 - **`sync-tooling.sh` propagation:** the relocatability fix must reach adopters,
   or they keep the broken resolver. Run `--check` post-change.
-- **Container OAuth/secret surfaces:** GEA-015's overlay must follow the
-  GEA-005/GEA-012 no-plaintext pattern for any credentials; the skills
+- **Container OAuth/secret surfaces:** <adopter>-015's overlay must follow the
+  <adopter>-005/<adopter>-012 no-plaintext pattern for any credentials; the skills
   themselves need none, but the install layer touches the agent home.
 - **Decision D1 unresolved** blocks a clean walk-up implementation — settle it
   first.
@@ -272,6 +272,6 @@ not the finished state.
 - [ ] D1 / D2 ratified — §2.4
 - [ ] Skill anchoring via `EPOSFORGE_HOME` (EF-032 scope or EF-045) — §3
 - [ ] EF-032 installer: surface table, modes, drift, list/uninstall, docs — §4
-- [ ] GEA-015 filed + 3-surface rollout — §5
+- [ ] <adopter>-015 filed + 3-surface rollout — §5
 - [ ] `sync-tooling.sh --check` clean across adopters
 ```

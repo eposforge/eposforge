@@ -121,12 +121,12 @@ GraphRAG-style capabilities (dependency traversal, impact/critical-path analysis
 
 Agents obtain graph-augmented answers by calling the appropriate tools/skills rather than performing broad raw file RAG. The shared ontology supplies cross-scope mapping when needed. Disk (the Markdown) is canonical; the graph is a projection for reasoning.
 
-See `instance/backlog/file-based-backlog/file-based-backlog.md` (Living Spec), the architecture discussion capture docs, and EF-046/047/056–058.
+See `.eposforge/backlog/file-based-backlog/file-based-backlog.md` (Living Spec), the architecture discussion capture docs, and EF-046/047/056–058.
 
-Adopters designate one primary repo (the Adopter Platform Spec) that documents their overall eposforge implementation for product and platform factories and contains the `eposforge/` slice. Portfolio reviews are performed from that primary repo using the aggregate tooling (with appropriate BACKLOG_ROOTS).
+Adopters designate one primary repo (the Adopter Platform Spec) that documents their overall eposforge implementation for product and platform factories and contains the `.eposforge/` container slice. Portfolio reviews are performed from that primary repo using the aggregate tooling (with appropriate BACKLOG_ROOTS).
 
 ## Reference implementations
 
 See repo-instance adapter docs under
-`instance/backlog/` for concrete implementations of this
+`.eposforge/backlog/` for concrete implementations of this
 slot.

@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# post-commit fragment owned by spec-graph.
+# Sets .eposforge/spec-graph/.needs-rebuild when any *.md files in
+# the tracked docs directories are modified. Non-blocking reminder; it does
+# NOT trigger a sync automatically.
+#
+# Composed into .git/hooks/post-commit by:
+#   bash .eposforge/source-control-ci/github-and-actions/scripts/install-hooks.sh
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+FLAG="${REPO_ROOT}/.eposforge/spec-graph/.needs-rebuild"
+
+# Check whether any tracked docs directories were touched in this commit
+CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null \
+  | grep -E "^(00-vision|01-architecture|02-roadmap|03-research|\.eposforge/adrs|\.eposforge/)/.*\.md$" \
+  || true)
+
+if [[ -n "${CHANGED}" ]]; then
+  touch "${FLAG}" 2>/dev/null || true
+  echo "spec-graph: Markdown docs changed; the Spec Graph is now out of date."
+  echo "  See .eposforge/spec-graph/cognee/sync/README.md to sync."
+fi
