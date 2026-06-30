@@ -1,6 +1,6 @@
 ---
 name: maintain-ontology
-description: Keeps 00-vision/01-ontology.ttl well-formed, internally consistent, and aligned with adapter cards under instance/ so Cognee extraction remains ontology-grounded.
+description: Keeps 00-vision/01-ontology.ttl well-formed, internally consistent, and aligned with adapter cards under .eposforge/ so Cognee extraction remains ontology-grounded.
 ---
 
 Maintains `00-vision/01-ontology.ttl` — the EposForge file that combines the domain **ontology** (OWL: the dark factory pattern model) and **knowledge taxonomy** (SKOS + ef:kind: the canonical tree organization of concepts, guidance, tenets, pillars, etc.). It grounds Cognee entity extraction for the Spec Graph so agents receive consistent, pattern-aligned knowledge.
@@ -25,7 +25,7 @@ If this ontology drifts, consumer agents can still query Cognee MCP, but the gui
 - `00-vision/01-ontology.ttl` — the ontology file under review
 - previous ontology-grounded KG state via Cognee MCP when available — use it as the last published graph-backed memory of the ontology, not as authority over newer unrebuild corpus changes
 - `git log` — commit history to detect drift
-- adapter cards and specs — `instance/`, `instance/SPEC.md`, and core spec files under `00-vision/`, `01-architecture/`, `02-roadmap/`, `04-standards/`
+- adapter cards and specs — `.eposforge/`, `.eposforge/SPEC.md`, and core spec files under `00-vision/`, `01-architecture/`, `02-roadmap/`, `04-standards/`
 - [owl-turtle-primer](./references/owl-turtle-primer.md) — OWL/Turtle reference (load when coaching is needed)
 
 ## Detect drift from git history
@@ -103,7 +103,7 @@ Walk the spec and adapter corpus in order, looking for concepts not yet modeled 
 | `01-architecture/02-components/*.md` | Component names (one file = one Component individual) | `ef:Component` individuals |
 | `02-roadmap/*.md` | Phase names (Phase 0–4, A–F) | `ef:Phase` individuals |
 | `04-standards/**/*.md` | Standard titles, relationship keywords | `ef:Standard` individuals |
-| `instance/**/*.md` | Adapter status/capabilities and slot mapping | `ef:Adapter` model alignment |
+| `.eposforge/**/*.md` | Adapter status/capabilities and slot mapping | `ef:Adapter` model alignment |
 | `AGENTS.md` | RELATIONSHIP KEYWORDS in caps | Object properties |
 | `.scratchpad/knowledge-tree.txt` | Node kind tags (`[concept]`, `[guidance]`, `[tenet]`, `[group]`) | `ef:Concept`, `ef:Guidance`, `ef:Tenet`, `ef:Group` individuals |
 | previous Cognee KG state | last rebuilt meaning/aliases/nearby edges for existing terms | editorial disambiguation before minting new terms |

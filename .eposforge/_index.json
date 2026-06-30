@@ -1,0 +1,270 @@
+{
+  "generated_at": "2026-06-30T22:02:28Z",
+  "adapters": [
+    {
+      "component": "agent-policy",
+      "adapter": "tier-yaml",
+      "spec": ".eposforge/agent-policy/tier-yaml/tier-yaml.md",
+      "scripts_dir": ".eposforge/agent-policy/tier-yaml/scripts",
+      "name": "tier-yaml",
+      "status": "experimental",
+      "privacy_posture": "local",
+      "cost_hint": "free",
+      "capabilities": [
+        "tiered-policy",
+        "claude-settings-generation",
+        "baseline-equivalence-check"
+      ],
+      "invocation_surface": "CLI scripts"
+    },
+    {
+      "component": "audit-observability",
+      "adapter": "jsonl-event-sink",
+      "spec": ".eposforge/audit-observability/jsonl-event-sink/jsonl-event-sink.md",
+      "scripts_dir": ".eposforge/audit-observability/jsonl-event-sink/scripts",
+      "name": "jsonl-event-sink",
+      "status": "experimental",
+      "privacy_posture": "local",
+      "cost_hint": "free",
+      "capabilities": [
+        "structured-logs",
+        "append-only-audit",
+        "recent-event-query"
+      ],
+      "invocation_surface": "CLI scripts"
+    },
+    {
+      "component": "backlog",
+      "adapter": "file-based-backlog",
+      "spec": ".eposforge/backlog/file-based-backlog/file-based-backlog.md",
+      "scripts_dir": ".eposforge/backlog/file-based-backlog/scripts",
+      "name": "file-based-backlog",
+      "status": "experimental",
+      "privacy_posture": "local",
+      "cost_hint": "free",
+      "capabilities": [
+        "issue-tracking",
+        "dependency-linking",
+        "cross-repo-aggregation",
+        "archive-indexing",
+        "linting",
+        "ready-work-query",
+        "portfolio-views",
+        "version-sync"
+      ],
+      "invocation_surface": "bash scripts"
+    },
+    {
+      "component": "dev-product",
+      "adapter": "claude-code",
+      "spec": ".eposforge/dev-product/claude-code/claude-code.md",
+      "scripts_dir": null,
+      "name": "claude-code",
+      "status": "approved",
+      "privacy_posture": "vendor-no-training",
+      "cost_hint": "consumer-paid",
+      "capabilities": [
+        "multi-file-edit",
+        "terminal-ops",
+        "browser-ops",
+        "agentic-autonomy",
+        "mcp-tool-use"
+      ],
+      "invocation_surface": "CLI"
+    },
+    {
+      "component": "dev-product",
+      "adapter": "copilot",
+      "spec": ".eposforge/dev-product/copilot/copilot.md",
+      "scripts_dir": null,
+      "name": "copilot",
+      "status": "approved",
+      "privacy_posture": "vendor-no-training",
+      "cost_hint": "consumer-paid",
+      "capabilities": [
+        "inline-autocomplete",
+        "chat",
+        "agent-mode",
+        "multi-file-edit",
+        "mcp-tool-use"
+      ],
+      "invocation_surface": "IDE-extension"
+    },
+    {
+      "component": "dev-product",
+      "adapter": "gemini-cli",
+      "spec": ".eposforge/dev-product/gemini-cli/gemini-cli.md",
+      "scripts_dir": null,
+      "name": "gemini-cli",
+      "status": "experimental",
+      "privacy_posture": "vendor-default",
+      "cost_hint": "free",
+      "capabilities": [
+        "very-large-context",
+        "multi-file-edit",
+        "terminal-ops",
+        "mcp-extensible"
+      ],
+      "invocation_surface": "CLI"
+    },
+    {
+      "component": "execution-sandbox",
+      "adapter": "windows-acl-user",
+      "spec": ".eposforge/execution-sandbox/windows-acl-user/windows-acl-user.md",
+      "scripts_dir": ".eposforge/execution-sandbox/windows-acl-user/scripts",
+      "name": "windows-acl-user",
+      "status": "approved",
+      "privacy_posture": "local",
+      "cost_hint": "free",
+      "capabilities": [
+        "filesystem-isolation",
+        "identity-separation"
+      ],
+      "invocation_surface": "OS-user-account"
+    },
+    {
+      "component": "inference",
+      "adapter": "anthropic",
+      "spec": ".eposforge/inference/anthropic/anthropic.md",
+      "scripts_dir": null,
+      "name": "anthropic",
+      "status": "approved",
+      "privacy_posture": "vendor-default",
+      "cost_hint": "metered",
+      "capabilities": [
+        "text-extraction",
+        "entity-generation"
+      ],
+      "invocation_surface": "GraphRAG pipeline config, Cognee pipeline config"
+    },
+    {
+      "component": "inference",
+      "adapter": "openai",
+      "spec": ".eposforge/inference/openai/openai.md",
+      "scripts_dir": null,
+      "name": "openai",
+      "status": "approved",
+      "privacy_posture": "vendor-default",
+      "cost_hint": "metered",
+      "capabilities": [
+        "embedding-generation"
+      ],
+      "invocation_surface": "GraphRAG pipeline config"
+    },
+    {
+      "component": "secrets-key-management",
+      "adapter": "env-vars",
+      "spec": ".eposforge/secrets-key-management/env-vars/env-vars.md",
+      "scripts_dir": null,
+      "name": "env-vars",
+      "status": "experimental",
+      "privacy_posture": "local",
+      "cost_hint": "free",
+      "capabilities": [
+        "runtime-config-injection",
+        "bootstrap-passthrough"
+      ],
+      "invocation_surface": "process environment"
+    },
+    {
+      "component": "secrets-key-management",
+      "adapter": "sops-age",
+      "spec": ".eposforge/secrets-key-management/sops-age/sops-age.md",
+      "scripts_dir": ".eposforge/secrets-key-management/sops-age/scripts",
+      "name": "sops-age",
+      "status": "experimental",
+      "privacy_posture": "local",
+      "cost_hint": "free",
+      "capabilities": [
+        "encrypted-file-store",
+        "multi-machine-sharing",
+        "two-state-rotation",
+        "cross-platform"
+      ],
+      "invocation_surface": "sops CLI + age keying; runtime injection via epos-secrets resolver"
+    },
+    {
+      "component": "secrets-key-management",
+      "adapter": "windows-credential-manager",
+      "spec": ".eposforge/secrets-key-management/windows-credential-manager/windows-credential-manager.md",
+      "scripts_dir": null,
+      "name": "windows-credential-manager",
+      "status": "experimental",
+      "privacy_posture": "local",
+      "cost_hint": "free",
+      "capabilities": [
+        "per-user-credential-isolation",
+        "least-privilege-scoping"
+      ],
+      "invocation_surface": "Windows Credential Manager via cmdkey / PowerShell Get-StoredCredential"
+    },
+    {
+      "component": "source-control-ci",
+      "adapter": "github-and-actions",
+      "spec": ".eposforge/source-control-ci/github-and-actions/github-and-actions.md",
+      "scripts_dir": ".eposforge/source-control-ci/github-and-actions/scripts",
+      "name": "github-and-actions",
+      "status": "approved",
+      "privacy_posture": "vendor-default",
+      "cost_hint": "free + metered",
+      "capabilities": [
+        "version-control",
+        "pr-review",
+        "workflow-runs"
+      ],
+      "invocation_surface": "github.com + GitHub Actions"
+    },
+    {
+      "component": "spec-graph",
+      "adapter": "cognee",
+      "spec": ".eposforge/spec-graph/cognee/cognee.md",
+      "scripts_dir": ".eposforge/spec-graph/cognee/scripts",
+      "name": "cognee-ontology-preprocessor",
+      "status": "experimental",
+      "privacy_posture": "vendor-default",
+      "cost_hint": "metered",
+      "capabilities": [
+        "ontology-grounded-extraction",
+        "entity-normalization",
+        "synonym-collapse",
+        "embedded-graph-write"
+      ],
+      "invocation_surface": "cognee-sync CLI"
+    },
+    {
+      "component": "spec-graph",
+      "adapter": "graphrag",
+      "spec": ".eposforge/spec-graph/graphrag/graphrag.md",
+      "scripts_dir": ".eposforge/spec-graph/graphrag/scripts",
+      "name": "graphrag",
+      "status": "shelved",
+      "privacy_posture": "vendor-default",
+      "cost_hint": "metered",
+      "capabilities": [
+        "entity-extraction",
+        "community-detection",
+        "global-search",
+        "neo4j-write",
+        "vector-index"
+      ],
+      "invocation_surface": "CLI script"
+    },
+    {
+      "component": "tool-transport",
+      "adapter": "mcp-stdio-and-http",
+      "spec": ".eposforge/tool-transport/mcp-stdio-and-http/mcp-stdio-and-http.md",
+      "scripts_dir": ".eposforge/tool-transport/mcp-stdio-and-http/scripts",
+      "name": "mcp-stdio-and-http",
+      "status": "approved",
+      "privacy_posture": "mixed",
+      "cost_hint": "free + metered",
+      "capabilities": [
+        "graph-query",
+        "repo-query",
+        "docs-query",
+        "memory"
+      ],
+      "invocation_surface": "MCP"
+    }
+  ]
+}

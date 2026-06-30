@@ -12,7 +12,7 @@ This skill owns *running* the update. Editing the ontology TTL itself is a
 separate concern owned by [maintain-ontology](../maintain-ontology/SKILL.md):
 edit the TTL there, then come here to rebuild. Adapter-level deployment topology,
 API behavior, and recovery procedures live in
-[cognee.md](../../instance/spec-graph/cognee/cognee.md).
+[cognee.md](../../.eposforge/spec-graph/cognee/cognee.md).
 
 ## Pick the path first: incremental vs full
 
@@ -36,11 +36,11 @@ changed ontology without wiping the KG.
 
 - `dkr-cgnee-api` container running and healthy (the KG owner; the MCP container
   is only a proxy — never ingest against it). See cognee.md §Deployment topology.
-- `epos-secrets` on PATH (or at `instance/secrets-key-management/bin/`)
+- `epos-secrets` on PATH (or at `.eposforge/secrets-key-management/bin/`)
   to inject `COGNEE_API_URL` / `COGNEE_API_TOKEN`.
-- `uv` available; run from `instance/spec-graph/cognee/sync`.
+- `uv` available; run from `.eposforge/spec-graph/cognee/sync`.
 - Check the inference budget before a full rebuild (~180K–200K embedding tokens
-  for the full corpus): `instance/.audit/inference-budget-counters.json`.
+  for the full corpus): `.eposforge/.audit/inference-budget-counters.json`.
 - The ontology key is `eposforge` (override via `$COGNEE_ONTOLOGY_KEY`).
 
 ## Incremental path (doc changes)
@@ -50,11 +50,11 @@ Always pass `--ontology-key` so cognify anchors entities to the ontology.
 
 ```bash
 # From repo root. BASE = last commit whose changes are already in the KG.
-ADDED=$(git diff --name-only --diff-filter=A "$BASE..HEAD" -- '*.md' '*.ttl' | grep -vxF '00-vision/01-ontology.ttl' | grep -vE '(^|/)(backlog/|instance/backlog/|plans/)')
-MODIFIED=$(git diff --name-only --diff-filter=M "$BASE..HEAD" -- '*.md' '*.ttl' | grep -vxF '00-vision/01-ontology.ttl' | grep -vE '(^|/)(backlog/|instance/backlog/|plans/)')
-DELETED=$(git diff --name-only --diff-filter=D "$BASE..HEAD" -- '*.md' '*.ttl' | grep -vxF '00-vision/01-ontology.ttl' | grep -vE '(^|/)(backlog/|instance/backlog/|plans/)')
+ADDED=$(git diff --name-only --diff-filter=A "$BASE..HEAD" -- '*.md' '*.ttl' | grep -vxF '00-vision/01-ontology.ttl' | grep -vE '(^|/)(backlog/|.eposforge/backlog/|plans/)')
+MODIFIED=$(git diff --name-only --diff-filter=M "$BASE..HEAD" -- '*.md' '*.ttl' | grep -vxF '00-vision/01-ontology.ttl' | grep -vE '(^|/)(backlog/|.eposforge/backlog/|plans/)')
+DELETED=$(git diff --name-only --diff-filter=D "$BASE..HEAD" -- '*.md' '*.ttl' | grep -vxF '00-vision/01-ontology.ttl' | grep -vE '(^|/)(backlog/|.eposforge/backlog/|plans/)')
 
-cd instance/spec-graph/cognee/sync
+cd .eposforge/spec-graph/cognee/sync
 epos-secrets uv run cognee-sync --ontology-key eposforge \
     ${ADDED:+--added $ADDED} \
     ${MODIFIED:+--modified $MODIFIED} \
@@ -65,7 +65,7 @@ Notes:
 - The ontology TTL is the **anchor, not a corpus document** — exclude it from
   `--added`/`--modified`. If it changed, you are on the wrong path (use full
   rebuild).
-- Raw backlog items (`backlog/`, `instance/backlog/`, `plans/`) are excluded from the main Spec Graph by default (EF-057). They live in the independent file-based backlog graph. The main graph may still reference backlog *mechanics* via ontology terms. Use aggregate.sh / portfolio-review for backlog GraphRAG views.
+- Raw backlog items (`backlog/`, `.eposforge/backlog/`, `plans/`) are excluded from the main Spec Graph by default (EF-057). They live in the independent file-based backlog graph. The main graph may still reference backlog *mechanics* via ontology terms. Use aggregate.sh / portfolio-review for backlog GraphRAG views.
 - The incremental path assumes the ontology is already uploaded. If unsure,
   add `--upload-ontology 00-vision/01-ontology.ttl` once (it is idempotent:
   delete + re-upload).
@@ -84,23 +84,24 @@ it means dedup leaves the old anchoring in place.
 Per cognee.md §Recovery procedures (this destroys the entire KG):
 
 ```bash
-COMPOSE_FILE=/mnt/raid-storage/docker-volume-mounts/cognee/docker-compose.yml
+COMPOSE_FILE=<docker-volume-mounts>/cognee/docker-compose.yml
 docker compose -f "$COMPOSE_FILE" stop dkr-cgnee-api
-sudo rm -rf /mnt/raid-storage/docker-volume-mounts/cognee/data/cognee_system
-sudo mkdir -p /mnt/raid-storage/docker-volume-mounts/cognee/data/cognee_system
-sudo chown -R cdfadmin: /mnt/raid-storage/docker-volume-mounts/cognee/data/cognee_system
+# sudo rm -rf <docker-volume-mounts>/cognee/data/cognee_system
+# sudo mkdir -p <docker-volume-mounts>/cognee/data/cognee_system
+# sudo chown -R <operator-user>: <docker-volume-mounts>/cognee/data/cognee_system
 docker compose -f "$COMPOSE_FILE" start dkr-cgnee-api
 # Wait ~10s for the health check before rebuilding.
+# (Use concrete values only in private adopter runbooks.)
 ```
 
 ### 2. Rebuild
 
 ```bash
-bash instance/spec-graph/cognee/scripts/bulk-rebuild.sh
+bash .eposforge/spec-graph/cognee/scripts/bulk-rebuild.sh
 ```
 
 `bulk-rebuild.sh` wipes the sync state DB, stages every tracked `*.md`/`*.ttl`
-**except** the ontology TTL and raw backlog items (`backlog/`, `instance/backlog/`, `plans/` per EF-057), uploads the ontology as the `eposforge` anchor, and
+**except** the ontology TTL and raw backlog items (`backlog/`, `.eposforge/backlog/`, `plans/` per EF-057), uploads the ontology as the `eposforge` anchor, and
 cognifies with `ontologyKey=[eposforge]`. Use `--dry-run` to preview.
 
 **Bulk cognify is two-pass.** The first pass over 80+ docs may emit ~10 SQLite

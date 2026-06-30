@@ -634,7 +634,7 @@ ef:MultiGraphArchitecture rdf:type ef:Concept, skos:Concept ;
 
 ef:IndependentBacklogGraph rdf:type ef:Concept, skos:Concept ;
     skos:prefLabel "Independent File-Based Backlog Graph" ;
-    skos:definition "Backlog items (the work) live in their own independent file-based graph, separate from the main Spec Graph (Component 6; see EF-056 / EF-057). Structured Markdown provides the explicit skeleton: issues are nodes (Status, Effort, Tags, Fix surface, etc. attributes); Depends on:/Blocks:/Supersedes: are directed edges; Tags supply communities. GraphRAG-style capabilities (critical-path, thematic views, traversal) are supplied by separate tooling and skills over the files (aggregate.sh, portfolio-review, etc.). The capability lives in the tooling layer. Disk (the Markdown) is canonical; no Cognee dependency for the core backlog graph. See instance/backlog/file-based-backlog/file-based-backlog.md and EF-056/057." ;
+    skos:definition "Backlog items (the work) live in their own independent file-based graph, separate from the main Spec Graph (Component 6; see EF-056 / EF-057). Structured Markdown provides the explicit skeleton: issues are nodes (Status, Effort, Tags, Fix surface, etc. attributes); Depends on:/Blocks:/Supersedes: are directed edges; Tags supply communities. GraphRAG-style capabilities (critical-path, thematic views, traversal) are supplied by separate tooling and skills over the files (aggregate.sh, portfolio-review, etc.). The capability lives in the tooling layer. Disk (the Markdown) is canonical; no Cognee dependency for the core backlog graph. See .eposforge/backlog/file-based-backlog/file-based-backlog.md and EF-056/057." ;
     skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindConcept ;
     ef:lifecycleStatus ef:StatusAdopted ;
@@ -655,11 +655,11 @@ ef:SpecInput rdf:type ef:Component, skos:Concept ;
 
 ef:LivingSpecComponent rdf:type ef:Component, skos:Concept ;
     skos:prefLabel "Living Spec" ;
-    skos:definition "Living Spec format is in active use across all repos (every adapter card and component doc follows the pattern). No formal installed adapter in instance/installed/02-living-spec/; the paired-change CI check and graph-projection contract are not yet formally enforced." ;
+    skos:definition "Living Spec format is in active use across all repos (every adapter card and component doc follows the pattern). No formal installed adapter in .eposforge/installed/02-living-spec/; the paired-change CI check and graph-projection contract are not yet formally enforced." ;
     skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindComponent ;
     ef:componentMaturity ef:MaturityPartial ;
-    rdfs:comment "Living Spec format is in active use across all repos (every adapter card and component doc follows the pattern). No formal installed adapter in instance/installed/02-living-spec/; the paired-change CI check and graph-projection contract are not yet formally enforced." .
+    rdfs:comment "Living Spec format is in active use across all repos (every adapter card and component doc follows the pattern). No formal installed adapter in .eposforge/installed/02-living-spec/; the paired-change CI check and graph-projection contract are not yet formally enforced." .
 
 ef:DevProductComponent rdf:type ef:Component, skos:Concept ;
     skos:prefLabel "Dev Product" ;
@@ -751,11 +751,11 @@ ef:AuditObservabilityComponent rdf:type ef:Component, skos:Concept ;
 ef:SecretsKeyManagementComponent rdf:type ef:Component, skos:Concept ;
     rdfs:label "Secrets & Key Management" ;
     skos:prefLabel "Secrets & Key Management" ;
-    skos:definition "sops-age adapter installed and operational: vault at instance/installed/12-secrets-key-management/sops-age/, resolver at bin/epos-secrets. Note: epos-secrets is a repo-local script, not a standalone installable artifact (EF-022 tracks making it relocatable). Adopters in mode-B must copy the script; a stable independent install does not yet exist." ;
+    skos:definition "sops-age adapter installed and operational: vault at .eposforge/installed/12-secrets-key-management/sops-age/, resolver at bin/epos-secrets. Note: epos-secrets is a repo-local script, not a standalone installable artifact (EF-022 tracks making it relocatable). Adopters in mode-B must copy the script; a stable independent install does not yet exist." ;
     skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindComponent ;
     ef:componentMaturity ef:MaturityShipped ;
-    rdfs:comment "sops-age adapter installed and operational: vault at instance/installed/12-secrets-key-management/sops-age/, resolver at bin/epos-secrets. Note: epos-secrets is a repo-local script, not a standalone installable artifact (EF-022 tracks making it relocatable). Adopters in mode-B must copy the script; a stable independent install does not yet exist." .
+    rdfs:comment "sops-age adapter installed and operational: vault at .eposforge/installed/12-secrets-key-management/sops-age/, resolver at bin/epos-secrets. Note: epos-secrets is a repo-local script, not a standalone installable artifact (EF-022 tracks making it relocatable). Adopters in mode-B must copy the script; a stable independent install does not yet exist." .
 
 ef:BacklogComponent rdf:type ef:Component, skos:Concept ;
     skos:prefLabel "Backlog" ;

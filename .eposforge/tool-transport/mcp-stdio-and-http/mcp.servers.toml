@@ -1,0 +1,28 @@
+schema_version = "1"
+# Canonical MCP server declarations for this repo instance.
+# This is the source of truth — DO NOT edit .mcp.json or .vscode/mcp.json directly.
+#
+# After editing this file, regenerate the two JSON config files:
+#   python.eposforge/tool-transport/mcp-stdio-and-http/scripts/sync-mcp.py
+#
+# To check for drift:
+#   python.eposforge/tool-transport/mcp-stdio-and-http/scripts/sync-mcp.py --check
+
+[[server]]
+name         = "cognee"
+transport    = "sse"
+url          = "https://<your-cognee-mcp-host>/sse"
+
+[[server]]
+name         = "github"
+transport    = "stdio"
+command      = "npx"
+args         = ["-y", "@modelcontextprotocol/server-github"]
+uses_secrets = ["github_pat_operator_dev"]
+
+[server.non_secret_env]
+
+[[server]]
+name      = "ms-docs"
+transport = "http"
+url       = "https://learn.microsoft.com/api/mcp"

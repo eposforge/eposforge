@@ -150,7 +150,7 @@ during the next portfolio-review pass).
 Run lint after writing:
 
 ```bash
-bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/instance/backlog/file-based-backlog/scripts/lint-backlog.sh
+bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/.eposforge/backlog/file-based-backlog/scripts/lint-backlog.sh
 ```
 
 ## Step 7 — Write elicitation record

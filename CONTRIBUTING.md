@@ -16,7 +16,7 @@ research catalogs, reference adapters, and tooling are all welcome.
    both work):
 
 ```bash
-bash instance/source-control-ci/github-and-actions/scripts/install-hooks.sh
+bash .eposforge/source-control-ci/github-and-actions/scripts/install-hooks.sh
 ```
 
 4. Sign your commits with `git commit -s` (see DCO below).
@@ -63,7 +63,7 @@ Run the one-time setup script for your platform (it only writes your local
 
 ```bash
 # Linux / macOS / Git Bash
-bash instance/source-control-ci/github-and-actions/scripts/setup-signed-commits.sh
+bash .eposforge/source-control-ci/github-and-actions/scripts/setup-signed-commits.sh
 ```
 
 ```powershell

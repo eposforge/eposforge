@@ -72,6 +72,6 @@ In addition to the universal fields in
 ## Reference implementations
 
 See [../../03-research/01-architecture/02-components/dev-product/dev-products.md](../../03-research/01-architecture/02-components/dev-product/dev-products.md)
-for the candidate catalog and [../../instance/dev-product/](../../instance/dev-product/)
+for the candidate catalog and [../../.eposforge/dev-product/](../../.eposforge/dev-product/)
 for what THIS repo installs.
 

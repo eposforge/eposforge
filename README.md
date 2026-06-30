@@ -34,7 +34,7 @@ Instances pick implementations.
 What better way to build an AI driven dark factory than to have AI build it for you?
 
 EposForge delivers value via a Cognee MCP server which LLMs can use for a GraphRag grounding.  
-eposforge/instance/spec-graph/cognee is the implementation
+eposforge/.eposforge/spec-graph/cognee is the implementation (after container uniformity)
 
 Once agents have access to the server, they can ground their chats and actions by accessing the EposForge ontology grounded knowledge graph through Cognee MCP.
 
@@ -62,10 +62,10 @@ what is a concrete local implementation.
 | --- | --- | --- | --- |
 | Architecture definition | `00-vision/`, `01-architecture/`, `02-roadmap/` | Normative EposForge pattern, contracts, and maturity models | Reused across adopting repos |
 | Standards definition | `04-standards/` | Adopted cross-cutting standards and conformance requirements | Reused across adopting repos |
-| Implementation for this repo instance | `instance/`, `docs/runbooks/` | Concrete implementation choices used by this repository | Varies by repo |
+| Implementation for this repo instance | `.eposforge/`, `docs/runbooks/` | Concrete implementation choices used by this repository (uniform container) | Varies by repo |
 | Research and candidates | `03-research/` | Candidate adapters, comparative analysis, and implementation options | Reused as reference, non-normative |
 
-See `instance/README.md` for a slot-by-slot map of what this repo installs.
+See `.eposforge/README.md` for a slot-by-slot map of what this repo installs.
 
 ## Portable Conventions For Adopting Repos
 
@@ -101,9 +101,9 @@ Cursor, Goose, etc.) connects to Neo4j via the Neo4j MCP extension
 and gains graph-augmented memory of the full architecture for
 spec generation, ADR authoring, and consistency checks.
 
-See [instance/SPEC.md](./instance/SPEC.md) for the Living Spec and
-adapter registry, [instance/spec-graph/cognee/cognee.md](./instance/spec-graph/cognee/cognee.md)
-for the default adapter, and [instance/spec-graph/graphrag/README.md](./instance/spec-graph/graphrag/README.md)
+See [.eposforge/SPEC.md](./.eposforge/SPEC.md) for the Living Spec and
+adapter registry, [.eposforge/spec-graph/cognee/cognee.md](./.eposforge/spec-graph/cognee/cognee.md)
+for the default adapter, and [.eposforge/spec-graph/graphrag/README.md](./.eposforge/spec-graph/graphrag/README.md)
 for the fallback adapter and current invocation surface.
 
 ## Status

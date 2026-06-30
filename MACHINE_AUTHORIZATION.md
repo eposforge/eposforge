@@ -88,7 +88,7 @@ The requesting machine will now be able to decrypt secrets.
 To revoke a machine, remove its public key from `.sops.yaml` and run:
 
 ```bash
-sops updatekeys instance/secrets-key-management/sops-age/secrets.enc.yaml
+sops updatekeys .eposforge/secrets-key-management/sops-age/secrets.enc.yaml
 git add -A && git commit -m "sops: revoke machine <hostname>"
 git push
 ```

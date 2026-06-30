@@ -14,7 +14,7 @@ An adopter should have a **single primary repo** that acts as the primary eposfo
 This primary repo:
 
 - Contains documentation about the overall eposforge implementation, for both product and platform factories.
-- Includes the `eposforge/` adopted slice (the pattern reference implementations under the stable component names).
+- Includes the `.eposforge/` container (the adopted pattern slice under the stable component names).
 
 EposForge instructs adopters to set it up that way. The primary adopter fills that role.
 
@@ -35,10 +35,10 @@ The Living Spec contract notes the distributed-corpus reality for pattern-scale 
 
 The backlog adapter distinguishes `role = "substrate"` vs `"product"`. The primary repo for an adopter is typically substrate-oriented, with links (`Blocks:`) toward product-repo anchors.
 
-See `01-architecture/02-components/backlog.md` and `instance/backlog/file-based-backlog/file-based-backlog.md`.
+See `01-architecture/02-components/backlog.md` and `.eposforge/backlog/file-based-backlog/file-based-backlog.md`.
 
 ## Cross-References
 
 - EF-058: Terminology + repository roles & ownership section
 - the architecture implementation plan and discussion capture docs (see `docs/`)
-- `04-standards/07-adapter-layout-mirror/adapter-layout-mirror.md` (eposforge/ container inside the primary repo)
+- `04-standards/07-adapter-layout-mirror/adapter-layout-mirror.md` (.eposforge/ container inside the primary repo)

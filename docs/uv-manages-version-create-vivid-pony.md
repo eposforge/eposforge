@@ -19,7 +19,7 @@ epos-secrets uv run cognee-sync --added path/new.md --modified path/changed.md -
 ```
 
 API behavioral findings from all phases are in
-`instance/spec-graph/cognee/cognee.md` §Observed API behavior.
+`.eposforge/spec-graph/cognee/cognee.md` §Observed API behavior.
 
 ## What remains
 
@@ -59,7 +59,7 @@ The workflow must run on a self-hosted runner that has:
 
 ### 3. `COGNEE_STATE_DB` persistence between runs — **decided**
 
-State DB lives at `instance/spec-graph/cognee/sync/.cognee-state.db`,
+State DB lives at `.eposforge/spec-graph/cognee/sync/.cognee-state.db`,
 committed to source. Default is hardcoded in `cli.py` relative to `__file__`
 so it resolves correctly regardless of working directory. Override with
 `COGNEE_STATE_DB` if needed.
@@ -81,7 +81,7 @@ bootstrap a fresh Cognee instance. Not required for the daily diff-based sync.
 epos-secrets uv run cognee-sync --help
 
 # Dry-run against a real file
-epos-secrets uv run cognee-sync --dry-run --added instance/SPEC.md
+epos-secrets uv run cognee-sync --dry-run --added .eposforge/SPEC.md
 
 # Full integration suite
 epos-secrets uv run pytest -m integration -v -s   # 18 pass, 1 xfail expected
