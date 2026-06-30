@@ -28,7 +28,7 @@ An adopter designates **one primary repo** as the "Adopter Platform Spec" for th
 - Includes the `eposforge/` bucket (the adopted pattern slice with stable component/adapter layout).
 - Acts as the anchor for cross-repo views such as portfolio reviews.
 
-GEA is the canonical example of this primary repo. Product repos and other implementation repos remain separate but can be discovered from the primary via workspace files or BACKLOG_ROOTS for a unified portfolio view.
+The primary adopter (the single "Adopter Platform Spec" repo designated for an environment) is the canonical example. Product repos and other implementation repos remain separate but can be discovered from the primary via workspace files or BACKLOG_ROOTS for a unified portfolio view.
 
 See the architecture capture and implementation plan (tracked by EF-056) for the multi-graph and boundaries model. The adapter-layout-mirror rules below ensure the `eposforge/` slice is uniform so tooling works.
 
@@ -98,4 +98,4 @@ See the architecture capture and implementation plan (tracked by EF-056) for the
 - [../06-research-mirror/research-mirror.md](../06-research-mirror/research-mirror.md) (sibling mirror standard)
 - [../../01-architecture/00-adapter-pattern/adapter-pattern.md](../../01-architecture/00-adapter-pattern/adapter-pattern.md)
 
-See `docs/eposforge-gea-architecture-discussion-capture.md`, `docs/implementation-plan-eposforge-gea-architecture.md`, and `00-vision/02-roles-ownership.md` (tracked by EF-056/058). This standard covers the technical rules for the `eposforge/` slice inside an adopter's primary repo. The primary repo itself (e.g. GEA) is the place where overall eposforge implementation documentation lives and where portfolio reviews are performed. AGENTS.md is the SSoT for agent instructions on using dedicated backlog-graph tools + explicit markup over raw file RAG. See also EF-047/048 for public/private concerns.
+See the architecture discussion capture, implementation plan, and `00-vision/02-roles-ownership.md` (tracked by EF-056/058). This standard covers the technical rules for the `eposforge/` slice inside an adopter's primary repo. The primary repo (the Adopter Platform Spec) is the place where overall eposforge implementation documentation lives and where portfolio reviews are performed. AGENTS.md is the SSoT for agent instructions on using dedicated backlog-graph tools + explicit markup over raw file RAG. See also EF-047/048 for public/private concerns.

@@ -51,7 +51,8 @@ coding pitfalls and the MIT-licensed distillation at
    that means a named conformance command, lint script, or recall query —
    and loop until the criteria are verified. For multi-step work, state a
    brief plan with a verify step per item.
-5. `AGENTS.md` MUST carry a condensed statement of principles 1–4 so they
+5. **Public/private boundary hygiene (no leaking adopter identifiers).** Agents MUST NEVER name, reference by identifier, or include paths for any specific adopter repository (including the primary Adopter Platform Spec or examples such as any private org repo) inside this public repository's docs, plans, standards, comments, examples, backlog items, or code. Always use only abstract/generic language: "the primary adopter", "an adopting repository", "the Adopter Platform Spec", etc. Specific names and operational details belong exclusively in the adopter's private trees. Before editing any document that discusses adoption or layout, recall the current public/private rules via the appropriate tool. Violations must be treated as sensitive-literal errors.
+6. `AGENTS.md` MUST carry a condensed statement of principles 1–5 so they
    are in loaded context every session; this file remains the source of
    truth.
 
