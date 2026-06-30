@@ -1,8 +1,8 @@
-# Implementation Plan: EposForge / GEA Architecture & Multi-Graph (2026-06) — Zoomed Out
+# Implementation Plan: EposForge / the primary adopter Architecture & Multi-Graph (2026-06) — Zoomed Out
 
-**Source**: Consolidated from full discussion capture in `docs/eposforge-gea-architecture-discussion-capture.md`.
+**Source**: Consolidated from full discussion capture in `docs/adopter-architecture-discussion-capture.md`.
 
-**Goal**: Clarify boundaries so that an adopter maintains a single primary repo (the "Adopter Platform Spec", e.g. GEA) that documents the overall eposforge implementation for both product and platform factories and contains the `eposforge/` adopted slice. Enable multi-graph + ontology-as-mapping, targeted mirroring, reliable projection, and graph-first agent access while keeping disk canonical. Portfolio reviews happen from that primary repo. Use strangler fig pattern (see 02-roadmap/adoption-strategy.md) for incremental rollout so we don't lose track.
+**Goal**: Clarify boundaries so that an adopter maintains a single primary repo (the "Adopter Platform Spec", e.g. the primary adopter) that documents the overall eposforge implementation for both product and platform factories and contains the `eposforge/` adopted slice. Enable multi-graph + ontology-as-mapping, targeted mirroring, reliable projection, and graph-first agent access while keeping disk canonical. Portfolio reviews happen from that primary repo. Use strangler fig pattern (see 02-roadmap/adoption-strategy.md) for incremental rollout so we don't lose track.
 
 **Tracking to avoid losing the thread**:
 - Create EF- backlog items for each phase/milestone (use the file-based backlog itself).
@@ -56,7 +56,7 @@ Start narrow (one adopter + one area), prove, then expand. Track everything as E
 - Treat backlog as its own file-based graph (parse markup to explicit graph).
 - Build minimal GraphRAG tooling layer (skills/tools, not Cognee) for agent access.
 - Separate ingestion: backlog items stay out of main Spec Graph.
-- Pilot on EposForge's own backlog + GEA as one adopter.
+- Pilot on EposForge's own backlog + the primary adopter as one adopter.
 - Add simple cross-mapping in ontology (adoptsFrom style for backlog mechanics).
 - Use existing aggregate.sh and portfolio-review as starting point for the tooling layer.
 
@@ -66,19 +66,19 @@ Start narrow (one adopter + one area), prove, then expand. Track everything as E
 
 ## Phase 2: Multi-Graph Foundation (Core, one adopter first)
 - Choose deployment (start with single Cognee instance + datasets for isolation).
-- Stand up GEA's graph (ingest its Living Specs/adoption docs).
+- Stand up the primary adopter's graph (ingest its Living Specs/adoption docs).
 - Shared ontology as mapping layer (add/ use adoptsFrom, fulfillsSlot for realizations).
-- Agent grounding rules: "pattern graph for EposForge model, local graph for GEA state".
+- Agent grounding rules: "pattern graph for EposForge model, local graph for the primary adopter state".
 - Update adopter-recall style wrappers.
 - Pilot mappings between graphs.
 
 **Strangler angle**: Run in parallel with current single-graph usage. Gradually migrate agent prompts and tools to use the right graph.
 
-**Milestone**: GEA can ground on both graphs cleanly. Ontology bridges them.
+**Milestone**: the primary adopter can ground on both graphs cleanly. Ontology bridges them.
 
 ## Phase 3: Targeted Mirroring & Layout Guidelines (Human + quality)
 - Document levels of mirroring (inside adoption bucket, high-level sections, runtime/LAN names).
-- Apply lightly to GEA filesystem and containers (for discoverability and better extraction).
+- Apply lightly to the primary adopter filesystem and containers (for discoverability and better extraction).
 - Update layout mirror standard (design only first).
 - Ensure disk layout supports file-based RAG for humans/narrow scopes while graph remains primary for agents.
 
@@ -108,7 +108,7 @@ Start narrow (one adopter + one area), prove, then expand. Track everything as E
 - The backlog system itself is the tracker (ironic but effective).
 - Small phases with clear "done when".
 - Opportunistic + committed (per existing strategy).
-- Regular visibility in GEA/EF backlogs.
+- Regular visibility in the primary adopter/EF backlogs.
 
 Update this plan and the capture after every phase or significant discussion. Start with Phase 0 items in the actual backlog.
 
@@ -119,11 +119,11 @@ Update this plan and the capture after every phase or significant discussion. St
      - Light: high-level knowledge sections (`NN-` prefixes).
      - Runtime: container/service/mount naming for discoverability.
    - Add file-RAG discoverability principles (self-describing dirs, index/README files per section, frontmatter that aids extraction).
-   - Update for single-repo platform adopters (GEA-style) while preserving "does not govern own application layout" where appropriate.
-2. Apply to GEA (targeted):
+   - Update for single-repo platform adopters (the primary adopter-style) while preserving "does not govern own application layout" where appropriate.
+2. Apply to the primary adopter (targeted):
    - Align `eposforge/` more closely where it makes sense.
    - Improve naming in `servers/`, `hardware/`, container defs.
-   - Keep GEA's natural numbering for its knowledge but document mappings.
+   - Keep the primary adopter's natural numbering for its knowledge but document mappings.
 3. Document in 00-vision or new "Repository roles & ownership" section (see boundaries capture). **Done**: see `00-vision/02-roles-ownership.md`.
 
 **Success**: Operators can match disk/LAN to EposForge model at a glance. Projection quality improves. Agents using file tools (narrow scopes) find things easily.
@@ -135,23 +135,23 @@ Update this plan and the capture after every phase or significant discussion. St
    - Instructions: Prefer MCP for discovery/relationships; use graph for mapping across scopes.
 2. Update tooling:
    - Generalize sanitization (path rewriting, maturity tags).
-   - Runbooks for "how GEA agents ground".
+   - Runbooks for "how the primary adopter agents ground".
 3. Address current reality: Gradually restrict broad cross-repo file access (via policy, mounts, execution sandbox).
 
-**Success**: Agents do not need (and ideally cannot) do broad file RAG across EposForge/GEA. No contradiction with Cognee routing. "Search twice" eliminated via reliable graphs + mappings.
+**Success**: Agents do not need (and ideally cannot) do broad file RAG across EposForge/the primary adopter. No contradiction with Cognee routing. "Search twice" eliminated via reliable graphs + mappings.
 
 **AGENTS.md applicability (to backlog graphrag)**: EposForge uses root AGENTS.md as SSoT for agent guidance (with adopted standard in 04-standards/08 for behaviors). Unlike per-skill SKILL.md, this is global instructions. For the independent file-based backlog graph: AGENTS.md (or adopter equivalent) should instruct agents to use dedicated graph tools/skills (vs raw files), leverage explicit markup, reference the separate graph. Useful for portable standalone versions. Add to agent policy work in Phase 4.
 
 ## Phase 5: Living Spec & Terminology Polish
 - Update Living Spec contract + research catalog for distributed corpora / pattern-scale work.
-- Terminology: Introduce "Adopter Platform Spec (GEA repo)" vs "Platform Instance (srv-docker-hp + IaC)" in ontology, vision, EF notes.
+- Terminology: Introduce "Adopter Platform Spec (the primary adopter repo)" vs "Platform Instance (srv-docker-hp + IaC)" in ontology, vision, EF notes.
 - Validate via existing checks (check-doc-classification, etc.).
 
 ## Phase 6: Validation & Rollout
 - Update `skills/portfolio-review`, `skills/update-spec-graph`, etc.
 - Probes: Recall quality tests, "graph vs disk" diffs, operator walkthroughs.
 - Backlog items for remaining (e.g., EF-0xx for specific pieces).
-- Apply to GEA + IAC first, then products.
+- Apply to the primary adopter + IAC first, then products.
 
 **Overall Success Criteria**:
 - Clear boundaries (no more "bleed" confusion).
@@ -161,7 +161,7 @@ Update this plan and the capture after every phase or significant discussion. St
 - Terminology and layering match reality (platform vs product, spec vs impl).
 
 **References**:
-- Master capture: `docs/eposforge-gea-architecture-discussion-capture.md`
+- Master capture: `docs/adopter-architecture-discussion-capture.md`
 - Early boundaries: `docs/boundaries-layers-2026-06.md`
 - Key standards: `04-standards/07-adapter-layout-mirror/`, `00-vision/01-ontology.ttl`
 - Tooling: `instance/spec-graph/cognee/`, backlog scripts.
@@ -170,7 +170,7 @@ This plan is derived directly from the captured discussion. Prioritize Phases 0-
 
 **Phase 0 status (2026-06-29)**: Complete. 
 - EF-056 master + children EF-057 (ingestion boundaries + GraphRAG layer pilot), EF-058 (terminology + repository roles + primary Adopter Platform Spec model) created with full verify criteria in backlog.
-- Four maintained files (this plan, capture, boundaries-layers-2026-06.md, 04-standards/07-adapter-layout-mirror) + related docs (backlog component, file-based-backlog.md, preferred-mode-adoption-plan.md) updated: EF refs, "planning only" language removed, explicit primary-repo model (single Adopter Platform Spec repo holds overall product+platform docs + eposforge/ slice; portfolio reviews run there; GEA example). 
+- Four maintained files (this plan, capture, boundaries-layers-2026-06.md, 04-standards/07-adapter-layout-mirror) + related docs (backlog component, file-based-backlog.md, preferred-mode-adoption-plan.md) updated: EF refs, "planning only" language removed, explicit primary-repo model (single Adopter Platform Spec repo holds overall product+platform docs + eposforge/ slice; portfolio reviews run there; the primary adopter example). 
 - Terminology aligned (Adopter Platform Spec vs Platform Instance, multi-graph, independent backlog graph) in docs, ontology (new ef:MultiGraphArchitecture + ef:IndependentBacklogGraph), skills (portfolio-review, update-spec-graph), and standards.
 - Ontology enhanced pre-review.
 - Portfolio-review executed as checkpoint (initially in framework; clarified real view from primary adopter repo).

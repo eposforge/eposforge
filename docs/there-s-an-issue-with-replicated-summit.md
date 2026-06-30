@@ -14,7 +14,7 @@ This plan makes three changes:
 
 Goal: standards adoption is auditable, research paths are predictable from source paths, and the structural invariant survives refactors because it is itself an adopted standard.
 
-Constraint: GEA depends on EposForge, never the reverse. This change is entirely internal to EposForge.
+Constraint: the primary adopter depends on EposForge, never the reverse. This change is entirely internal to EposForge.
 
 ## Locked decisions
 

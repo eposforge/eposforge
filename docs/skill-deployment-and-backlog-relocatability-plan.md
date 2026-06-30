@@ -9,7 +9,7 @@ sessions (any cwd), the Copilot Remote-SSH surface, and the `dkr-gstwn-01`
 containerized CLIs.
 
 **Owning repos:** framework work lands in `eposforge` (EF-032, EF-033, skill
-anchoring); host rollout lands in `GraceEnterprisesArchitecture` (new GEA item).
+anchoring); host rollout lands in the primary adopter repo.
 
 ---
 
@@ -212,7 +212,7 @@ working symlink; re-run is idempotent; a tampered copy is reported as drift;
 
 ## 5. GEA-015 (new) — roll the backlog skills onto srv-docker-hp surfaces
 
-**Repo:** GraceEnterprisesArchitecture. **Effort:** M.
+**Repo:** primary adopter. **Effort:** M.
 **Depends on:** `eposforge:EF-032`, `eposforge:EF-033` (and §3 anchoring).
 **Sibling of:** GEA-012 (which covers only `refine-prompt`; this covers the
 backlog skills).

@@ -1,4 +1,4 @@
-# EposForge / GEA Architecture Discussion Capture (2026-06)
+# EposForge / the primary adopter Architecture Discussion Capture (2026-06)
 
 **Purpose**: Self-contained summary of the full conversation for persistence across chats, fresh starts, or handoff. Captures problems, insights, models, decisions, and open threads.
 
@@ -10,53 +10,53 @@ User flagged issues with `01-architecture/02-components/spec-graph.md`:
 - The graph ingests a broad corpus (architecture contracts, research, instance docs, etc.) via ontology-grounded extraction (Kuzu + LanceDB).
 - Does it contain "more than the spec"? Yes — rich entities/relations/summaries, not raw Living Specs only.
 - Is the Living Spec (Component 2) properly implemented? Contract exists (durable per-deliverable spec with paired-change rule, projectable to graph), but practice is distributed (component contracts + adapter cards). No formal Living Spec Adapter yet (Phase C territory). Paired-change is selective.
-- For adopters like GEA: How to use the upstream EposForge Cognee graph (for pattern) while maintaining its own graph (for current implementation state)? Should GEA implement Living Spec first?
+- For adopters like the primary adopter: How to use the upstream EposForge Cognee graph (for pattern) while maintaining its own graph (for current implementation state)? Should the primary adopter implement Living Spec first?
 
 Key contract reminder (from spec-graph.md): Living Specs on disk are source of truth. Graph is a **projection**. "If the graph and the specs ever disagree, the specs win and the graph is re-projected." Indexing post-merge via Source Control + CI. Must be rebuildable. `incremental_update` is a required adapter metadata field.
 
 ## 2. User's Deeper "Smells" (Systemic Issues)
 User listed 7 core problems:
-1. Backlog *system structure* (schema, load rules, aggregation, roles) belongs in the Spec Graph. Individual backlog *items* (EF-/GEA- text) should not.
+1. Backlog *system structure* (schema, load rules, aggregation, roles) belongs in the Spec Graph. Individual backlog *items* (EF-/the primary adopter- text) should not.
 2. Backlog should be a first-class KG (even if file-based backend). Agents should use GraphRAG-style tooling over it for traversal/dependencies (not just file RAG).
-3. GEA (adopter) needs to leverage the same projection system for grounding dev on EposForge + GEA's current state.
+3. the primary adopter (adopter) needs to leverage the same projection system for grounding dev on EposForge + the primary adopter's current state.
 4. Smell: EposForge Cognee graph includes far more than Living Specs.
-5. Smell: Living Spec contract assumes single `SPEC.md` per deliverable, but EposForge and GEA are effectively entire distributed living specs.
-6. Layering failure: GEA and IAC are for *eposforge platform factory implementation*. Product repos are for product factory. No single repo should "implement EposForge in its entirety." This is underspecified.
-7. GEA conflation: GEA is "kind of like the platform factory spec." The actual implementation is srv-docker-hp + other grace.lan components/config/IaC. "EposForge adopter's implementation" mixes the two.
+5. Smell: Living Spec contract assumes single `SPEC.md` per deliverable, but EposForge and the primary adopter are effectively entire distributed living specs.
+6. Layering failure: the primary adopter and IAC are for *eposforge platform factory implementation*. Product repos are for product factory. No single repo should "implement EposForge in its entirety." This is underspecified.
+7. the primary adopter conflation: the primary adopter is "kind of like the platform factory spec." The actual implementation is srv-docker-hp + other grace.lan components/config/IaC. "EposForge adopter's implementation" mixes the two.
 
 Additional context:
 - EposForge = pattern + reference implementations (in `instance/`).
-- GEA = the adopter's primary repo (Adopter Platform Spec) that documents the overall eposforge implementation for both factories and contains the eposforge/ slice (with GEA- backlog items, private visibility in aggregation).
-- Existing partials: backlog adapter has `role = "substrate"` vs "product"; `aggregate.sh` handles private roots (writes to first private like GEA); ontology distinguishes PlatformFactory/ProductFactory; platform vs product phase roadmaps.
+- the primary adopter = the adopter's primary repo (Adopter Platform Spec) that documents the overall eposforge implementation for both factories and contains the eposforge/ slice (with the primary adopter- backlog items, private visibility in aggregation).
+- Existing partials: backlog adapter has `role = "substrate"` vs "product"; `aggregate.sh` handles private roots (writes to first private like the primary adopter); ontology distinguishes PlatformFactory/ProductFactory; platform vs product phase roadmaps.
 
-## 3. Encapsulation & Layout Problems (GEA's eposforge/ Folder)
+## 3. Encapsulation & Layout Problems (the primary adopter's eposforge/ Folder)
 Detailed inspection:
-- GEA repo root has `eposforge/` (intended single container per Adapter Layout Mirror standard): backlog/, router/gastown/ (config+scripts), secrets-key-management/, backup-resilience/.
+- the primary adopter repo root has `eposforge/` (intended single container per Adapter Layout Mirror standard): backlog/, router/gastown/ (config+scripts), secrets-key-management/, backup-resilience/.
 - But implementation bleeds heavily:
-  - GEA top-level: `00-north-star/`, `01-reference-architecture/`, `03-standards/`, `04-runbooks/`, `07-project-portfolio/`, `hardware/`, `servers/containers/` (actual docker-compose, Dockerfile, entrypoints for dkr-gstwn-01/Gas Town, cognee, gitea, etc.), `skills/` (gastown-*), `services/`, `instance/`.
-  - GEA README positions the *whole repo* as source of truth for servers/containers/networks/storage.
+  - the primary adopter top-level: `00-north-star/`, `01-reference-architecture/`, `03-standards/`, `04-runbooks/`, `07-project-portfolio/`, `hardware/`, `servers/containers/` (actual docker-compose, Dockerfile, entrypoints for dkr-gstwn-01/Gas Town, cognee, gitea, etc.), `skills/` (gastown-*), `services/`, `instance/`.
+  - the primary adopter README positions the *whole repo* as source of truth for servers/containers/networks/storage.
   - Runtime bleed: ~30 scattered `eposforge/` copies in docker volume mounts (under dkr-gstwn-01/deacon/dogs/{alpha,bravo,...}, iac/, refinery, events/, runtime/, etc.). Mostly minimal (backlog mounts for agents/mayor).
-- Both EposForge and GEA use numbered folders for knowledge org (EposForge: 00-vision, 01-architecture, 02-roadmap, 03-research, 04-standards + subs; GEA: 00-north-star, 01-reference-architecture, 03-standards, 04-runbooks, 07-project-portfolio, 99-archive + subs).
+- Both EposForge and the primary adopter use numbered folders for knowledge org (EposForge: 00-vision, 01-architecture, 02-roadmap, 03-research, 04-standards + subs; the primary adopter: 00-north-star, 01-reference-architecture, 03-standards, 04-runbooks, 07-project-portfolio, 99-archive + subs).
 - Inside `eposforge/` bucket: clean stable names (no numbers), per standard.
 - Existing standard (04-standards/07-adapter-layout-mirror/adapter-layout-mirror.md): Mandates `eposforge/` container for adopters (framework uses `instance/` to avoid self-dupe). Uses stable node names from knowledge tree. Explicitly: "This standard does not govern an adopter's own application source layout." Prescribes backlog data location and .code-workspace for discovery. Purpose: tooling uniformity (aggregate, Spec Graph).
 
-Adapter Layout Mirror is too narrow for full single-repo platform adopters like GEA.
+Adapter Layout Mirror is too narrow for full single-repo platform adopters like the primary adopter.
 
 ## 4. Key Proposals & Evolution of Thinking
-- **Broader adopter repo layout standard needed**: For "single repo like GEA." Current mirror only covers the adopted slice. Need guidance on overall shape while distinguishing platform vs product.
+- **Broader adopter repo layout standard needed**: For "single repo like the primary adopter." Current mirror only covers the adopted slice. Need guidance on overall shape while distinguishing platform vs product.
 - **Targeted (not total) symmetry/mirroring**:
   - Strong inside `eposforge/` bucket (stable component names).
   - Light for high-level knowledge (similar `NN-` prefixes where natural for humans).
   - Runtime/LAN elements (container names, mounts) for human recognition.
-  - Do *not* force full repo isomorphism (different purposes: framework = pattern docs + refs; GEA = full platform factory + IaC + own decisions).
+  - Do *not* force full repo isomorphism (different purposes: framework = pattern docs + refs; the primary adopter = full platform factory + IaC + own decisions).
 - **Mapping layer**:
   - Initially separate idea.
   - Refined: The **Spec Graph + ontology/taxonomy *is* the mapping**.
   - Ontology (ef:fulfillsSlot, ef:adoptsFrom, ef:implements, etc.) provides shared vocabulary/schema.
-  - Graphs contain instantiated relationships (e.g., GEA gastown adoptsFrom EposForge reference).
+  - Graphs contain instantiated relationships (e.g., the primary adopter gastown adoptsFrom EposForge reference).
   - Already partials: adoption-links.ttl, reference-implementations.ttl, adopter-recall.py (sanitizes paths per EF-011, adds maturity tags per EF-012).
 - **Multi-graph architecture** (core model):
-  - One graph per scope: EposForge (pattern + references), GEA (adoption + implementation), IAC, each product repo.
+  - One graph per scope: EposForge (pattern + references), the primary adopter (adoption + implementation), IAC, each product repo.
   - Agents get access to whichever graph(s) needed for the task (via MCP / datasets).
   - Benefits: graphrag (entities/relations/communities) per scope, over pure file RAG.
   - Connection mechanism: Shared ontology (common language) + explicit mappings ingested + agent orchestration (query relevant graph(s), synthesize using ontology relations).
@@ -64,7 +64,7 @@ Adapter Layout Mirror is too narrow for full single-repo platform adopters like 
   - Cognee supports `datasets` param in recall/search. Current deployment: one instance, `eposforge-sync` dataset (adopters use wrappers). Future: per-scope datasets or instances.
   - Adopter-recall.py pattern generalizes.
 - **Agent access model** (critical clarification):
-  - Ideal: Agents route primarily/exclusively through Cognee MCP / relevant Spec Graphs. No broad raw file access to EposForge, GEA, or other repos (security, isolation, control via sandbox + agent policy + tool transport).
+  - Ideal: Agents route primarily/exclusively through Cognee MCP / relevant Spec Graphs. No broad raw file access to EposForge, the primary adopter, or other repos (security, isolation, control via sandbox + agent policy + tool transport).
   - Current reality: Agents often have wide filesystem access (causes bleed, path leaks, dual search).
   - This contradicts "make disk great for file-based RAG" if it implies agents browse freely.
   - File-based RAG: Useful in narrow scopes or for humans/operators. Disk layout should support it for quality projection and human navigation.
@@ -100,7 +100,7 @@ Adapter Layout Mirror is too narrow for full single-repo platform adopters like 
    - For portability: the data stays pure markdown files; the GraphRAG layer is optional, pluggable tooling that can live in a small independent package or skill.
 
   4. **Adopter Implementation**:
-     - GEA repo: living spec of platform adoption (adopted components, custom adapters, decisions, GEA- items).
+     - the primary adopter repo: living spec of platform adoption (adopted components, custom adapters, decisions, the primary adopter- items).
      - Concrete substrate: srv-docker-hp IaC, compose, volumes, Gas Town, host config.
      - Product repos: separate.
   - Spec Graphs (and the separate backlog graph) are *tools used by* the factories.
@@ -113,12 +113,12 @@ Existing partial mechanisms:
 - Research-mirror and adapter-layout-mirror standards.
 
 ## 5. Current Pain Points & Contradictions
-- GEA `eposforge/` encapsulation fails (bleed everywhere + LAN).
+- the primary adopter `eposforge/` encapsulation fails (bleed everywhere + LAN).
 - Graph vs disk drift (incremental sync incomplete; unclear canonical for agents).
 - Agents often have broad file access today (violates ideal isolation; contradicts Cognee MCP routing).
 - Layout not yet optimized for both human discoverability *and* high-quality projection without relying on agents having raw files.
 - No full multi-graph + mapping practice codified.
-- Terminology overload around "GEA" and "adopter implementation."
+- Terminology overload around "the primary adopter" and "adopter implementation."
 
 ## 6. Open Decisions & Next Actions (from discussion)
 **Open**:
@@ -129,7 +129,7 @@ Existing partial mechanisms:
 - How much mapping data in upstream graph vs only in adopter graphs.
 - Living Spec contract updates for distributed corpora.
 - Terminology (to be used consistently):
-  - "Adopter Platform Spec (e.g. GEA repo)": the single primary repo that acts as the primary eposforge implementer in the adopter's environment. It contains documentation about the overall eposforge implementation for both product and platform factories + the `eposforge/` adopted slice. This is where portfolio reviews happen.
+  - "Adopter Platform Spec (e.g. the primary adopter repo)": the single primary repo that acts as the primary eposforge implementer in the adopter's environment. It contains documentation about the overall eposforge implementation for both product and platform factories + the `eposforge/` adopted slice. This is where portfolio reviews happen.
   - "Platform Instance (concrete LAN)": the actual running substrate (srv-docker-hp + IaC etc.).
 - EposForge instructs adopters to set up their environment with one such primary repo. Product repos are separate but can be included in views from the primary.
 - Sync reliability: verification steps, easy agent-triggered rebuilds, "graph knows about disk" checks.
@@ -147,7 +147,7 @@ Existing partial mechanisms:
 9. Improve cognee-sync: better validation, staleness detection, full rebuild UX.
 10. Persist physical mirroring recommendations for humans + extraction (in layout standard).
 11. Ontology enhancements for clearer cross-scope mappings.
-12. Per-scope dataset/instance bootstrap for GEA/IAC/products.
+12. Per-scope dataset/instance bootstrap for the primary adopter/IAC/products.
 13. Validation via recall probes, portfolio review, operator walkthroughs.
 
 See also: EF-011, EF-012 (recall quality), backlog component, platform/product phases, instance/backlog/file-based-backlog.md, aggregate.sh, cognee.md, adopter-recall.py, 04-standards/07-adapter-layout-mirror, 00-vision/01-ontology.ttl, boundaries-layers-2026-06.md (this evolved from), preferred-mode-adoption-plan.md.
@@ -158,12 +158,12 @@ See also: EF-011, EF-012 (recall quality), backlog component, platform/product p
 - `00-vision/01-ontology.ttl` + adoption-links.ttl (mapping vocabulary).
 - `instance/spec-graph/cognee/` (cognee.md, sync/, adopter-recall.py, bulk-rebuild.sh).
 - `docs/boundaries-layers-2026-06.md` (early capture; this file supersedes/extends it).
-- GEA-specific: `GraceEnterprisesArchitecture/eposforge/`, servers/, hardware/, etc. (examples of bleed).
+- the primary-adopter-specific paths (under the container, servers/, hardware/, etc. as examples of bleed).
 - Backlog: `instance/backlog/`, `backlog/file-based-backlog/scripts/aggregate.sh`.
 
 **Phase 0 status (tracked by EF-056)**: Complete (as of 2026-06-29). 
 - EF-056 master + EF-057 (ingestion boundaries + minimal GraphRAG layer pilot), EF-058 (terminology + roles + primary repo model) created with detailed verify criteria.
-- Four maintained files (plan, this capture, boundaries-layers, adapter-layout-mirror) + related (backlog.md component doc, file-based-backlog.md, preferred-mode-adoption-plan.md) updated with EF references, removed planning-only language, and full primary-repo model: adopter's single primary repo (Adopter Platform Spec, e.g. GEA) contains overall eposforge implementation docs for product + platform factories + the eposforge/ slice; this is where portfolio reviews happen. EposForge now instructs adopters to set it up this way.
+- Four maintained files (plan, this capture, boundaries-layers, adapter-layout-mirror) + related (backlog.md component doc, file-based-backlog.md, preferred-mode-adoption-plan.md) updated with EF references, removed planning-only language, and full primary-repo model: adopter's single primary repo (Adopter Platform Spec, e.g. the primary adopter) contains overall eposforge implementation docs for product + platform factories + the eposforge/ slice; this is where portfolio reviews happen. EposForge now instructs adopters to set it up this way.
 - Terminology aligned across docs, ontology (ef:MultiGraphArchitecture + ef:IndependentBacklogGraph), skills (portfolio-review, update-spec-graph), and standards.
 - Ontology enhanced with the new concepts before the review.
 - Portfolio-review executed as checkpoint (framework view first; clarified that the real combined portfolio view belongs in the primary adopter repo).
@@ -182,7 +182,7 @@ This file + `docs/boundaries-layers-2026-06.md` + the standards above contain th
 
 **Model is not final** — discussion evolved from "narrow fixes" to "multi-graph + ontology-as-mapping + targeted mirroring + graph-first agent access."
 
-**Forward plan (zoomed out)**: See `docs/implementation-plan-eposforge-gea-architecture.md`. The adopter's single primary repo (Adopter Platform Spec, e.g. GEA) contains the overall eposforge implementation documentation (product + platform factories) plus the `eposforge/` slice; this is where portfolio reviews are run. Use the repo's own strangler fig pattern for incremental rollout. Track via EF- items, the four files, and visibility mechanisms. EposForge instructs adopters to set up their primary repo this way.
+**Forward plan (zoomed out)**: See `docs/implementation-plan-eposforge-gea-architecture.md`. The adopter's single primary repo (Adopter Platform Spec, e.g. the primary adopter) contains the overall eposforge implementation documentation (product + platform factories) plus the `eposforge/` slice; this is where portfolio reviews are run. Use the repo's own strangler fig pattern for incremental rollout. Track via EF- items, the four files, and visibility mechanisms. EposForge instructs adopters to set up their primary repo this way.
 
 Cross-cutting: Follow EposForge's AGENTS.md / SKILL.md / agent-coding-guidelines patterns for all agent/skills design work on the backlog graph. Plan to fill gaps in that guidance. Bake strangler fig concepts (Migration, LEGACY_SHAPE_OF, TARGET_SHAPE_OF, visibility of debt, etc.) into the backlog semantic layer (schema/fields) so agents can use the GraphRAG to implement strangler migrations especially well.
 

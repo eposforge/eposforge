@@ -87,15 +87,14 @@ UAT 1 — Lint rule: Status: blocked without an open dep
   EF-023 → EF-024 edge. All node IDs should be clean EF-XXX format with no colons.
 
   ---
-  UAT 5 — Critical-path against a GEA anchor (multi-root)
+  UAT 5 — Critical-path against a primary adopter anchor (multi-root)
 
-  BACKLOG_ROOTS="/mnt/raid-storage/src/git/gh/eposforge:/mnt/raid-storage/src/git/
-  local/GraceEnterprisesArchitecture/eposforge" \
+  BACKLOG_ROOTS="/mnt/raid-storage/src/git/gh/eposforge:/path/to/primary-adopter/eposforge" \
     bash instance/backlog/file-based-backlog/scripts/aggregate.sh
-  --critical-path GEA-013
+  --critical-path ADOPTER-013
 
-  Expect: a chain ending at GEA-013, with the EF-043 node shown as resolved (not
-  open), and GEA-013 marked [workable now].
+  Expect: a chain ending at the adopter item, with the EF-043 node shown as resolved (not
+  open), and the adopter item marked [workable now]. Use generic placeholders.
 
   ---
   UAT 6 — Skill docs readability
@@ -124,7 +123,7 @@ UAT 1 — Lint rule: Status: blocked without an open dep
 
   Exercises sync-tooling.sh drift detection and copy. Uses a throwaway sandbox
   adopter under /tmp so nothing real is touched. (No on-disk adopter currently
-  vendors the scripts — GEA is data-only — so a sandbox is the way to test this.)
+  vendors the scripts — a primary adopter may be data-only in some setups — so a sandbox is the way to test this.)
 
   SRC=instance/backlog/file-based-backlog/scripts
   SANDBOX=/tmp/uat-adopter

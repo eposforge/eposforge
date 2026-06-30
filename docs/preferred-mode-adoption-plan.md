@@ -16,7 +16,7 @@ its `instance/` container so the framework and adopters share one layout.
 - **Status:** draft — decisions settled (§8); **do not implement until ordered**
 - **Framework clone (source of truth for tooling):**
   `/mnt/raid-storage/src/git/gh/eposforge`
-- **Adopter repos in scope:** GraceEnterprisesArchitecture (GEA), IAC, OutreachApi, OutreachAssistant
+- **Adopter repos in scope:** the primary adopter, IAC, OutreachApi, OutreachAssistant
 
 ---
 
@@ -24,7 +24,7 @@ its `instance/` container so the framework and adopters share one layout.
 
 Every adopter operates its backlog by running the framework's scripts **from the
 framework clone** (Preferred mode) — no vendored copy of the scripts in the
-adopter. GEA and IAC already hold backlog data and get *completed*; OutreachApi
+adopter. the primary adopter and IAC already hold backlog data and get *completed*; OutreachApi
 and OutreachAssistant get *scaffolded* (empty, migration-ready) without moving
 their existing issue content yet. The framework's own backlog data moves from the
 repo root into `instance/backlog/` (Phase D) so that `instance/` (framework) and
@@ -67,19 +67,19 @@ repo root into `instance/backlog/` (Phase D) so that `instance/` (framework) and
 
 ## 3. Canonical target layout
 
-Adopter primary repo (e.g. GEA — the Adopter Platform Spec):
+Adopter primary repo (e.g. the primary adopter — the Adopter Platform Spec):
 
 The adopter designates one primary repo as the single source for their overall eposforge implementation (documentation for both product and platform factories + the adopted `eposforge/` slice). Portfolio reviews are performed from this primary repo.
 
 ```text
-<repo>/                                        # e.g. GraceEnterprisesArchitecture (primary)
+<repo>/                                        # e.g. primary-adopter (primary)
   # High-level adopter documentation of the overall eposforge implementation
   # (platform factory + product factory concerns, standards, runbooks, portfolio, hardware, etc.)
   00-north-star/, 01-reference-architecture/, 03-standards/, 04-runbooks/, 07-project-portfolio/, ...
 
   eposforge/                                   # the adopted pattern slice (one container)
     backlog/
-      config.toml                              # prefix=GEA, visibility=private
+      config.toml                              # prefix=the primary adopter, visibility=private
       backlog.md ... portfolio.md
     # other adopted adapters (router/gastown, secrets-key-management, ...)
   <repo>.code-workspace                        # folders include ./eposforge + framework reference
@@ -119,7 +119,7 @@ BACKLOG_ROOTS="$PWD/instance" bash "$BACKLOG_HOME/scripts/ready.sh"    # framewo
 
 | Repo | git root | container | `backlog/` data | `config.toml` | Discovery (workspace) | Action |
 |---|---|---|---|---|---|---|
-| **GEA** | `local/GraceEnterprisesArchitecture` | ✅ `eposforge/` | ✅ (prefix `GEA`) | ✅ | ❌ broken (`.` + doubled `../../gh/eposforge/eposforge`) | **Complete** |
+| **the primary adopter** | `local/primary-adopter` | ✅ `eposforge/` | ✅ (prefix `the primary adopter`) | ✅ | ❌ broken (`.` + doubled `../../gh/eposforge/eposforge`) | **Complete** |
 | **IAC** | `local/IAC` | ✅ `eposforge/` | ✅ (items use `IAC-`) | ❌ missing | ❌ none | **Complete** |
 | **OutreachApi** | `local/OutreachApi` | ❌ none | ❌ | ❌ | ❌ none | **Scaffold** |
 | **OutreachAssistant** | `local/OutreachAssistant` | ❌ none | ❌ | ❌ | ⚠️ has `.code-workspace` (no eposforge folder) | **Scaffold** |
@@ -131,12 +131,12 @@ Existing issue docs (for the *later* migration phase, **not** touched now):
   `issue-findings-archive.md` (maps to active/slated/archive); `docs/workspace-issues.md`;
   `docs-working/backlog.md`.
 
-Repo prefixes (settled): `GEA`, `IAC` (existing); **`OAPI`** (OutreachApi);
+Repo prefixes (settled): `the primary adopter`, `IAC` (existing); **`OAPI`** (OutreachApi);
 **`OA`** (OutreachAssistant).
 
 ---
 
-## 5. Phase A — Complete GEA & IAC (they already hold data)
+## 5. Phase A — Complete the primary adopter & IAC (they already hold data)
 
 ### A1. IAC — create `eposforge/backlog/config.toml`
 ```toml
@@ -147,8 +147,8 @@ themes = []   # populate on first portfolio-review pass
 (IAC-001..003 all use `Fix surface: infrastructure`; the extra surfaces are
 reserved headroom.)
 
-### A2. GEA — repair the workspace file
-`GraceEnterprisesArchitecture/GraceEnvironment.code-workspace` folders →
+### A2. the primary adopter — repair the workspace file
+`primary-adopter/GraceEnvironment.code-workspace` folders →
 ```json
 { "folders": [ { "path": "./eposforge" }, { "path": "../../gh/eposforge" } ] }
 ```
@@ -184,7 +184,7 @@ For **each** of OutreachApi (`OAPI`) and OutreachAssistant (`OA`):
   backlog-archive.md          # header only
   backlog-archive-index.md    # header only
 ```
-Seed each `.md` with the same header style as IAC/GEA's files (title + one-line
+Seed each `.md` with the same header style as IAC/the primary adopter's files (title + one-line
 description naming the repo and its prefix, e.g. "IDs use the `OAPI-` prefix").
 `portfolio.md` is generated by `aggregate.sh`; do not seed it.
 
@@ -266,7 +266,7 @@ In `adapter-layout-mirror.md`:
 
 ## 9. Decisions (settled)
 
-1. **Prefixes** — OutreachApi = `OAPI`, OutreachAssistant = `OA` (GEA/IAC unchanged).
+1. **Prefixes** — OutreachApi = `OAPI`, OutreachAssistant = `OA` (the primary adopter/IAC unchanged).
 2. **Living Spec** — part of the model, but **not created in this rollout**. Adopters
    carry only data + config now; per-repo `file-based-backlog.md` is deferred.
 3. **Framework unification** — **do it** (Phase D), including the Rule 3 anchor rewrite.
@@ -294,7 +294,7 @@ Tracked separately once scaffolding lands:
 
 ## 11. Acceptance criteria
 
-- GEA, IAC, OutreachApi, OutreachAssistant each: scripts run from the framework clone
+- the primary adopter, IAC, OutreachApi, OutreachAssistant each: scripts run from the framework clone
   (no vendored `scripts/` anywhere in the adopter), discover the repo's `eposforge/`
   backlog root, and `lint-backlog.sh` exits 0.
 - Each adopter has `eposforge/backlog/config.toml` with the correct prefix.
@@ -313,7 +313,7 @@ Tracked separately once scaffolding lands:
 All phases implemented and verified.
 
 - A1: `IAC/eposforge/backlog/config.toml` (prefix `IAC`) — done.
-- A2: `GraceEnterprisesArchitecture/GraceEnvironment.code-workspace` repaired — done.
+- A2: `primary-adopter/GraceEnvironment.code-workspace` repaired — done.
 - A3: `IAC/IAC.code-workspace` created — done.
 - B1: `OutreachApi/eposforge/backlog/` seeded (config.toml + 4 empty `.md` files) — done.
 - B2: `OutreachApi/OutreachApi.code-workspace` created — done.
@@ -332,6 +332,6 @@ All phases implemented and verified.
 Verification results:
 - Framework (`eposforge.code-workspace`): `lint-backlog.sh` OK; `ready.sh` shows EF items; `aggregate.sh --plan` shows EF table from `instance`.
 - IAC: lint finds `eposforge/backlog/` via workspace; items visible (IAC-001 pre-existing resolved/missing-fields error is a data issue, not a discovery issue).
-- GEA: lint finds `eposforge/backlog/` via workspace; items visible (pre-existing cross-repo ref errors are data issues).
+- the primary adopter: lint finds `eposforge/backlog/` via workspace; items visible (pre-existing cross-repo ref errors are data issues).
 - OutreachApi: lint OK, ready "No ready items".
 - OutreachAssistant: lint OK, ready "No ready items".

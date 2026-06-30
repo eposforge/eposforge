@@ -626,7 +626,7 @@ ef:ProductPromotion rdf:type ef:Concept, skos:Concept ;
 
 ef:MultiGraphArchitecture rdf:type ef:Concept, skos:Concept ;
     skos:prefLabel "Multi-Graph Architecture" ;
-    skos:definition "One graph per scope (EposForge pattern + references, Adopter Platform Spec such as GEA repo, IAC, product repos). Graphs are connected by the shared ontology (as the mapping layer using ef:fulfillsSlot, ef:adoptsFrom, etc.) plus explicit mappings and deliberate agent orchestration (query relevant dataset(s) and synthesize). Enables scoped GraphRAG over pure file RAG. Disk (Living Specs + backlog markup) remains canonical. See EF-056/057 and the architecture capture." ;
+    skos:definition "One graph per scope (EposForge pattern + references, Adopter Platform Spec such as primary adopter repo, IAC, product repos). Graphs are connected by the shared ontology (as the mapping layer using ef:fulfillsSlot, ef:adoptsFrom, etc.) plus explicit mappings and deliberate agent orchestration (query relevant dataset(s) and synthesize). Enables scoped GraphRAG over pure file RAG. Disk (Living Specs + backlog markup) remains canonical. See EF-056/057 and the architecture capture." ;
     skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindConcept ;
     ef:lifecycleStatus ef:StatusAdopted ;
@@ -671,11 +671,11 @@ ef:DevProductComponent rdf:type ef:Component, skos:Concept ;
 
 ef:RouterComponent rdf:type ef:Component, skos:Concept ;
     skos:prefLabel "Router" ;
-    skos:definition "No reference implementation installed in this EposForge instance. EF-013 (Router v0) is slated, gated on EF-011 and EF-012 recall quality. Adopters may install their own adapter (e.g. Gas Town at the GEA adopter instance) — that is an adopter-side installation, not this framework layer. Do not present Router patterns as currently operational at the framework level." ;
+    skos:definition "No reference implementation installed in this EposForge instance. EF-013 (Router v0) is slated, gated on EF-011 and EF-012 recall quality. Adopters may install their own adapter (e.g. Gas Town at the primary adopter instance) — that is an adopter-side installation, not this framework layer. Do not present Router patterns as currently operational at the framework level." ;
     skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindComponent ;
     ef:componentMaturity ef:MaturityIntent ;
-    rdfs:comment "No reference implementation installed in this EposForge instance. EF-013 (Router v0) is slated, gated on EF-011 and EF-012 recall quality. Adopters may install their own adapter (e.g. Gas Town at the GEA adopter instance) — that is an adopter-side installation, not this framework layer. Do not present Router patterns as currently operational at the framework level." .
+    rdfs:comment "No reference implementation installed in this EposForge instance. EF-013 (Router v0) is slated, gated on EF-011 and EF-012 recall quality. Adopters may install their own adapter (e.g. Gas Town at the primary adopter instance) — that is an adopter-side installation, not this framework layer. Do not present Router patterns as currently operational at the framework level." .
 
 ef:ToolTransportComponent rdf:type ef:Component, skos:Concept ;
     skos:prefLabel "Tool Transport" ;
@@ -697,11 +697,11 @@ ef:SpecGraphComponent rdf:type ef:Component, skos:Concept ;
 ef:ExecutionSandboxComponent rdf:type ef:Component, skos:Concept ;
     rdfs:label "Execution Sandbox" ;
     skos:prefLabel "Execution Sandbox" ;
-    skos:definition "windows-acl-user adapter installed (experimental): Windows OS-user + NTFS-ACL isolation via runas. Platform-specific — Windows only. No Linux or container sandbox adapter exists. Adopters on Linux or Docker MUST treat this slot as intent-only for their platform. The Gas Town container boundary is NOT an Execution Sandbox (GEA-006 confirmed this is an EF-012 conflation)." ;
+    skos:definition "windows-acl-user adapter installed (experimental): Windows OS-user + NTFS-ACL isolation via runas. Platform-specific — Windows only. No Linux or container sandbox adapter exists. Adopters on Linux or Docker MUST treat this slot as intent-only for their platform. The Gas Town container boundary is NOT an Execution Sandbox (primary-adopter-006 confirmed this is an EF-012 conflation)." ;
     skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindComponent ;
     ef:componentMaturity ef:MaturityPartial ;
-    rdfs:comment "windows-acl-user adapter installed (experimental): Windows OS-user + NTFS-ACL isolation via runas. Platform-specific — Windows only. No Linux or container sandbox adapter exists. Adopters on Linux or Docker MUST treat this slot as intent-only for their platform. The Gas Town container boundary is NOT an Execution Sandbox (GEA-006 confirmed this is an EF-012 conflation)." .
+    rdfs:comment "windows-acl-user adapter installed (experimental): Windows OS-user + NTFS-ACL isolation via runas. Platform-specific — Windows only. No Linux or container sandbox adapter exists. Adopters on Linux or Docker MUST treat this slot as intent-only for their platform. The Gas Town container boundary is NOT an Execution Sandbox (primary-adopter-006 confirmed this is an EF-012 conflation)." .
 
 ef:AgentPolicyComponent rdf:type ef:Component, skos:Concept ;
     rdfs:label "Agent Policy" ;
@@ -742,11 +742,11 @@ ef:InferenceLayerComponent rdf:type ef:Component, skos:Concept ;
 ef:AuditObservabilityComponent rdf:type ef:Component, skos:Concept ;
     rdfs:label "Audit & Observability" ;
     skos:prefLabel "Audit & Observability" ;
-    skos:definition "jsonl-event-sink adapter installed (experimental): append-only structured event log. Full OTEL/trace backend stack is NOT deployed — GEA-001 (stand up C11 backend on srv-docker-hp) is in-progress. EF-015 defined the adapter contract (resolved 2026-05-24) but the backend that ingests and queries the events is design intent." ;
+    skos:definition "jsonl-event-sink adapter installed (experimental): append-only structured event log. Full OTEL/trace backend stack is NOT deployed — primary-adopter work (stand up C11 backend) is in-progress. EF-015 defined the adapter contract (resolved 2026-05-24) but the backend that ingests and queries the events is design intent." ;
     skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindComponent ;
     ef:componentMaturity ef:MaturityPartial ;
-    rdfs:comment "jsonl-event-sink adapter installed (experimental): append-only structured event log. Full OTEL/trace backend stack is NOT deployed — GEA-001 (stand up C11 backend on srv-docker-hp) is in-progress. EF-015 defined the adapter contract (resolved 2026-05-24) but the backend that ingests and queries the events is design intent." .
+    rdfs:comment "jsonl-event-sink adapter installed (experimental): append-only structured event log. Full OTEL/trace backend stack is NOT deployed — primary-adopter work (stand up C11 backend) is in-progress. EF-015 defined the adapter contract (resolved 2026-05-24) but the backend that ingests and queries the events is design intent." .
 
 ef:SecretsKeyManagementComponent rdf:type ef:Component, skos:Concept ;
     rdfs:label "Secrets & Key Management" ;
@@ -763,7 +763,7 @@ ef:BacklogComponent rdf:type ef:Component, skos:Concept ;
     skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindComponent ;
     ef:componentMaturity ef:MaturityShipped ;
-    rdfs:comment "file-based-backlog adapter installed: per-repo markdown backlog files under backlog/ with EF-/GEA- IDs (EF-/GEA- prefixes). Beads (bd, Dolt-backed) is available via Gas Town at adopter instances as a complementary agent-facing ledger. The independent backlog graph (items) is distinct from backlog mechanics projected into the main Spec Graph. See ef:MultiGraphArchitecture, ef:IndependentBacklogGraph, and the file-based-backlog Living Spec." ;
+    rdfs:comment "file-based-backlog adapter installed: per-repo markdown backlog files under backlog/ with EF- (and adopter-specific) IDs (with repo-scoped prefixes). Beads (bd, Dolt-backed) is available via Gas Town at adopter instances as a complementary agent-facing ledger. The independent backlog graph (items) is distinct from backlog mechanics projected into the main Spec Graph. See ef:MultiGraphArchitecture, ef:IndependentBacklogGraph, and the file-based-backlog Living Spec." ;
     skos:broader ef:PillarProductEngine .
 
 ### Adapter Status Individuals

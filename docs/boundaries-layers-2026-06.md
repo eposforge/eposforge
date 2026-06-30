@@ -2,7 +2,7 @@
 
 **Note**: This was an early capture. The full, evolved discussion (including multi-graph architecture, mapping as ontology/graph, agent access model, disk vs graph canonicality, targeted mirroring, and GEA encapsulation details) is now in the comprehensive file:
 
-`docs/eposforge-gea-architecture-discussion-capture.md`
+`docs/adopter-architecture-discussion-capture.md`
 
 This file is the recommended starting point for handoff or fresh chats. It supersedes and extends this note.
 
@@ -63,7 +63,7 @@ Spec Graph (and any backlog KG) are tools *used by* the factories; they are not 
 - How GEA agents are told to ground: "always consult upstream eposforge MCP first for pattern, then local adoption graph for our state".
 - Living Spec contract update: allow "declared corpus of contracts + cards" for pattern and large adopters instead of mandating single root SPEC.md.
 
-**Superseded**: Full evolved discussion is in `eposforge-gea-architecture-discussion-capture.md`. This note is retained for history. Phase 0 alignment complete (EF-056 master + children); see implementation plan and current backlog items for status. Terminology, primary-repo model (portfolio reviews in the Adopter Platform Spec repo), and initial ingestion boundary work (EF-057) documented in the main files.
+**Superseded**: Full evolved discussion is in `adopter-architecture-discussion-capture.md`. This note is retained for history. Phase 0 alignment complete (EF-056 master + children); see implementation plan and current backlog items for status. Terminology, primary-repo model (portfolio reviews in the Adopter Platform Spec repo), and initial ingestion boundary work (EF-057) documented in the main files.
 
 This early note is kept only for historical context. Current SSoT is the capture + plan + the four maintained files.
 
