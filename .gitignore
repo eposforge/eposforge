@@ -60,3 +60,14 @@ epos-machine-request.json
 # - The public root .gitignore (portfolio.md + **/portfolio.md) is the final defense.
 portfolio.md
 **/portfolio.md
+
+# Gas Town (added by gt)
+.runtime/
+.claude/
+.opencode/
+.logs/
+__pycache__/
+state.json
+CLAUDE.md
+CLAUDE.local.md
+GEMINI.md
