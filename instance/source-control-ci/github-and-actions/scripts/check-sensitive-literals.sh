@@ -4,6 +4,7 @@
 # Detects potentially sensitive literals in text files:
 # - Private RFC1918 IPv4 addresses (LAN endpoints)
 # - Machine-local absolute paths (common user/workstation paths)
+# - Private adopter repository names/identifiers (forbidden in the public framework)
 #
 # Modes:
 #   --staged                     Scan staged content only (for pre-commit)
@@ -26,6 +27,9 @@ fi
 
 PRIVATE_IP_PATTERN='(^|[^0-9])(10\.(25[0-5]|2[0-4][0-9]|1?[0-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1?[0-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1?[0-9]?[0-9])|192\.168\.(25[0-5]|2[0-4][0-9]|1?[0-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1?[0-9]?[0-9])|172\.(1[6-9]|2[0-9]|3[0-1])\.(25[0-5]|2[0-4][0-9]|1?[0-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1?[0-9]?[0-9]))([^0-9]|$)'
 LOCAL_PATH_PATTERN='([A-Za-z]:[\\/](Users|src|home|work|workspace|repos|projects)[\\/][^[:space:]"]+|/(Users|home)/[^/[:space:]]+/[^[:space:]"]+)'
+# Specific adopter repository names/identifiers must never appear in the public framework tree.
+# This list is maintained here for deterministic enforcement across all agents and CI.
+PRIVATE_ADOPTER_PATTERN='GraceEnterprisesArchitecture|GraceEnvironment'
 
 has_errors=0
 
@@ -49,10 +53,16 @@ scan_file() {
   if grep -Iq . "${file_path}"; then
     local ip_hits
     local path_hits
+    local adopter_hits
     ip_hits=$(grep -nE "${PRIVATE_IP_PATTERN}" "${file_path}" || true)
     path_hits=$(grep -nE "${LOCAL_PATH_PATTERN}" "${file_path}" || true)
+    adopter_hits=$(grep -nE "${PRIVATE_ADOPTER_PATTERN}" "${file_path}" || true)
+    # Do not flag the definition line inside this checker itself
+    if [[ "$(basename "${file_path}")" == "check-sensitive-literals.sh" ]]; then
+      adopter_hits=""
+    fi
 
-    if [[ -n "${ip_hits}" || -n "${path_hits}" ]]; then
+    if [[ -n "${ip_hits}" || -n "${path_hits}" || -n "${adopter_hits}" ]]; then
       has_errors=1
       echo ""
       echo "Sensitive literal check failed in ${label}:"
@@ -63,6 +73,10 @@ scan_file() {
       if [[ -n "${path_hits}" ]]; then
         echo "  Local path matches:"
         printf '%s\n' "${path_hits}" | sed 's/^/    /'
+      fi
+      if [[ -n "${adopter_hits}" ]]; then
+        echo "  Private adopter name matches (forbidden in public framework):"
+        printf '%s\n' "${adopter_hits}" | sed 's/^/    /'
       fi
     fi
   fi
@@ -106,8 +120,9 @@ fi
 
 if [[ "${has_errors}" -ne 0 ]]; then
   echo ""
-  echo "Commit blocked: remove machine-local paths/private IPs or replace with placeholders."
-  echo "Use placeholders like <abs-path-to-repo-root> and bolt://<neo4j-host-or-ip>:7688."
+  echo "Commit blocked: remove machine-local paths, private IPs, or private adopter names."
+  echo "Use placeholders like <abs-path-to-repo-root>, bolt://<neo4j-host-or-ip>:7688, or generic terms (\"the primary adopter\")."
+  echo "Specific adopter repository names/paths are never allowed in this public tree."
   exit 1
 fi
 
