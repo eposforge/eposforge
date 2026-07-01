@@ -26,26 +26,26 @@ User listed 7 core problems:
 
 Additional context:
 - EposForge = pattern + reference implementations (in `instance/`).
-- the primary adopter = the adopter's primary repo (Adopter Platform Spec) that documents the overall eposforge implementation for both factories and contains the eposforge/ slice (with the primary adopter- backlog items, private visibility in aggregation).
+- the primary adopter = the adopter's primary repo (Adopter Platform Spec) that documents the overall eposforge implementation for both factories and contains the  .eposforge/ slice (with the primary adopter- backlog items, private visibility in aggregation).
 - Existing partials: backlog adapter has `role = "substrate"` vs "product"; `aggregate.sh` handles private roots (writes to first private like the primary adopter); ontology distinguishes PlatformFactory/ProductFactory; platform vs product phase roadmaps.
 
 ## 3. Encapsulation & Layout Problems (the primary adopter's eposforge/ Folder)
 Detailed inspection:
-- the primary adopter repo root has `eposforge/` (intended single container per Adapter Layout Mirror standard): backlog/, router/gastown/ (config+scripts), secrets-key-management/, backup-resilience/.
+- the primary adopter repo root has `.eposforge/` (intended single container per Adapter Layout Mirror standard): backlog/, router/gastown/ (config+scripts), secrets-key-management/, backup-resilience/.
 - But implementation bleeds heavily:
   - the primary adopter top-level: `00-north-star/`, `01-reference-architecture/`, `03-standards/`, `04-runbooks/`, `07-project-portfolio/`, `hardware/`, `servers/containers/` (actual docker-compose, Dockerfile, entrypoints for dkr-gstwn-01/Gas Town, cognee, gitea, etc.), `skills/` (gastown-*), `services/`, `instance/`.
   - the primary adopter README positions the *whole repo* as source of truth for servers/containers/networks/storage.
-  - Runtime bleed: ~30 scattered `eposforge/` copies in docker volume mounts (under dkr-gstwn-01/deacon/dogs/{alpha,bravo,...}, iac/, refinery, events/, runtime/, etc.). Mostly minimal (backlog mounts for agents/mayor).
+  - Runtime bleed: ~30 scattered `.eposforge/` copies in docker volume mounts (under dkr-gstwn-01/deacon/dogs/{alpha,bravo,...}, iac/, refinery, events/, runtime/, etc.). Mostly minimal (backlog mounts for agents/mayor).
 - Both EposForge and the primary adopter use numbered folders for knowledge org (EposForge: 00-vision, 01-architecture, 02-roadmap, 03-research, 04-standards + subs; the primary adopter: 00-north-star, 01-reference-architecture, 03-standards, 04-runbooks, 07-project-portfolio, 99-archive + subs).
-- Inside `eposforge/` bucket: clean stable names (no numbers), per standard.
-- Existing standard (04-standards/07-adapter-layout-mirror/adapter-layout-mirror.md): Mandates `eposforge/` container for adopters (framework uses `instance/` to avoid self-dupe). Uses stable node names from knowledge tree. Explicitly: "This standard does not govern an adopter's own application source layout." Prescribes backlog data location and .code-workspace for discovery. Purpose: tooling uniformity (aggregate, Spec Graph).
+- Inside `.eposforge/` bucket: clean stable names (no numbers), per standard.
+- Existing standard (04-standards/07-adapter-layout-mirror/adapter-layout-mirror.md): Mandates `.eposforge/` container for adopters (framework uses `instance/` to avoid self-dupe). Uses stable node names from knowledge tree. Explicitly: "This standard does not govern an adopter's own application source layout." Prescribes backlog data location and .code-workspace for discovery. Purpose: tooling uniformity (aggregate, Spec Graph).
 
 Adapter Layout Mirror is too narrow for full single-repo platform adopters like the primary adopter.
 
 ## 4. Key Proposals & Evolution of Thinking
 - **Broader adopter repo layout standard needed**: For "single repo like the primary adopter." Current mirror only covers the adopted slice. Need guidance on overall shape while distinguishing platform vs product.
 - **Targeted (not total) symmetry/mirroring**:
-  - Strong inside `eposforge/` bucket (stable component names).
+  - Strong inside `.eposforge/` bucket (stable component names).
   - Light for high-level knowledge (similar `NN-` prefixes where natural for humans).
   - Runtime/LAN elements (container names, mounts) for human recognition.
   - Do *not* force full repo isomorphism (different purposes: framework = pattern docs + refs; the primary adopter = full platform factory + IaC + own decisions).
@@ -80,7 +80,7 @@ Adapter Layout Mirror is too narrow for full single-repo platform adopters like 
   - Helps human operators match implementation to EposForge model.
   - Improves extraction quality into local graphs (recognizable structure → better entities/relations).
   - Complements (does not replace) semantic mapping in graphs.
-  - Examples: `eposforge/` bucket structure, numbered sections, component-flavored container names/mounts.
+  - Examples: `.eposforge/` bucket structure, numbered sections, component-flavored container names/mounts.
   - Scattered runtime copies (in docker volumes) are often minimal data mounts for agents — intentional for isolation/performance, not full mirrors.
 - **Overall target layering** (from boundaries note, extended):
   1. **Pattern + References** (EposForge framework repo) → feeds canonical EposForge graph.
@@ -113,7 +113,7 @@ Existing partial mechanisms:
 - Research-mirror and adapter-layout-mirror standards.
 
 ## 5. Current Pain Points & Contradictions
-- the primary adopter `eposforge/` encapsulation fails (bleed everywhere + LAN).
+- the primary adopter `.eposforge/` encapsulation fails (bleed everywhere + LAN).
 - Graph vs disk drift (incremental sync incomplete; unclear canonical for agents).
 - Agents often have broad file access today (violates ideal isolation; contradicts Cognee MCP routing).
 - Layout not yet optimized for both human discoverability *and* high-quality projection without relying on agents having raw files.
@@ -129,7 +129,7 @@ Existing partial mechanisms:
 - How much mapping data in upstream graph vs only in adopter graphs.
 - Living Spec contract updates for distributed corpora.
 - Terminology (to be used consistently):
-  - "Adopter Platform Spec (e.g. the primary adopter repo)": the single primary repo that acts as the primary eposforge implementer in the adopter's environment. It contains documentation about the overall eposforge implementation for both product and platform factories + the `eposforge/` adopted slice. This is where portfolio reviews happen.
+  - "Adopter Platform Spec (e.g. the primary adopter repo)": the single primary repo that acts as the primary eposforge implementer in the adopter's environment. It contains documentation about the overall eposforge implementation for both product and platform factories + the `.eposforge/` adopted slice. This is where portfolio reviews happen.
   - "Platform Instance (concrete LAN)": the actual running substrate (srv-docker-hp + IaC etc.).
 - EposForge instructs adopters to set up their environment with one such primary repo. Product repos are separate but can be included in views from the primary.
 - Sync reliability: verification steps, easy agent-triggered rebuilds, "graph knows about disk" checks.
@@ -163,7 +163,7 @@ See also: EF-011, EF-012 (recall quality), backlog component, platform/product p
 
 **Phase 0 status (tracked by EF-056)**: Complete (as of 2026-06-29). 
 - EF-056 master + EF-057 (ingestion boundaries + minimal GraphRAG layer pilot), EF-058 (terminology + roles + primary repo model) created with detailed verify criteria.
-- Four maintained files (plan, this capture, boundaries-layers, adapter-layout-mirror) + related (backlog.md component doc, file-based-backlog.md, preferred-mode-adoption-plan.md) updated with EF references, removed planning-only language, and full primary-repo model: adopter's single primary repo (Adopter Platform Spec, e.g. the primary adopter) contains overall eposforge implementation docs for product + platform factories + the eposforge/ slice; this is where portfolio reviews happen. EposForge now instructs adopters to set it up this way.
+- Four maintained files (plan, this capture, boundaries-layers, adapter-layout-mirror) + related (backlog.md component doc, file-based-backlog.md, preferred-mode-adoption-plan.md) updated with EF references, removed planning-only language, and full primary-repo model: adopter's single primary repo (Adopter Platform Spec, e.g. the primary adopter) contains overall eposforge implementation docs for product + platform factories + the  .eposforge/ slice; this is where portfolio reviews happen. EposForge now instructs adopters to set it up this way.
 - Terminology aligned across docs, ontology (ef:MultiGraphArchitecture + ef:IndependentBacklogGraph), skills (portfolio-review, update-spec-graph), and standards.
 - Ontology enhanced with the new concepts before the review.
 - Portfolio-review executed as checkpoint (framework view first; clarified that the real combined portfolio view belongs in the primary adopter repo).
@@ -182,7 +182,7 @@ This file + `docs/boundaries-layers-2026-06.md` + the standards above contain th
 
 **Model is not final** — discussion evolved from "narrow fixes" to "multi-graph + ontology-as-mapping + targeted mirroring + graph-first agent access."
 
-**Forward plan (zoomed out)**: See `docs/implementation-plan-eposforge-gea-architecture.md`. The adopter's single primary repo (Adopter Platform Spec, e.g. the primary adopter) contains the overall eposforge implementation documentation (product + platform factories) plus the `eposforge/` slice; this is where portfolio reviews are run. Use the repo's own strangler fig pattern for incremental rollout. Track via EF- items, the four files, and visibility mechanisms. EposForge instructs adopters to set up their primary repo this way.
+**Forward plan (zoomed out)**: See `docs/implementation-plan-eposforge-gea-architecture.md`. The adopter's single primary repo (Adopter Platform Spec, e.g. the primary adopter) contains the overall eposforge implementation documentation (product + platform factories) plus the `.eposforge/` slice; this is where portfolio reviews are run. Use the repo's own strangler fig pattern for incremental rollout. Track via EF- items, the four files, and visibility mechanisms. EposForge instructs adopters to set up their primary repo this way.
 
 Cross-cutting: Follow EposForge's AGENTS.md / SKILL.md / agent-coding-guidelines patterns for all agent/skills design work on the backlog graph. Plan to fill gaps in that guidance. Bake strangler fig concepts (Migration, LEGACY_SHAPE_OF, TARGET_SHAPE_OF, visibility of debt, etc.) into the backlog semantic layer (schema/fields) so agents can use the GraphRAG to implement strangler migrations especially well.
 

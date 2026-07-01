@@ -39,7 +39,7 @@ repo root into `.eposforge/backlog/` (Phase D) so that `.eposforge/` (framework)
    Adopters do **not** vendor `scripts/`. (Ref: `file-based-backlog.md` §"Tooling
    distribution".)
 2. **One container per adopter, named `.eposforge/` (uniform post-EF-059/060).** Everything an adopter takes
-   from the eposforge architecture lives under a single top-level `.eposforge/` (legacy names were `eposforge/` for adopters and `instance/` for framework).
+   from the eposforge architecture lives under a single top-level `.eposforge/` (legacy names were `.eposforge/` for adopters and `instance/` for framework).
    directory, namespaced away from the repo's own files. The framework repo's
    equivalent container is `.eposforge/`; it is named differently only because a
    folder named `eposforge` inside the eposforge repo would be a confusing
@@ -69,7 +69,7 @@ repo root into `.eposforge/backlog/` (Phase D) so that `.eposforge/` (framework)
 
 Adopter primary repo (e.g. the primary adopter — the Adopter Platform Spec):
 
-The adopter designates one primary repo as the single source for their overall eposforge implementation (documentation for both product and platform factories + the adopted `eposforge/` slice). Portfolio reviews are performed from this primary repo.
+The adopter designates one primary repo as the single source for their overall eposforge implementation (documentation for both product and platform factories + the adopted `.eposforge/` slice). Portfolio reviews are performed from this primary repo.
 
 ```text
 <repo>/                                        # e.g. primary-adopter (primary)
@@ -77,7 +77,7 @@ The adopter designates one primary repo as the single source for their overall e
   # (platform factory + product factory concerns, standards, runbooks, portfolio, hardware, etc.)
   00-north-star/, 01-reference-architecture/, 03-standards/, 04-runbooks/, 07-project-portfolio/, ...
 
-  eposforge/                                   # the adopted pattern slice (one container)
+   .eposforge/                                   # the adopted pattern slice (one container)
     backlog/
       config.toml                              # prefix=the primary adopter, visibility=private
       backlog.md ... portfolio.md
@@ -119,8 +119,8 @@ BACKLOG_ROOTS="$PWD/instance" bash "$BACKLOG_HOME/scripts/ready.sh"    # framewo
 
 | Repo | git root | container | `backlog/` data | `config.toml` | Discovery (workspace) | Action |
 |---|---|---|---|---|---|---|
-| **the primary adopter** | `local/primary-adopter` | ✅ `eposforge/` | ✅ (prefix `the primary adopter`) | ✅ | ❌ broken (`.` + doubled `../../gh/eposforge/eposforge`) | **Complete** |
-| **IAC** | `local/IAC` | ✅ `eposforge/` | ✅ (items use `IAC-`) | ❌ missing | ❌ none | **Complete** |
+| **the primary adopter** | `local/primary-adopter` | ✅ `.eposforge/` | ✅ (prefix `the primary adopter`) | ✅ | ❌ broken (`.` + doubled `../../gh/eposforge/eposforge`) | **Complete** |
+| **IAC** | `local/IAC` | ✅ `.eposforge/` | ✅ (items use `IAC-`) | ❌ missing | ❌ none | **Complete** |
 | **OutreachApi** | `local/OutreachApi` | ❌ none | ❌ | ❌ | ❌ none | **Scaffold** |
 | **OutreachAssistant** | `local/OutreachAssistant` | ❌ none | ❌ | ❌ | ⚠️ has `.code-workspace` (no eposforge folder) | **Scaffold** |
 | **framework** | `gh/eposforge` | `.eposforge/` | ⚠️ at repo root `backlog/` | ✅ | `.` only (no `./instance`) | **Unify (Phase D)** |
