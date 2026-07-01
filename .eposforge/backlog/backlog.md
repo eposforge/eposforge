@@ -424,10 +424,19 @@ Notes: This corrects the folder structure so all adopting libraries (and the fra
 ID: EF-060
 Title: Execute renames, reference updates, and migration for `.eposforge/` container (framework + adopters)
 Date: 2026-06-30
-Status: open
+Status: resolved
 Effort: L
 Fix surface: eposforge-pattern
 Depends on: EF-059
 Tags: distribution, backlog-tooling
 Verify with: physical renames complete (`git mv instance .eposforge` in framework; `git mv eposforge .eposforge` in primary and secondary adopters); all references updated (framework internal paths, adopter runbooks/docker/compose/gastown configs, skills using EPOSFORGE_HOME, source-control-ci scripts, etc.); workspaces updated; generate-installed-index.py + layout checks + backlog scripts run successfully against new paths; no broken links or mounts remain; optional migration notes/doc updates shipped.
 Notes: Follows EF-059 (the decision + standard). This is the mechanical execution + coordination across repos. Includes cleanup of any legacy numbered paths inside adopters as encountered. After renames, re-ingest affected corpus into cognee where relevant and re-run portfolio views. See the (sanitized) public plan file for high-level steps; detailed private adopter coordination lives in the primary adopter's backlog.
+
+**Execution log (adopters, 2026-07-01+):**
+- Primary adopter + all product adopters with eposforge/ container tracked under GEA-029 in GraceEnterprisesArchitecture (the Adopter Platform Spec).
+- Repos in scope: GraceEnterprisesArchitecture (primary, full components + heavy private surface), IAC, OutreachApi, OutreachAssistant, PersonalAiContext.
+- Legal: already completed to .eposforge/ (2026-06-30).
+- Framework: completed.
+- Plan of record for private details/mounts: primary's GEA-dot-eposforge-container-private.md (to be relocated during its rename).
+- Will batch: update workspaces + references first (in each repo), git mv, post-rename fixes + verification per-repo, then global cross-checks.
+- After full set: update this item + EF-059 status, refresh graph, close.
