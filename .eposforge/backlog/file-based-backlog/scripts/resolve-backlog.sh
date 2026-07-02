@@ -2,11 +2,13 @@
 # resolve-backlog.sh — source this file to populate BACKLOG_DIR.
 #
 # Resolution precedence (single-root scripts):
-#   1. BACKLOG_ROOTS env  — first colon-separated entry; <entry>/backlog/config.toml
-#   2. cwd walk-up        — from $PWD upward: <dir>/backlog/config.toml then
-#                           <dir>/eposforge/backlog/config.toml (D1: depth-tolerant)
-#   3. VS Code workspace  — VSCODE_WORKSPACE_FILE / WORKSPACE_FILE; same depth probes
-#   4. <git-root>/backlog — back-compat fallback (fails gracefully if no config.toml)
+#   1. BACKLOG_ROOTS env  — first colon-separated entry; probe:
+#                           <entry>/backlog/config.toml
+#                           <entry>/.eposforge/backlog/config.toml
+#                           <entry>/eposforge/backlog/config.toml
+#   2. cwd walk-up        — from $PWD upward: same probes (depth-tolerant)
+#   3. VS Code workspace  — VSCODE_WORKSPACE_FILE / WORKSPACE_FILE; same probes
+#   4. git-root fallback  — first existing probe under git root, else <git-root>/backlog
 #
 # After sourcing, BACKLOG_DIR is an absolute path to the resolved backlog directory.
 # If no config.toml exists at the resolved path, the caller should emit the bootstrap
@@ -25,6 +27,10 @@ if [[ -n "${BACKLOG_ROOTS:-}" ]]; then
   _first="${BACKLOG_ROOTS%%:*}"
   if [[ -f "${_first}/backlog/config.toml" ]]; then
     BACKLOG_DIR="$(realpath "${_first}/backlog")"
+  elif [[ -f "${_first}/.eposforge/backlog/config.toml" ]]; then
+    BACKLOG_DIR="$(realpath "${_first}/.eposforge/backlog")"
+  elif [[ -f "${_first}/eposforge/backlog/config.toml" ]]; then
+    BACKLOG_DIR="$(realpath "${_first}/eposforge/backlog")"
   fi
 fi
 
@@ -34,6 +40,10 @@ if [[ -z "${BACKLOG_DIR}" ]]; then
   while [[ "${_walk}" != "/" ]]; do
     if [[ -f "${_walk}/backlog/config.toml" ]]; then
       BACKLOG_DIR="$(realpath "${_walk}/backlog")"
+      break
+    fi
+    if [[ -f "${_walk}/.eposforge/backlog/config.toml" ]]; then
+      BACKLOG_DIR="$(realpath "${_walk}/.eposforge/backlog")"
       break
     fi
     if [[ -f "${_walk}/eposforge/backlog/config.toml" ]]; then
@@ -61,6 +71,10 @@ if [[ -z "${BACKLOG_DIR}" ]]; then
         BACKLOG_DIR="$(realpath "${_base}/backlog")"
         break
       fi
+      if [[ -f "${_base}/.eposforge/backlog/config.toml" ]]; then
+        BACKLOG_DIR="$(realpath "${_base}/.eposforge/backlog")"
+        break
+      fi
       if [[ -f "${_base}/eposforge/backlog/config.toml" ]]; then
         BACKLOG_DIR="$(realpath "${_base}/eposforge/backlog")"
         break
@@ -70,11 +84,19 @@ if [[ -z "${BACKLOG_DIR}" ]]; then
   fi
 fi
 
-# Tier 4 — git-root/backlog (back-compat fallback)
+# Tier 4 — git-root fallback (prefer existing config locations)
 if [[ -z "${BACKLOG_DIR}" ]]; then
   _git_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
   if [[ -n "${_git_root}" ]]; then
-    BACKLOG_DIR="${_git_root}/backlog"
+    if [[ -f "${_git_root}/backlog/config.toml" ]]; then
+      BACKLOG_DIR="${_git_root}/backlog"
+    elif [[ -f "${_git_root}/.eposforge/backlog/config.toml" ]]; then
+      BACKLOG_DIR="${_git_root}/.eposforge/backlog"
+    elif [[ -f "${_git_root}/eposforge/backlog/config.toml" ]]; then
+      BACKLOG_DIR="${_git_root}/eposforge/backlog"
+    else
+      BACKLOG_DIR="${_git_root}/backlog"
+    fi
   else
     BACKLOG_DIR="${PWD}/backlog"
   fi
