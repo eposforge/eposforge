@@ -52,7 +52,9 @@ WHOLE-FILE LEAK SCAN (ERRORS — a public repo must leak nothing)
   This catches leaks the structural edge check can't see (prose, notes, headers).
 
 ROOT RESOLUTION PRECEDENCE
-  BACKLOG_ROOTS env → cwd walk-up → VS Code workspace file → <git-root>/backlog.
+  BACKLOG_ROOTS env → cwd walk-up → VS Code workspace file →
+  git-root fallback (first existing of `backlog/`, `.eposforge/backlog/`,
+  `eposforge/backlog/`; defaults to `<git-root>/backlog` if none exist).
 HELP
   exit 0
 fi
@@ -73,7 +75,7 @@ if [[ ! -f "${CONFIG_FILE}" ]]; then
   echo "ERROR: no backlog found at ${CONFIG_FILE}." >&2
   echo "  Bootstrap: create ${BACKLOG_DIR}/config.toml with:" >&2
   echo '    prefix = "XX"' >&2
-  echo "  Resolution order tried: BACKLOG_ROOTS env → cwd walk-up → VS Code workspace file → <git-root>/backlog" >&2
+  echo "  Resolution order tried: BACKLOG_ROOTS env → cwd walk-up → VS Code workspace file → git-root fallback (backlog/.eposforge/eposforge)" >&2
   exit 1
 fi
 
@@ -161,12 +163,20 @@ def parse_visibility(text: str) -> str:
     return m.group(1) if m else "private"
 
 
+def backlog_parent_with_config(base: Path):
+    for parent in (base, base / ".eposforge", base / "eposforge"):
+        if (parent / "backlog" / "config.toml").exists():
+            return parent.resolve()
+    return None
+
+
 def build_visibility_map(roots):
     # Maps repo prefix -> visibility ("public"/"private") across all discovered
     # roots. A prefix absent from the map is "unknown" (single-root degradation).
     vis_map = {}
     for root in roots:
-        cfg = root / "backlog" / "config.toml"
+        cfg_parent = backlog_parent_with_config(root) or root
+        cfg = cfg_parent / "backlog" / "config.toml"
         if not cfg.exists():
             continue
         text = read_text(cfg)
@@ -228,22 +238,27 @@ def parse_issues(path: Path):
 def discover_roots(current_repo: Path):
     # Roots are normalized to the directory CONTAINING `backlog/` so that
     # `collect_all_issues` can resolve `<root>/backlog` for both the flat
-    # (`<repo>/backlog`) and the adapter-mirror (`<repo>/eposforge/backlog`)
+    # (`<repo>/backlog`) and adapter-mirror layouts
+    # (`<repo>/.eposforge/backlog`, `<repo>/eposforge/backlog`)
     # layouts. Precedence matches aggregate.sh / ready.sh.
 
     # 1. BACKLOG_ROOTS env (each entry is a backlog-parent dir)
     if backlog_roots_env:
-        env_roots = [Path(p).expanduser().resolve() for p in backlog_roots_env.split(":") if p.strip()]
+        env_roots = []
+        for p in backlog_roots_env.split(":"):
+            if not p.strip():
+                continue
+            base = Path(p).expanduser().resolve()
+            env_roots.append(backlog_parent_with_config(base) or base)
         if env_roots:
             return dedupe_roots(env_roots)
 
-    # 2. cwd walk-up — probes <dir>/backlog/ then <dir>/eposforge/backlog/ (D1: depth-tolerant)
+    # 2. cwd walk-up — probes backlog/, .eposforge/backlog/, eposforge/backlog/
     cwd = Path.cwd()
     while cwd != cwd.parent:
-        if (cwd / "backlog" / "config.toml").exists():
-            return [cwd]
-        if (cwd / "eposforge" / "backlog" / "config.toml").exists():
-            return [cwd / "eposforge"]
+        candidate = backlog_parent_with_config(cwd)
+        if candidate:
+            return [candidate]
         cwd = cwd.parent
 
     # 3. VS Code workspace file
@@ -263,28 +278,28 @@ def discover_roots(current_repo: Path):
                         p = (ws_dir / p).resolve()
                     else:
                         p = p.resolve()
-                    if (p / "backlog" / "config.toml").exists():
-                        roots.append(p)
-                    elif (p / "eposforge" / "backlog" / "config.toml").exists():
-                        roots.append(p / "eposforge")
+                    candidate = backlog_parent_with_config(p)
+                    if candidate:
+                        roots.append(candidate)
                 if roots:
                     return dedupe_roots(roots)
             except Exception:
                 pass
 
     # 4. git-root fallback
-    return [current_repo]
+    fallback = backlog_parent_with_config(current_repo)
+    return [fallback or current_repo]
 
 
 def dedupe_roots(roots):
     seen = set()
     out = []
     for root in roots:
-        key = str(root)
+        key = str(root.resolve())
         if key in seen:
             continue
         seen.add(key)
-        out.append(root)
+        out.append(root.resolve())
     return out
 
 
