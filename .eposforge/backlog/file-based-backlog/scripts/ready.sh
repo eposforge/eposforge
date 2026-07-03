@@ -83,26 +83,46 @@ def dedupe(paths):
     return out
 
 
+def backlog_parent_with_config(base: Path):
+    for parent in (base, base / ".eposforge", base / "eposforge"):
+        if (parent / "backlog" / "config.toml").exists():
+            return parent.resolve()
+    return None
+
+
+def repo_label(root: Path) -> str:
+    if root.name in {".eposforge", "eposforge"}:
+        return root.parent.name
+    return root.name
+
+
 def discover_roots():
     # 1. CLI --roots (highest)
     if roots_cli:
-        roots = [Path(p).expanduser().resolve() for p in roots_cli]
+        roots = []
+        for p in roots_cli:
+            base = Path(p).expanduser().resolve()
+            roots.append(backlog_parent_with_config(base) or base)
         if roots:
             return dedupe(roots)
 
     # 2. BACKLOG_ROOTS env
     if backlog_roots_env:
-        roots = [Path(p).expanduser().resolve() for p in backlog_roots_env.split(":") if p.strip()]
+        roots = []
+        for p in backlog_roots_env.split(":"):
+            if not p.strip():
+                continue
+            base = Path(p).expanduser().resolve()
+            roots.append(backlog_parent_with_config(base) or base)
         if roots:
             return dedupe(roots)
 
-    # 3. cwd walk-up — probes <dir>/backlog/ then <dir>/eposforge/backlog/ (D1: depth-tolerant)
+    # 3. cwd walk-up — probes backlog/, .eposforge/backlog/, eposforge/backlog/
     cwd = Path.cwd()
     while cwd != cwd.parent:
-        if (cwd / "backlog" / "config.toml").exists():
-            return [cwd]
-        if (cwd / "eposforge" / "backlog" / "config.toml").exists():
-            return [cwd / "eposforge"]
+        candidate = backlog_parent_with_config(cwd)
+        if candidate:
+            return [candidate]
         cwd = cwd.parent
 
     # 4. VS Code workspace file
@@ -122,17 +142,17 @@ def discover_roots():
                         p = (ws_dir / p).resolve()
                     else:
                         p = p.resolve()
-                    if (p / "backlog" / "config.toml").exists():
-                        roots.append(p)
-                    elif (p / "eposforge" / "backlog" / "config.toml").exists():
-                        roots.append(p / "eposforge")
+                    candidate = backlog_parent_with_config(p)
+                    if candidate:
+                        roots.append(candidate)
                 if roots:
                     return dedupe(roots)
             except Exception:
                 pass
 
     # 5. git-root fallback
-    return [repo_root]
+    fallback = backlog_parent_with_config(repo_root)
+    return [fallback or repo_root]
 
 
 roots = discover_roots()
@@ -152,7 +172,7 @@ for root in roots:
                 "status": fields.get("Status", "").strip().lower(),
                 "depends_on": csv_ids(fields.get("Depends on", "")),
                 "title": fields.get("Title", issue["header_title"]),
-                "repo": root.name,
+                "repo": repo_label(root),
                 "effort": fields.get("Effort", ""),
             }
 

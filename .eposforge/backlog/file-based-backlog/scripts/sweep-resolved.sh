@@ -14,7 +14,7 @@ if [[ ! -f "${BACKLOG_DIR}/config.toml" ]]; then
   echo "ERROR: no backlog found at ${BACKLOG_DIR}/config.toml." >&2
   echo "  Bootstrap: create ${BACKLOG_DIR}/config.toml with:" >&2
   echo '    prefix = "XX"' >&2
-  echo "  Resolution order tried: BACKLOG_ROOTS env → cwd walk-up → VS Code workspace file → <git-root>/backlog" >&2
+  echo "  Resolution order tried: BACKLOG_ROOTS env → cwd walk-up → VS Code workspace file → git-root fallback (backlog/.eposforge/eposforge)" >&2
   exit 1
 fi
 
