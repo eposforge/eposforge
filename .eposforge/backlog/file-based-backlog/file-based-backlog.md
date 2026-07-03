@@ -30,7 +30,7 @@ source_of_truth: yes
 | Field | Value |
 |---|---|
 | `repo_prefix` | `EF` |
-| `discovery_method` | `workspace-file` with `BACKLOG_ROOTS` env fallback |
+| `discovery_method` | `BACKLOG_ROOTS` → cwd walk-up → workspace-file → git-root fallback (supports `backlog/`, `.eposforge/backlog/`, `eposforge/backlog/`) |
 | `archive_format` | `single-file-with-index` |
 
 ### Repo-specific fields
