@@ -253,7 +253,8 @@ Notes: Generalizes the gap surfaced while landing EF-031: the framework ships sk
 ID: EF-033
 Title: Make file-based-backlog scripts relocatable: discover the backlog root instead of assuming `<git-root>/backlog/`
 Date: 2026-06-12
-Status: open
+Status: resolved
+Resolved: 2026-07-03
 Effort: M
 Fix surface: eposforge-pattern
 Tags: backlog-tooling

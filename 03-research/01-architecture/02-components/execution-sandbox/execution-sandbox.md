@@ -7,7 +7,7 @@ source_of_truth: no
 
 # Execution Sandbox — Implementation Catalog
 
-> **Snapshot date:** 2026-05. Verify current details before adopting.
+> **Snapshot date:** 2026-07. Verify current details before adopting.
 
 Candidate Adapters for the Execution Sandbox slot
 ([../../01-architecture/02-components/execution-sandbox.md](../../01-architecture/02-components/execution-sandbox.md)).
@@ -109,6 +109,32 @@ Each entry includes (where known):
 - **Notes:** strongest isolation choice in this catalog. Operationally
   heavier; consider when running untrusted Dev Product code or
   untrusted Spec Inputs.
+
+### Modal Sandboxes
+
+- **Type:** hosted gVisor container sandbox (optional full VM runtime);
+  commercial AI infrastructure vendor ([modal.com](https://modal.com/)).
+- **Cost tier:** commercial; pay-per-second CPU/memory/GPU (free credit
+  tier may exist — verify current pricing).
+- **Isolation mechanism:** gVisor by default (stronger than plain Docker
+  namespaces); VM Sandboxes (experimental) for full Linux kernel /
+  Docker-in-Docker. Sandboxes are not authorized to other Modal
+  workspace resources by default.
+- **Capabilities:** shell and arbitrary images; filesystem API +
+  Volumes for artifact I/O; GPU attach (preemptible; not on VM
+  runtime); wall-clock and idle timeouts; readiness probes; lifecycle
+  events (created → finished). Network policy modes: full block,
+  CIDR allowlist, domain allowlist (beta), runtime policy update
+  (alpha). High concurrency / scale-to-zero without self-managed
+  cluster.
+- **Notes:** best **hosted** fit in this catalog for bursty agent
+  sandboxes when privacy posture allows **vendor** execution. **Cannot**
+  satisfy `privacy: local` — compute runs on Modal's cloud. Adapter
+  must refuse local-posture dispatches and always set hard resource
+  limits. Deep research:
+  [modal-sandboxes.md](./modal-sandboxes.md). Secondary (separate
+  adapter): Modal as hosted GPU inference engine host — see Inference
+  catalog if added later.
 
 ---
 

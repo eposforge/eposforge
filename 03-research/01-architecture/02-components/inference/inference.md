@@ -7,7 +7,7 @@ source_of_truth: no
 
 # Inference — Implementation Catalog
 
-> **Snapshot date:** 2026-04. Pricing, model availability, and
+> **Snapshot date:** 2026-07. Pricing, model availability, and
 > privacy postures change frequently. Verify current details before
 > committing.
 
@@ -119,6 +119,30 @@ Each entry includes (where known):
   embedded use cases.
 - **Notes:** option for instances with constrained hardware budgets
   or edge deployments.
+
+---
+
+## Hosted self-managed engines
+
+### Modal (GPU / serverless model host)
+
+- **Type:** hosted self-managed — operator deploys the inference
+  engine (e.g. vLLM) on Modal Functions / GPU capacity; Modal is the
+  substrate, not a frontier model vendor.
+- **Cost tier:** commercial; per-second GPU/CPU, scale-to-zero.
+- **Privacy posture:** `vendor-default` (cloud execution; confirm
+  current ToS / data retention for the product surface used —
+  Inference endpoints claim zero data retention for request payloads).
+- **Capabilities:** elastic GPU serving without owning a fleet;
+  multi-cloud capacity; depends on the engine image for tool calling,
+  context window, and streaming.
+- **Notes:** weaker unique fit than using Modal for **Execution
+  Sandbox** (see
+  [../execution-sandbox/modal-sandboxes.md](../execution-sandbox/modal-sandboxes.md)).
+  Prefer when the factory needs bursty self-hosted open-weight serving
+  without local GPUs. Install as a **separate** Adapter from any Modal
+  Sandbox Adapter; do not conflate the two slots. Still need a local
+  engine Adapter for `privacy: local`.
 
 ---
 
