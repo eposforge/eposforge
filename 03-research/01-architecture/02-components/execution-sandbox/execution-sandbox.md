@@ -101,14 +101,27 @@ Each entry includes (where known):
 
 ### Firecracker micro-VMs
 
-- **Type:** minimal hypervisor for serverless / function workloads.
-- **Cost tier:** free OSS.
-- **Isolation mechanism:** KVM-based micro-VM.
-- **Capabilities:** stronger isolation than containers; fast boot
-  (~125 ms); minimal attack surface.
-- **Notes:** strongest isolation choice in this catalog. Operationally
-  heavier; consider when running untrusted Dev Product code or
-  untrusted Spec Inputs.
+- **Type:** open-source KVM microVMM (Apache 2.0); AWS-origin, used for
+  multi-tenant serverless-class isolation
+  ([firecracker-microvm.github.io](https://firecracker-microvm.github.io/)).
+- **Cost tier:** free OSS (host capacity + operator cost only).
+- **Isolation mechanism:** hardware-virtualized microVM (separate guest
+  kernel) + minimal device model (virtio-net/block/vsock, serial); production
+  posture adds the **jailer** (chroot, cgroups, drop privileges, optional
+  netns/PID ns). Stronger than shared-kernel containers.
+- **Capabilities:** ≤~125 ms cold path to guest init (upstream SLA on
+  reference hosts); &lt;5 MiB VMM overhead class; virtio rate limiters for
+  net/block; snapshot/restore for warm start; REST API over Unix socket.
+  **No GPU passthrough.** Egress policy is host-side (TAP +
+  iptables/nftables/CNI/netns), not a productized allowlist DSL. Higher-level
+  wrappers (firecracker-containerd, Kata+Firecracker) improve OCI/K8s
+  ergonomics.
+- **Notes:** best **self-hosted** isolation fit in this catalog for
+  untrusted Dev Product code and `privacy: local` when the operator can
+  staff KVM hosts, rootfs pipelines, and network glue. Not turnkey — the
+  Adapter owns lifecycle, artifacts, audit events, and cleanup. Route GPU
+  sub-tasks to another Adapter. Deep research:
+  [firecracker-microvms.md](./firecracker-microvms.md).
 
 ### Modal Sandboxes
 
