@@ -91,10 +91,54 @@ practice — 82 cognify runs / 0 errors over 48h confirmed.
 
 | Symptom | Real cause |
 |---|---|
-| `Failed to initialize Ladybug database: Could not map version_code to proper Ladybug version` | **File-lock contention**, not a real version mismatch. Some second process is trying to open `cognee_graph_ladybug` while the container holds the exclusive lock. Cognee's migration-fallback path masks the real `RuntimeError: Could not set lock on file` and reports the version-code lookup that fails because Ladybug 0.16.0 writes version_code 40, but cognee's migration table only knows 34–39. Don't try to "migrate" — find the second process. If no external second process is visible, the prior container run left a stale lock in `./data/cognee_system/databases/`. Recovery: **wipe and restart** — see **Recovery procedures** below. This destroys the KG; follow with a full corpus rebuild. |
+| `Failed to initialize Ladybug database: Could not map version_code to proper Ladybug version` (a.k.a. `ValueError: Could not map version_code to proper Ladybug version`, `version_code = 40`) | **A masking artifact — never the real cause.** `version_code 40` is the *normal* state: Ladybug 0.16.0 always writes 40, but cognee's migration table only knows 34–39, so any time the primary graph open fails, cognee's fallback path (`adapter.py:154`, `except RuntimeError:`) calls `read_ladybug_storage_version`, which throws this ValueError and **swallows the real `RuntimeError`**. The real error is one of at least two things, and you must unmask it before choosing a recovery — see **[Unmasking the real Ladybug open error](#unmasking-the-real-ladybug-open-error-do-this-first)** below. Two known primary errors: (a) `Could not set lock on file` → lock contention (a second process, or a stale lock from a prior run — but MCP in proxy mode does *not* hold the file, so a "second process" is rare here); (b) `Corrupted wal file. Read out invalid WAL record type` → a torn/corrupt `cognee_graph_ladybug.wal`, typically from an unclean shutdown (power loss, `kill -9`, hung teardown). **Do not "migrate", and do not wipe blindly** — the recovery differs per primary error. |
 | `database is locked` or `no such table: data` during bulk cognify | Cognee internal SQLite worker-concurrency. A large (80+ doc) batch spawns concurrent writer tasks; if any task holds a lock past the batch, subsequent re-runs hit it. Recovery: re-run the same `cognee-sync --added` command — the second pass picks up all missed docs cleanly. If the second pass also fails, restart `dkr-cgnee-api` to clear stale in-process locks, then re-run. |
 | `Recall failed: 'NoneType' object has no attribute 'id'` | cognee 1.0.4 in the MCP image only. Already patched in `Dockerfile.mcp`. Won't appear in proxy mode. |
 | `HTTP 404 Could not find session` after a restart | Expected — SSE sessions don't survive container recreation. Reconnect via Claude Code's `/mcp`. |
+
+### Unmasking the real Ladybug open error (do this first)
+
+Because cognee swallows the primary `RuntimeError` (see the decoder row above),
+the `version_code 40` message tells you nothing about the actual fault. Recover
+the real error **non-destructively** by opening an *isolated copy* of the graph
+— never the live files — so the probe cannot touch the WAL or take a lock on the
+real DB:
+
+```bash
+docker exec dkr-cgnee-api sh -c '
+  mkdir -p /tmp/lbprobe
+  cp /app/cognee/.cognee_system/databases/cognee_graph_ladybug     /tmp/lbprobe/g
+  cp /app/cognee/.cognee_system/databases/cognee_graph_ladybug.wal /tmp/lbprobe/g.wal 2>/dev/null
+  python - <<PY
+from ladybug import Database
+try:
+    db = Database("/tmp/lbprobe/g", buffer_pool_size=256*1024*1024, max_db_size=1024*1024*1024)
+    print("OPEN OK"); db.close()
+except Exception as e:
+    print("PRIMARY ERROR:", type(e).__name__, "-", e)
+PY
+  rm -rf /tmp/lbprobe'
+```
+
+Interpret the `PRIMARY ERROR`:
+
+- `Corrupted wal file. Read out invalid WAL record type` → **corrupt WAL.** The
+  committed data lives in the main `cognee_graph_ladybug` file; anything only in
+  the WAL is unrecoverable. Confirm how much survives by re-running the probe
+  **without** copying the `.wal` and querying `MATCH (n) RETURN count(n)`. If the
+  main file is ~4 KB the graph was never checkpointed and count is 0 → a rebuild
+  is unavoidable. Recovery: **[move the corrupt WAL aside](MAINTENANCE.md#corrupt-wal-recovery-non-destructive-to-the-main-db)**
+  (minimal, touches only the WAL) rather than a full wipe.
+- `Could not set lock on file` → **lock contention.** Find the second holder
+  (`lsof`/`fuser` the file inside the container; remember MCP proxy mode does not
+  open it). If none, it's a stale lock from a prior run → wipe and restart.
+- Anything else → capture it; the decoder above is not exhaustive.
+
+> **Note the timeline trap:** the failure surfaces on the first *cold restart*
+> after the WAL was corrupted, which can be long after the corruption itself. A
+> WAL `mtime` weeks before the outage that "revealed" the crash means the outage
+> was only the trigger, not the cause — check `ls -la --time-style=full-iso` on
+> the WAL vs. the reboot time (`last -x reboot`) before blaming the restart.
 
 ### Recovery procedures
 
