@@ -161,8 +161,9 @@ the skill works from any cwd and any CLI.
 **Ownership:** this is the skills-side sibling of EF-033/EF-022. Recommend
 **folding it into EF-032's scope** (an installed skill that can't find its
 tooling isn't really "installed") rather than a standalone ticket. If kept
-separate, file as **EF-045 — "Anchor script-calling skills to EPOSFORGE_HOME so
-installed skills resolve framework tooling from any cwd."**
+separate, file a dedicated item (historical note: **EF-045** was once proposed
+for this name; that ID is now DCO/SSH signing). **Filed 2026-07-17 as
+`EF-062` — Anchor script-calling skills to EPOSFORGE_HOME.**
 
 ---
 
@@ -202,6 +203,16 @@ where not.**
 ### 4.3 Out of scope (per ticket) — do NOT build here
 Runtime skill discovery/registry (C3/C4); **containerized agent-home installs
 (that's the adopter overlay = §5)**; any auto-update/watcher.
+
+### 4.5 Gap pack filed 2026-07-17 (do not re-litigate — track in backlog)
+
+| ID | Gap closed |
+|----|------------|
+| **EF-061** | Ship `04-standards/03-agent-skills/` (create-side contract) |
+| **EF-062** | `EPOSFORGE_HOME` anchoring for script-calling skills (§3) |
+| **EF-063** | Fleet surfaces: Grok, agy, project-scoped, `.agents/skills` |
+| **EF-064** | Product-repo skill source + wrappers + create checklist |
+| Adopter | Manifest install set + Windows host surfaces (private GEA items) |
 
 ### 4.4 Verification
 `install.sh <skill> --surface claude-code-user --mode consume` produces a
