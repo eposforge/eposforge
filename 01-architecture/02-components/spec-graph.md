@@ -49,7 +49,7 @@ In addition to the universal fields in
 
 ## Boundaries
 
-- **Is:** a projection of Living Specs, queryable by the Router and by
+- **Is:** a projection of Living Specs, queryable by the Orchestrator and by
   operators.
 - **Is not:** a source of truth. Never edit the graph directly to
   change behavior; edit the Living Spec.

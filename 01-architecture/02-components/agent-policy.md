@@ -41,7 +41,7 @@ Any Adapter for this slot must:
   At minimum: GA ring deploy actions must be tier-0 (forbidden for
   agents); alpha ring deploy actions may be tier-1. Intermediate rings
   are tier-2 or tier-3 at the instance's discretion.
-- Provide a decision API the Router and Tool Transport call before any
+- Provide a decision API the Orchestrator and Tool Transport call before any
   action.
 - Be versioned with audit history. Policy changes are auditable like
   code changes.
@@ -67,10 +67,9 @@ In addition to the universal fields in
 - **Is:** the slot where bounds and approval gates are declared and
   decided.
 - **Is not:** the enforcement point. Other components (Tool Transport,
-  Router, CI) are enforcement points; they consult Agent Policy for
+  Orchestrator, CI) are enforcement points; they consult Agent Policy for
   decisions.
-- **Is not:** a runtime monitor. Audit & Observability handles
-  observation; Agent Policy handles permission.
+- **Is not:** a runtime monitor. Audit & Observability handles recording the stream. Content Safety (C14), the runtime content-safety enforcement point, inspects payloads (distinct from C8).
 - **Is not:** the ring governance model. Release Rings
   ([release-rings.md](./release-rings.md)) declares what the
   rings are and what the evidence thresholds are; Agent Policy enforces

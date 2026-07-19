@@ -25,7 +25,7 @@ Any Adapter for this slot must:
   Living Spec must fail CI.
 - Run automated tests for each PR; gate merges on test status.
 - Run factory-level integration tests as a required PR check. These
-  tests exercise the full component chain (Spec Input → Router → Dev
+  tests exercise the full component chain (Spec Input → Orchestrator → Dev
   Product → Tool Transport → Source Control gate) against real service
   instances, not mocks of factory components. Isolation is provided by
   Component 7 (Execution Sandbox); disposable container environments
@@ -77,6 +77,8 @@ In addition to the universal fields in
   pipelines are defined in source control and triggered from CI, but
   the ring governance contract — evidence thresholds, ring-lock rules,
   promotion authority — belongs to that component, not here.
+
+See also [Standard 10: Ungameable Gates](../../04-standards/10-ungameable-gate/ungameable-gate.md) for how integration tests must be structured as the ungameable gate for tasks.
 
 ## Reference implementations
 

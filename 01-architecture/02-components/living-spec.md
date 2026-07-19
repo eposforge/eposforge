@@ -65,7 +65,7 @@ In addition to the universal fields in
 - **Is:** the durable spec living inside the deliverable repo for the
   deliverable's entire lifetime.
 - **Is not:** the Spec Input ([spec-input.md](./spec-input.md)),
-  which is request-shaped and consumed by the Router.
+  which is request-shaped and consumed by the Orchestrator.
 - **Is not:** API documentation, README, or operator runbook — though it
   may inform any of those.
 

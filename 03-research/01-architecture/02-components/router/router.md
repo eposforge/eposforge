@@ -5,13 +5,13 @@ maturity: draft
 source_of_truth: no
 ---
 
-# Router — Implementation Catalog
+# Orchestrator — Implementation Catalog
 
 > **Snapshot date:** 2026-04. Verify current details before adopting.
 
-Candidate Adapters for the Router slot
-([../../01-architecture/02-components/router.md](../../01-architecture/02-components/router.md)).
-A Router Adapter consumes normalized Spec Input, decomposes it into
+Candidate Adapters for the Orchestrator slot
+([../../01-architecture/02-components/orchestrator.md](../../01-architecture/02-components/orchestrator.md)).
+An Orchestrator Adapter consumes normalized Spec Input, decomposes it into
 sub-tasks, picks Dev Product Adapters per sub-task, dispatches via
 Tool Transport, and iterates.
 
@@ -33,7 +33,7 @@ Each entry includes (where known):
 
 ## Orchestration shapes this slot can implement
 
-The Router slot is orchestration-pattern agnostic. Common shapes are:
+The Orchestrator slot is orchestration-pattern agnostic. Common shapes are:
 
 - **Hierarchical lead + sub-agents:** one lead agent decomposes,
   delegates to worker agents, evaluates results, and returns final
@@ -43,7 +43,7 @@ The Router slot is orchestration-pattern agnostic. Common shapes are:
 - **Hybrid:** deterministic outer workflow with LLM-driven decomposition
   inside selected nodes.
 
-In all three shapes, the Router remains the orchestrator; worker
+In all three shapes, the Orchestrator remains the orchestrator; worker
 executors belong to the Dev Product slot.
 
 ---
@@ -85,7 +85,7 @@ executors belong to the Dev Product slot.
 - **Capabilities:** durable state, retries, signals, schedules, and
   long-running multi-step workflows that survive process restarts.
 - **Notes:** pairs with LangGraph or a custom decomposer to give the
-  Router durability guarantees the slot's `escalation_policy` field
+  Orchestrator durability guarantees the slot's `escalation_policy` field
   benefits from.
 
 ### AutoGen
@@ -107,7 +107,7 @@ executors belong to the Dev Product slot.
 - **Decomposition strategy:** LLM-driven autonomous task execution.
 - **Capabilities:** self-directed multi-step development workflows.
 - **Notes:** also listed in [dev-products.md](../dev-product/dev-products.md);
-  whether it fits the Router slot or the Dev Product slot depends on
+  whether it fits the Orchestrator slot or the Dev Product slot depends on
   how the operator scopes its autonomy.
 
 ### Custom in-house orchestrator
@@ -116,8 +116,8 @@ executors belong to the Dev Product slot.
 - **Cost tier:** free (cost of build + maintain).
 - **Decomposition strategy:** whatever the instance needs.
 - **Capabilities:** unconstrained.
-- **Notes:** the floor option. Choose deliberately — building a
-  Router is the largest single component effort in a factory
+- **Notes:** the floor option. Choose deliberately — building an
+  Orchestrator is the largest single component effort in a factory
   instance. Adopt a framework first and replace only when no
   framework fits.
 
@@ -127,5 +127,5 @@ executors belong to the Dev Product slot.
 
 Open a PR adding new entries with the same fields. Prefer Adapters
 with declared retry / escalation behavior and a clear emission
-surface for the audit events the Router slot requires.
+surface for the audit events the Orchestrator slot requires.
 

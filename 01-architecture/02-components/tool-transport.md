@@ -41,6 +41,7 @@ the Tool Transport. There is no "back door" for a Dev Product.
 
 ## Required Adapter metadata
 
+
 In addition to the universal fields in
 [../00-adapter-pattern/adapter-pattern.md](../00-adapter-pattern/adapter-pattern.md):
 
@@ -55,11 +56,11 @@ In addition to the universal fields in
 - **Is not:** the sandbox in which work runs (that is Execution
   Sandbox).
 - **Is not:** the policy decision point (that is Agent Policy); the
-  Transport is the enforcement point.
+  Transport asks for permission and enforces the answer.
+- **Is not:** the runtime content-safety enforcement point. Content Safety (C14) is the runtime content-safety enforcement point.
 
 ## Reference implementations
 
-See [../../03-research/](../../03-research/) for the catalog. Today's
+See [../../03-research/](../../03-research/) for the catalog. A
 common choice is Model Context Protocol (MCP); other transports are
 acceptable as long as the contract is met.
-

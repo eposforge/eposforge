@@ -31,7 +31,7 @@ By the end of Phase 0:
   Management Adapter (component 12).
 - Audit & Observability (component 11) is collecting structured events
   from the substrate.
-- Backups are automated and tested for restoration.
+- Backups are automated and tested for restoration (C16).
 - Source Control + CI (component 9) is operational with signed agent
   attribution.
 
