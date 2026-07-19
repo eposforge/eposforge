@@ -5,6 +5,47 @@ explicit operator confirmation using the exact phrase **"I authorize KG wipe"**.
 
 ---
 
+## Known cognee failure modes (read before a rebuild)
+
+Two non-obvious behaviors caused a multi-hour outage; both are now handled by
+`bulk-rebuild.sh`, but understand them before touching the graph manually.
+
+### 1. cognee never checkpoints the graph WAL on its own → data is WAL-only
+
+Ladybug writes land in the WAL (`cognee_graph_ladybug.wal`) and are **not** flushed
+into the durable main file (`cognee_graph_ladybug`) on shutdown — not even a
+graceful `docker compose stop`. Consequences:
+
+- The graph is fully queryable while the container runs (the WAL replays on open),
+  so a **copy-probe of the main file alone reports 0 nodes even when the live graph
+  is full** — always count via the API (`CYPHER: MATCH (n) RETURN count(n)`), not a
+  main-file-only probe.
+- Any unclean stop (`kill -9`, `--force-recreate` past the grace period, power loss)
+  **tears the uncheckpointed WAL** → corrupt-WAL outage on the next cold start, and
+  all un-checkpointed data is lost.
+
+**Fix / rule:** force a checkpoint after any bulk graph change:
+`POST /api/v1/search {"searchType":"CYPHER","query":"CHECKPOINT"}` (the bare
+`CHECKPOINT` statement; `CALL checkpoint()` is invalid). `bulk-rebuild.sh` now does
+this automatically as its final step. Verify durability with a main-file-only probe
+— after a checkpoint it should match the live count. `stop_grace_period: 300s` on the
+API service gives a clean stop time to settle; never hard-kill an un-checkpointed WAL.
+
+### 2. Bulk ingest corrupts cognee's SQLite metadata without a batch throttle
+
+A full-corpus cognify at cognee's default concurrency corrupts the embedded SQLite
+metadata store — `sqlite3.DatabaseError: database disk image is malformed` — which
+then fails every subsequent `/api/v1/add` and `/api/v1/cognify` with a 500 until a
+full wipe. **The fix is throttling, not retrying** (once SQLite is malformed, retry
+can't recover it).
+
+**Fix / rule:** set `COGNEE_CHUNKS_PER_BATCH` (default `6` in `bulk-rebuild.sh`) so
+cognee serializes graph/SQLite writes. A clean 116-doc rebuild at batch=6 completes
+without corruption; the same rebuild unthrottled corrupted SQLite partway. If you
+still hit `malformed`, lower the batch size further.
+
+---
+
 ## Recovery procedures
 
 ### KG wipe (Ladybug stale-lock or clean-slate rebuild)

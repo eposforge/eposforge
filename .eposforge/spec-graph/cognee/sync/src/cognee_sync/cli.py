@@ -45,7 +45,7 @@ from .state import StateStore
 # Default state DB lives alongside the sync project itself, committed to source.
 # cli.py is at src/cognee_sync/cli.py; three parents up = sync/
 _DEFAULT_STATE_DB = str(Path(__file__).parent.parent.parent / ".cognee-state.db")
-_REPO_ROOT = Path(__file__).resolve().parents[7]
+_REPO_ROOT = Path(__file__).resolve().parents[6]
 
 
 def _script_path(relative_path: str) -> str:
@@ -499,11 +499,16 @@ def main() -> None:
             anchor = f" (ontology={ontology_key})" if ontology_key else ""
             print(f"cognify {dataset_name}{anchor} ...", flush=True)
             actual = None
+            # COGNEE_CHUNKS_PER_BATCH throttles cognee's internal cognify
+            # concurrency. Large corpora at the default corrupt cognee's embedded
+            # SQLite ("database disk image is malformed"); a small batch avoids it.
+            _cpb = os.environ.get("COGNEE_CHUNKS_PER_BATCH")
             try:
                 client.cognify(
                     datasets=[dataset_name],
                     run_in_background=False,
                     ontology_key=[ontology_key] if ontology_key else None,
+                    chunks_per_batch=int(_cpb) if _cpb else None,
                 )
                 print(f"cognify {dataset_name} done")
             finally:

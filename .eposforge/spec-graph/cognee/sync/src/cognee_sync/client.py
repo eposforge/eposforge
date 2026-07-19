@@ -176,12 +176,18 @@ class CogneeClient:
         run_in_background: bool = False,
         custom_prompt: str = "",
         ontology_key: list[str] | None = None,
+        chunks_per_batch: int | None = None,
     ) -> dict[str, Any]:
         """POST /api/v1/cognify — extract a knowledge graph from an added dataset.
 
         Provide ``datasets`` (names) or ``dataset_ids`` (UUID strings), not both.
         Note: ``add_file`` already returns ``status="PipelineRunCompleted"``,
         so cognify may be implicit on add — Phase 1 confirms this.
+
+        ``chunks_per_batch`` throttles how many chunks cognee processes
+        concurrently. Large corpora at the default concurrency corrupt cognee's
+        embedded SQLite metadata store ("database disk image is malformed"); a
+        small batch serializes the writes enough to avoid it.
         """
         body: dict[str, Any] = {"runInBackground": run_in_background}
         if datasets is not None:
@@ -192,6 +198,8 @@ class CogneeClient:
             body["customPrompt"] = custom_prompt
         if ontology_key is not None:
             body["ontologyKey"] = ontology_key
+        if chunks_per_batch is not None:
+            body["chunksPerBatch"] = chunks_per_batch
         response = self._client.post("/api/v1/cognify", json=body)
         response.raise_for_status()
         return response.json()
