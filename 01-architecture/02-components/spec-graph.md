@@ -109,8 +109,10 @@ In addition to the universal fields in
   stores, relational projections, or hybrid stores are acceptable as
   long as the contract is met.
 - **Is not:** a code graph (AST/call-graph of implementation). Code
-  intelligence is a different shape; see landscape research. Spec Graph
-  projects **intent docs** (Living Specs), not source structure.
+  intelligence is a different shape (Tool Transport
+  **code-structure**; candidate: codebase-memory-mcp — see
+  `03-research/` and landscape). Spec Graph projects **intent**
+  (Product Living Specs), not source structure.
 - **Is not:** the independent backlog-items graph. Backlog *mechanics*
   may project into a Scope Spec Graph; raw work items live in the
   file-based backlog graph (`ef:IndependentBacklogGraph`).

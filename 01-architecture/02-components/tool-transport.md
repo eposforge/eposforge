@@ -27,7 +27,16 @@ Any Adapter for this slot must:
   - **shell** — sandboxed command execution (delegated to the Execution
     Sandbox).
   - **graph-query** — read (and tier-gated write) against the Spec
-    Graph.
+    Graph (Living Spec projections / Factory Spec Graph scopes).
+  - **code-structure** (recommended) — structural queries over
+    implementation graphs (call paths, symbol search, change impact).
+    Distinct from graph-query: indexes **code**, not Product Living
+    Specs. Candidate Adapters include codebase-memory-mcp and
+    Code-Graph-RAG (see `03-research/`). Index only **declared code
+    surfaces** (code-focused repos or roots such as `src/`, `apps/`)
+    per
+    [Standard 12](../../04-standards/12-code-surface-encapsulation/code-surface-encapsulation.md);
+    do not whole-index prose-primary corpora.
   - **browser** — headless browser operations.
   - **http** — outbound HTTP calls within policy.
 - Authenticate the calling Dev Product Adapter and apply its declared

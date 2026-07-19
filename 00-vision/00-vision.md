@@ -91,6 +91,14 @@ Component 2
    value. Value informs the next spec. Minimize the distance between an
    idea and a working deliverable.
 
+6. **Conversational-first, code when earned.** Prefer agent/conversational
+   surfaces first; promote to deterministic source code and UIs when use
+   demands them. Encapsulate that code in declared code roots or
+   code-focused repos so Tool Transport code-structure tools can be
+   scoped — do not scatter implementation through prose-primary trees.
+   See
+   [Standard 12](../04-standards/12-code-surface-encapsulation/code-surface-encapsulation.md).
+
 ## Core Principles (Immutable)
 
 1. **Everything-as-Code** — Git is source of truth; no manual clicks.

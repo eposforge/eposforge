@@ -302,10 +302,12 @@ A strong **dark-factory** (`autonomous`-mode) candidate additionally:
 These products score strongly on building a queryable graph or semantic
 index of a codebase but weakly on autonomous artifact production. They
 are **context / retrieval** providers, not Dev Products: in EposForge
-terms they feed agents through **Spec Graph (Component 6)** and **Tool
-Transport (Component 5)** rather than filling the Dev Product slot.
-Evaluate them as alternatives or complements to the instance's Spec
-Graph (e.g., cognee), not as workers.
+terms they feed agents through **Tool Transport (Component 5)** as a
+**code-structure** capability (and only loosely as a Spec Graph
+complement when Living Specs are also projected — which most do not).
+They index **implementation (as-built)**, not Product Living Specs.
+Evaluate them as complements to the instance's Spec Graph (e.g. cognee),
+not as workers and **not as a replacement** for Component 6.
 
 ### Sourcegraph (Cody / Amp)
 
@@ -339,8 +341,37 @@ Graph (e.g., cognee), not as workers.
 - **Capabilities:** Tree-sitter-based code mapping, deep multi-repo
   code context, knowledge graph generation.
 - **Notes:** native code knowledge graph via Tree-sitter; strong
-  candidate for graph-aware Adapters needing deep codebase
-  understanding. Component-6 provider rather than a Dev Product.
+  candidate for Tool Transport code-structure Adapters. Not a
+  substitute for Living Spec → Spec Graph.
+
+### codebase-memory-mcp (DeusData)
+
+- **Type:** open-source MCP server — structural code intelligence /
+  knowledge graph for AI coding agents.
+- **Homepage:** https://deusdata.github.io/codebase-memory-mcp/
+- **Source:** https://github.com/DeusData/codebase-memory-mcp
+- **Cost tier:** free OSS (MIT); no API key for indexing/query.
+- **Privacy posture:** `local` — single static C binary; tree-sitter +
+  Hybrid LSP + on-device embeddings; code never leaves the machine.
+- **Capabilities:** indexes source into a persistent SQLite graph
+  (functions, classes, call chains, HTTP routes, cross-service links,
+  IaC nodes); 15 MCP tools including `search_graph` (structural +
+  semantic), `trace_path`, `detect_changes` (diff blast radius),
+  `query_graph` (read-only Cypher), `get_architecture`,
+  `get_code_snippet`; auto-sync watcher; optional team graph artifact
+  (`.codebase-memory/graph.db.zst`); 158 languages; multi-repo
+  `CROSS_*` edges.
+- **BYOK:** N/A for graph engine (no embedded LLM); agent client
+  supplies NL→tool translation.
+- **Autonomy / ToS:** retrieval/structure backend only; not a Dev
+  Product. Installer configures many agent surfaces (Claude Code,
+  Cursor, Codex, Goose, etc.).
+- **Notes:** Strong OSS peer to Sourcegraph-class code graphs with zero
+  infra. **Tool Transport** code-structure provider. Must not ingest
+  into or replace Cognee/Spec Graph Living Spec projections. Prefer
+  for call paths, impact, dead code, route maps; prefer Spec Graph for
+  product intent / factory architecture. Research snapshot: 2026-07
+  (v0.8.x).
 
 ---
 
@@ -477,10 +508,12 @@ In hierarchical orchestration mode, these products typically act as
 delegated workers in the Dev Product slot unless the operator
 explicitly installs one as the Router.
 
-- **Sourcegraph (Cody/Amp), Augment Code, Code-Graph-RAG** are
-  context / retrieval providers — they fit **Spec Graph (Component 6)**
-  + **Tool Transport (Component 5)**, feeding agents rather than
-  producing artifacts themselves.
+- **Sourcegraph (Cody/Amp), Augment Code, Code-Graph-RAG,
+  codebase-memory-mcp** are context / retrieval providers — primarily
+  **Tool Transport (Component 5)** code-structure (and only secondarily
+  a Spec Graph complement if specs are projected into them). They feed
+  agents rather than producing artifacts; they do not replace Living
+  Spec → Spec Graph.
 - **Microsoft Agent Framework** is primarily a Router candidate; it
   can also dispatch in ways that resemble a Dev Product for some tasks.
 - **Blitzy / Harness AIDA / Autonomy AI** are full-platform candidates;
