@@ -484,3 +484,17 @@ Theme: distribution
 Depends on: EF-032, EF-061
 Verify with: the installer (or a documented product mode) can take `--source <product-repo>/skills/<name>` (not only the framework clone's `skills/`) and project into the same surface table as EF-032/EF-063; product AGENTS template fragment (or standard section) requires: new agent workflows go to `skills/<name>/SKILL.md`, thin `.github/skills/<name>/SKILL.md` wrapper in the same change, and optional project projections for local harness discovery; optional cheap lint/check script or docs-lint class flags a `skills/<name>/` without matching `.github/skills/<name>/` wrapper (report-only ok for v1); a worked example in docs uses a product-style skill (no private product names required — synthetic `example-product-skill` is fine); recall about "product repo skills" or "fork mode product skills" returns this.
 Notes: Filed 2026-07-17. Renumbered from draft EF-055 after ID collision with vault-removal item. Framework install alone does not make product skills uniformly discoverable. Adjacency: EF-032, EF-061, EF-063, product AGENTS patterns.
+
+## Issue EF-065 — Context plane observability behavioral implementation (manifest, viewer, envelope)
+ID: EF-065
+Title: Context plane observability behavioral implementation (manifest, viewer, envelope)
+Date: 2026-07-16
+Status: open
+Effort: M
+Fix surface: eposforge-pattern
+Tags: observability
+Depends on: EF-034
+Verify with: implement the behavioral facets of context plane observability: launcher write-side manifest, on-demand viewer behavior, multi-level adapter telemetry conformance (at least two adapters at different levels), and event envelope conforming to Track 1 schema.
+Notes: Split from EF-034 to separate the metadata contract (EF-034) from the behavioral artifacts (EF-065). Renumbered from EF-061 after ID collision with the Agent Skills standard (EF-061 on mainline).
+
+
