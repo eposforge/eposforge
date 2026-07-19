@@ -57,9 +57,27 @@ Each entry includes (where known):
 - **Capabilities:** indexes a codebase into a graph projection
   optimized for RAG over code.
 - **Notes:** primarily designed for code, not specs. Usable for the
-  Spec Graph slot if the Adapter projects Living Specs into the
-  index as additional node kinds. Worth evaluating in instances
-  that already use Code-Graph-RAG for code retrieval.
+  Spec Graph slot **only if** the Adapter also projects Living Specs
+  into the index as first-class node kinds. Prefer evaluating as Tool
+  Transport code-structure, not as the primary Spec Graph Adapter.
+
+### codebase-memory-mcp (DeusData)
+
+- **Type:** open-source MCP structural code-graph server (tree-sitter /
+  Hybrid LSP → SQLite graph).
+- **Cost tier:** free OSS (MIT); local binary, no LLM API for index.
+- **Query languages:** MCP tools + read-only openCypher subset;
+  semantic vector search (bundled embeddings).
+- **Capabilities:** functions/classes/calls/routes/cross-service;
+  change-impact; architecture overview; multi-repo edges.
+- **Notes:** **Not a Spec Graph Adapter by default.** It projects
+  **source code**, not Product Living Specs. Do not treat as Component
+  6 replacement for Cognee/ontology-grounded intent graphs. Optional
+  hybrid only if Living Specs are separately projected and authority
+  rules keep Specs as SoT for behavior. Primary fit: Tool Transport
+  code-structure alongside Spec Graph. Links:
+  https://github.com/DeusData/codebase-memory-mcp ,
+  https://deusdata.github.io/codebase-memory-mcp/ .
 
 ### Blitzy GraphRAG
 

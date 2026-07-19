@@ -50,6 +50,12 @@ Where the Spec file lives is an Adapter choice (primary product repo,
 `docs/` monorepo layout, etc.). Identity is **product_id**, not
 “whichever repo you opened.”
 
+Fulfillment may start as **conversational** surfaces (skills, agents)
+and later add **deterministic code and UIs**. When code exists, it must
+be encapsulated in code roots or code-focused repos so code-structure
+tools stay scoped — see
+[Standard 12](../../04-standards/12-code-surface-encapsulation/code-surface-encapsulation.md).
+
 ### Behavior
 
 When developing new features, agents first update the **Product** Living

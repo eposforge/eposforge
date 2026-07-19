@@ -52,15 +52,21 @@ end-to-end factory pattern with cross-component contracts.
 
 ### Code-graph and spec-graph projects
 
-Examples: Code-Graph-RAG, Blitzy GraphRAG (proprietary), various
-hand-rolled Neo4j projections.
+Examples: Code-Graph-RAG, [codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp)
+(DeusData; site [deusdata.github.io/codebase-memory-mcp](https://deusdata.github.io/codebase-memory-mcp/)),
+Blitzy GraphRAG (proprietary), various hand-rolled Neo4j projections.
 
 Common shape: indexes a codebase or documentation corpus into a graph
 and exposes queries / RAG. Strong for retrieval over large code.
+MCP-native code graphs (e.g. codebase-memory-mcp) give agents structural
+tools (`search_graph`, `trace_path`, `detect_changes`) without embedding
+an LLM in the indexer.
 
-Gap: most are read-only over code, not over **specs**. The Living
+Gap: most are read-only over **code**, not over **specs**. The Living
 Spec → Spec Graph projection (separating durable behavior description
-from implementation) is a different shape than a code graph.
+from implementation) is a different shape than a code graph. Use code
+graphs as Tool Transport **code-structure** context; do not substitute
+them for Component 6 Spec Graph over Product Living Specs.
 
 ### Physical-AI and robotics platforms
 

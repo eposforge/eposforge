@@ -654,6 +654,15 @@ ef:MultiGraphArchitecture rdf:type ef:Concept, skos:Concept ;
     ef:lifecycleStatus ef:StatusAdopted ;
     skos:related ef:SpecGraphComponent, ef:BacklogComponent, ef:ScopeSpecGraph, ef:FactorySpecGraph .
 
+ef:CodeSurfaceEncapsulation rdf:type ef:Concept, skos:Concept ;
+    skos:prefLabel "Code-surface encapsulation" ;
+    skos:altLabel "conversational-first delivery", "declared code roots" ;
+    skos:definition "Product delivery starts conversational (agents, skills, structured intent) and promotes to deterministic source code and UIs when use demands it. Implementation code and UI code must live in declared code roots (e.g. src/, apps/) or code-focused repos so Tool Transport code-structure tools can be scoped via product registry code_globs — not scattered through prose-primary knowledge trees or whole-repo indexed as a code graph. See Standard 12." ;
+    skos:inScheme ef:KnowledgeTree ;
+    ef:kind ef:NodeKindConcept ;
+    ef:lifecycleStatus ef:StatusAdopted ;
+    skos:related ef:LivingSpecComponent, ef:ToolTransportComponent, ef:PairedChangeEnforcement, ef:SpecGraphComponent .
+
 ef:PairedChangeEnforcement rdf:type ef:Concept, skos:Concept ;
     skos:prefLabel "Paired-Change Enforcement" ;
     skos:definition "Fail-closed CI and product-registry machinery that keeps Product Living Specs current: code path changes require Spec path changes or a finite audited exemption; Spec-derived tests must stay green. Ceremony (light in-place Spec edit vs heavy specify episode) may scale with ambiguity; Spec fidelity must not. Prompt-only compliance is non-conformant. Without this gate Living Specs rot and code becomes de facto process truth. See Standard 11, Component 2, Component 9." ;

@@ -52,7 +52,7 @@ least:
 | --- | --- |
 | `product_id` | Stable identity |
 | `spec_paths` | Paths that constitute the **current** Living Spec (HEAD), not episode folders |
-| `code_globs` | Paths whose change is treated as product fulfillment code |
+| `code_globs` | Paths whose change is treated as product fulfillment code — **declared code surfaces only** (Standard 12); not whole prose-primary trees |
 | `exemption_policy` | Which exemption codes are allowed, by author class (human vs agent) |
 
 CI MUST map every changed file in a PR to zero or more `product_id`s via
