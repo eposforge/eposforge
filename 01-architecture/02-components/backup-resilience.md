@@ -5,7 +5,7 @@ maturity: draft
 source_of_truth: yes
 ---
 
-# Component 16: Backup / Data Resilience
+# Backup / Data Resilience
 
 ## Purpose
 
