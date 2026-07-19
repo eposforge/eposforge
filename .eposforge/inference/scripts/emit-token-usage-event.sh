@@ -60,7 +60,7 @@ for n in "$prompt_tokens" "$completion_tokens" "$total_tokens" "$latency_ms"; do
   fi
 done
 
-repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 emit_script="${repo_root}/.eposforge/audit-observability/jsonl-event-sink/scripts/emit-event.sh"
 
 if [[ ! -x "$emit_script" ]]; then

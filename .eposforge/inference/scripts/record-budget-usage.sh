@@ -31,7 +31,7 @@ if [[ ! "$consumed_tokens" =~ ^[0-9]+$ ]]; then
   exit 2
 fi
 
-repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 counters_path="${INFERENCE_BUDGET_COUNTERS:-${repo_root}/.eposforge/.audit/inference-budget-counters.json}"
 
 python3 - "$counters_path" "$repo_key" "$consumed_tokens" <<'PY'

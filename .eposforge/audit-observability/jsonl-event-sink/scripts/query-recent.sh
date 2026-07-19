@@ -21,7 +21,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../../.." && pwd)"
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
 sink_path="${EPOS_AUDIT_SINK:-${repo_root}/.eposforge/.audit/events.jsonl}"
 
 python3 - "$sink_path" "$event_type" "$limit" <<'PY'
