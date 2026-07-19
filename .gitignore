@@ -71,3 +71,7 @@ state.json
 CLAUDE.md
 CLAUDE.local.md
 GEMINI.md
+
+# Operator-local vault pointer for epos-secrets (adopter path stays out of the repo)
+secrets-home.local
+.eposforge/secrets-key-management/secrets-home.local
