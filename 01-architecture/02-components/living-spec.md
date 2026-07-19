@@ -58,9 +58,28 @@ step: intended observable behavior, inputs/outputs, dependencies,
 non-functional bounds, and acceptance criteria. Implementation then
 fulfills the Spec.
 
+As the product develops, the Living Spec is **continuously refined**
+(clarified, edged, corrected). That refinement *is* product work, not a
+separate optional documentation track. The hard line between “intent”
+and “implementation choice” is judged by: **if the prior Spec would
+become false or incomplete as a description of the product, the Spec
+must change in the same work.** When unsure, update the Spec.
+
 Agents update the Living Spec and the affected fulfillment artifacts in
 the same change (**paired-change**). A change that modifies product
-behavior without updating the Product Living Spec is rejected.
+behavior without updating the Product Living Spec is rejected — and
+must be **rejected by CI**, not only by prompt compliance. See
+[Source Control + CI](./source-control-ci.md) and
+[Standard 11: Paired-Change Enforcement](../../04-standards/11-paired-change-enforcement/paired-change-enforcement.md).
+
+### Ceremony vs fidelity
+
+| | |
+| --- | --- |
+| **Fidelity (always)** | Product meaning changes ⇒ Product Living Spec (HEAD) changes in the same gated change set (or a narrow audited exemption that meaning did not change). |
+| **Ceremony (optional scale)** | Large/ambiguous work MAY use a heavy authoring Adapter (e.g. Spec Kit-style episode) to draft a delta, then **fold into** the Product Living Spec. Small fixes use a **light path**: edit the same Spec file + code. |
+| **Never** | “Too small / low risk for Spec ⇒ code only.” That is how Specs rot. |
+| **Never** | Treat episode folders as the Living Spec or as the Spec Graph corpus. |
 
 Episodic packages (Spec Kit `specify` folders, one-off plans) are not
 Living Specs. Applied work folds into the Product Living Spec; episodes
@@ -79,8 +98,13 @@ Any Adapter for this slot must:
 - Define the **paired-change rule**: any change that affects observable
   **product** behavior must update the Product Living Spec and the
   fulfillment artifacts in the same commit / PR (or linked change set).
-- Provide a paired-change check enforceable in CI (see component 9,
-  [Source Control + CI](./source-control-ci.md)).
+- Require that paired-change be enforced as a **fail-closed CI gate**
+  per component 9 and
+  [Standard 11](../../04-standards/11-paired-change-enforcement/paired-change-enforcement.md)
+  (product registry, default code⇒Spec rule, finite audited exemptions,
+  Spec-derived tests). Prompt-only enforcement is non-conformant.
+- Support a **light path** (in-place Spec HEAD edit) so full specify
+  pipelines are not the only way to stay compliant.
 - Define minimum content: purpose, observable behavior, inputs /
   outputs, dependencies, non-functional bounds, versioning policy.
 - Declare inputs/outputs and non-functional bounds with enough precision
@@ -126,3 +150,6 @@ In addition to the universal fields in
 
 See [../../03-research/](../../03-research/) for survey of Living-Spec
 templates and paired-change check tooling.
+
+Enforcement (normative for instances that claim Living Spec maturity):
+[Standard 11: Paired-Change Enforcement](../../04-standards/11-paired-change-enforcement/paired-change-enforcement.md).

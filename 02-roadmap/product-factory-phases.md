@@ -60,8 +60,9 @@ reference implementations may need extension.
 
 ## Phase C — Living Spec Rollout
 
-**Goal:** every Product has a current Living Spec; paired-change
-enforcement is active.
+**Goal:** every Product has a current Living Spec; **fail-closed**
+paired-change enforcement is active so Specs cannot rot under code
+churn.
 
 By the end of Phase C:
 
@@ -71,11 +72,25 @@ By the end of Phase C:
   backfilled from existing documentation where needed.
 - New Products ship with a Living Spec from the first intentional
   behavior definition.
-- Source Control + CI (component 9) enforces the paired-change check.
-  Soft warning at first, hard fail within two weeks.
+- A **product registry** maps each `product_id` to `spec_paths` and
+  `code_globs` (see
+  [Standard 11](../04-standards/11-paired-change-enforcement/paired-change-enforcement.md)).
+- Source Control + CI (component 9) enforces Standard 11:
+  - Default: product code change without Spec path change **fails CI**
+    unless a finite audited exemption is declared.
+  - Spec-derived tests (and recommended Spec lint) are required checks.
+  - Agents cannot dismiss required checks; light path = in-place Spec
+    HEAD edit + code (no mandatory full specify pipeline).
+- Soft warning may be used for at most two weeks after introduction;
+  then hard fail.
 
-**Risk:** low-medium. Paired-change enforcement surfaces sloppy
-commit habits — expect a week of friction.
+**Risk:** medium. Expect friction until light-path Spec edits become
+habit; exemption policy will be gamed if allowlists are vague — keep
+them finite and audited.
+
+**Verify (conformance sketch):** PR with only product code fails; PR
+with Spec + code can pass paired-change; pure-refactor exemption still
+runs Spec-derived tests.
 
 ---
 

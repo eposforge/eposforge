@@ -18,6 +18,8 @@ This section is the source of truth for cross-cutting standards adopted by EposF
 - [07-adapter-layout-mirror/adapter-layout-mirror.md](07-adapter-layout-mirror/adapter-layout-mirror.md)
 - [08-agent-coding-guidelines/agent-coding-guidelines.md](08-agent-coding-guidelines/agent-coding-guidelines.md)
 - [09-paired-detection/paired-detection.md](09-paired-detection/paired-detection.md)
+- [10-ungameable-gate/ungameable-gate.md](10-ungameable-gate/ungameable-gate.md)
+- [11-paired-change-enforcement/paired-change-enforcement.md](11-paired-change-enforcement/paired-change-enforcement.md) — fail-closed CI so Product Living Specs stay current (product registry, code⇒Spec gate, exemptions, Spec-derived tests)
 
 ## Superseded standards
 

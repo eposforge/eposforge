@@ -654,6 +654,15 @@ ef:MultiGraphArchitecture rdf:type ef:Concept, skos:Concept ;
     ef:lifecycleStatus ef:StatusAdopted ;
     skos:related ef:SpecGraphComponent, ef:BacklogComponent, ef:ScopeSpecGraph, ef:FactorySpecGraph .
 
+ef:PairedChangeEnforcement rdf:type ef:Concept, skos:Concept ;
+    skos:prefLabel "Paired-Change Enforcement" ;
+    skos:definition "Fail-closed CI and product-registry machinery that keeps Product Living Specs current: code path changes require Spec path changes or a finite audited exemption; Spec-derived tests must stay green. Ceremony (light in-place Spec edit vs heavy specify episode) may scale with ambiguity; Spec fidelity must not. Prompt-only compliance is non-conformant. Without this gate Living Specs rot and code becomes de facto process truth. See Standard 11, Component 2, Component 9." ;
+    skos:inScheme ef:KnowledgeTree ;
+    ef:kind ef:NodeKindConcept ;
+    ef:lifecycleStatus ef:StatusAdopted ;
+    skos:broader ef:LivingSpecComponent ;
+    skos:related ef:SpecGraphComponent, ef:SourceControlCIComponent .
+
 ef:IndependentBacklogGraph rdf:type ef:Concept, skos:Concept ;
     skos:prefLabel "Independent File-Based Backlog Graph" ;
     skos:definition "Backlog items (the work) live in their own independent file-based graph, separate from Spec Graph projections (Component 6 Scope/Factory Spec Graphs; see EF-056 / EF-057). Structured Markdown provides the explicit skeleton: issues are nodes (Status, Effort, Tags, Fix surface, etc. attributes); Depends on:/Blocks:/Supersedes: are directed edges; Tags supply communities. GraphRAG-style capabilities (critical-path, thematic views, traversal) are supplied by separate tooling and skills over the files (aggregate.sh, portfolio-review, etc.). The capability lives in the tooling layer. Disk (the Markdown) is canonical; no Cognee dependency for the core backlog graph. See .eposforge/backlog/file-based-backlog/file-based-backlog.md and EF-056/057." ;
