@@ -5,7 +5,7 @@ maturity: draft
 source_of_truth: yes
 ---
 
-# Component 14: Content Safety
+# Content Safety
 
 ## Purpose
 
