@@ -97,8 +97,8 @@ factory.
 **Memory and state** — components that record and project the factory's
 work over time.
 
-- [living-spec.md](../02-components/living-spec.md) — durable spec
-  in each deliverable.
+- [living-spec.md](../02-components/living-spec.md) — durable current
+  Spec per Product (or platform capability).
 - [spec-graph.md](../02-components/spec-graph.md) — queryable
   projection of all Living Specs.
 - [audit-observability.md](../02-components/audit-observability.md)
@@ -151,24 +151,27 @@ audit channel.
 ## Living Spec → Spec Graph Flow
 
 ```text
-Each deliverable repo
-    │  Living Spec (canonical, paired-change protected)
+Each Product (one Living Spec = HEAD of product intent)
+    │  may span multiple implementation repos
+    │  paired-change protected
     ▼
 Source Control + CI emits a post-merge event
     │
     ▼
 Spec Graph Adapter reads the changed Living Specs
     │  Projects into nodes / edges / embeddings per Adapter format
+    │  (Scope Spec Graphs → Factory Spec Graph composition)
     ▼
 Spec Graph (queryable surface)
     │  Reuse detection, dependency mapping, change-impact analysis,
-    │  RAG over all specs
+    │  RAG over product intent
     ▼
 Router consults the graph during decomposition and selection
 ```
 
 The Spec Graph is a projection. If it disagrees with a Living Spec,
-re-project. Living Specs win.
+re-project. Living Specs win. Episode/specify folders are not Living
+Specs and are not the primary graph corpus.
 
 ---
 

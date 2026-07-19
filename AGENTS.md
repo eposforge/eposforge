@@ -84,9 +84,11 @@ cross-repo host-stack coordination, and the migration design source
 | **TARGET_SHAPE_OF** | Relationship: an entity is on the target side of a Migration. |
 | **Phase 0–4** | Platform Factory maturity ladder (Foundation → Full Autonomy). |
 | **Phase A–F** | Product Factory maturity ladder (Registry → Level 5 gate). |
-| **Living Spec** | A machine-readable spec that travels with an artifact and drives agent behavior. |
-| **Spec Graph** | Component 6: queryable projection of Living Specs. Prefer **Scope Spec Graph** (one scope's projection, e.g. this repo's Cognee corpus) vs **Factory Spec Graph** (collective multi-scope factory-wide capability). See `01-architecture/02-components/spec-graph.md`. |
-| **Scope Spec Graph** | Projection of Living Specs in one ownership scope (pattern, adopter platform, IAC, one product). |
+| **Product** | Operator-authored application/capability (Product Factory). **Unit of Living Spec attachment** — one Product, one current Living Spec (even if multi-repo). |
+| **Deliverable** | Shippable **output** (release, deployable unit) that fulfills a Product — not the Spec attachment unit; not “each git repo.” |
+| **Living Spec** | Current HEAD of intent for a **Product** (or platform capability at the same grain). Not Spec Kit episodes; not one Spec per module repo of the same product. Paired-change with fulfillment code. |
+| **Spec Graph** | Component 6: queryable projection of Living Specs. Prefer **Scope Spec Graph** vs **Factory Spec Graph**. See `01-architecture/02-components/spec-graph.md`. |
+| **Scope Spec Graph** | Projection of Living Specs in one ownership scope (pattern, adopter platform, IAC, product scope). |
 | **Factory Spec Graph** | Logical factory-wide Spec Graph: all Scope Spec Graphs + ontology mappings + orchestration. |
 
 - Ontology + Taxonomy: `00-vision/01-ontology.ttl` is the source combining the domain ontology (dark factory pattern in OWL) and knowledge taxonomy (SKOS + ef:kind for the canonical tree). Editorial workflow is governed by the maintain-ontology skill (and evolving 04-standards policy).

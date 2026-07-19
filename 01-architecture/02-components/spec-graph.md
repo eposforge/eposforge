@@ -23,7 +23,7 @@ ever disagree, the specs win and the graph is re-projected.
 
 | Term | Meaning |
 | --- | --- |
-| **Scope Spec Graph** | Projection of the Living Specs (or declared Living Spec corpus) **in one scope** — e.g. the EposForge pattern repo, an Adopter Platform Spec, IAC/substrate docs, or a single product repo. One ownership boundary, one rebuildable store (dataset, instance, or equivalent). |
+| **Scope Spec Graph** | Projection of the Living Specs (Products' / platform capabilities' current intent, or a declared current corpus) **in one scope** — e.g. the EposForge pattern, an Adopter Platform Spec, IAC/substrate, or a product scope. One ownership boundary, one rebuildable store (dataset, instance, or equivalent). |
 | **Factory Spec Graph** | The **collective** factory-wide Spec Graph: the set of Scope Spec Graphs for that factory instance, plus the shared ontology, explicit cross-scope mappings, and agent/tool orchestration that answers questions over **every** Living Spec in the factory. It is a **logical** system, not a requirement for one physical graph containing every scope's corpus. |
 
 Component 6's factory-scale obligations apply to the **Factory Spec

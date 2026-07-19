@@ -29,7 +29,13 @@ See `skills/portfolio-review/SKILL.md` and the architecture plan/capture (tracke
 
 ## Living Spec Contract
 
-The Living Spec contract notes the distributed-corpus reality for pattern-scale and adopter-scale work. There is no change to the single `SPEC.md` rule for ordinary deliverables.
+Living Spec attaches to a **Product** (one current Spec per product),
+not to every repo or shippable deliverable. Multi-repo products share
+one Product Living Spec; specify episodes fold into it. See
+`01-architecture/02-components/living-spec.md`.
+
+Pattern-scale / adopter-scale work may use a **declared current corpus**
+as one logical Spec (not an unbounded episode pile).
 
 ## Backlog Adapter Roles
 

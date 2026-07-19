@@ -53,11 +53,19 @@ those components without locking the factory to any one vendor.
 
 ### 3. Product Engine
 
-The factory exists to produce things. Software products, platform
-automations, physical workflows — all are deliverables. Each deliverable
-ships with a **Living Spec** that travels with it for its lifetime; all
-Living Specs are projected into a queryable **Spec Graph** so the factory
-can detect reuse, trace dependencies, and reason about change impact.
+The factory exists to produce **Products** (and platform capabilities):
+coherent applications and automations the operator authors. Each
+**Product** has one current **Living Spec** (HEAD of product intent)
+for its lifetime; those Specs are projected into a queryable **Spec
+Graph** so the factory can detect reuse, trace dependencies, and reason
+about change impact.
+
+**Deliverables** are shippable **outputs** (releases, deployed units)
+that fulfill a Product — not the Spec attachment unit, and not “one Spec
+per repo.” Multi-repo products still have **one** Product Living Spec.
+Episodic specify runs fold into that Spec; they do not replace it. See
+Component 2
+([living-spec.md](../01-architecture/02-components/living-spec.md)).
 
 ## Design Principles
 

@@ -41,7 +41,7 @@ ef:Platform rdf:type owl:Class ;
 
 ef:Product rdf:type owl:Class ;
     rdfs:label "Product" ;
-    rdfs:comment "Software (or physical workflow) authored by the operator. The term 'Software' is avoided as a top-level term because it cannot cleanly distinguish operator-authored applications (Product) from third-party server apps (Platform)." .
+    rdfs:comment "An operator-authored application or capability in the Product Factory domain (not third-party platform apps). Unit of Living Spec attachment for product work: one Product has one current Living Spec (HEAD of product intent), even if implementation spans multiple repos. Distinct from Deliverable (shippable output/instance) and from Spec Kit episode folders. Multi-repo products still have one Product Living Spec; repos fulfill it." .
 
 ef:Component rdf:type owl:Class ;
     rdfs:label "Component" ;
@@ -79,7 +79,7 @@ ef:Spec rdf:type owl:Class ;
 ef:LivingSpec rdf:type owl:Class ;
     rdfs:subClassOf ef:Spec ;
     rdfs:label "Living Spec" ;
-    rdfs:comment "A canonical spec document that lives inside every factory deliverable repo." .
+    rdfs:comment "Current canonical intent (HEAD) for one Product — or one Platform Factory capability at the same grain. Not one Spec per repo/module of a multi-repo product, and not a Spec Kit episode folder. Episodes fold into this Spec when applied. Fulfillment artifacts (code across repos) implement it. Projected into Scope / Factory Spec Graph. See Component 2 contract." .
 
 ef:Phase rdf:type owl:Class ;
     rdfs:label "Phase" ;
@@ -95,7 +95,7 @@ ef:Principle rdf:type owl:Class ;
 
 ef:Deliverable rdf:type owl:Class ;
     rdfs:label "Deliverable" ;
-    rdfs:comment "A software, platform, or physical output produced by a factory." .
+    rdfs:comment "Shippable factory output (release artifact, deployed unit, built package, etc.) produced by a Factory (ef:produces). Result of building a Product or platform capability — not the unit of Living Spec attachment. Living Spec describes the Product (or platform capability); deliverables fulfill/ship it. Avoid equating Deliverable with Product or with 'each git repo'." .
 
 ef:Constraint rdf:type owl:Class ;
     rdfs:label "Constraint" ;
