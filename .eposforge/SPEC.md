@@ -38,10 +38,15 @@ architecture contracts versus repo-instance implementations.
 ## Component slot
 
 This tooling implements **Component 6: Spec Graph** for the EposForge
-repo itself. This is one of many possible Spec Graph implementations;
-the slot contract is defined in
+repo itself — specifically a **Scope Spec Graph** for the pattern +
+references scope (not the Factory Spec Graph by itself). Other scopes
+(adopter platform, product repos) get their own Scope Spec Graphs;
+together with ontology mappings and orchestration they form the
+Factory Spec Graph. See
 [../01-architecture/02-components/spec-graph.md](../01-architecture/02-components/spec-graph.md).
-It is a concrete reference implementation of the pattern documented in
+This is one of many possible Spec Graph implementations; the slot
+contract is defined in that file. It is a concrete reference
+implementation of the pattern documented in
 [../03-research/01-architecture/02-components/spec-graph/graphrag-neo4j-integration.md](../03-research/01-architecture/02-components/spec-graph/graphrag-neo4j-integration.md).
 
 ---

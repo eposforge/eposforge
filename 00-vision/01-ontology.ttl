@@ -135,7 +135,7 @@ ef:ToolTransport rdf:type owl:Class ;
 ef:SpecGraph rdf:type owl:Class ;
     rdfs:subClassOf ef:Adapter ;
     rdfs:label "Spec Graph" ;
-    rdfs:comment "A queryable projection of every Living Spec across the factory." .
+    rdfs:comment "Adapter kind that fulfills Component 6. Implements one or more Scope Spec Graphs and/or participates in the Factory Spec Graph (collective multi-scope projection of Living Specs). See ef:ScopeSpecGraph and ef:FactorySpecGraph." .
 
 ef:ExecutionSandbox rdf:type owl:Class ;
     rdfs:subClassOf ef:Adapter ;
@@ -494,15 +494,17 @@ ef:relationshipEdge rdf:type owl:DatatypeProperty ;
 
 ef:EposForgeMCPUsage rdf:type ef:Guidance, skos:Concept ;
     skos:prefLabel "EposForge MCP usage" ;
-    skos:definition """Adopter agents should start here. The EposForge Spec Graph is exposed via the Cognee MCP (recall, graph queries).
+    skos:definition """Adopter agents should start here. The EposForge pattern-scope Spec Graph (not the whole Factory Spec Graph) is exposed via the Cognee MCP (recall, graph queries) over the framework repo corpus.
 Preferred access: Use SKOS (skos:inScheme on ef:KnowledgeTree, skos:broader/narrower, skos:prefLabel) for knowledge tree navigation and classification.
 Use OWL domain model (ef:kind, ef:fulfillsSlot, ef:maturesTo, etc.) for the dark factory pattern itself.
+For product or adopter implementation questions, query that scope's Scope Spec Graph (or disk) — do not assume pattern-scope recall contains product Living Specs.
 Always begin with recall("EposForge MCP usage") or recall("EposForge Canonical Knowledge Tree").
 See the scopeNote on ef:KnowledgeTree for current access model. This node is the canonical entry point for proper MCP usage.""" ;
     skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindGuidance ;
     ef:lifecycleStatus ef:StatusAdopted ;
-    skos:broader ef:KnowledgeTree .
+    skos:broader ef:KnowledgeTree ;
+    skos:related ef:ScopeSpecGraph, ef:FactorySpecGraph .
 
 ef:RandianConceptFormation rdf:type ef:Tenet, skos:Concept ;
     skos:prefLabel "Randian concept formation" ;
@@ -624,17 +626,37 @@ ef:ProductPromotion rdf:type ef:Concept, skos:Concept ;
 
 ### Knowledge-Tree Individuals — Multi-Graph and Backlog Separation (EF-056)
 
-ef:MultiGraphArchitecture rdf:type ef:Concept, skos:Concept ;
-    skos:prefLabel "Multi-Graph Architecture" ;
-    skos:definition "One graph per scope (EposForge pattern + references, Adopter Platform Spec such as primary adopter repo, IAC, product repos). Graphs are connected by the shared ontology (as the mapping layer using ef:fulfillsSlot, ef:adoptsFrom, etc.) plus explicit mappings and deliberate agent orchestration (query relevant dataset(s) and synthesize). Enables scoped GraphRAG over pure file RAG. Disk (Living Specs + backlog markup) remains canonical. See EF-056/057 and the architecture capture." ;
+ef:ScopeSpecGraph rdf:type ef:Concept, skos:Concept ;
+    skos:prefLabel "Scope Spec Graph" ;
+    skos:altLabel "scoped Spec Graph", "per-scope Spec Graph" ;
+    skos:definition "A Spec Graph projection of the Living Specs (or declared Living Spec corpus) in one ownership scope — e.g. EposForge pattern + references, an Adopter Platform Spec, IAC/substrate, or a single product repo. One rebuildable store or dataset. Disk remains canonical for that scope. Not automatically the Factory Spec Graph; product intent must not be assumed present in the pattern-scope graph. See Component 6 contract and ef:MultiGraphArchitecture." ;
     skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindConcept ;
     ef:lifecycleStatus ef:StatusAdopted ;
-    skos:related ef:SpecGraphComponent, ef:BacklogComponent .
+    skos:broader ef:SpecGraphComponent ;
+    skos:related ef:FactorySpecGraph, ef:MultiGraphArchitecture .
+
+ef:FactorySpecGraph rdf:type ef:Concept, skos:Concept ;
+    skos:prefLabel "Factory Spec Graph" ;
+    skos:altLabel "collective Spec Graph", "factory-wide Spec Graph" ;
+    skos:definition "The collective, factory-wide Spec Graph capability: the set of Scope Spec Graphs for a factory instance, plus the shared ontology, explicit cross-scope mappings, and agent/tool orchestration that answers reuse, dependency, and impact questions over every Living Spec in the factory. Logical system — not a requirement that one physical graph hold every scope's corpus. Component 6 factory-scale obligations apply here. Implemented via multi-graph (ef:MultiGraphArchitecture), not by stuffing all product markdown into the pattern-scope projection." ;
+    skos:inScheme ef:KnowledgeTree ;
+    ef:kind ef:NodeKindConcept ;
+    ef:lifecycleStatus ef:StatusAdopted ;
+    skos:broader ef:SpecGraphComponent ;
+    skos:related ef:ScopeSpecGraph, ef:MultiGraphArchitecture .
+
+ef:MultiGraphArchitecture rdf:type ef:Concept, skos:Concept ;
+    skos:prefLabel "Multi-Graph Architecture" ;
+    skos:definition "How the Factory Spec Graph is usually deployed: one Scope Spec Graph per scope (EposForge pattern + references, Adopter Platform Spec, IAC, product repos). Scope graphs are connected by the shared ontology (ef:fulfillsSlot, ef:adoptsFrom, etc.) plus explicit mappings and deliberate agent orchestration (query relevant dataset(s) and synthesize). Not automatic federation. Enables scoped GraphRAG over pure file RAG. Disk (Living Specs + backlog markup) remains canonical. See EF-056/057, Component 6 (Scope vs Factory Spec Graph), and the architecture capture." ;
+    skos:inScheme ef:KnowledgeTree ;
+    ef:kind ef:NodeKindConcept ;
+    ef:lifecycleStatus ef:StatusAdopted ;
+    skos:related ef:SpecGraphComponent, ef:BacklogComponent, ef:ScopeSpecGraph, ef:FactorySpecGraph .
 
 ef:IndependentBacklogGraph rdf:type ef:Concept, skos:Concept ;
     skos:prefLabel "Independent File-Based Backlog Graph" ;
-    skos:definition "Backlog items (the work) live in their own independent file-based graph, separate from the main Spec Graph (Component 6; see EF-056 / EF-057). Structured Markdown provides the explicit skeleton: issues are nodes (Status, Effort, Tags, Fix surface, etc. attributes); Depends on:/Blocks:/Supersedes: are directed edges; Tags supply communities. GraphRAG-style capabilities (critical-path, thematic views, traversal) are supplied by separate tooling and skills over the files (aggregate.sh, portfolio-review, etc.). The capability lives in the tooling layer. Disk (the Markdown) is canonical; no Cognee dependency for the core backlog graph. See .eposforge/backlog/file-based-backlog/file-based-backlog.md and EF-056/057." ;
+    skos:definition "Backlog items (the work) live in their own independent file-based graph, separate from Spec Graph projections (Component 6 Scope/Factory Spec Graphs; see EF-056 / EF-057). Structured Markdown provides the explicit skeleton: issues are nodes (Status, Effort, Tags, Fix surface, etc. attributes); Depends on:/Blocks:/Supersedes: are directed edges; Tags supply communities. GraphRAG-style capabilities (critical-path, thematic views, traversal) are supplied by separate tooling and skills over the files (aggregate.sh, portfolio-review, etc.). The capability lives in the tooling layer. Disk (the Markdown) is canonical; no Cognee dependency for the core backlog graph. See .eposforge/backlog/file-based-backlog/file-based-backlog.md and EF-056/057." ;
     skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindConcept ;
     ef:lifecycleStatus ef:StatusAdopted ;
@@ -759,11 +781,11 @@ ef:SecretsKeyManagementComponent rdf:type ef:Component, skos:Concept ;
 
 ef:BacklogComponent rdf:type ef:Component, skos:Concept ;
     skos:prefLabel "Backlog" ;
-    skos:definition "Backlog data lives in its own independent file-based graph (separate from the main Spec Graph in Component 6; see EF-056 / EF-057 and ef:IndependentBacklogGraph). Structured Markdown supplies explicit nodes (issues with attributes), directed edges (Depends on, Blocks), and Tag communities; GraphRAG-style views are provided by separate tooling (aggregate, portfolio-review). Disk (Markdown) is canonical." ;
+    skos:definition "Backlog data lives in its own independent file-based graph (separate from Scope/Factory Spec Graph projections in Component 6; see EF-056 / EF-057 and ef:IndependentBacklogGraph). Structured Markdown supplies explicit nodes (issues with attributes), directed edges (Depends on, Blocks), and Tag communities; GraphRAG-style views are provided by separate tooling (aggregate, portfolio-review). Disk (Markdown) is canonical." ;
     skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindComponent ;
     ef:componentMaturity ef:MaturityShipped ;
-    rdfs:comment "file-based-backlog adapter installed: per-repo markdown backlog files under backlog/ with EF- (and adopter-specific) IDs (with repo-scoped prefixes). Beads (bd, Dolt-backed) is available via Gas Town at adopter instances as a complementary agent-facing ledger. The independent backlog graph (items) is distinct from backlog mechanics projected into the main Spec Graph. See ef:MultiGraphArchitecture, ef:IndependentBacklogGraph, and the file-based-backlog Living Spec." ;
+    rdfs:comment "file-based-backlog adapter installed: per-repo markdown backlog files under backlog/ with EF- (and adopter-specific) IDs (with repo-scoped prefixes). Beads (bd, Dolt-backed) is available via Gas Town at adopter instances as a complementary agent-facing ledger. The independent backlog graph (items) is distinct from backlog mechanics projected into Scope Spec Graphs. See ef:MultiGraphArchitecture, ef:ScopeSpecGraph, ef:IndependentBacklogGraph, and the file-based-backlog Living Spec." ;
     skos:broader ef:PillarProductEngine .
 
 ### Adapter Status Individuals

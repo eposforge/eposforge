@@ -56,13 +56,19 @@ Adapter Layout Mirror is too narrow for full single-repo platform adopters like 
   - Graphs contain instantiated relationships (e.g., the primary adopter gastown adoptsFrom EposForge reference).
   - Already partials: adoption-links.ttl, reference-implementations.ttl, adopter-recall.py (sanitizes paths per EF-011, adds maturity tags per EF-012).
 - **Multi-graph architecture** (core model):
-  - One graph per scope: EposForge (pattern + references), the primary adopter (adoption + implementation), IAC, each product repo.
-  - Agents get access to whichever graph(s) needed for the task (via MCP / datasets).
+  - **Terminology (normative in Component 6 contract + ontology):**
+    - **Scope Spec Graph** — projection of Living Specs in one ownership scope (one store/dataset).
+    - **Factory Spec Graph** — collective factory-wide capability: all Scope Spec Graphs + shared ontology + mappings + orchestration. Logical system; not one physical bag of every repo's markdown.
+    - Multi-graph is how the Factory Spec Graph is usually *deployed*; it does not replace Component 6.
+  - One **Scope Spec Graph** per scope: EposForge (pattern + references), the primary adopter (adoption + implementation), IAC, each product repo.
+  - Agents get access to whichever Scope Spec Graph(s) needed for the task (via MCP / datasets). Factory-wide questions use multi-scope query + synthesize (= Factory Spec Graph).
   - Benefits: graphrag (entities/relations/communities) per scope, over pure file RAG.
   - Connection mechanism: Shared ontology (common language) + explicit mappings ingested + agent orchestration (query relevant graph(s), synthesize using ontology relations).
   - Not automatic federation; deliberate scoping + synthesis.
-  - Cognee supports `datasets` param in recall/search. Current deployment: one instance, `eposforge-sync` dataset (adopters use wrappers). Future: per-scope datasets or instances.
+  - Cognee supports `datasets` param in recall/search. Current deployment: one instance, `eposforge-sync` dataset = **pattern-scope** Spec Graph only (adopters use wrappers). Future: per-scope datasets or instances for other Scope Spec Graphs.
+  - Prefer "pattern-scope Spec Graph" over "main Spec Graph" when referring to `eposforge-sync`.
   - Adopter-recall.py pattern generalizes.
+  - Ontology: `ef:ScopeSpecGraph`, `ef:FactorySpecGraph`, `ef:MultiGraphArchitecture`.
 - **Agent access model** (critical clarification):
   - Ideal: Agents route primarily/exclusively through Cognee MCP / relevant Spec Graphs. No broad raw file access to EposForge, the primary adopter, or other repos (security, isolation, control via sandbox + agent policy + tool transport).
   - Current reality: Agents often have wide filesystem access (causes bleed, path leaks, dual search).

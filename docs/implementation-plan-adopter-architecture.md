@@ -172,6 +172,7 @@ This plan is derived directly from the captured discussion. Prioritize Phases 0-
 - EF-056 master + children EF-057 (ingestion boundaries + GraphRAG layer pilot), EF-058 (terminology + repository roles + primary Adopter Platform Spec model) created with full verify criteria in backlog.
 - Four maintained files (this plan, capture, boundaries-layers-2026-06.md, 04-standards/07-adapter-layout-mirror) + related docs (backlog component, file-based-backlog.md, preferred-mode-adoption-plan.md) updated: EF refs, "planning only" language removed, explicit primary-repo model (single Adopter Platform Spec repo holds overall product+platform docs + .eposforge/ slice; portfolio reviews run there; the primary adopter example). 
 - Terminology aligned (Adopter Platform Spec vs Platform Instance, multi-graph, independent backlog graph) in docs, ontology (new ef:MultiGraphArchitecture + ef:IndependentBacklogGraph), skills (portfolio-review, update-spec-graph), and standards.
+- Spec Graph levels named: **Scope Spec Graph** vs **Factory Spec Graph** in Component 6 contract, ontology (`ef:ScopeSpecGraph`, `ef:FactorySpecGraph`), AGENTS.md glossary, and multi-graph capture (avoids overloaded "main Spec Graph" = pattern-scope only).
 - Ontology enhanced pre-review.
 - Portfolio-review executed as checkpoint (initially in framework; clarified real view from primary adopter repo).
 - Related tooling advanced (EF-046 Tags full migration, EF-047 visibility/private roots).
