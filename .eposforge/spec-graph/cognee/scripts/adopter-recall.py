@@ -29,7 +29,7 @@ from typing import Any
 DEFAULT_DATASET = "eposforge-sync"
 SEARCH_TYPE = "GRAPH_COMPLETION"
 
-_INTERNAL_PATH_RE = re.compile(r"\binstance/[^\s`'\")\]]+")
+_INTERNAL_PATH_RE = re.compile(r"\.eposforge/[^\s`'\")\]]+")
 _MATURITY_RE = re.compile(r"\[maturity:\s*(shipped|partial|intent)\]", re.IGNORECASE)
 
 INTENT_HINTS = (

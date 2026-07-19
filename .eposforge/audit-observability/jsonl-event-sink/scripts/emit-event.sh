@@ -9,7 +9,7 @@ fi
 event_type="$1"
 payload="$2"
 
-repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../../.." && pwd)"
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
 sink_path="${EPOS_AUDIT_SINK:-${repo_root}/.eposforge/.audit/events.jsonl}"
 
 mkdir -p "$(dirname "${sink_path}")"

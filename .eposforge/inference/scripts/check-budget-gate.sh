@@ -41,7 +41,7 @@ if [[ ! "$requested_tokens" =~ ^[0-9]+$ ]]; then
   exit 2
 fi
 
-repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 config_path="${INFERENCE_BUDGET_CONFIG:-${repo_root}/.eposforge/inference/budget-policy.json}"
 counters_path="${INFERENCE_BUDGET_COUNTERS:-${repo_root}/.eposforge/.audit/inference-budget-counters.json}"
 
