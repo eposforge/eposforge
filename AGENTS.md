@@ -47,9 +47,10 @@ The bias is toward caution over speed; for trivial edits, use judgment.
    your own change created. Every changed line should trace to the request.
 4. **Goal-driven execution.** Restate the task as verifiable success
    criteria before starting — in this repo that means a named conformance
-   command, lint script, or recall query, not "make it better". For
-   multi-step work, state a brief plan with a verify step per item, and
-   loop until verified.
+   command, lint script, or recall query, not "make it better". For graded/qualitative
+   outcomes, success criteria MAY be expressed as a rubric. The scoring authority
+   for a rubric must sit external to the implementing agent. For multi-step work,
+   state a brief plan with a verify step per item, and loop until verified.
 5. **Public/private boundary hygiene.** This public repo and all its docs, plans, standards, comments, and backlog items MUST NEVER name a specific adopter repository, its short identifier, or internal paths. Use only generic language ("the primary adopter", "an adopting repository", "the Adopter Platform Spec"). Specific names are leaks. Run the sensitive-literals check (and any adopter-name check) before proposing changes. When the task touches adoption, layout, or examples, first recall the boundary rules.
 
 ---

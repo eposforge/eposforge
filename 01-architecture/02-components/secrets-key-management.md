@@ -11,7 +11,7 @@ source_of_truth: yes
 
 The slot for resolving, rotating, and redacting every secret the factory
 or its dispatched work consumes. Secrets cross every component boundary:
-the Router needs vendor API keys, Dev Products need credentials to
+the Orchestrator needs vendor API keys, Dev Products need credentials to
 external services, Tool Transport needs auth tokens, Source Control + CI
 needs deploy keys, the Inference Layer needs provider keys.
 

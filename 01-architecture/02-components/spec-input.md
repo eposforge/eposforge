@@ -11,7 +11,7 @@ source_of_truth: yes
 
 The slot for declaring intent. Operators write Spec Input documents that
 describe a desired capability — what should exist, why, and the
-non-functional bounds (privacy, cost, latency, etc.). The Router consumes
+non-functional bounds (privacy, cost, latency, etc.). The Orchestrator consumes
 Spec Input and decomposes it into work the factory can execute.
 
 Spec Input is **request-shaped** ("build me X"); it is distinct from the
@@ -23,12 +23,12 @@ durable description of an existing deliverable.
 Any Adapter for this slot must:
 
 - Accept human-authored declarative input in a defined format.
-- Normalize the input into a structured form the Router can decompose
+- Normalize the input into a structured form the Orchestrator can decompose
   (sub-tasks, acceptance criteria, non-functional requirements).
 - Validate the input against the Adapter's schema and reject malformed
   input with actionable feedback.
 - Produce output that names: target deliverable(s), success criteria,
-  privacy posture, cost ceiling (if any), and any constraints the Router
+  privacy posture, cost ceiling (if any), and any constraints the Orchestrator
   must respect during dispatch.
 - Be idempotent: re-submitting the same input yields the same normalized
   output.
@@ -40,15 +40,19 @@ In addition to the universal fields in
 
 - `input_format` — markdown, YAML, structured form, etc.
 - `decomposition_hints` — capability tags the Adapter recognizes and
-  passes to the Router.
-- `acceptance_format` — how acceptance criteria are expressed (Gherkin,
-  free text, etc.).
+  passes to the Orchestrator.
+- `acceptance_format` — how acceptance criteria are expressed (e.g. Gherkin,
+  free text, or `rubric`). A rubric expresses "what good looks like" when a
+  binary check under-specifies the outcome. It requires named dimensions,
+  per-criterion levels/weights, and an explicit passing threshold.
+  **Crucially**, the scoring authority for a rubric must sit external to the
+  implementing agent to prevent gaming.
 
 ## Boundaries
 
 - **Is:** the contract for getting intent into the factory.
 - **Is not:** a workflow engine. Spec Input does not orchestrate; it
-  hands off to the Router.
+  hands off to the Orchestrator.
 - **Is not:** the durable Living Spec. Spec Input is consumed and
   archived; Living Specs are persistent.
 

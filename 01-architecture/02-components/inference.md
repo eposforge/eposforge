@@ -5,13 +5,14 @@ maturity: draft
 source_of_truth: yes
 ---
 
-# Component 10: Inference Layer
+# Component 10: Inference Layer (Model Router / Inference Gateway)
 
 ## Purpose
 
 Provides language-model and other inference capabilities to Adapters
-that need them — primarily Dev Products and the Router, but also any
-component performing semantic reasoning. The Inference Layer abstracts
+that need them — primarily Dev Products and the Orchestrator, but also any
+component performing semantic reasoning. The Inference Layer (often called a
+"model router" in industry usage) abstracts
 away whether a model runs locally or at a vendor, what privacy posture
 applies, and how cost is metered.
 
@@ -34,7 +35,7 @@ Any Adapter for this slot must:
 - Report token / time / cost metrics back to Audit & Observability for
   every call.
 - Expose model capabilities (context window, tool calling, vision,
-  reasoning, etc.) so the Router can pick appropriately.
+  reasoning, etc.) so the Orchestrator can pick appropriately.
 - Read API credentials only via the Secrets & Key Management slot.
 
 ## Required Adapter metadata

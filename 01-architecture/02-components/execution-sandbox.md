@@ -22,39 +22,37 @@ Tool Transport.
 Any Adapter for this slot must:
 
 - Provide a fresh, isolated workspace per dispatched sub-task.
-- Apply resource limits declared by the dispatching Router (CPU, memory,
+- Declare the isolation guarantees an orchestrator may rely on:
+  - per-dispatched-task confinement (filesystem scope, non-root identity, network policy, and the absence of host-control primitives — e.g. a mounted container-runtime socket)
+  - enforced resource limits
+  - clean teardown
+- Apply resource limits declared by the dispatching Orchestrator (CPU, memory,
   wall clock, network egress budget).
 - Enforce the privacy posture of the Dev Product Adapter running inside.
-  A `privacy: local` Dev Product must run in a sandbox that prevents any
-  outbound traffic except through approved channels.
-- Tear down the sandbox cleanly after the sub-task completes; surface
-  artifacts via the agreed return path.
-- Emit audit events on creation, termination, and any policy violation
-  attempts.
+- Emit sandbox lifecycle + escape-attempt events emit to Audit & Observability (C11).
 
 ## Required Adapter metadata
 
 In addition to the universal fields in
 [../00-adapter-pattern/adapter-pattern.md](../00-adapter-pattern/adapter-pattern.md):
 
-- `isolation_mechanism` — container, VM, micro-VM, namespace, etc.
-- `network_policy_modes` — what egress controls the sandbox supports.
-- `gpu_support` — whether the sandbox can host GPU-accelerated Dev
-  Products.
-- `state_persistence` — whether the sandbox supports cross-invocation
-  state (usually no; declare explicitly).
+- `isolation_mechanism` — container / rootless-container / micro-VM / socket-proxy.
+- `isolation_strength`
+- `host_escape_surface`
+- `runtime_overhead`
 
 ## Boundaries
 
 - **Is:** the isolation layer for dispatched work.
-- **Is not:** the orchestrator (that is the Router) or the policy point
-  (that is Agent Policy); the Sandbox enforces what they decide.
+- **Is not:** the orchestrator (that is the Orchestrator) or the policy point
+  (that is Agent Policy). C8 decides whether an action is permitted; C7 bounds what a permitted action can reach — a denylist at C8 is accident-prevention, C7 is the containment boundary.
 - **Is not:** a long-lived service host. Sandboxes exist for the
   duration of a sub-task.
 
+## Phased Adoption
+
+C7 is recommended under supervised mode and mandatory once autonomous (human-off-the-loop).
+
 ## Reference implementations
 
-See [../../03-research/](../../03-research/) for the catalog (Docker
-containers, Kubernetes ephemeral pods, Firecracker micro-VMs,
-devcontainers, OpenClaw / similar agent sandboxes, etc.).
-
+See [../../03-research/](../../03-research/) for the catalog.

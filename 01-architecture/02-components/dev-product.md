@@ -14,7 +14,7 @@ artifacts (code, configuration, infrastructure, prose, etc.). Dev
 Products are the factory's hands. Concrete product choices are
 instance-specific.
 
-The Router selects a Dev Product Adapter per sub-task based on its
+The Orchestrator selects a Dev Product Adapter per sub-task based on its
 declared metadata (capabilities, privacy posture, cost). EposForge
 expects multiple Dev Product Adapters to be installed simultaneously;
 the factory chooses among them per task.
@@ -23,8 +23,8 @@ the factory chooses among them per task.
 
 Any Adapter for this slot must:
 
-- Accept a normalized sub-task descriptor from the Router (input bounds
-  defined by the Router contract, see
+- Accept a normalized sub-task descriptor from the Orchestrator (input bounds
+  defined by the Orchestrator contract, see
   [router.md](./router.md)).
 - Execute the sub-task within the Execution Sandbox
   ([execution-sandbox.md](./execution-sandbox.md)) and return one
@@ -49,7 +49,7 @@ In addition to the universal fields in
 - `task_shapes` — the kinds of sub-tasks the Adapter accepts (e.g.,
   `single-file-edit`, `multi-file-refactor`, `test-authoring`,
   `terminal-ops`, `browser-ops`).
-- `context_window` — practical limits the Router should respect.
+- `context_window` — practical limits the Orchestrator should respect.
 - `parallelism` — whether the Adapter supports concurrent invocations.
 - `streaming` — whether the Adapter streams progress to the audit log.
 - `autonomy_tos_posture` — the highest autonomy mode the Adapter's
@@ -59,13 +59,15 @@ In addition to the universal fields in
   typically `subscription-ok-through-supervised;
   api-key-required-for-autonomous`. A factory running in `autonomous`
   mode must not dispatch to an Adapter whose posture forbids it.
+- `context_telemetry_conformance` — declared level of context observability (L0 = static manifest from launcher only; L1 = + per-prompt injection events; L2 = + per-tool-call and token-level events).
 
 ## Boundaries
 
 - **Is:** the slot for tools that produce artifacts from sub-task
   descriptions.
-- **Is not:** the orchestration layer (that is the Router) or the
-  policy boundary (that is Agent Policy).
+- **Is not:** the orchestration layer (that is the Orchestrator) or the
+  policy decision point (that is Agent Policy). Payload content inspection
+  is handled by Content Safety (C14), the runtime content-safety enforcement point.
 - **Is not:** required to be AI-driven. A deterministic code generator
   can fill this slot if it conforms to the contract.
 
