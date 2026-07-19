@@ -60,15 +60,17 @@ reference implementations may need extension.
 
 ## Phase C — Living Spec Rollout
 
-**Goal:** every factory deliverable has a Living Spec; paired-change
+**Goal:** every Product has a current Living Spec; paired-change
 enforcement is active.
 
 By the end of Phase C:
 
-- Every existing factory deliverable has a `SPEC.md` (or whatever
-  format the Living Spec Adapter declares), backfilled from existing
-  documentation where needed.
-- New deliverables ship with a Living Spec from commit 1.
+- Every existing Product has a current Living Spec (`SPEC.md` or the
+  format the Living Spec Adapter declares — one Spec per Product, not
+  per repo of a multi-repo product, and not Spec Kit episode folders),
+  backfilled from existing documentation where needed.
+- New Products ship with a Living Spec from the first intentional
+  behavior definition.
 - Source Control + CI (component 9) enforces the paired-change check.
   Soft warning at first, hard fail within two weeks.
 
