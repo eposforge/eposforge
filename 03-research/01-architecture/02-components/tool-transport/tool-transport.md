@@ -18,6 +18,10 @@ swapping the Transport does not require changing Dev Products.
 
 This catalog is **not exhaustive** and **not an endorsement**.
 
+**Indexes are not candidates.** Community MCP server directories and
+hosted search APIs list other servers; they do not fill this slot.
+See [mcp-server-indexes.md](./mcp-server-indexes.md) (declined).
+
 ---
 
 ## How to read this catalog
@@ -97,6 +101,14 @@ Each entry includes (where known):
   instances that need a central policy enforcement layer above
   the transport protocol level. Adapter would front an MCP
   server and add audit / rate-limit middleware.
+
+---
+
+## Out of catalog
+
+- [MCP server indexes](./mcp-server-indexes.md) — directories and
+  search APIs over third-party MCP servers; declined as Tool Transport
+  Adapters and as first-class discovery substrate.
 
 ---
 
