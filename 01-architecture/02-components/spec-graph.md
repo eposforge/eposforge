@@ -5,7 +5,7 @@ maturity: draft
 source_of_truth: yes
 ---
 
-# Component 6: Spec Graph
+# Spec Graph
 
 ## Purpose
 
@@ -26,7 +26,7 @@ ever disagree, the specs win and the graph is re-projected.
 | **Scope Spec Graph** | Projection of the Living Specs (Products' / platform capabilities' current intent, or a declared current corpus) **in one scope** — e.g. the EposForge pattern, an Adopter Platform Spec, IAC/substrate, or a product scope. One ownership boundary, one rebuildable store (dataset, instance, or equivalent). |
 | **Factory Spec Graph** | The **collective** factory-wide Spec Graph: the set of Scope Spec Graphs for that factory instance, plus the shared ontology, explicit cross-scope mappings, and agent/tool orchestration that answers questions over **every** Living Spec in the factory. It is a **logical** system, not a requirement for one physical graph containing every scope's corpus. |
 
-Component 6's factory-scale obligations apply to the **Factory Spec
+The Spec Graph's factory-scale obligations apply to the **Factory Spec
 Graph**. Multi-graph deployment
 ([`ef:MultiGraphArchitecture`](../../00-vision/01-ontology.ttl)) is the
 usual way to implement that collective: one Scope Spec Graph per scope,
@@ -123,3 +123,4 @@ See [../../03-research/](../../03-research/) for the catalog (Neo4j,
 Code-Graph-RAG, Blitzy GraphRAG, hybrid vector + graph stores, etc.).
 Multi-graph deployment notes:
 [../../docs/adopter-architecture-discussion-capture.md](../../docs/adopter-architecture-discussion-capture.md).
+

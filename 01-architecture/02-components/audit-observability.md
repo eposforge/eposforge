@@ -5,7 +5,7 @@ maturity: draft
 source_of_truth: yes
 ---
 
-# Component 11: Audit & Observability
+# Audit & Observability
 
 ## Purpose
 
@@ -66,4 +66,5 @@ In addition to the universal fields in
 See [../../03-research/](../../03-research/) for the catalog (Loki +
 Prometheus + Tempo, ELK, OpenTelemetry stacks, custom append-only
 stores, etc.).
+
 

@@ -52,7 +52,9 @@ NUMERIC_REF_RE = re.compile(r"\bC\d{1,2}\b|\bcomponent\s+\d{1,2}[a-z]?\b", re.IG
 # Deprecated component name. "Router" capitalized as a component (not the
 # lowercase "model router" concept, and not inside an allow-marked file).
 ROUTER_REF_RE = re.compile(r"\bRouter\b")
-ALLOW_ROUTER_MARKER = "<!-- allow-router -->"
+# A file may opt out of the Router check with an HTML comment whose text
+# starts with "allow-router" (e.g. the Orchestrator contract's deprecation note).
+ALLOW_ROUTER_MARKER = "<!-- allow-router"
 
 # Markdown reference usages: shortcut [Label] and full [text][Label].
 # Group 'full' captures the label in [text][Label]; group 'short' in [Label].
