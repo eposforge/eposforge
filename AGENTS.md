@@ -72,7 +72,7 @@ cross-repo host-stack coordination, and the migration design source
 
 | Term | Meaning |
 |---|---|
-| **Component** | An architectural slot (e.g. Spec Graph, Router, Dev Product). Twelve components defined in `01-architecture/02-components/`. |
+| **Component** | An architectural slot (e.g. Spec Graph, Orchestrator, Dev Product). Components are defined in `01-architecture/02-components/`; the canonical roster is the [Component Catalog](01-architecture/02-components/README.md). |
 | **Adapter** | A concrete implementation plugged into a component slot. Self-declares `capabilities`, `privacy_posture`, `cost_hint`, `invocation_surface`. |
 | **Migration** | A named, in-flight transition between two coexisting architectural shapes (legacy and target) within an instance, with a stated completion commitment. Defined in `00-vision/01-ontology.ttl`; used by `02-roadmap/adoption-strategy.md`. |
 | **FULFILLS_SLOT** | Relationship: an Adapter fulfills a component slot. |
@@ -89,7 +89,7 @@ cross-repo host-stack coordination, and the migration design source
 | **Living Spec** | Current HEAD of intent for a **Product** (or platform capability at the same grain). Not Spec Kit episodes; not one Spec per module repo of the same product. Continuously refined; paired-change with fulfillment code. |
 | **Paired-change enforcement** | Fail-closed CI (Standard 11): product code change requires Spec path change or finite audited exemption; Spec-derived tests required. Ceremony may be light; Spec fidelity is not optional. |
 | **Code-surface encapsulation** | Standard 12: conversational-first; promote to code/UI when earned; keep implementation in declared code roots or code-focused repos so code-structure graphs (e.g. codebase-memory-mcp) stay scoped. |
-| **Spec Graph** | Component 6: queryable projection of Living Specs. Prefer **Scope Spec Graph** vs **Factory Spec Graph**. See `01-architecture/02-components/spec-graph.md`. |
+| **Spec Graph** | The queryable projection of Living Specs. Prefer **Scope Spec Graph** vs **Factory Spec Graph**. See `01-architecture/02-components/spec-graph.md`. |
 | **Scope Spec Graph** | Projection of Living Specs in one ownership scope (pattern, adopter platform, IAC, product scope). |
 | **Factory Spec Graph** | Logical factory-wide Spec Graph: all Scope Spec Graphs + ontology mappings + orchestration. |
 
@@ -114,7 +114,7 @@ cross-repo host-stack coordination, and the migration design source
 .eposforge/spec-graph/graphrag/scripts/ GraphRAG adapter scripts (rebuild.sh, index.sh, import.sh)
 .eposforge/spec-graph/scripts/hooks/    Spec-graph hook fragments composed into .git/hooks/
 .eposforge/source-control-ci/github-and-actions/scripts/ SCM/CI checks, hook composer, hook fragments
-.eposforge/SPEC.md    Living Spec for this repo's Spec Graph adapter (Component 6)
+.eposforge/SPEC.md    Living Spec for this repo's Spec Graph adapter
 ```
 
 Paired-change rule: changes to the specific files enumerated in the
