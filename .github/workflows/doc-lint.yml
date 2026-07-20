@@ -46,3 +46,20 @@ jobs:
 
       - name: Verify _index.json matches installed adapters
         run: python instance/installed/09-source-control-ci/github-and-actions/scripts/generate-installed-index.py --check
+
+  component-links:
+    name: Component reference links
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Components referenced by name, not number; links resolve
+        run: >-
+          python .eposforge/source-control-ci/github-and-actions/scripts/check-component-links.py
+          --check 00-vision 01-architecture 02-roadmap 04-standards AGENTS.md
