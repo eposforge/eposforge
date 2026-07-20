@@ -5,7 +5,7 @@ maturity: draft
 source_of_truth: no
 ---
 
-# Component 16: Backup / Data Resilience — Implementation Catalog
+# Backup / Data Resilience — Implementation Catalog
 
 Candidate Adapters for the Backup / Data Resilience slot.
 

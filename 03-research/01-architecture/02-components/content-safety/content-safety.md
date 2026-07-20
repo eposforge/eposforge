@@ -5,10 +5,10 @@ maturity: draft
 source_of_truth: no
 ---
 
-# Component 14: Content Safety — Implementation Catalog
+# Content Safety — Implementation Catalog
 
 Candidate Adapters for the Content Safety slot
-([../../../../01-architecture/02-components/14-content-safety.md](../../../../01-architecture/02-components/14-content-safety.md)).
+([../../../../01-architecture/02-components/content-safety.md](../../../../01-architecture/02-components/content-safety.md)).
 
 ## Candidates
 

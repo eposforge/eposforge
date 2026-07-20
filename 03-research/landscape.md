@@ -66,7 +66,7 @@ Gap: most are read-only over **code**, not over **specs**. The Living
 Spec → Spec Graph projection (separating durable behavior description
 from implementation) is a different shape than a code graph. Use code
 graphs as Tool Transport **code-structure** context; do not substitute
-them for Component 6 Spec Graph over Product Living Specs.
+them for the Spec Graph over Product Living Specs.
 
 ### Physical-AI and robotics platforms
 
@@ -136,14 +136,14 @@ issue or a PR. Scope this doc to "what shapes of work exist," not
 
 Concrete Adapter candidates per component slot:
 
-- [spec-input.md](./spec-input/spec-input.md) — Spec Input slot (component 1).
-- [dev-products.md](./dev-product/dev-products.md) — Dev Product slot (component 3).
-- [router.md](./router/router.md) — Router slot (component 4).
-- [spec-graph.md](./spec-graph/spec-graph.md) — Spec Graph slot (component 6).
-- [execution-sandbox.md](./execution-sandbox/execution-sandbox.md) — Execution Sandbox slot (component 7).
-- [source-control-ci.md](./source-control-ci/source-control-ci.md) — Source Control + CI slot (component 9).
-- [inference.md](./inference/inference.md) — Inference slot (component 10).
-- [audit-observability.md](./audit-observability/audit-observability.md) — Audit & Observability slot (component 11).
-- [secrets-key-management.md](./secrets-key-management/secrets-key-management.md) — Secrets & Key Management slot (component 12).
+- [spec-input.md](./spec-input/spec-input.md) — Spec Input slot.
+- [dev-products.md](./dev-product/dev-products.md) — Dev Product slot.
+- [orchestrator.md](./orchestrator/orchestrator.md) — Orchestrator slot.
+- [spec-graph.md](./spec-graph/spec-graph.md) — Spec Graph slot.
+- [execution-sandbox.md](./execution-sandbox/execution-sandbox.md) — Execution Sandbox slot.
+- [source-control-ci.md](./source-control-ci/source-control-ci.md) — Source Control + CI slot.
+- [inference.md](./inference/inference.md) — Inference slot.
+- [audit-observability.md](./audit-observability/audit-observability.md) — Audit & Observability slot.
+- [secrets-key-management.md](./secrets-key-management/secrets-key-management.md) — Secrets & Key Management slot.
 - More to come as research surveys mature.
 

@@ -12,7 +12,7 @@ source_of_truth: no
 
 Candidate Adapters for the Dev Product slot
 ([../../01-architecture/02-components/dev-product.md](../../01-architecture/02-components/dev-product.md)).
-A Dev Product accepts a sub-task descriptor from the Router and
+A Dev Product accepts a sub-task descriptor from the Orchestrator and
 produces artifacts. Many products listed here can plug into the slot
 once an Adapter exists for them.
 
@@ -119,7 +119,7 @@ A strong **dark-factory** (`autonomous`-mode) candidate additionally:
   `supervised`-mode operator surface; weak for `autonomous` economics.
 - **Notes:** strongest "watch a fleet of agents" UX for the supervised
   intermediate; its background-agents view can serve as a temporary
-  Router in `supervised` mode.
+  Orchestrator in `supervised` mode.
 
 ### Claude Code
 
@@ -238,7 +238,7 @@ A strong **dark-factory** (`autonomous`-mode) candidate additionally:
 - **BYOK:** yes — own-key + local.
 - **Autonomy / ToS:** `byok-clean-all-modes` (MIT).
 - **Notes:** more autonomous than typical Dev Products; verify
-  whether it fits the Dev Product slot or the Router slot in your
+  whether it fits the Dev Product slot or the Orchestrator slot in your
   instance.
 
 ### Cline
@@ -302,12 +302,12 @@ A strong **dark-factory** (`autonomous`-mode) candidate additionally:
 These products score strongly on building a queryable graph or semantic
 index of a codebase but weakly on autonomous artifact production. They
 are **context / retrieval** providers, not Dev Products: in EposForge
-terms they feed agents through **Tool Transport (Component 5)** as a
+terms they feed agents through **Tool Transport** as a
 **code-structure** capability (and only loosely as a Spec Graph
 complement when Living Specs are also projected — which most do not).
 They index **implementation (as-built)**, not Product Living Specs.
 Evaluate them as complements to the instance's Spec Graph (e.g. cognee),
-not as workers and **not as a replacement** for Component 6.
+not as workers and **not as a replacement** for the Spec Graph.
 
 ### Sourcegraph (Cody / Amp)
 
@@ -444,7 +444,7 @@ not as workers and **not as a replacement** for Component 6.
 - **Privacy posture:** local deployment / private cloud.
 - **Capabilities:** conversable agents, multi-agent orchestration,
   graph management & sync.
-- **Notes:** primarily a Router candidate; can also dispatch in ways
+- **Notes:** primarily a Orchestrator candidate; can also dispatch in ways
   that resemble a Dev Product for some tasks. See router research for
   the primary evaluation.
 
@@ -506,15 +506,15 @@ factory slot:
 
 In hierarchical orchestration mode, these products typically act as
 delegated workers in the Dev Product slot unless the operator
-explicitly installs one as the Router.
+explicitly installs one as the Orchestrator.
 
 - **Sourcegraph (Cody/Amp), Augment Code, Code-Graph-RAG,
   codebase-memory-mcp** are context / retrieval providers — primarily
-  **Tool Transport (Component 5)** code-structure (and only secondarily
+  **Tool Transport** code-structure (and only secondarily
   a Spec Graph complement if specs are projected into them). They feed
   agents rather than producing artifacts; they do not replace Living
   Spec → Spec Graph.
-- **Microsoft Agent Framework** is primarily a Router candidate; it
+- **Microsoft Agent Framework** is primarily a Orchestrator candidate; it
   can also dispatch in ways that resemble a Dev Product for some tasks.
 - **Blitzy / Harness AIDA / Autonomy AI** are full-platform candidates;
   they could host a Dev Product Adapter internally but would not

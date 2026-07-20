@@ -23,7 +23,7 @@ Currently populated mirrored paths:
 - [01-architecture/02-components/spec-input/](01-architecture/02-components/spec-input/)
 - [01-architecture/02-components/living-spec/](01-architecture/02-components/living-spec/)
 - [01-architecture/02-components/dev-product/](01-architecture/02-components/dev-product/)
-- [01-architecture/02-components/router/](01-architecture/02-components/router/)
+- [01-architecture/02-components/orchestrator/](01-architecture/02-components/orchestrator/)
 - [01-architecture/02-components/tool-transport/](01-architecture/02-components/tool-transport/)
 - [01-architecture/02-components/spec-graph/](01-architecture/02-components/spec-graph/)
 - [01-architecture/02-components/execution-sandbox/](01-architecture/02-components/execution-sandbox/)

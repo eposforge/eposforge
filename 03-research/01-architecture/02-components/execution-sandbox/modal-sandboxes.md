@@ -15,7 +15,7 @@ Deep-dive research on [Modal](https://modal.com/) for the **Execution
 Sandbox** slot
 ([../../../../01-architecture/02-components/execution-sandbox.md](../../../../01-architecture/02-components/execution-sandbox.md)).
 Secondary fit for the Inference Layer is summarized at the end; primary
-placement is Component 7.
+placement is the Execution Sandbox.
 
 Companion catalog entry:
 [execution-sandbox.md](./execution-sandbox.md).
@@ -48,7 +48,7 @@ adopting instance — if and only if privacy posture and cost model fit.
 |---|---|---|
 | Create / exec / terminate | `modal.Sandbox.create`, `exec`, `terminate`, `detach` | Python, JS, Go SDKs |
 | Lifecycle events | Created → Scheduled → Started → Ready → Finished | Maps to audit create/terminate |
-| Timeouts | Default 5 min; max 24 h; `idle_timeout` | Wall-clock limit from Router |
+| Timeouts | Default 5 min; max 24 h; `idle_timeout` | Wall-clock limit from Orchestrator |
 | Resource limits | `cpu` / `memory` request + hard limits; `ephemeral_disk` | OOM kill on memory hard limit |
 | Network policy | `block_network`, CIDR allowlist, domain allowlist (beta), runtime policy update (alpha) | Strong egress story |
 | Isolation | **gVisor** by default; **VM Sandboxes** (alpha/beta) for full kernel | gVisor > plain Docker namespaces |
@@ -134,10 +134,10 @@ default — blast radius limited to the sandbox container.
 
 ---
 
-## Lifecycle mapping (Router → Sandbox → Audit)
+## Lifecycle mapping (Orchestrator → Sandbox → Audit)
 
 ```text
-Router dispatches sub-task
+Orchestrator dispatches sub-task
         │
         ▼
 Adapter: Sandbox.create(
@@ -166,7 +166,7 @@ sb.terminate(wait=True); sb.detach()
         │  audit: sandbox.finished {id, returncode, duration, cost}
 ```
 
-**Wall clock:** prefer Router-declared timeout over Modal's 5-minute
+**Wall clock:** prefer Orchestrator-declared timeout over Modal's 5-minute
 default. For sessions needing >24 h, Modal recommends filesystem
 snapshot + restore (not a continuous single sandbox).
 
@@ -203,7 +203,7 @@ catalog for agent-scale isolation.
 
 2. **Audit integration** — Modal has logs, lifecycle states, and
    Enterprise audit logs; the EposForge Adapter must still emit
-   normative audit events into Audit & Observability (Component 11).
+   normative audit events into Audit & Observability.
    Do not treat the Modal dashboard as the factory system of record.
 
 3. **Egress budget** — contract mentions network egress *budget*;
@@ -234,11 +234,11 @@ catalog for agent-scale isolation.
 
 9. **Cost attribution** — pay `max(request, actual)` per second. Poor
    request sizing wastes money; missing hard limits let agents burn
-   memory. Adapter should set **hard memory/CPU limits** from Router
+   memory. Adapter should set **hard memory/CPU limits** from Orchestrator
    policy always.
 
 10. **SDK / client surface** — create/exec from outside Modal (factory
-    host or Router process) is supported; requires Modal token via
+    host or Orchestrator process) is supported; requires Modal token via
     Secrets. JS/Go clients exist for non-Python Routers.
 
 ---
@@ -272,7 +272,7 @@ Prefer **not** Modal when:
 
 Normative contract lives in the component doc; this is research only.
 
-1. **Map Router resource hints** → `cpu`, `memory`, `timeout`,
+1. **Map Orchestrator resource hints** → `cpu`, `memory`, `timeout`,
    `idle_timeout`, optional GPU type.
 2. **Map privacy / network policy** → `block_network` or allowlists;
    refuse dispatch if posture is `local`.
@@ -335,7 +335,7 @@ required.
 | Decision | Guidance |
 |---|---|
 | Pattern change needed? | **No** |
-| Primary slot | **Execution Sandbox (Component 7)** |
+| Primary slot | **Execution Sandbox** |
 | Secondary slot | Inference Layer as hosted GPU engine host (optional, separate adapter) |
 | Catalog action | Add Modal to the Execution Sandbox implementation catalog (done alongside this note) |
 | Implementation priority | **Low–medium** — pursue when an adopting instance needs bursty vendor-privacy agent sandboxes; not required for local-first self-host |

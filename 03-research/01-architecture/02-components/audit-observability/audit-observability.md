@@ -98,7 +98,7 @@ Each entry includes (where known):
 - **Capabilities:** scalable trace storage, OpenTelemetry-native,
   Grafana integration.
 - **Notes:** appropriate when the factory needs causal chains
-  across component boundaries — particularly Router → Dev Product
+  across component boundaries — particularly Orchestrator → Dev Product
   → Tool Transport → Sandbox traces.
 
 ### Jaeger

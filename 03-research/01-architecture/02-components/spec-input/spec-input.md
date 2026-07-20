@@ -12,7 +12,7 @@ source_of_truth: no
 Candidate Adapters for the Spec Input slot
 ([../../01-architecture/02-components/spec-input.md](../../01-architecture/02-components/spec-input.md)).
 A Spec Input Adapter accepts human-authored declarative intent and
-normalizes it into a structured form the Router can decompose.
+normalizes it into a structured form the Orchestrator can decompose.
 
 This catalog is **not exhaustive** and **not an endorsement**.
 

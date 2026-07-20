@@ -13,7 +13,7 @@ source_of_truth: no
 Deep-dive research on [Firecracker](https://firecracker-microvm.github.io/)
 for the **Execution Sandbox** slot
 ([../../../../01-architecture/02-components/execution-sandbox.md](../../../../01-architecture/02-components/execution-sandbox.md)).
-Primary placement is Component 7. Secondary notes on orchestration
+Primary placement is the Execution Sandbox. Secondary notes on orchestration
 wrappers and GPU-adjacent alternatives appear where relevant.
 
 Companion catalog entry:
@@ -156,7 +156,7 @@ Typical operator patterns:
 **virtio rate limiters** (bytes/sec and ops/sec on net devices) plus
 adapter-side accounting. That is closer to a true budget knob than
 Modal’s block/allowlist-only model — but the Adapter owns the mapping
-from Router “egress budget” to limiter parameters.
+from Orchestrator “egress budget” to limiter parameters.
 
 **Tool Transport bridge:** prefer **vsock** (or a host agent listening
 on a host-only path) so Dev Products do not need a general internet
@@ -165,10 +165,10 @@ without baking secrets into the rootfs.
 
 ---
 
-## Lifecycle mapping (Router → Sandbox → Audit)
+## Lifecycle mapping (Orchestrator → Sandbox → Audit)
 
 ```text
-Router dispatches sub-task
+Orchestrator dispatches sub-task
         │
         ▼
 Adapter prepares:
@@ -197,7 +197,7 @@ Graceful guest shutdown or SIGTERM Firecracker; cleanup jail, TAP, netns
         │  audit: sandbox.finished {id, exit, duration, resource_use}
 ```
 
-**Wall clock:** Adapter must enforce Router timeout; Firecracker has no
+**Wall clock:** Adapter must enforce Orchestrator timeout; Firecracker has no
 Modal-style `idle_timeout` product feature — implement with host timer.
 
 **Snapshot path:** for multi-turn agents, boot once → warm snapshot →
@@ -343,7 +343,7 @@ Normative contract lives in the component doc; this is research only.
 
 1. **Preflight host** — KVM available; cgroup v1/v2 layout understood;
    jailer + firecracker binaries version-pinned and checksummed.
-2. **Map Router resource hints** → vCPU, mem, jailer cgroups, virtio
+2. **Map Orchestrator resource hints** → vCPU, mem, jailer cgroups, virtio
    rate limiters, wall-clock timer.
 3. **Map privacy / network policy** → no-NIC / isolated netns /
    allowlist firewall; refuse if host cannot enforce requested posture.
@@ -378,10 +378,10 @@ Kata RuntimeClass when the factory already lives on Kubernetes.
 | Decision | Guidance |
 |---|---|
 | Pattern change needed? | **No** |
-| Primary slot | **Execution Sandbox (Component 7)** |
+| Primary slot | **Execution Sandbox** |
 | Catalog action | Expand Firecracker entry; link this deep-dive (done alongside this note) |
 | Implementation priority | **Medium for local-first / untrusted-code factories**; **low** if the instance is vendor-sandbox-first or GPU-heavy |
-| Best paired with | Docker (floor) and/or Modal (burst vendor) as sibling Adapters; Router selects by privacy + gpu_support + isolation strength |
+| Best paired with | Docker (floor) and/or Modal (burst vendor) as sibling Adapters; Orchestrator selects by privacy + gpu_support + isolation strength |
 | Next engineering step if pursued | Spike: jailer-booted microVM → isolated netns → run a Dev Product CLI → artifact out → destroy; measure boot/snapshot latency and failure cleanup on the actual host class |
 
 ---

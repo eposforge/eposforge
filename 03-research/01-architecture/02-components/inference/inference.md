@@ -14,7 +14,7 @@ source_of_truth: no
 Candidate Adapters for the Inference slot
 ([../../01-architecture/02-components/inference.md](../../01-architecture/02-components/inference.md)).
 An Inference Adapter serves language-model (and related) inference
-to Adapters that need it — primarily Dev Products and the Router.
+to Adapters that need it — primarily Dev Products and the Orchestrator.
 Most factories install **multiple** Inference Adapters and pick per
 request based on privacy and cost.
 
@@ -46,7 +46,7 @@ Each entry includes (where known):
   enterprise plans by default; consumer plans require opt-out.
 - **Capabilities:** strong reasoning, large context, mature tool
   calling, prompt caching, vision.
-- **Notes:** common default for the Router and for general-purpose
+- **Notes:** common default for the Orchestrator and for general-purpose
   Dev Product inference. Adapter consumes the Anthropic SDK; reads
   API key via Secrets & Key Management.
 
