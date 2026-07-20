@@ -43,7 +43,7 @@ Any Adapter for this slot must:
 Recommended candidate tools for this component include **Restic**, **autorestic**,
 **BorgBackup**, **Kopia**, **Velero** (for Kubernetes), and filesystem snapshots
 (**ZFS/btrfs**). See
-`../../03-research/01-architecture/02-components/16-backup-resilience/backup-resilience.md`
+`../../03-research/01-architecture/02-components/backup-resilience/backup-resilience.md`
 for the full catalog and trade-offs.
 
 

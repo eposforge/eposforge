@@ -62,4 +62,4 @@ jobs:
       - name: Components referenced by name, not number; links resolve
         run: >-
           python .eposforge/source-control-ci/github-and-actions/scripts/check-component-links.py
-          --check 00-vision 01-architecture 02-roadmap 04-standards AGENTS.md
+          --check 00-vision 01-architecture 02-roadmap 03-research 04-standards AGENTS.md

@@ -86,7 +86,7 @@ EposForge vocabulary.
 
 | Type | Examples |
 |---|---|
-| `component` | Spec Input, Router, Spec Graph, Inference Layer |
+| `component` | Spec Input, Orchestrator, Spec Graph, Inference Layer |
 | `adapter` | Claude Code, Neo4j CE, Gemini API |
 | `phase` | Phase 0 Foundation, Phase A Adapter Foundation |
 | `pillar` | Substrate-Agnostic Platform, AI Factory |
@@ -235,6 +235,6 @@ the Ollama OpenAI-compatible endpoint and `api_key` to any string).
 | [`instance/spec-graph/graphrag/settings.yaml`](../../instance/spec-graph/graphrag/settings.yaml) | GraphRAG project config |
 | [`instance/spec-graph/graphrag/prompts/`](../../instance/spec-graph/graphrag/prompts/) | Custom entity/relationship extraction prompts |
 | [`instance/spec-graph/graphrag/scripts/rebuild.sh`](../../instance/spec-graph/graphrag/scripts/rebuild.sh) | Index + import in one command (GraphRAG fallback) |
-| [`instance/SPEC.md`](../../instance/SPEC.md) | Living Spec for this tooling (Component 2 contract) |
+| [`instance/SPEC.md`](../../instance/SPEC.md) | Living Spec for this tooling (Living Spec contract) |
 | [`instance/adrs/001-spec-graph-graphrag-neo4j.md`](../../instance/adrs/001-spec-graph-graphrag-neo4j.md) | ADR recording adapter decisions |
 
