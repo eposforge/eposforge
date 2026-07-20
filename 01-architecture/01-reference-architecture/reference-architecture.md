@@ -7,14 +7,14 @@ source_of_truth: yes
 
 # Reference Architecture
 
-System-level view of a EposForge instance. Shows how the fourteen
+System-level view of a EposForge instance. Shows how the
 components and the universal Adapter Pattern fit together. Concrete
 hardware, networks, hostnames, and tooling choices are out of scope —
 those are instance decisions.
 
 > Read first: [adapter-pattern.md](../00-adapter-pattern/adapter-pattern.md). Each
-> component referenced here has a contract under
-> [02-components/](.../02-components/).
+> component referenced here has a contract in the
+> [Component Catalog](../02-components/README.md).
 
 ---
 
@@ -31,7 +31,7 @@ those are instance decisions.
 │  FACTORY TIER                                                     │
 │                                                                   │
 │  ┌────────────────────────────────────────────────────────────┐  │
-│  │  Spec Input → Router → Dev Product (in Execution Sandbox) │  │
+│  │  Spec Input → Orchestrator → Dev Product (sandboxed)      │  │
 │  │                  ▲           │                             │  │
 │  │                  │           ▼                             │  │
 │  │              Spec Graph   Tool Transport                   │  │
@@ -77,44 +77,44 @@ bootstrap rule, see
 
 ## Component Layout
 
-The fourteen components fall into three roles:
+The components fall into three roles:
 
 **Orchestration spine** — components that move work through the
 factory.
 
-- [spec-input.md](../02-components/spec-input.md) — accepts intent.
-- [router.md](../02-components/router.md) — decomposes and
+- [Spec Input] — accepts intent.
+- [Orchestrator] — decomposes and
   dispatches.
-- [dev-product.md](../02-components/dev-product.md) — produces
+- [Dev Product] — produces
   artifacts.
-- [tool-transport.md](../02-components/tool-transport.md) — exposes
+- [Tool Transport] — exposes
   capabilities to Dev Products.
-- [source-control-ci.md](../02-components/source-control-ci.md) —
+- [Source Control + CI] —
   lands and gates artifacts.
-- [release-rings.md](../02-components/release-rings.md) —
+- [Release Rings] —
   governs where artifacts run and who may put them there.
 
 **Memory and state** — components that record and project the factory's
 work over time.
 
-- [living-spec.md](../02-components/living-spec.md) — durable current
+- [Living Spec] — durable current
   Spec per Product (or platform capability).
-- [spec-graph.md](../02-components/spec-graph.md) — queryable
+- [Spec Graph] — queryable
   projection of all Living Specs.
-- [audit-observability.md](../02-components/audit-observability.md)
+- [Audit & Observability]
   — immutable record of what happened.
-- [backlog.md](../02-components/backlog.md) — durable, cross-repo
+- [Backlog] — durable, cross-repo
   work-item tracker for active, deferred, and archived items.
 
 **Cross-cutting controls** — components consulted by every other
 component.
 
-- [execution-sandbox.md](../02-components/execution-sandbox.md) —
+- [Execution Sandbox] —
   isolation for dispatched work.
-- [agent-policy.md](../02-components/agent-policy.md) — what
+- [Agent Policy] — what
   agents may do.
-- [inference.md](../02-components/inference.md) — model inference.
-- [secrets-key-management.md](../02-components/secrets-key-management.md)
+- [Inference Layer] — model inference.
+- [Secrets & Key Management]
   — secret resolution and rotation.
 
 ---
@@ -123,11 +123,11 @@ component.
 
 ```text
 1. Operator authors a Spec Input.
-2. Router consumes it; queries the Spec Graph for reusable prior work.
-3. Router decomposes into sub-tasks and selects a Dev Product Adapter
+2. Orchestrator consumes it; queries the Spec Graph for reusable prior work.
+3. Orchestrator decomposes into sub-tasks and selects a Dev Product Adapter
    per sub-task, consulting Agent Policy and Adapter metadata
    (privacy, cost, capabilities).
-4. For each sub-task: Router opens an isolated Execution Sandbox,
+4. For each sub-task: Orchestrator opens an isolated Execution Sandbox,
    dispatches the Dev Product, and exposes capabilities through the
    Tool Transport.
 5. The Dev Product produces artifacts in a working branch in Source
@@ -166,7 +166,7 @@ Spec Graph (queryable surface)
     │  Reuse detection, dependency mapping, change-impact analysis,
     │  RAG over product intent
     ▼
-Router consults the graph during decomposition and selection
+Orchestrator consults the graph during decomposition and selection
 ```
 
 The Spec Graph is a projection. If it disagrees with a Living Spec,
@@ -187,11 +187,11 @@ three loops:
 invocation, every policy decision, every artifact, every error, every
 secret access (without values).
 
-**Decide.** Agent Policy evaluates each proposed action. The Router
+**Decide.** Agent Policy evaluates each proposed action. The [Orchestrator]
 asks "may I dispatch this?" and gets back tier 0 / 1 / 2 / 3. Tier
 gates determine whether human approval is required.
 
-**Act.** The Router dispatches; Dev Products execute in sandboxes; the
+**Act.** The [Orchestrator] dispatches; Dev Products execute in sandboxes; the
 Tool Transport carries capability calls; Source Control + CI gates the
 result.
 
@@ -240,3 +240,18 @@ This document specifies how the components fit together. Everything
 else is the operator's choice, made with whatever Adapters they
 install.
 
+<!-- component-links (generated by check-component-links.py --write-defs) -->
+[Spec Input]: ../02-components/spec-input.md
+[Orchestrator]: ../02-components/orchestrator.md
+[Dev Product]: ../02-components/dev-product.md
+[Tool Transport]: ../02-components/tool-transport.md
+[Source Control + CI]: ../02-components/source-control-ci.md
+[Release Rings]: ../02-components/release-rings.md
+[Living Spec]: ../02-components/living-spec.md
+[Spec Graph]: ../02-components/spec-graph.md
+[Audit & Observability]: ../02-components/audit-observability.md
+[Backlog]: ../02-components/backlog.md
+[Execution Sandbox]: ../02-components/execution-sandbox.md
+[Agent Policy]: ../02-components/agent-policy.md
+[Inference Layer]: ../02-components/inference.md
+[Secrets & Key Management]: ../02-components/secrets-key-management.md

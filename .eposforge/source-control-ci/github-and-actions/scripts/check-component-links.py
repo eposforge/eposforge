@@ -96,12 +96,33 @@ def iter_markdown(paths: list[str]) -> list[Path]:
     return out
 
 
-def split_body_and_block(text: str) -> tuple[str, str]:
-    """Split file text into (body, existing_defs_block_text)."""
-    m = BLOCK_MARKER_RE.search(text)
-    if not m:
-        return text, ""
-    return text[: m.start()].rstrip("\n"), text[m.start():]
+def blank_code(text: str) -> str:
+    """Return text with fenced blocks and inline code spans blanked to spaces,
+    preserving every character offset and line so positions still map to the
+    original. Illustrative code (e.g. a `C4` example of a *forbidden* form) must
+    not be scanned as a live reference."""
+    out: list[str] = []
+    in_fence = False
+    for line in text.split("\n"):
+        stripped = line.lstrip()
+        if stripped.startswith("```") or stripped.startswith("~~~"):
+            in_fence = not in_fence
+            out.append(" " * len(line))
+        elif in_fence:
+            out.append(" " * len(line))
+        else:
+            out.append(re.sub(r"`[^`]*`", lambda m: " " * len(m.group(0)), line))
+    return "\n".join(out)
+
+
+def split_at_marker(text: str) -> tuple[str, str, int]:
+    """(scannable_body, real_block, marker_index). Detection uses code-blanked
+    text so an example block inside a fence is not mistaken for the real one;
+    the returned block is the untouched original after the marker."""
+    scannable = blank_code(text)
+    m = BLOCK_MARKER_RE.search(scannable)
+    idx = m.start() if m else len(text)
+    return scannable[:idx], text[idx:] if m else "", idx
 
 
 def referenced_labels(body: str, catalog: dict[str, str]) -> list[str]:
@@ -143,16 +164,17 @@ def rel_from(file: Path, target_filename: str) -> str:
 
 def write_defs(file: Path, catalog: dict[str, str]) -> bool:
     text = file.read_text(encoding="utf-8")
-    body, _ = split_body_and_block(text)
-    labels = referenced_labels(body, catalog)
+    scan_body, _, idx = split_at_marker(text)
+    real_body = text[:idx].rstrip("\n")
+    labels = referenced_labels(scan_body, catalog)
     display = canonical_display_names()
     if not labels:
-        new_text = body + "\n"
+        new_text = real_body + "\n"
     else:
         lines = [BLOCK_START]
         for key in labels:
             lines.append(f"[{display[key]}]: {rel_from(file, catalog[key])}")
-        new_text = body + "\n\n" + "\n".join(lines) + "\n"
+        new_text = real_body + "\n\n" + "\n".join(lines) + "\n"
     if new_text != text:
         file.write_text(new_text, encoding="utf-8")
         return True
@@ -175,10 +197,10 @@ def check(paths: list[str], catalog: dict[str, str]) -> int:
         except ValueError:
             rel = file
         text = file.read_text(encoding="utf-8")
-        body, block = split_body_and_block(text)
+        scan_body, block, _ = split_at_marker(text)
         allow_router = ALLOW_ROUTER_MARKER in text
 
-        for i, line in enumerate(body.splitlines(), 1):
+        for i, line in enumerate(scan_body.splitlines(), 1):
             for m in NUMERIC_REF_RE.finditer(line):
                 errors.append(f"{rel}:{i}: numeric component reference '{m.group(0)}' — use the component name")
             if not allow_router:
@@ -186,7 +208,7 @@ def check(paths: list[str], catalog: dict[str, str]) -> int:
                     errors.append(f"{rel}:{i}: deprecated component name 'Router' — use 'Orchestrator'")
 
         defs = defined_labels(block)
-        for key in referenced_labels(body, catalog):
+        for key in referenced_labels(scan_body, catalog):
             if key not in defs:
                 errors.append(f"{rel}: references [{key}] but no definition in the component-links block (run --write-defs)")
                 continue
