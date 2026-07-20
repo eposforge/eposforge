@@ -169,9 +169,19 @@ catalog entry a EposForge instance produces is structured to be
 This unlocks a qualitatively different mode of software production:
 
 - **Discover-before-build.** When a factory needs a capability, the
-  [Orchestrator] first queries the shared Spec Graph and OSS registries for an
-  existing Living Spec or Adapter that satisfies the intent. Building
-  new is the fallback, not the default.
+  [Orchestrator] first queries the shared Spec Graph and OSS
+  discovery surfaces for an existing Living Spec or Adapter that
+  satisfies the intent. Building new is the fallback, not the default.
+  - **Outbound discovery plane.** Prefer the Spec Graph, then
+    commodity search (code hosts, package registries, web / AI
+    search). Vertical niche indexes (for example MCP server
+    marketplaces) are optional human recon, not factory
+    infrastructure or Tool Transport Adapters — see
+    [mcp-server-indexes research](../03-research/01-architecture/02-components/tool-transport/mcp-server-indexes.md).
+  - **Inbound co-priority.** Short term, shipping **publishable,
+    matchable** Living Specs and Adapters (intent and contract,
+    license, install surface) matters as much as improving search:
+    discover-before-build without a publish surface is half a loop.
 - **Reuse at the spec layer, not just the code layer.** Because Living
   Specs travel with their artifacts and are projected into queryable
   graphs, other factories can match on *intent and contract*, not just
