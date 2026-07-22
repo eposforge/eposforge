@@ -40,8 +40,8 @@ See the architecture capture and implementation plan (tracked by EF-056) for the
    the knowledge tree"); the node name is the stable anchor across re-shelving.
 2. The framework installs its self-implementation (adapters) under
    `.eposforge/<component>/<adapter>/` . A pure ADOPTER uses the same
-   under its `<adoption-root>/.eposforge/<component>/<adapter>/` (container is
-   `.eposforge/`). Component directories use the stable node name (no numeric
+   layout: `.eposforge/<component>/<adapter>/` at its repo root (the
+   `.eposforge/` container IS the adoption-root — see requirement 6). Component directories use the stable node name (no numeric
    prefixes). The authoritative component node names are: spec-input,
    living-spec, dev-product, router, tool-transport, spec-graph,
    execution-sandbox, agent-policy, source-control-ci, release-rings,
