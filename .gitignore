@@ -39,6 +39,16 @@ graphrag/*.pyc
 .eposforge/spec-graph/cognee/__pycache__/
 .eposforge/spec-graph/cognee/.cognee/
 
+# Same runtime artifacts under the instance/installed/ layout (unanchored so they
+# match wherever an adapter is installed, not just the legacy spec-graph path)
+**/graphrag/output/
+**/graphrag/cache/
+**/graphrag/.venv/
+**/.cognee/
+
+# Instance-local audit log (mirrors .eposforge/.audit/ above)
+instance/.audit/
+
 # Scratchpad — never commit (temp files, plans, scratch notes, diffs, logs)
 .scratchpad/
 scratchpad/
