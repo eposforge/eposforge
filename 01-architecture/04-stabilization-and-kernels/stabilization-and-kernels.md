@@ -168,6 +168,58 @@ story instead of slotting into these two axes, it has increased
 documentation entropy — which would be self-refuting for a doctrine about
 fighting entropy.
 
+## Origination
+
+Where new work *enters* the factory follows the same two axes. Confusing
+them produces a specific, recurring error: forcing substrate-integrity work
+through a product backlog because *"everything originates from the
+product,"* or the mirror mistake — standing up platform capability
+platform-first because it looks like infrastructure. Origination is not one
+rule; it is one rule **per axis**.
+
+> **Work originates on the axis whose question it answers.** Capability
+> that delivers product value originates on the **product-promotion** axis
+> — from a product anchor, with any substrate change falling out of that
+> anchor's implementation. Work that restores or sustains *what may be
+> built upon* originates on the **foundation-trust** axis — at the
+> substrate/instance layer, under the bootstrap order, with no product
+> anchor.
+
+Value origination is product-first because the pattern holds that the
+platform exists only in service of product delivery: a new capability is
+pulled into being by a product anchor and rolled out as substrate during
+its implementation. Kernel/substrate-integrity origination is **not an
+exception** to that rule — it is the *other axis*. A host PSU failure, a
+degraded RAID, a full root disk each drop a kernel below "stable"; by the
+[bootstrap rule](#the-bootstrap-rule) nothing above can be trusted until
+the kernel is restored, so the work must originate immediately at the
+substrate layer. It needs no product anchor because its dependency is not
+on one product but on *every* layer built above the kernel — and the
+pattern already expresses that portfolio-wide dependency structurally, as
+**kernel state**, not as a `Blocks:` edge to an arbitrary anchor. *"Every
+product needs it"* is the definition of a kernel concern, not a reason to
+attach it to a product.
+
+This is why an instance's substrate backlog can say *no **value-harvest**
+anchors originate here* while still, correctly, originating
+substrate-integrity items: the scoping word is *value-harvest.* "No value
+anchors originate in substrate" is not "no work originates in substrate."
+Reading the former as the latter is the axis-conflation this section exists
+to prevent.
+
+A single initiative frequently spans **both** axes — an element has a place
+in each ([Reconciliation](#reconciliation-two-axes-not-four)), and so can a
+piece of work. A shared email/notification capability, for example, is
+partly a custom service layer (product-promotion: it originates from the
+product that needs to send mail, and is rolled out during that anchor's
+implementation) and partly host configuration that becomes shared substrate
+(foundation-trust: a candidate kernel the moment it is stable and carries a
+one-command check). Do not force such work onto a single axis. Split it by
+axis: the value-delivering thread originates product-first; the substrate it
+establishes is stabilized and detected on the foundation-trust axis by the
+same implementation. The two threads share an implementation; they do not
+share an origination rule.
+
 ## Instance responsibilities
 
 This document is the pattern. An instance applies it by:
