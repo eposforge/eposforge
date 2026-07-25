@@ -344,3 +344,70 @@ Tags: observability
 Depends on: EF-034
 Verify with: implement the behavioral facets of context plane observability: launcher write-side manifest, on-demand viewer behavior, multi-level adapter telemetry conformance (at least two adapters at different levels), and event envelope conforming to Track 1 schema.
 Notes: Split from EF-034 to separate the metadata contract (EF-034) from the behavioral artifacts (EF-065). Renumbered from EF-061 after ID collision with the Agent Skills standard (EF-061 on mainline).
+
+
+## Issue EF-067 — Standards Catalog + name-based standard references (create-side contract)
+ID: EF-067
+Title: Standards Catalog + name-based standard references (create-side contract)
+Date: 2026-07-25
+Status: open
+Effort: M
+Fix surface: eposforge-pattern
+Tags: simplification
+Blocks: EF-068, EF-069
+Verify with: `04-standards/README.md` carries a canonical **Standards Catalog** roster table (Standard name | file | one-line scope) that is the machine-readable source of truth a lint parses, plus the name-not-number rationale paragraph, and lists every standard on disk (today `04-mcp/` and `05-canonical-doc-sources/` are missing from it); `04-standards/00-standards-meta/standards-meta.md` normative requirement 1 changes `04-standards/<nn>-<slug>/` to `04-standards/<slug>/` (numeric directory prefixes forbidden) with Conformance updated to match; `04-standards/01-naming-conventions/naming-conventions.md` gains normative requirements mirroring its own #7–9 for standards (canonical-name-not-number, shortcut-reference-link form `[Ungameable Gates]`, capitalize-for-standard) plus a `## Standard references` section; a lint resolves standard labels against the catalog and supports `--write-defs` / `--check`, failing on numeric standard identifiers (`Standard 11`, `Standard 09`, `standards 10`), undefined labels, and definitions pointing at missing files; one standard is converted end-to-end as the proof file with `--check` clean on it.
+Notes: Filed 2026-07-25. Applies to `04-standards/` the same treatment the components got in the 2026-07 name-based-reference series (catalog + naming rules + lint + proof, then contracts, then a normative-layer sweep, then CI, then the research mirror). The rationale transfers exactly: numbers are opaque to readers, have no decoder, and drift. The standards tree has already drifted three ways — there is no `03-` on disk yet 9 live references point at `04-standards/03-agent-skills/`; `02-` was reused after the vocabulary standard was superseded while 7 references still point at `04-standards/02-vocabulary/`; and `04-mcp/` + `05-canonical-doc-sources/` exist on disk but appear nowhere in the README roster. Implementation recommendation: generalize the existing `check-component-links.py` to parse two catalogs (components, standards) rather than fork a near-identical script — the definitions-block machinery, reference regexes and `--write-defs` rewrite are identical; if generalized, keep the `<!-- component-links -->` block marker working and add a sibling `<!-- standard-links -->` marker so the two blocks stay independently regenerable. Note the ordering interaction with EF-061: that item ships the Agent Skills standard at `04-standards/03-agent-skills/`; if it lands first it should be created at the unnumbered path directly. Adjacency: EF-061 (would otherwise add a thirteenth numbered dir), EF-066 (once its schema ships, backfill this chain with `Migration: numbered-to-named-standards` — and note that this work reopens EF-066's open question (1), since `numbered-to-named-components` is no longer "nearly complete" as a dogfood candidate but has a live second phase), EF-044 (retired numbered component folders in the adapter layer), EF-030 (lint as companion).
+
+
+## Issue EF-068 — Drop numeric prefixes from standard directories + repo-wide path sweep
+ID: EF-068
+Title: Drop numeric prefixes from standard directories + repo-wide path sweep
+Date: 2026-07-25
+Status: open
+Effort: M
+Fix surface: eposforge-pattern
+Tags: simplification
+Depends on: EF-067
+Blocks: EF-070
+Verify with: all twelve `04-standards/<nn>-<slug>/` directories are `git mv`-renamed to `04-standards/<slug>/` (standards-meta, naming-conventions, ontology-taxonomy, mcp, canonical-doc-sources, research-mirror, adapter-layout-mirror, agent-coding-guidelines, paired-detection, ungameable-gate, paired-change-enforcement, code-surface-encapsulation); every path reference across the tracked tree is updated (00-vision, 01-architecture, 02-roadmap, 04-standards, 03-research, AGENTS.md, README/CONTRIBUTING, `.github/workflows/doc-lint.yml` path filters, `skills/`, `.eposforge/`, `00-vision/01-ontology.ttl`); the two dangling numeric paths are resolved rather than merely rewritten — `04-standards/03-agent-skills/` (9 refs, no such directory; either point at EF-061's future path or mark as pending) and `04-standards/02-vocabulary/` (7 refs to a superseded standard; retarget to `ontology-taxonomy` or drop); the markdown link check (`.mlc-config.json`) passes with no broken links; `git log --follow` still resolves each standard's history.
+Notes: Filed 2026-07-25. Mechanical and scriptable, but it breaks every inbound link at once, so the rename and the path sweep must land in a single change — unlike the component precedent, where only two files carried numeric prefixes and could be renamed inside the catalog commit. Separate from EF-069 because this is *paths*; EF-069 is *citation form*. Do the rename with `git mv` so file history survives, and check the `_index.json` / installed-layout generators do not hardcode numbered standard paths before renaming. Adjacency: EF-067 (contract), EF-069 (citation sweep — can land either order but both before CI enforcement in EF-071), EF-061 (Agent Skills standard placement), EF-044 (same rename shape, adapter layer; note `.eposforge/14-content-safety/` and `.eposforge/16-backup-resilience/` are still numbered leftovers of that thread and are out of scope here).
+
+
+## Issue EF-069 — Convert standard citations across the normative layer to name-based links
+ID: EF-069
+Title: Convert standard citations across the normative layer to name-based links
+Date: 2026-07-25
+Status: open
+Effort: M
+Fix surface: eposforge-pattern
+Tags: simplification
+Depends on: EF-067
+Blocks: EF-070
+Verify with: `Standard 10:` is stripped from the `ungameable-gate.md` H1 (the only numbered standard heading) so titles read as names; every inline `Standard NN` citation becomes a resolvable shortcut-reference link on the canonical name — in the component contracts (`living-spec.md` ×4, `source-control-ci.md` ×5, `tool-transport.md` ×1), in the standards' own cross-references (`paired-change-enforcement.md` ×5, `code-surface-encapsulation.md` ×3), and in `AGENTS.md` ×2, `00-vision/00-vision.md` ×1, `02-roadmap/product-factory-phases.md` ×2; verbose `[04-standards/nn-slug/slug.md](path)` sibling links in `04-standards/README.md` and each standard's `Related` section collapse to `[Name]` form; per-file `<!-- standard-links -->` definition blocks are generated by `--write-defs`; `--check` is clean over the normative layer (00-vision, 01-architecture, 02-roadmap, 04-standards, AGENTS.md); no bare unbracketed `Standard N` survives outside fenced code and `03-research/`.
+Notes: Filed 2026-07-25. Mirrors the components sweep: the citations are the payload, the numbers are the defect. Two live examples of why — `source-control-ci.md` cites "Standard 09: Paired Detection" and "Standard 10: Ungameable Gates" in the same list, so a reader must hold a number→name table that exists nowhere; `code-surface-encapsulation.md` cites "Standard 11 (paired-change)" inline with no link at all, which is unresolvable and unlintable. Historical backlog `Notes:` in `backlog.md` / `backlog-archive.md` also carry `Standard 08`/`Standard 09` citations — leave archived items alone (immutable record), but the lint scope must exclude the backlog files or they will fail the check. Adjacency: EF-067 (contract + lint), EF-068 (paths), EF-071 (enforcement).
+
+
+## Issue EF-070 — Sweep the research mirror for name-based standard references
+ID: EF-070
+Title: Sweep the research mirror for name-based standard references
+Date: 2026-07-25
+Status: open
+Effort: S
+Fix surface: eposforge-pattern
+Tags: simplification
+Depends on: EF-068, EF-069
+Verify with: `03-research/04-standards/01-naming-conventions/` and `03-research/04-standards/06-research-mirror/` are renamed to drop their numeric prefixes; every link pointing at the renamed paths is updated (`03-research/README.md`, `03-research/landscape.md`, the `declined-options:` line in `naming-conventions.md` Status, and the `Related` sections of `standards-meta.md` and `research-mirror.md`); numeric standard citations inside the mirror become names; `03-research` is inside the lint's `DEFAULT_SCOPE` for standard references and a full `--check` passes.
+Notes: Filed 2026-07-25. Directly mirrors the components research sweep, which folded `03-research` back into the enforced scope once clean. Small because the mirror only carries two standards today. The research-mirror standard itself governs this directory, so its own path moving is a self-referential edit worth doing carefully — the `declined-options:` back-pointers are the links most likely to be missed. Adjacency: EF-068, EF-069, EF-071.
+
+
+## Issue EF-071 — Enforce name-based standard references in CI and docs-lint
+ID: EF-071
+Title: Enforce name-based standard references in CI and docs-lint
+Date: 2026-07-25
+Status: open
+Effort: S
+Fix surface: eposforge-pattern
+Tags: source-control
+Depends on: EF-069, EF-070
+Verify with: `.github/workflows/doc-lint.yml` runs the standard-reference check over the enforced normative layer plus `03-research` (either by extending the existing `component-links` job or as a sibling job, named to cover both), from the tracked source path; the lint's `DEFAULT_SCOPE` covers the same surface and excludes `.eposforge/backlog/*.md` and `docs/` (historical capture); the docs-lint skill gains a `standard-ref` semantic finding class for bare unbracketed standard names, noting that the deterministic floor already owns numbers, undefined labels and broken links; a deliberately numbered reference introduced in a scratch file makes the job fail, and removing it makes it pass.
+Notes: Filed 2026-07-25. Last in the chain by design — the precedent enforced only after the corpus was clean, otherwise CI is red on main while the sweep lands. The one judgment call: whether this is a second job or the existing `component-links` job broadened to "spec reference links". Recommend broadening if EF-067 generalizes the script (one invocation, one catalog parse, one failure surface); keep them separate only if EF-067 ships a sibling script. Adjacency: EF-067 (script shape decides this), EF-069, EF-070, EF-030.
