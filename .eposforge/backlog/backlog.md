@@ -2,6 +2,22 @@
 
 Active issues (`open`, `in-progress`, `blocked`) for this repo.
 
+> **NEXT BUILD — EF-066** (designated 2026-07-24). Take EF-066 (strangler-tracking
+> schema) before other work, so the next things built converge on the target
+> architecture instead of diverging. This is an ordering decision by the architect,
+> not a dependency: EF-066 carries no `Depends on:` and `ready.sh` sorts only by
+> `(Effort, ID)`, so the tooling will keep listing it mid-pack at `[M]` — that is
+> expected, this note is the authority. Portfolio-review 2026-07-24 found ~11
+> concurrent unlabeled migrations across the roots (the live cost: GEA-042 slates
+> Gas Town → Gas City while five open GEA items still invest in the Gas Town shape).
+> Two open questions to settle at build time, not yet decided: (1) whether to
+> retarget the dogfood proof from `numbered-to-named-components` (nearly complete)
+> to `theme-to-tags` (live, public, exercises the "do not invest" marker); (2) how a
+> migration whose legacy shape is diffuse corpus state rather than an item — e.g.
+> theme-to-tags' 145 remaining `Theme:` lines — satisfies the "at least one
+> legacy-shape item" lint rule. Also note EF-066's "lint passes across all roots"
+> criterion is not currently met (98 errors across 8 roots, 63 in GEA).
+
 Tooling track EF-035–EF-043 resolved 2026-06-13. Portfolio-review (EF-040) pass executed 2026-06-28 (cross-repo theming, substrate linking to adopter anchors via Depends on:/Blocks:). EF-045 (DCO + SSH signed commits for Phase 0) resolved 2026-06-28. Phase 0 architecture evolution (EF-056 master + children 057/058+) now tracking multi-graph, independent backlog graph, and boundaries (see docs/implementation-plan... and capture). EF-046 (Tags) and EF-047 (public/private) advanced as closely-related backlog-tooling work. EF-059/060 filed for the `.eposforge/` container uniformity correction (replaces `eposforge/` in adopters and `.eposforge/` in framework); public plan at `backlog/plans/EF-059-dot-eposforge-container-uniformity.md` (detailed private execution in primary adopter backlog). This continues the layout-mirror / terminology thread from EF-056/058.
 
 ## Issue EF-056 — Multi-graph + independent file-based backlog graph + adopter boundaries evolution (Phase 0 alignment & strangler tracking)
@@ -13,7 +29,19 @@ Effort: L
 Fix surface: eposforge-pattern
 Tags: backlog-tooling, spec-graph
 Verify with: a top-level EF- item exists in active backlog referencing the four capture/plan files (the adopter architecture implementation plan and discussion capture, boundaries-layers-2026-06.md, adapter-layout-mirror.md); 4–6 child EF- items created for major threads (backlog graph independence/ingestion boundaries, multi-graph foundation for first adopter, targeted layout mirroring, agent grounding + policy, sync reliability/verification, terminology); the capture/plan files are updated with EF- references and "planning only" notes removed or marked "Phase 0 in progress"; portfolio-review run surfaces the evolution as a theme; terminology uses generic "Adopter Platform Spec repo" (no specific adopter identifiers) vs "Platform Instance"; first concrete (EF-057) started (explicit exclusion of raw backlog items from main Spec Graph). All changes tracked via the backlog's own graph.
-Notes: Phase 0 of the strangler-fig rollout for the 2026-06 architecture alignment (captured in the four files). Master item owns visibility and sequencing. Cross-cutting: (a) bake strangler/Migration/legacy-shape/target-shape concepts into backlog schema so agents using GraphRAG tooling can drive such evolutions; (b) any new agent/skills work follows AGENTS.md + 04-standards/08-agent-coding-guidelines and ships SKILL.md; (c) update the four files only for design state. Children will be filed for the threads. Adjacency: EF-011/012 (recall boundaries), EF-046/047/048 (backlog graph quality), EF-040 (portfolio visibility).
+Notes: Phase 0 of the strangler-fig rollout for the 2026-06 architecture alignment (captured in the four files). Master item owns visibility and sequencing. Cross-cutting: (a) bake strangler/Migration/legacy-shape/target-shape concepts into backlog schema so agents using GraphRAG tooling can drive such evolutions — **carved out to EF-066 for independent delivery** (schema is decided; do not gate it behind the multi-graph GraphRAG work here); (b) any new agent/skills work follows AGENTS.md + 04-standards/08-agent-coding-guidelines and ships SKILL.md; (c) update the four files only for design state. Children will be filed for the threads. Adjacency: EF-011/012 (recall boundaries), EF-046/047/048 (backlog graph quality), EF-040 (portfolio visibility), EF-066 (strangler-tracking schema, carved from cross-cutting (a)).
+
+
+## Issue EF-066 — Strangler-tracking backlog schema: make in-flight migrations legible to agents (Migration/LegacyShapeOf/TargetShapeOf)
+ID: EF-066
+Title: Strangler-tracking backlog schema: make in-flight migrations legible to agents (Migration/LegacyShapeOf/TargetShapeOf)
+Date: 2026-07-24
+Status: open
+Effort: M
+Fix surface: eposforge-pattern
+Tags: backlog-tooling
+Verify with: `docs/schema.md` documents three new optional item fields — `Migration:` (a kebab-case migration slug, e.g. `numbered-to-named-components`), `LegacyShapeOf:` and `TargetShapeOf:` (each naming a migration slug), comma-separated in the same style as `Blocks:`; `lint-backlog.sh` validates them (an item carrying `LegacyShapeOf:` or `TargetShapeOf:` names a slug that some other item declares via `Migration:`; a `Migration:` slug resolves to at least one legacy-shape AND one target-shape item; unknown-slug references error) and passes across all roots; `aggregate.sh --strangler` prints one section per migration slug listing its legacy-shape items and its target-shape items, plus an "unlabeled candidates" hint (items whose text matches migration-shape keywords but carry no `Migration:` field); a debt-visibility surface exists so an agent reading an item flagged `LegacyShapeOf:` sees a one-line "this shape is being strangled toward <slug> — do not invest" marker (agent-grounding doc or a lint advisory, per AGENTS.md conventions); the Living Spec `version` bumps and its command list reads `--strangler`; and the framework's OWN numbered-component-folder → name-based-component migration is encoded end-to-end as the dogfood proof (the resolved EF-044/EF-059/EF-060 items backfilled with `Migration: numbered-to-named-components` + shapes), so `aggregate.sh --strangler` renders at least that one migration correctly.
+Notes: Carved out of EF-056 cross-cutting thread (a) so it ships independently — the schema is a decided design, not an empirical unknown, so per "spike the unknowns, not the knowns" it should be placed directly rather than gated behind the multi-graph/GraphRAG build EF-056/EF-057 own. Motivation: several migrations run concurrently across the framework and its adopters (orchestrator platform re-expression, component-folder rename, backlog schema evolution, source-adapter multi-sourcing, execution-sandbox confinement, autonomous-loop replacement, store-backend swaps), but each one's legacy→target intent lives only in free-text `Notes:`, invisible to building agents and to GraphRAG recall. The observable symptom of that invisibility: effort gets sunk into a legacy shape (e.g. tuning an orchestrator subsystem) while a target shape is actively replacing it, because nothing structured told the agent "this is being strangled." This item ships the create-side contract (fields + lint + `--strangler` view + debt marker); adopters then backfill their own in-flight migrations in their own backlogs (adopter-specific migration IDs stay in the adopter's repo, not here — public/private boundary per EF-047). Field semantics stay strictly distinct from dependency edges: `Migration:`/`LegacyShapeOf:`/`TargetShapeOf:` are associative migration-membership edges, NOT `Depends on:`/`Blocks:` (which continue to drive critical-path ordering). Adjacency: EF-056 (parent; this is thread (a)), EF-046 (sibling associative-field schema evolution — mirror its lint/aggregate/schema.md/version surface area), EF-047/048 (keeps adopter migration IDs out of the public backlog), EF-040 (portfolio-review should surface migrations as a class).
 
 
 ## Issue EF-057 — Explicit ingestion boundaries + minimal GraphRAG layer for independent backlog graph (Phase 1 pilot)
