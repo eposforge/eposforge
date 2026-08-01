@@ -9,7 +9,7 @@ on:
       - "03-research/**"
       - "03-research/01-architecture/**"
       - "04-standards/**"
-      - "instance/**"
+      - ".eposforge/**"
 
 permissions:
   contents: read
@@ -30,7 +30,7 @@ jobs:
           python-version: "3.12"
 
       - name: Check doc classification metadata and installed layout
-        run: python instance/installed/09-source-control-ci/github-and-actions/scripts/check-doc-classification.py
+        run: python .eposforge/source-control-ci/github-and-actions/scripts/check-doc-classification.py
 
   installed-index-fresh:
     name: Installed adapter index freshness
@@ -45,7 +45,7 @@ jobs:
           python-version: "3.12"
 
       - name: Verify _index.json matches installed adapters
-        run: python instance/installed/09-source-control-ci/github-and-actions/scripts/generate-installed-index.py --check
+        run: python .eposforge/source-control-ci/github-and-actions/scripts/generate-installed-index.py --check
 
   component-links:
     name: Component reference links

@@ -30,4 +30,4 @@ jobs:
           fi
 
       - name: Run sensitive literal guard
-        run: bash instance/installed/09-source-control-ci/github-and-actions/scripts/check-sensitive-literals.sh --changed-against "${{ steps.base.outputs.ref }}"
+        run: bash .eposforge/source-control-ci/github-and-actions/scripts/check-sensitive-literals.sh --changed-against "${{ steps.base.outputs.ref }}"
