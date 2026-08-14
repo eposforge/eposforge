@@ -98,6 +98,7 @@ cross-repo host-stack coordination, and the migration design source
 - MCP-first and canonical source policy: `04-standards/05-canonical-doc-sources/` and `04-standards/04-mcp/`
 - Naming and documentation hygiene: `04-standards/01-naming-conventions/naming-conventions.md`
 - Refactoring discipline for mirrored research paths: `04-standards/06-research-mirror/research-mirror.md`
+- Session chairs (judgment seats vs skills vs component roles): `04-standards/14-session-chairs/session-chairs.md`
 
 ---
 
