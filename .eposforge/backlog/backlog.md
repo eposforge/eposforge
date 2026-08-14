@@ -427,19 +427,6 @@ Verify with: `01-architecture/02-components/backlog.md` no longer requires a thr
 Notes: Filed 2026-07-25 after measuring the split against its own rationale. FOUR FINDINGS. (1) It does not achieve its stated goal for its main consumer: `ready.sh` iterates all three files (`for fname in ("backlog.md", "backlog-slated.md", "backlog-archive.md")`) and must, because determining whether a blocking dependency is resolved requires the archive — so the one query the split was designed to serve opens everything anyway. (2) The premise has decayed: measured across every conforming root, median total backlog size is ~15KB and the largest is ~177KB; the split saves meaningful context on two roots and nothing on the rest. (3) The real modeling defect — status is stored TWICE, as a field on the item and as the file the item lives in, giving two sources of truth that can disagree, and making a status change a record MOVE rather than a field edit (write amplification plus a bug class that cannot exist in a single-file design). (4) It contradicts this repo's own agent-access model: the same component contract directs agents to "obtain graph-augmented answers by calling the appropriate tools/skills rather than performing broad raw file RAG", and a state-partitioned store only pays off for agents reading raw files. WHAT SURVIVES: the archive split, on different grounds than originally given — archive is cold and unbounded, which is log rotation, not query optimization. Keep it. WHAT ALSO SURVIVES, and is the property actually responsible for this adapter being the one work-tracking system in the portfolio that never diverged: fixed filenames at a fixed path, so tooling needs no registry and adopters make no naming decisions. Do not lose that while fixing the split. GENERAL PRINCIPLE worth adding to the component contract: a file boundary must be justified by a sharing boundary or by cold storage, never by a query — filtering is a tool concern. That rule is what forbids `backlog-p0.md` or `backlog-<surface>.md` later. Adjacency: EF-066 (schema work — a `Migration:` label fits this change), EF-036 (`ready.sh` borrowed `bd ready` semantics; the filtered-view requirement is the same idea stated at the contract level), EF-046 (backlog graph quality). Note this is a contract change plus an adapter change plus a data migration across all conforming roots, hence M not S.
 
 
-## Issue EF-074 — Session chairs standard (judgment seats vs skills vs component roles)
-ID: EF-074
-Title: Session chairs standard (judgment seats vs skills vs component roles)
-Date: 2026-08-14
-Status: in-progress
-Effort: S
-Fix surface: eposforge-pattern
-Tags: agent-policy
-Depends on:
-Verify with: `04-standards/14-session-chairs/session-chairs.md` exists and is listed from `04-standards/README.md` and `AGENTS.md` §Standards; the standard distinguishes component role / session chair / skill, requires a CLI-agnostic chair store plus a selector in standing `AGENTS.md`, and forbids Orchestrator adapters from substituting for host chairs; no adopter names or host paths appear; incremental Spec Graph ingest of the new standard makes a recall probe ("What session chairs should an adopter install, and how do they differ from skills?") name this layer rather than only Orchestrator / Dev Product.
-Notes: Filed 2026-08-14. Closes the gap where recall described factory component roles and adopters kept growing skills while every CLI session sat as implementer. Not a new component slot. Ontology `SessionChair` class deferred (full KG wipe); markdown + incremental ingest first. Adjacency: EF-061 (skills create-side, sibling not parent), EF-032/EF-063 (skill install/fleet — same projection pattern), Standard 08, Standard 05.
-
-
 ## Issue EF-073 — Add Interaction Capture component slot — durable corpus of what agents were asked and returned
 ID: EF-073
 Title: Add Interaction Capture component slot — durable corpus of what agents were asked and returned
@@ -456,10 +443,11 @@ Notes: Filed 2026-08-14. Same carving-out precedent as EF-027 / EF-028 — a slo
 ID: EF-074
 Title: Session chairs standard (judgment seats vs skills vs component roles)
 Date: 2026-08-14
-Status: in-progress
+Status: resolved
 Effort: S
 Fix surface: eposforge-pattern
 Tags: agent-policy
 Depends on:
 Verify with: `04-standards/14-session-chairs/session-chairs.md` exists and is listed from `04-standards/README.md` and `AGENTS.md` §Standards; the standard distinguishes component role / session chair / skill, requires a CLI-agnostic chair store plus a selector in standing `AGENTS.md`, and forbids Orchestrator adapters from substituting for host chairs; no adopter names or host paths appear; incremental Spec Graph ingest of the new standard makes a recall probe ("What session chairs should an adopter install, and how do they differ from skills?") name this layer rather than only Orchestrator / Dev Product.
 Notes: Filed 2026-08-14. Closes the gap where recall described factory component roles and adopters kept growing skills while every CLI session sat as implementer. Not a new component slot. Ontology `SessionChair` class deferred (full KG wipe); markdown + incremental ingest first. Adjacency: EF-061 (skills create-side, sibling not parent), EF-032/EF-063 (skill install/fleet — same projection pattern), Standard 08, Standard 05.
+Validation: 2026-08-14. Standard on `main` (`52ad72e`); listed in `04-standards/README.md` and `AGENTS.md`. Incremental ingest: ontology key was missing (`409 Ontology key 'eposforge' not found`), re-uploaded existing TTL, cognify `PipelineRunCompleted`. Recall "What session chairs should an adopter install, and how do they differ from skills?" named implementer/reviewer/elicitor/operator plus the skill-vs-chair split.
