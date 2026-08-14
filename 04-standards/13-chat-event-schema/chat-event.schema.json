@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://eposforge.dev/schema/chat-event/1.0",
+  "title": "EposForge Chat Event",
+  "description": "Normalized Interaction Capture record. Markdown rules in chat-event-schema.md are authoritative for dedupe_key construction, training_eligible tagging, and migration.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_version",
+    "record_kind",
+    "captured_at",
+    "dedupe_key",
+    "training_eligible",
+    "provenance",
+    "identity"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+$"
+    },
+    "record_kind": {
+      "type": "string",
+      "enum": ["event", "session.envelope", "session.end"]
+    },
+    "captured_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "dedupe_key": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "training_eligible": {
+      "type": "boolean"
+    },
+    "training_eligible_reason": {
+      "type": "string"
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["provider", "cli", "capture_layer", "source_file", "source_line"],
+      "properties": {
+        "provider": { "type": "string", "minLength": 1 },
+        "cli": { "type": "string", "minLength": 1 },
+        "capture_layer": { "type": "string", "enum": ["wire", "transcript"] },
+        "source_file": { "type": "string" },
+        "source_line": { "type": "integer", "minimum": 0 },
+        "source_adapter": { "type": "string" }
+      }
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["account_key", "machine_key", "workspace_id", "session_id"],
+      "properties": {
+        "account_key": { "type": "string" },
+        "machine_key": { "type": "string" },
+        "workspace_id": { "type": "string" },
+        "session_id": { "type": "string" }
+      }
+    },
+    "event": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["role", "event_type", "text"],
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": ["user", "assistant", "system", "tool", "unknown"]
+        },
+        "event_type": { "type": "string" },
+        "text": { "type": "string" },
+        "cwd": { "type": "string" }
+      }
+    },
+    "request": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "system": true,
+        "tools": true,
+        "messages": true,
+        "raw": true,
+        "method": { "type": "string" },
+        "url": { "type": "string" },
+        "headers": { "type": "object" }
+      }
+    },
+    "response": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "status_code": { "type": "integer" },
+        "message": true,
+        "sse_events": { "type": "array" },
+        "raw": true
+      }
+    },
+    "usage": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "cli": { "type": "string" },
+    "cwd": { "type": "string" },
+    "pid": { "type": "integer" },
+    "argv": { "type": "array", "items": { "type": "string" } }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "record_kind": { "const": "event" } },
+        "required": ["record_kind"]
+      },
+      "then": { "required": ["event"] }
+    }
+  ]
+}

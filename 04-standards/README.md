@@ -21,6 +21,7 @@ This section is the source of truth for cross-cutting standards adopted by EposF
 - [10-ungameable-gate/ungameable-gate.md](10-ungameable-gate/ungameable-gate.md)
 - [11-paired-change-enforcement/paired-change-enforcement.md](11-paired-change-enforcement/paired-change-enforcement.md) — fail-closed CI so Product Living Specs stay current (product registry, code⇒Spec gate, exemptions, Spec-derived tests)
 - [12-code-surface-encapsulation/code-surface-encapsulation.md](12-code-surface-encapsulation/code-surface-encapsulation.md) — conversational-first delivery; encapsulate deterministic code/UI so code-structure graphs stay scopable
+- [13-chat-event-schema/chat-event-schema.md](13-chat-event-schema/chat-event-schema.md) — normalized Interaction Capture record (schema_version, provenance, identity, training_eligible, dedupe_key)
 
 ## Superseded standards
 

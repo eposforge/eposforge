@@ -103,6 +103,8 @@ work over time.
   projection of all Living Specs.
 - [Audit & Observability]
   — immutable record of what happened.
+- [Interaction Capture]
+  — durable corpus of what agents were asked and returned.
 - [Backlog] — durable, cross-repo
   work-item tracker for active, deferred, and archived items.
 
@@ -250,6 +252,7 @@ install.
 [Living Spec]: ../02-components/living-spec.md
 [Spec Graph]: ../02-components/spec-graph.md
 [Audit & Observability]: ../02-components/audit-observability.md
+[Interaction Capture]: ../02-components/interaction-capture.md
 [Backlog]: ../02-components/backlog.md
 [Execution Sandbox]: ../02-components/execution-sandbox.md
 [Agent Policy]: ../02-components/agent-policy.md
