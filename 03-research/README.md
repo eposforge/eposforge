@@ -26,6 +26,8 @@ Currently populated mirrored paths:
 - [01-architecture/02-components/orchestrator/](01-architecture/02-components/orchestrator/)
 - [01-architecture/02-components/tool-transport/](01-architecture/02-components/tool-transport/)
 - [01-architecture/02-components/spec-graph/](01-architecture/02-components/spec-graph/)
+- [01-architecture/02-components/working-memory/](01-architecture/02-components/working-memory/)
+- [01-architecture/02-components/interaction-capture/](01-architecture/02-components/interaction-capture/)
 - [01-architecture/02-components/execution-sandbox/](01-architecture/02-components/execution-sandbox/)
 - [01-architecture/02-components/source-control-ci/](01-architecture/02-components/source-control-ci/)
 - [01-architecture/02-components/inference/](01-architecture/02-components/inference/)

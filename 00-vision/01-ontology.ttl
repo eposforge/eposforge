@@ -137,6 +137,11 @@ ef:SpecGraph rdf:type owl:Class ;
     rdfs:label "Spec Graph" ;
     rdfs:comment "Adapter kind that fulfills Component 6. Implements one or more Scope Spec Graphs and/or participates in the Factory Spec Graph (collective multi-scope projection of Living Specs). See ef:ScopeSpecGraph and ef:FactorySpecGraph." .
 
+ef:WorkingMemory rdf:type owl:Class ;
+    rdfs:subClassOf ef:Adapter ;
+    rdfs:label "Working Memory" ;
+    rdfs:comment "Adapter kind that fulfills the Working Memory component slot. Shared semantic operational memory that replaces each Dev Product native memory store. Distinct from Spec Graph: not a projection of Living Specs. A product that also fulfills Spec Graph does so as a different Adapter with a separate store." .
+
 ef:ExecutionSandbox rdf:type owl:Class ;
     rdfs:subClassOf ef:Adapter ;
     rdfs:label "Execution Sandbox" ;
@@ -683,7 +688,7 @@ ef:IndependentBacklogGraph rdf:type ef:Concept, skos:Concept ;
 
 ef:MultiGraphArchitecture skos:broader ef:SpecGraphComponent .
 
-### Individuals (The 14 Core Components)
+### Individuals (Core Components)
 
 ef:SpecInput rdf:type ef:Component, skos:Concept ;
     skos:prefLabel "Spec Input" ;
@@ -733,6 +738,16 @@ ef:SpecGraphComponent rdf:type ef:Component, skos:Concept ;
     ef:componentMaturity ef:MaturityShipped ;
     rdfs:comment "Cognee adapter installed and running against Azure Foundry (EF-017 resolved 2026-05-26). graphrag adapter also present. EF-020 (KG sync validation) is still slated — treat recall as operational but not yet drift-verified over time." ;
     skos:broader ef:PillarAIFactory .
+
+ef:WorkingMemoryComponent rdf:type ef:Component, skos:Concept ;
+    skos:prefLabel "Working Memory" ;
+    skos:definition "Shared semantic operational memory that replaces each Dev Product native memory store. Contract defined (draft). No installed adapter in this framework instance. A product that fulfills Spec Graph does not fulfill this slot; a Working Memory Adapter requires a separate store. See 03-research/ for candidate adapters (Cognee distinct-dataset, Mem0, Zep, LangMem, Letta)." ;
+    skos:inScheme ef:KnowledgeTree ;
+    ef:kind ef:NodeKindComponent ;
+    ef:componentMaturity ef:MaturityIntent ;
+    rdfs:comment "Component contract defined (draft). No installed adapter in this EposForge instance. Depends on Tool Transport. Distinct from Spec Graph, Interaction Capture, and code-structure. Native per-CLI memory is what this slot displaces." ;
+    skos:related ef:SpecGraphComponent ;
+    skos:related ef:ToolTransportComponent .
 
 ef:ExecutionSandboxComponent rdf:type ef:Component, skos:Concept ;
     rdfs:label "Execution Sandbox" ;

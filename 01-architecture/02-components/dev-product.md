@@ -31,6 +31,11 @@ Any Adapter for this slot must:
 - Honor [Agent Policy] on every action. Touching a resource the policy
   forbids must fail.
 - Consume tool capabilities only via the configured [Tool Transport].
+- When a [Working Memory] Adapter is installed, consume it via the
+  Tool Transport **working-memory** capability and **must not**
+  persist operational memory in the Dev Product's native store
+  (vendor `MEMORY.md`, auto-memory, or equivalent). Native memory
+  as a parallel source of truth is a contract violation.
 - Read secrets only via the [Secrets & Key Management] slot.
 - Emit audit events to [Audit & Observability].
 - Update the Living Spec on any change with observable behavior; refusal
@@ -77,6 +82,7 @@ for what THIS repo installs.
 [Execution Sandbox]: ./execution-sandbox.md
 [Agent Policy]: ./agent-policy.md
 [Tool Transport]: ./tool-transport.md
+[Working Memory]: ./working-memory.md
 [Secrets & Key Management]: ./secrets-key-management.md
 [Audit & Observability]: ./audit-observability.md
 [Content Safety]: ./content-safety.md

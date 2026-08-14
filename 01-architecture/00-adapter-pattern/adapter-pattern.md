@@ -11,13 +11,13 @@ source_of_truth: yes
 
 EposForge defines a set of **components** — architectural slots every
 dark factory needs (Spec Input, Living Spec, Dev Product, Orchestrator, Tool
-Transport, Spec Graph, Execution Sandbox, Agent Policy, Release Rings,
+Transport, Spec Graph, Working Memory, Execution Sandbox, Agent Policy, Release Rings,
 Source Control + CI, Inference Layer, Audit & Observability,
 Interaction Capture, Secrets & Key Management, Backlog, Content Safety,
 Backup / Data Resilience).
 
 Concrete products plug into those slots as **Adapters**. Rather than
-repeat the plug-in machinery in fourteen component contracts, we define
+repeat the plug-in machinery in every component contract, we define
 it once here and reference it everywhere.
 
 ## Definitions

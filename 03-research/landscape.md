@@ -101,7 +101,9 @@ on the hardware is the vendor's choice.
 EposForge is **not** trying to be any of the above. It is trying to be
 the **shared, opinionated pattern** that:
 
-- Names the twelve components every dark factory needs.
+- Names the component slots every dark factory needs, including
+  Working Memory (shared semantic replacement for each CLI's
+  native memory — not the Spec Graph).
 - Defines a uniform Adapter Pattern so vendors and OSS projects above
   can plug in without re-architecting.
 - Includes Platform Factory and Product Factory as peer maturity
@@ -140,10 +142,11 @@ Concrete Adapter candidates per component slot:
 - [dev-products.md](./dev-product/dev-products.md) — Dev Product slot.
 - [orchestrator.md](./orchestrator/orchestrator.md) — Orchestrator slot.
 - [spec-graph.md](./spec-graph/spec-graph.md) — Spec Graph slot.
+- [working-memory.md](./01-architecture/02-components/working-memory/working-memory.md) — Working Memory slot (not Spec Graph).
+- [interaction-capture.md](./01-architecture/02-components/interaction-capture/interaction-capture.md) — Interaction Capture slot.
 - [execution-sandbox.md](./execution-sandbox/execution-sandbox.md) — Execution Sandbox slot.
 - [source-control-ci.md](./source-control-ci/source-control-ci.md) — Source Control + CI slot.
 - [inference.md](./inference/inference.md) — Inference slot.
 - [audit-observability.md](./audit-observability/audit-observability.md) — Audit & Observability slot.
 - [secrets-key-management.md](./secrets-key-management/secrets-key-management.md) — Secrets & Key Management slot.
 - More to come as research surveys mature.
-

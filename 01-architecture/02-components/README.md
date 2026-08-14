@@ -37,6 +37,7 @@ citations. Names are self-describing and cannot silently transpose.)
 | Inference Layer | [inference.md](inference.md) | Model inference gateway / routing. |
 | Audit & Observability | [audit-observability.md](audit-observability.md) | Immutable record of what happened. |
 | Interaction Capture | [interaction-capture.md](interaction-capture.md) | Durable corpus of what agents were asked and returned. |
+| Working Memory | [working-memory.md](working-memory.md) | Shared semantic memory that replaces each Dev Product's native store. |
 | Secrets & Key Management | [secrets-key-management.md](secrets-key-management.md) | Secret resolution and rotation. |
 | Backlog | [backlog.md](backlog.md) | Durable, cross-repo work-item tracker. |
 | Content Safety | [content-safety.md](content-safety.md) | Runtime payload content inspection. |

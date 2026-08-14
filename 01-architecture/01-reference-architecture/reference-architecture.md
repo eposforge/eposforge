@@ -105,6 +105,8 @@ work over time.
   — immutable record of what happened.
 - [Interaction Capture]
   — durable corpus of what agents were asked and returned.
+- [Working Memory]
+  — shared semantic memory that replaces each Dev Product's native store.
 - [Backlog] — durable, cross-repo
   work-item tracker for active, deferred, and archived items.
 
@@ -131,11 +133,13 @@ component.
    (privacy, cost, capabilities).
 4. For each sub-task: Orchestrator opens an isolated Execution Sandbox,
    dispatches the Dev Product, and exposes capabilities through the
-   Tool Transport.
+   Tool Transport, including Working Memory when that slot is filled.
 5. The Dev Product produces artifacts in a working branch in Source
    Control. Agent Policy gates each action; Secrets & Key Management
    resolves any required credentials; the Inference Layer serves any
-   model calls; everything is logged to Audit & Observability.
+   model calls; Working Memory is recalled and written through Tool
+   Transport rather than the CLI's native memory; everything is logged
+   to Audit & Observability.
 6. The Dev Product updates the Living Spec in the same change.
    Source Control + CI runs tests and the paired-change check.
 7. On green, Source Control + CI merges per Agent Policy tier rules
@@ -253,6 +257,7 @@ install.
 [Spec Graph]: ../02-components/spec-graph.md
 [Audit & Observability]: ../02-components/audit-observability.md
 [Interaction Capture]: ../02-components/interaction-capture.md
+[Working Memory]: ../02-components/working-memory.md
 [Backlog]: ../02-components/backlog.md
 [Execution Sandbox]: ../02-components/execution-sandbox.md
 [Agent Policy]: ../02-components/agent-policy.md
