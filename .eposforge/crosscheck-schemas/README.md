@@ -108,6 +108,11 @@ a true claim about a later repo used to become a harness failure. `--cwd` on
 `crosscheck-run-checks.sh` is an operator fallback for the whole handoff, not
 the directory every claim shares.
 
+Resolution also happens at write time, but only to prove the command runs. The
+resolved directory is **not** stored unless the author passed `--cwd`: baking it
+in would freeze today's answer, and the `files[]` fallback would never be
+consulted again — on this host or on any other.
+
 Check types that parse output:
 
 - `regex` is `jq test` over the whole captured output (Oniguruma). It is not
@@ -207,6 +212,12 @@ shape and vocabulary, and the shell adds only the rules a schema cannot express.
 | `CROSSCHECK_CHECK_OUTPUT_MAX` | `65536` | bytes of captured check output kept |
 | `CROSSCHECK_ALLOW_REVIEWER_EXEC` | `0` | permits executing `repro_cmd` — see below |
 | `CROSSCHECK_SESSION_TTL` | `8 hours` | how recently a payload must have been touched for `open` to treat its session as live |
+
+Liveness is a property of the session, not of a round: `open` looks for a
+recently-touched payload in **any** round of the session `current` names. A
+session that names itself may open alongside a live one and `current` is left
+where it was; a session that does not name itself has no other way back to its
+payload, so it is refused rather than pointed somewhere shared.
 
 ## Executing the reviewer's commands
 

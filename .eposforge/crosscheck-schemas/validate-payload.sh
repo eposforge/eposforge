@@ -195,12 +195,17 @@ findings)
     [[ -n "$uncovered" ]] && while IFS= read -r u; do fail "$u"; done <<<"$uncovered"
 
     # A finding may only point at a claim the handoff actually declares.
+    # Bind the finding before the pipe: inside `$claims | index(...)` the input
+    # is the claims array, so `.claim_ref` there is an index into an array and
+    # jq aborts — which made every payload that used claim_ref read INVALID for
+    # a reason that had nothing to do with the payload.
     bad="$(jq -r -n --slurpfile h "$href" --slurpfile f "$FILE" '
       [ $h[0].claims[].id ] as $claims
       | $f[0].findings[]
-      | select((.claim_ref // "") != "")
-      | select(($claims | index(.claim_ref)) == null)
-      | "finding " + .id + " references unknown claim " + .claim_ref' 2>&1)"
+      | . as $fnd
+      | select(($fnd.claim_ref // "") != "")
+      | select(($claims | index($fnd.claim_ref)) == null)
+      | "finding " + $fnd.id + " references unknown claim " + $fnd.claim_ref' 2>&1)"
     [[ -n "$bad" ]] && while IFS= read -r b; do fail "$b"; done <<<"$bad"
   fi
 

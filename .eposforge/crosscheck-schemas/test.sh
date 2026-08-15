@@ -244,6 +244,65 @@ CROSSCHECK_DIR="$R/.crosscheck" CROSSCHECK_SESSION=in-repo \
   expect_exit 2 "refuses a payload directory inside a git work tree" \
   ./crosscheck-claim open --repo "$R" --clearance low
 
+echo "== a finding may name a claim without crashing the validator"
+# The claim_ref check used to read `.claim_ref` with the claims array as input,
+# so jq aborted and a well-formed payload read INVALID for a reason that had
+# nothing to do with it. Both directions are tested, because the crash made the
+# real check unreachable as well.
+jq '.findings[0].claim_ref = "c1"' fixtures/findings-clean.json > "$TMP/ref-ok.json"
+expect_exit 0 "a finding pointing at a declared claim validates" \
+  ./validate-payload.sh findings "$TMP/ref-ok.json" --handoff fixtures/handoff-basic.json
+jq '.findings[0].claim_ref = "c99"' fixtures/findings-clean.json > "$TMP/ref-bad.json"
+out="$(./validate-payload.sh findings "$TMP/ref-bad.json" --handoff fixtures/handoff-basic.json 2>&1)"; rc=$?
+if [[ $rc -eq 1 ]] && grep -q 'references unknown claim c99' <<<"$out"; then
+  ok "a finding pointing at a claim that does not exist is named"
+else
+  bad "a finding pointing at a claim that does not exist is named" "rc=$rc $out"
+fi
+
+echo "== --files alone does not freeze today's directory into the claim"
+./crosscheck-claim add --statement "the linter is still there" --evidence-cmd 'test -f scripts/lint.sh' \
+  --check exit0 --files scripts/lint.sh >/dev/null 2>&1
+if [[ "$(jq -r '.claims[-1] | has("cwd")' "$H")" == "false" ]]; then
+  ok "a claim resolved from files[] records no cwd"
+else
+  bad "a claim resolved from files[] records no cwd" "$(jq -c '.claims[-1]' "$H")"
+fi
+./crosscheck-claim add --statement "explicitly here" --evidence-cmd 'true' \
+  --check exit0 --cwd "$R" --files scripts/lint.sh >/dev/null 2>&1
+if [[ "$(jq -r '.claims[-1].cwd' "$H")" == "$R" ]]; then
+  ok "an explicit --cwd is recorded as the author wrote it"
+else
+  bad "an explicit --cwd is recorded as the author wrote it" "$(jq -c '.claims[-1]' "$H")"
+fi
+./crosscheck-run-checks.sh --handoff "$H" >/dev/null 2>&1
+if [[ "$(jq -r '[.check_results[] | select(.ran and .matched)] | length' "$H")" -ge 3 ]]; then
+  ok "both claims still run in the right repository without a stored cwd"
+else
+  bad "both claims still run in the right repository without a stored cwd" "$(jq -c '.check_results' "$H")"
+fi
+
+echo "== a live session is not stolen just because its payload moved to round 2"
+LIVE="$TMP/live-payloads"
+CROSSCHECK_DIR="$LIVE" CROSSCHECK_SESSION=session-a CROSSCHECK_ROUND=2 \
+  ./crosscheck-claim open --repo "$R" --clearance low >/dev/null 2>&1
+# The round-2 payload is the case that used to be invisible: the liveness check
+# only looked at round-$CROSSCHECK_ROUND, so `current` was repointed at exactly
+# the moment the other session was most active.
+CROSSCHECK_DIR="$LIVE" CROSSCHECK_ROUND=1 \
+  expect_exit 0 "a session that names itself may open alongside a live one" \
+  ./crosscheck-claim open --repo "$R" --clearance low --session session-b
+if [[ "$(cat "$LIVE/current" 2>/dev/null)" == "session-a" ]]; then
+  ok "current still points at the live session"
+else
+  bad "current still points at the live session" "$(cat "$LIVE/current" 2>/dev/null)"
+fi
+if [[ -r "$LIVE/session-b/round-1/handoff.json" ]]; then
+  ok "and the new session still got its own payload"
+else
+  bad "and the new session still got its own payload" "no handoff written"
+fi
+
 echo "== rounds must line up"
 jq '.round=99' fixtures/findings-clean.json > "$TMP/r99.json"
 expect_exit 1 "round-99 findings are rejected against a round-1 handoff" \

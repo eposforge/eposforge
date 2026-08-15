@@ -35,7 +35,12 @@
 # Payload location:  $CROSSCHECK_DIR/<session>/round-<N>/handoff.json
 #   CROSSCHECK_DIR      default ~/.crosscheck   (keep it OUTSIDE any repo: a
 #                       payload that can be committed will eventually be committed)
-#   CROSSCHECK_SESSION  default a generated uuid, remembered in $CROSSCHECK_DIR/current
+#   CROSSCHECK_SESSION  default a generated uuid, remembered in $CROSSCHECK_DIR/current.
+#                       A session that names itself (env or --session) can be
+#                       opened while another session is live: it addresses its
+#                       own payload, so `current` is left pointing where it was.
+#                       A session that does not name itself has no other way
+#                       back to its payload and is refused instead.
 #   CROSSCHECK_ROUND    default 1
 #   CROSSCHECK_HANDOFF_TOKEN_CAP  default 8000
 #   CROSSCHECK_CLEARANCE_ORDER    adopter clearance vocabulary, weakest first,
@@ -75,6 +80,12 @@ CMD="${1:-}"; shift 2>/dev/null || true
 # ── session / payload path ───────────────────────────────────────────────────
 session_file="$ROOT/current"
 SESSION="${CROSSCHECK_SESSION:-}"
+# A session that names itself can address its own payload without the `current`
+# pointer, which is what makes it safe to open one while another session holds
+# the pointer. A session that does not name itself has no other way back to its
+# payload, so for it the pointer is load-bearing.
+SESSION_EXPLICIT=0
+[[ -n "$SESSION" ]] && SESSION_EXPLICIT=1
 if [[ -z "$SESSION" && -r "$session_file" ]]; then SESSION="$(cat "$session_file")"; fi
 
 payload_path() { printf '%s/%s/round-%s/handoff.json' "$ROOT" "$SESSION" "$ROUND"; }
@@ -94,7 +105,7 @@ while [[ $# -gt 0 ]]; do
     --agent)        A_AGENT="$2"; shift 2 ;;
     --provider)     A_PROVIDER="$2"; shift 2 ;;
     --model)        A_MODEL="$2"; shift 2 ;;
-    --session)      SESSION="$2"; shift 2 ;;
+    --session)      SESSION="$2"; SESSION_EXPLICIT=1; shift 2 ;;
     --round)        ROUND="$2"; shift 2 ;;
     --statement)    A_STATEMENT="$2"; shift 2 ;;
     --class)        A_CLASS="$2"; shift 2 ;;
@@ -206,14 +217,31 @@ open)
   # the second session's payload.
   if [[ -s "$session_file" ]]; then
     prev="$(cat "$session_file")"
-    prev_payload="$ROOT/$prev/round-$ROUND/handoff.json"
-    if [[ "$prev" != "$SESSION" && -f "$prev_payload" ]] \
-       && [[ -n "$(find "$prev_payload" -newermt "-${CROSSCHECK_SESSION_TTL:-8 hours}" 2>/dev/null)" ]]; then
-      die "session $prev is still active (payload touched within ${CROSSCHECK_SESSION_TTL:-8 hours}).
+    prev_dir="$ROOT/$prev"
+    # Liveness is a property of the session, not of round 1. Looking only at
+    # round-$ROUND made a session whose payload had moved to round 2 invisible,
+    # so `open` repointed `current` at exactly the moment the other session was
+    # most active — the failure this guard exists to prevent.
+    prev_payload=""
+    if [[ "$prev" != "$SESSION" && -d "$prev_dir" ]]; then
+      prev_payload="$(find "$prev_dir" -maxdepth 2 -name handoff.json \
+                      -newermt "-${CROSSCHECK_SESSION_TTL:-8 hours}" -print -quit 2>/dev/null)"
+    fi
+    if [[ -n "$prev_payload" ]]; then
+      if (( SESSION_EXPLICIT )); then
+        # Open, but leave the pointer where it is. Refusing outright would make
+        # a per-session trigger unusable on a host where sessions overlap, which
+        # is the normal case; repointing would break the live session. Naming
+        # your own session is what buys the third option.
+        CLAIM_CURRENT=0
+        echo "crosscheck-claim: note — session $prev is still active; leaving 'current' pointing at it. This session is addressed by --session/CROSSCHECK_SESSION=$SESSION." >&2
+      else
+        die "session $prev is still active ($prev_payload touched within ${CROSSCHECK_SESSION_TTL:-8 hours}).
   Opening here would repoint 'current' and its next append would land in your payload.
   Run this session with its own id instead:
       export CROSSCHECK_SESSION=\$(cat /proc/sys/kernel/random/uuid)
   or pass --session <id>. Use CROSSCHECK_SESSION_TTL=0 to override deliberately."
+      fi
     fi
   fi
 
@@ -223,7 +251,7 @@ open)
   fi
   dir="$ROOT/$SESSION/round-$ROUND"
   mkdir -p "$dir" || die "cannot create $dir"
-  printf '%s' "$SESSION" > "$session_file"
+  if (( ${CLAIM_CURRENT:-1} )); then printf '%s' "$SESSION" > "$session_file"; fi
   file="$dir/handoff.json"
   [[ -e "$file" ]] && die "handoff already exists at $file (use 'scope'/'add' to append)"
 
@@ -296,7 +324,12 @@ add)
     if [[ -z "$probe_cwd" ]]; then
       no "cannot tell which scope repo to run this in — pass --cwd <repo> or --files that exist in exactly one of them (refusing to probe in scope[0])"
     fi
-    A_CWD="$probe_cwd"
+    # Probe where the claim will later run, but do NOT bake the resolved
+    # directory into the claim when the caller only passed --files. Writing it
+    # freezes today's answer: the files[] fallback would never be consulted
+    # again, so a scope entry added later, or a payload read on another host,
+    # silently keeps a path that may no longer be the right one. An explicit
+    # --cwd is the author's assertion and is recorded as written.
     ( cd "$probe_cwd" && bash -c "$A_EVIDENCE" ) >/dev/null 2>&1
     rc=$?
     if (( rc != 0 )); then
