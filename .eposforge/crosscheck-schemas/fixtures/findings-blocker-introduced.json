@@ -1,0 +1,50 @@
+{
+  "schema": "eposforge.crosscheck.findings/1",
+  "round": 1,
+  "handoff_ref": "handoff-basic.json",
+  "reviewer": {
+    "agent": "bravo",
+    "provider": "cli-b",
+    "model": "model-b-2",
+    "model_vendor": "vendor-b"
+  },
+  "verdict": "unsound",
+  "findings": [
+    {
+      "id": "f1",
+      "severity": "blocker",
+      "attribution": "introduced-by-change",
+      "repo": "example-app",
+      "claim_ref": null,
+      "what_is_wrong": "The rename drops two items from every status view.",
+      "evidence": "At head_sha the status view lists 10 items; at base_sha it listed 12.",
+      "confidence": "high",
+      "repro_cmd": "./scripts/lint.sh --root docs | grep -q ERRORS"
+    }
+  ],
+  "claims_verified": [
+    {
+      "claim_id": "c1",
+      "result": "confirmed",
+      "evidence": "Re-ran the linter per root; zero errors in each."
+    },
+    {
+      "claim_id": "c2",
+      "result": "confirmed",
+      "evidence": "Read the vocabulary doc and spot-checked six items against it."
+    },
+    {
+      "claim_id": "c3",
+      "result": "confirmed",
+      "evidence": "grep -c returned 12."
+    }
+  ],
+  "uncovered_scope": [],
+  "unverifiable": [],
+  "budget": {
+    "est_tokens": 1400,
+    "rendered_bytes": 5600,
+    "cap": 4000,
+    "over_budget": false
+  }
+}

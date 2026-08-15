@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "eposforge.crosscheck.findings/1",
+  "title": "Cross-agent review findings (reviewer -> implementer)",
+  "description": "Returned by a reviewer that spawned cold against a handoff. Budgeted tight: findings arrive at the implementer's most context-loaded moment, so long evidence goes behind a path pointer.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "round",
+    "handoff_ref",
+    "reviewer",
+    "verdict",
+    "findings",
+    "claims_verified",
+    "uncovered_scope",
+    "unverifiable",
+    "budget"
+  ],
+  "properties": {
+    "schema": { "const": "eposforge.crosscheck.findings/1" },
+
+    "round": { "type": "integer", "minimum": 1 },
+
+    "handoff_ref": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Path to the handoff this answers."
+    },
+
+    "reviewer": { "$ref": "#/$defs/actor" },
+
+    "verdict": {
+      "enum": ["sound", "sound-with-caveats", "unsound"],
+      "description": "The reviewer's overall opinion. Advisory only: termination reads the closed-vocabulary fields below, never this."
+    },
+
+    "findings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/finding" }
+    },
+
+    "claims_verified": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/claim_verdict" },
+      "description": "Must cover every handoff claim id exactly once. A missing claim is a malformed payload, not a pass."
+    },
+
+    "uncovered_scope": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/uncovered" },
+      "description": "Changes that shipped with no claim covering them. The counterweight to an implementer that knows the rubric: an empty claims list against a large scope must fail."
+    },
+
+    "unverifiable": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["what", "why"],
+        "properties": {
+          "what": { "type": "string", "minLength": 1 },
+          "why": { "type": "string", "minLength": 1 }
+        }
+      },
+      "description": "Named explicitly rather than silently dropped or guessed at."
+    },
+
+    "budget": { "$ref": "#/$defs/budget" }
+  },
+
+  "$defs": {
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["agent", "provider", "model"],
+      "properties": {
+        "agent": { "type": "string", "minLength": 1 },
+        "provider": { "type": "string", "minLength": 1 },
+        "model": { "type": "string", "minLength": 1 },
+        "model_vendor": { "type": "string" }
+      }
+    },
+
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "severity", "attribution", "repo", "what_is_wrong", "evidence", "confidence"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^f[0-9]+$" },
+        "severity": {
+          "enum": ["blocker", "major", "minor", "nit"],
+          "description": "Irreducible judgment. Deliberately left to the reviewer."
+        },
+        "attribution": {
+          "enum": ["introduced-by-change", "pre-existing", "not-a-defect"],
+          "description": "Asserted by the reviewer, then machine-checked by running repro_cmd at base_sha and head_sha. This is the category that decides whether the loop continues, so it is the one most worth abusing."
+        },
+        "attribution_checked": {
+          "anyOf": [
+            { "enum": ["introduced-by-change", "pre-existing", "not-a-defect", "inconclusive"] },
+            { "type": "null" }
+          ],
+          "description": "Written by the harness after executing repro_cmd at both revisions. When present it, not `attribution`, is what the stop rule reads."
+        },
+        "repo": { "type": "string", "minLength": 1 },
+        "item": { "type": "string", "description": "Adopter work-item identifier, when the finding is about one." },
+        "claim_ref": { "type": ["string", "null"], "pattern": "^(c[0-9]+)?$" },
+        "what_is_wrong": { "type": "string", "minLength": 1 },
+        "evidence": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Length-capped. Long form lives behind evidence_ref."
+        },
+        "evidence_ref": { "type": "string" },
+        "repro_cmd": { "type": "string", "minLength": 1 },
+        "correct_fix": { "type": "string" },
+        "confidence": { "enum": ["high", "medium", "low"] }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "severity": { "enum": ["blocker", "major"] } }, "required": ["severity"] },
+          "then": {
+            "required": ["repro_cmd"],
+            "description": "Without a runnable reproduction, attribution cannot be machine-checked, and attribution is what gates termination."
+          }
+        }
+      ]
+    },
+
+    "claim_verdict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claim_id", "result", "evidence"],
+      "properties": {
+        "claim_id": { "type": "string", "pattern": "^c[0-9]+$" },
+        "result": { "enum": ["confirmed", "refuted", "unverifiable"] },
+        "evidence": { "type": "string", "minLength": 1 }
+      }
+    },
+
+    "uncovered": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repo", "what_changed", "why_it_needed_a_claim"],
+      "properties": {
+        "repo": { "type": "string", "minLength": 1 },
+        "what_changed": { "type": "string", "minLength": 1 },
+        "why_it_needed_a_claim": { "type": "string", "minLength": 1 }
+      }
+    },
+
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["est_tokens", "rendered_bytes", "cap", "over_budget"],
+      "properties": {
+        "est_tokens": { "type": "integer", "minimum": 0 },
+        "rendered_bytes": { "type": "integer", "minimum": 0 },
+        "cap": { "type": "integer", "minimum": 1 },
+        "over_budget": { "type": "boolean" }
+      }
+    }
+  }
+}

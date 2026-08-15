@@ -1,0 +1,359 @@
+#!/usr/bin/env bash
+# crosscheck-claim — open a handoff at session start and append to it during the work.
+#
+# This is deliberately a shell command rather than hook plumbing: it works
+# identically for every agent CLI, so the accumulate half of a cross-check loop
+# needs no per-tool integration. Only the trigger ever does.
+#
+# The point of appending as you go rather than assembling at the end:
+#   - a claim is written while the evidence is still on screen, together with the
+#     exact command that produced it
+#   - a trap gets recorded at the moment it is discovered, which is the only
+#     moment anyone remembers it
+#   - the claims survive a context compaction that would otherwise destroy the
+#     author's ability to say what it did
+#   - and writing into a field labelled `evidence_cmd` is a different act from
+#     summarising at the end. "The commit says it is done" does not survive it.
+#
+# Usage:
+#   crosscheck-claim open  --repo <path> [--policy-key K] [--clearance C] [--base SHA]
+#                          [--agent A] [--provider P] [--model M] [--session S] [--round N]
+#   crosscheck-claim scope --repo <path> [--policy-key K] [--clearance C] [--base SHA]
+#   crosscheck-claim add   --statement TEXT [--class mechanical|judgment]
+#                          [--evidence-cmd CMD] [--check TYPE[:VALUE]] [--expected TEXT]
+#                          [--files a,b,c]
+#   crosscheck-claim trap  TEXT
+#   crosscheck-claim attack TEXT                 # ranked; weakest point first
+#   crosscheck-claim flag  --item X --judgment Y --rationale Z
+#   crosscheck-claim out-of-scope TEXT
+#   crosscheck-claim ground-rule TEXT
+#   crosscheck-claim artifact PATH
+#   crosscheck-claim headline NAME=VALUE
+#   crosscheck-claim show [--jq FILTER]
+#   crosscheck-claim path
+#
+# Payload location:  $CROSSCHECK_DIR/<session>/round-<N>/handoff.json
+#   CROSSCHECK_DIR      default ~/.crosscheck   (keep it OUTSIDE any repo: a
+#                       payload that can be committed will eventually be committed)
+#   CROSSCHECK_SESSION  default a generated uuid, remembered in $CROSSCHECK_DIR/current
+#   CROSSCHECK_ROUND    default 1
+#   CROSSCHECK_HANDOFF_TOKEN_CAP  default 8000
+#   CROSSCHECK_CLEARANCE_ORDER    adopter clearance vocabulary, weakest first,
+#                       comma-separated (e.g. "low,medium,high,max"). When set,
+#                       clearance_required is recomputed as the maximum over
+#                       scope[].clearance on every write. The vocabulary and its
+#                       ordering are adopter policy, so nothing is assumed here.
+#
+# Every append re-validates the whole payload against the schema, so a malformed
+# claim fails at the moment it is written rather than at handoff time. A
+# mechanical claim's --check is executed once on write, to prove the command runs
+# at all; its result is not recorded here (crosscheck-run-checks.sh does that,
+# immediately before the reviewer is spawned, when the tree is final).
+#
+# Exit: 0 ok · 1 rejected · 2 usage / IO.
+set -uo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VALIDATE="$SCRIPT_DIR/validate-payload.sh"
+# shellcheck source=lib/budget.sh
+. "$SCRIPT_DIR/lib/budget.sh"
+ROOT="${CROSSCHECK_DIR:-$HOME/.crosscheck}"
+ROUND="${CROSSCHECK_ROUND:-1}"
+CAP="${CROSSCHECK_HANDOFF_TOKEN_CAP:-8000}"
+
+usage() { sed -n '19,45p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' >&2; exit 2; }
+die()   { echo "crosscheck-claim: $*" >&2; exit 2; }
+no()    { echo "crosscheck-claim: rejected — $*" >&2; exit 1; }
+
+command -v jq >/dev/null 2>&1 || die "jq not found"
+
+CMD="${1:-}"; shift 2>/dev/null || true
+[[ -n "$CMD" ]] || usage
+
+# ── session / payload path ───────────────────────────────────────────────────
+session_file="$ROOT/current"
+SESSION="${CROSSCHECK_SESSION:-}"
+if [[ -z "$SESSION" && -r "$session_file" ]]; then SESSION="$(cat "$session_file")"; fi
+
+payload_path() { printf '%s/%s/round-%s/handoff.json' "$ROOT" "$SESSION" "$ROUND"; }
+
+# ── arg parsing (shared) ─────────────────────────────────────────────────────
+A_REPO=""; A_KEY=""; A_CLEAR=""; A_BASE=""
+A_AGENT=""; A_PROVIDER=""; A_MODEL=""
+A_STATEMENT=""; A_CLASS=""; A_EVIDENCE=""; A_CHECK=""; A_EXPECTED=""; A_FILES=""
+A_ITEM=""; A_JUDGMENT=""; A_RATIONALE=""; A_JQ=""
+POSITIONAL=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --repo)         A_REPO="$2"; shift 2 ;;
+    --policy-key)   A_KEY="$2"; shift 2 ;;
+    --clearance)    A_CLEAR="$2"; shift 2 ;;
+    --base)         A_BASE="$2"; shift 2 ;;
+    --agent)        A_AGENT="$2"; shift 2 ;;
+    --provider)     A_PROVIDER="$2"; shift 2 ;;
+    --model)        A_MODEL="$2"; shift 2 ;;
+    --session)      SESSION="$2"; shift 2 ;;
+    --round)        ROUND="$2"; shift 2 ;;
+    --statement)    A_STATEMENT="$2"; shift 2 ;;
+    --class)        A_CLASS="$2"; shift 2 ;;
+    --evidence-cmd) A_EVIDENCE="$2"; shift 2 ;;
+    --check)        A_CHECK="$2"; shift 2 ;;
+    --expected)     A_EXPECTED="$2"; shift 2 ;;
+    --files)        A_FILES="$2"; shift 2 ;;
+    --item)         A_ITEM="$2"; shift 2 ;;
+    --judgment)     A_JUDGMENT="$2"; shift 2 ;;
+    --rationale)    A_RATIONALE="$2"; shift 2 ;;
+    --jq)           A_JQ="$2"; shift 2 ;;
+    -h|--help)      usage ;;
+    --) shift; while [[ $# -gt 0 ]]; do POSITIONAL+=("$1"); shift; done ;;
+    -*) die "unknown arg: $1" ;;
+    *)  POSITIONAL+=("$1"); shift ;;
+  esac
+done
+
+# ── write helpers ────────────────────────────────────────────────────────────
+# Recompute the budget on every write and re-validate, so the payload is never
+# left in a state the reviewer could not be handed.
+finish() {
+  local file="$1" tmp="$1.tmp"
+
+  # clearance_required is the MAXIMUM over scope[].clearance — a review that
+  # touches four repositories is a review at the highest clearance of any of
+  # them. The ordering is adopter policy, not part of this contract, so the
+  # computation only happens when the adopter supplies one.
+  if [[ -n "${CROSSCHECK_CLEARANCE_ORDER:-}" ]]; then
+    jq --arg order "$CROSSCHECK_CLEARANCE_ORDER" '
+      ($order | split(",") | map(gsub("^\\s+|\\s+$"; ""))) as $ord
+      | ([ .scope[].clearance ] | map({c: ., r: ($ord | index(.) // -1)}) | max_by(.r)) as $top
+      | if $top == null or $top.r < 0 then . else .clearance_required = $top.c end
+    ' "$tmp" > "$tmp.c" && mv "$tmp.c" "$tmp"
+  elif [[ "$(jq -r '[.scope[].clearance] | unique | length' "$tmp")" -gt 1 ]]; then
+    echo "crosscheck-claim: NOTE scope spans several clearances and CROSSCHECK_CLEARANCE_ORDER is unset — clearance_required left as written" >&2
+  fi
+
+  refresh_budget "$tmp" "$CAP" || die "failed to write budget"
+
+  if ! "$VALIDATE" handoff "$tmp" --schema-only >/dev/null; then
+    "$VALIDATE" handoff "$tmp" --schema-only >&2
+    rm -f "$tmp"
+    no "the resulting payload does not conform; nothing was written"
+  fi
+  mv "$tmp" "$file"
+}
+
+edit() {  # edit <jq-filter> [jq args...]
+  local file; file="$(payload_path)"
+  [[ -r "$file" ]] || die "no handoff at $file — run 'crosscheck-claim open --repo <path>' first"
+  local filter="$1"; shift
+  jq "$@" "$filter" "$file" > "$file.tmp" || die "jq edit failed"
+  finish "$file"
+}
+
+git_head() { git -C "$1" rev-parse HEAD 2>/dev/null; }
+git_base() {
+  # Session baseline: the commit the work started from. Falls back to HEAD, which
+  # makes an empty diff, which is the correct answer for a session that has not
+  # committed anything yet.
+  git -C "$1" rev-parse HEAD 2>/dev/null
+}
+git_dirty() {
+  if [[ -n "$(git -C "$1" status --porcelain 2>/dev/null)" ]]; then echo true; else echo false; fi
+}
+
+scope_entry_json() {
+  local repo="$1" key="$2" clear="$3" base="$4"
+  git -C "$repo" rev-parse --git-dir >/dev/null 2>&1 || die "$repo is not a git repository"
+  local head dirty
+  head="$(git_head "$repo")" || die "cannot read HEAD in $repo"
+  [[ -n "$base" ]] || base="$(git_base "$repo")"
+  dirty="$(git_dirty "$repo")"
+  jq -n --arg p "$(cd "$repo" && pwd -P)" --arg k "${key:-$(basename "$(cd "$repo" && pwd -P)")}" \
+        --arg c "${clear:-unset}" --arg b "$base" --arg h "$head" --argjson d "$dirty" \
+        '{repo_path:$p, policy_key:$k, clearance:$c, base_sha:$b, head_sha:$h, dirty:$d}'
+}
+
+case "$CMD" in
+
+open)
+  [[ -n "$A_REPO" ]] || die "open needs --repo <path>"
+  if [[ -z "$SESSION" ]]; then
+    if [[ -r /proc/sys/kernel/random/uuid ]]; then SESSION="$(cat /proc/sys/kernel/random/uuid)"
+    else SESSION="$(date -u +%Y%m%dT%H%M%SZ)-$$"; fi
+  fi
+  dir="$ROOT/$SESSION/round-$ROUND"
+  mkdir -p "$dir" || die "cannot create $dir"
+  printf '%s' "$SESSION" > "$session_file"
+  file="$dir/handoff.json"
+  [[ -e "$file" ]] && die "handoff already exists at $file (use 'scope'/'add' to append)"
+
+  scope="$(scope_entry_json "$A_REPO" "$A_KEY" "$A_CLEAR" "$A_BASE")" || exit 2
+  jq -n --arg s "$SESSION" --argjson r "$ROUND" \
+        --arg ag "${A_AGENT:-unknown}" --arg pr "${A_PROVIDER:-unknown}" --arg mo "${A_MODEL:-unknown}" \
+        --argjson sc "$scope" --arg cl "${A_CLEAR:-unset}" '
+    {
+      schema: "eposforge.crosscheck.handoff/1",
+      round: $r,
+      session: $s,
+      implementer: {agent: $ag, provider: $pr, model: $mo},
+      scope: [$sc],
+      clearance_required: $cl,
+      claims: [],
+      headline_numbers: {},
+      traps: [],
+      attack_first: [],
+      self_flagged: [],
+      out_of_scope: [],
+      artifacts: [],
+      ground_rules: [
+        "Read-only. Do not commit, push, or start stopped services.",
+        "Verify content, not status: a green exit code is not evidence anything was read.",
+        "Do not reuse the author'"'"'s scripts to check the author'"'"'s work."
+      ],
+      disposition_ref: null,
+      budget: {est_tokens: 0, rendered_bytes: 0, cap: 0, over_budget: false}
+    }' > "$file.tmp" || die "cannot write $file"
+  finish "$file"
+  echo "$file"
+  ;;
+
+scope)
+  [[ -n "$A_REPO" ]] || die "scope needs --repo <path>"
+  scope="$(scope_entry_json "$A_REPO" "$A_KEY" "$A_CLEAR" "$A_BASE")" || exit 2
+  # Replace an existing entry for the same path rather than accumulating stale SHAs.
+  edit '
+    .scope = ((.scope | map(select(.repo_path != $e.repo_path))) + [$e])
+  ' --argjson e "$scope"
+  echo "scope: ${A_REPO}"
+  ;;
+
+add)
+  [[ -n "$A_STATEMENT" ]] || die "add needs --statement"
+  if [[ -z "$A_CLASS" ]]; then
+    if [[ -n "$A_CHECK" ]]; then A_CLASS="mechanical"; else A_CLASS="judgment"; fi
+  fi
+  case "$A_CLASS" in mechanical|judgment) ;; *) die "--class must be mechanical or judgment" ;; esac
+
+  ctype=""; cval=""
+  if [[ -n "$A_CHECK" ]]; then
+    ctype="${A_CHECK%%:*}"
+    [[ "$A_CHECK" == *:* ]] && cval="${A_CHECK#*:}"
+  fi
+
+  if [[ "$A_CLASS" == "mechanical" ]]; then
+    [[ -n "$A_EVIDENCE" ]] || no "a mechanical claim needs --evidence-cmd; without it the claim cannot be falsified"
+    [[ -n "$ctype" ]]      || no "a mechanical claim needs --check TYPE[:VALUE]; prose that cannot be executed never gets executed"
+    case "$ctype" in
+      exit0|absent) ;;
+      equals|regex|count-eq|count-lt)
+        [[ -n "$cval" ]] || no "check type '$ctype' needs a value: --check $ctype:<value>" ;;
+      *) no "unknown check type '$ctype' (exit0|equals|regex|absent|count-eq|count-lt)" ;;
+    esac
+    # Prove the command at least runs. Its verdict is not recorded here — the
+    # tree is still moving; crosscheck-run-checks.sh settles that at the end.
+    # Run it where crosscheck-run-checks.sh will run it later — the first scope
+    # entry — or a claim that passes on write fails at handoff for no reason
+    # anyone can see.
+    probe_cwd="$(jq -r '.scope[0].repo_path // "."' "$(payload_path)" 2>/dev/null || echo .)"
+    [[ -d "$probe_cwd" ]] || probe_cwd="."
+    ( cd "$probe_cwd" && bash -c "$A_EVIDENCE" ) >/dev/null 2>&1
+    rc=$?
+    if (( rc != 0 )); then
+      if [[ "$ctype" == "exit0" ]]; then
+        no "--check exit0 but the evidence command exited $rc right now; either the claim is false or the command is wrong"
+      fi
+      echo "crosscheck-claim: note — evidence command exited $rc on write (fine for check type '$ctype')" >&2
+    fi
+  fi
+
+  check_json=null
+  if [[ -n "$ctype" ]]; then
+    if [[ -z "$cval" ]]; then
+      check_json="$(jq -n --arg t "$ctype" '{type:$t}')"
+    elif [[ "$cval" =~ ^-?[0-9]+$ ]]; then
+      check_json="$(jq -n --arg t "$ctype" --argjson v "$cval" '{type:$t, value:$v}')"
+    else
+      check_json="$(jq -n --arg t "$ctype" --arg v "$cval" '{type:$t, value:$v}')"
+    fi
+  fi
+
+  files_json="$(jq -Rn --arg f "$A_FILES" '$f | if . == "" then [] else split(",") | map(gsub("^\\s+|\\s+$";"")) | map(select(length>0)) end')"
+
+  edit '
+    (([.claims[].id | ltrimstr("c") | tonumber] | max // 0) + 1) as $n
+    | .claims += [ ( {
+        id: ("c" + ($n|tostring)),
+        class: $cls,
+        statement: $st,
+        files: $files
+      }
+      + (if $ev == "" then {} else {evidence_cmd: $ev} end)
+      + (if $exp == "" then {} else {expected: $exp} end)
+      + (if $chk == null then {} else {check: $chk} end) ) ]
+  ' --arg cls "$A_CLASS" --arg st "$A_STATEMENT" --arg ev "$A_EVIDENCE" \
+    --arg exp "$A_EXPECTED" --argjson chk "$check_json" --argjson files "$files_json"
+  jq -r '.claims[-1] | "claim " + .id + " (" + .class + ") recorded"' "$(payload_path)"
+  ;;
+
+trap)
+  [[ ${#POSITIONAL[@]} -gt 0 ]] || die "trap needs the text as an argument"
+  edit '.traps += [$t]' --arg t "${POSITIONAL[*]}"
+  echo "trap recorded"
+  ;;
+
+attack)
+  [[ ${#POSITIONAL[@]} -gt 0 ]] || die "attack needs the text as an argument"
+  edit '.attack_first += [$t]' --arg t "${POSITIONAL[*]}"
+  echo "attack-first recorded"
+  ;;
+
+out-of-scope)
+  [[ ${#POSITIONAL[@]} -gt 0 ]] || die "out-of-scope needs the text as an argument"
+  edit '.out_of_scope += [$t]' --arg t "${POSITIONAL[*]}"
+  echo "out-of-scope recorded (the reviewer may challenge it)"
+  ;;
+
+ground-rule)
+  [[ ${#POSITIONAL[@]} -gt 0 ]] || die "ground-rule needs the text as an argument"
+  edit '.ground_rules += [$t]' --arg t "${POSITIONAL[*]}"
+  echo "ground rule recorded"
+  ;;
+
+artifact)
+  [[ ${#POSITIONAL[@]} -gt 0 ]] || die "artifact needs a path"
+  edit '.artifacts += [$t]' --arg t "${POSITIONAL[*]}"
+  echo "artifact recorded"
+  ;;
+
+headline)
+  [[ ${#POSITIONAL[@]} -gt 0 ]] || die "headline needs NAME=VALUE"
+  kv="${POSITIONAL[0]}"
+  [[ "$kv" == *=* ]] || die "headline needs NAME=VALUE"
+  k="${kv%%=*}"; v="${kv#*=}"
+  if [[ "$v" =~ ^-?[0-9]+$ ]]; then
+    edit '.headline_numbers[$k] = $v' --arg k "$k" --argjson v "$v"
+  else
+    edit '.headline_numbers[$k] = $v' --arg k "$k" --arg v "$v"
+  fi
+  echo "headline recorded"
+  ;;
+
+flag)
+  [[ -n "$A_ITEM" && -n "$A_JUDGMENT" && -n "$A_RATIONALE" ]] \
+    || die "flag needs --item, --judgment and --rationale"
+  edit '.self_flagged += [{item:$i, judgment:$j, rationale:$r}]' \
+    --arg i "$A_ITEM" --arg j "$A_JUDGMENT" --arg r "$A_RATIONALE"
+  echo "self-flagged call recorded"
+  ;;
+
+show)
+  file="$(payload_path)"
+  [[ -r "$file" ]] || die "no handoff at $file"
+  if [[ -n "$A_JQ" ]]; then jq -r "$A_JQ" "$file"; else jq . "$file"; fi
+  ;;
+
+path)
+  payload_path
+  ;;
+
+*) die "unknown subcommand: $CMD" ;;
+esac

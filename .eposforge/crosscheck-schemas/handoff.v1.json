@@ -1,0 +1,254 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "eposforge.crosscheck.handoff/1",
+  "title": "Cross-agent review handoff (implementer -> reviewer)",
+  "description": "Opened at session start and appended to during the work, not assembled at the end. The reviewer spawns cold, so this payload is the entire contract between the two agents.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "round",
+    "session",
+    "implementer",
+    "scope",
+    "clearance_required",
+    "claims",
+    "traps",
+    "attack_first",
+    "out_of_scope",
+    "ground_rules",
+    "budget"
+  ],
+  "properties": {
+    "schema": { "const": "eposforge.crosscheck.handoff/1" },
+
+    "round": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "1-based round number within one cross-check loop."
+    },
+
+    "session": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Opaque session identifier. Adopters that capture LLM wire traffic should reuse the capture session id here so a review joins its own transcript."
+    },
+
+    "implementer": { "$ref": "#/$defs/actor" },
+
+    "scope": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/scope_entry" },
+      "description": "Every repository this change touches. The reviewer reads diffs by reference from these SHAs; the payload never inlines them."
+    },
+
+    "clearance_required": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Opaque clearance token. Adopter policy defines the vocabulary and the ordering; this contract only requires that one exists. Computed as the maximum over scope[].clearance."
+    },
+
+    "claims": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/claim" },
+      "description": "The load-bearing field. A claim with no way to falsify it is not a claim."
+    },
+
+    "headline_numbers": {
+      "type": "object",
+      "description": "Named summary figures the reviewer should re-derive rather than accept."
+    },
+
+    "traps": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Tooling gotchas learned during the work that the reviewer would otherwise fall into. Append at the moment of discovery; these are the entries reconstruction-at-the-end reliably loses."
+    },
+
+    "attack_first": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Ranked. The author's own guess at where this change is weakest."
+    },
+
+    "self_flagged": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/self_flag" },
+      "description": "Judgment calls the author is knowingly taking, offered for challenge rather than buried."
+    },
+
+    "out_of_scope": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Pre-existing breakage not chargeable to this change. Every entry is challengeable by the reviewer."
+    },
+
+    "artifacts": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Paths the reviewer may read. Offered as evidence, not as tools: the reviewer should not reuse the author's scripts to check the author's work."
+    },
+
+    "ground_rules": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Constraints on how the reviewer may act, e.g. read-only, do not start stopped services, verify content rather than status."
+    },
+
+    "disposition_ref": {
+      "type": ["string", "null"],
+      "description": "Path to round N-1 disposition. Null on round 1. Round N+1 is a delta against this, not a restatement."
+    },
+
+    "budget": { "$ref": "#/$defs/budget" },
+
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["changed_files", "claimed_files", "uncovered"],
+      "properties": {
+        "changed_files": { "type": "integer", "minimum": 0 },
+        "claimed_files": { "type": "integer", "minimum": 0 },
+        "uncovered": { "type": "array", "items": { "type": "string" } }
+      },
+      "description": "Computed by set arithmetic over the diff, never asserted by the author."
+    },
+
+    "check_results": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/check_result" },
+      "description": "Filled by the harness before the reviewer is spawned, so the reviewer never re-runs a passing mechanical claim."
+    },
+
+    "reviewer_resolved": { "$ref": "#/$defs/reviewer_resolved" },
+
+    "prompt_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "Hash of the rendered reviewer prompt. Does not make an LLM reproducible; makes a disagreement diagnosable."
+    }
+  },
+
+  "$defs": {
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["agent", "provider", "model"],
+      "properties": {
+        "agent": { "type": "string", "minLength": 1 },
+        "provider": { "type": "string", "minLength": 1, "description": "The CLI harness." },
+        "model": { "type": "string", "minLength": 1, "description": "The serving model. Provider is not vendor: one harness can serve several vendors' models." }
+      }
+    },
+
+    "scope_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repo_path", "policy_key", "clearance", "base_sha", "head_sha", "dirty"],
+      "properties": {
+        "repo_path": { "type": "string", "minLength": 1 },
+        "policy_key": { "type": "string", "minLength": 1, "description": "Adopter routing key this path resolves to." },
+        "clearance": { "type": "string", "minLength": 1 },
+        "base_sha": { "type": "string", "pattern": "^[0-9a-f]{7,40}$" },
+        "head_sha": { "type": "string", "pattern": "^[0-9a-f]{7,40}$" },
+        "dirty": { "type": "boolean", "description": "True when the working tree has uncommitted changes, which head_sha does not describe." }
+      }
+    },
+
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "class", "statement", "files"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^c[0-9]+$" },
+        "class": { "enum": ["mechanical", "judgment"] },
+        "statement": { "type": "string", "minLength": 1 },
+        "evidence_cmd": { "type": "string", "minLength": 1 },
+        "expected": { "type": "string", "description": "Human-readable expectation. Never a substitute for `check`." },
+        "check": { "$ref": "#/$defs/check" },
+        "files": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Paths this claim covers. Drives the coverage computation; an empty list means the claim covers nothing."
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "class": { "const": "mechanical" } }, "required": ["class"] },
+          "then": {
+            "required": ["evidence_cmd", "check"],
+            "description": "A mechanical claim IS a test. Prose that cannot be executed never gets executed."
+          }
+        }
+      ]
+    },
+
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": { "enum": ["exit0", "equals", "regex", "absent", "count-eq", "count-lt"] },
+        "value": { "type": ["string", "number"] }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "enum": ["equals", "regex", "count-eq", "count-lt"] } }, "required": ["type"] },
+          "then": { "required": ["value"] }
+        }
+      ]
+    },
+
+    "self_flag": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["item", "judgment", "rationale"],
+      "properties": {
+        "item": { "type": "string", "minLength": 1 },
+        "judgment": { "type": "string", "minLength": 1 },
+        "rationale": { "type": "string", "minLength": 1 }
+      }
+    },
+
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["est_tokens", "rendered_bytes", "cap", "over_budget"],
+      "properties": {
+        "est_tokens": { "type": "integer", "minimum": 0 },
+        "rendered_bytes": { "type": "integer", "minimum": 0 },
+        "cap": { "type": "integer", "minimum": 1 },
+        "over_budget": { "type": "boolean" }
+      },
+      "description": "Over budget blocks until the author trims. Silent truncation would drop exactly the traps and attack_first entries that make the review worth running."
+    },
+
+    "check_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claim_id", "ran", "exit_code", "matched"],
+      "properties": {
+        "claim_id": { "type": "string", "pattern": "^c[0-9]+$" },
+        "ran": { "type": "boolean" },
+        "exit_code": { "type": "integer" },
+        "matched": { "type": ["boolean", "null"] },
+        "output_ref": { "type": "string", "description": "Path to captured output. The payload carries the pointer, not the bytes." }
+      }
+    },
+
+    "reviewer_resolved": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["agent", "provider", "realized_as", "selection_reason", "availability_checked"],
+      "properties": {
+        "agent": { "type": "string", "minLength": 1 },
+        "provider": { "type": "string", "minLength": 1 },
+        "model_vendor": { "type": "string", "description": "Vendor of the serving model. A diversity claim against a model you cannot name is not a claim." },
+        "realized_as": { "type": "string", "minLength": 1, "description": "The exact command line used." },
+        "selection_reason": { "type": "string" },
+        "availability_checked": { "type": "boolean", "description": "Availability probing makes selection environment-dependent; record whether it ran." }
+      }
+    }
+  }
+}

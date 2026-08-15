@@ -1,0 +1,11 @@
+{
+  "schema": "eposforge.crosscheck.disposition/1",
+  "round": 1,
+  "findings_ref": "findings-blocker-introduced.json",
+  "dispositions": [
+    {
+      "finding_id": "f1",
+      "action": "accepted-deferred"
+    }
+  ]
+}

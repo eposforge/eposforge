@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "eposforge.crosscheck.disposition/1",
+  "title": "Cross-agent review disposition (implementer -> reviewer, round N+1)",
+  "description": "The third leg, without which the loop cannot terminate: two payloads let round N+1 merely re-assert. Every finding must be answered, and two of the three answers cost something to give.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "round", "findings_ref", "dispositions"],
+  "properties": {
+    "schema": { "const": "eposforge.crosscheck.disposition/1" },
+    "round": { "type": "integer", "minimum": 1 },
+    "findings_ref": { "type": "string", "minLength": 1 },
+    "dispositions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/disposition" },
+      "description": "Must cover every findings[].id exactly once."
+    }
+  },
+
+  "$defs": {
+    "disposition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["finding_id", "action"],
+      "properties": {
+        "finding_id": { "type": "string", "pattern": "^f[0-9]+$" },
+        "action": { "enum": ["accepted-fixed", "accepted-deferred", "rejected"] },
+        "detail": {
+          "type": "string",
+          "minLength": 1,
+          "description": "For accepted-deferred, the work-item identifier the deferral was filed as. For rejected, the rebuttal. Deferring without filing and rejecting without arguing are the two ways this leg gets hollowed out."
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "action": { "enum": ["accepted-deferred", "rejected"] } }, "required": ["action"] },
+          "then": { "required": ["detail"] }
+        }
+      ]
+    }
+  }
+}

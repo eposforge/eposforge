@@ -1,0 +1,123 @@
+{
+  "schema": "eposforge.crosscheck.handoff/1",
+  "round": 1,
+  "session": "00000000-0000-4000-8000-000000000001",
+  "implementer": {
+    "agent": "alpha",
+    "provider": "cli-a",
+    "model": "model-a-1"
+  },
+  "scope": [
+    {
+      "repo_path": "/srv/repos/example-app",
+      "policy_key": "example_app",
+      "clearance": "medium",
+      "base_sha": "1111111111111111111111111111111111111111",
+      "head_sha": "2222222222222222222222222222222222222222",
+      "dirty": false
+    }
+  ],
+  "clearance_required": "medium",
+  "claims": [
+    {
+      "id": "c1",
+      "class": "mechanical",
+      "statement": "The linter reports zero errors across every configured root.",
+      "evidence_cmd": "./scripts/lint.sh --all",
+      "expected": "no ERRORS: section in the output",
+      "check": {
+        "type": "exit0"
+      },
+      "files": [
+        "scripts/lint.sh",
+        "config/roots.txt"
+      ]
+    },
+    {
+      "id": "c2",
+      "class": "judgment",
+      "statement": "Renaming the status vocabulary does not change which items are considered finished.",
+      "files": [
+        "docs/status-vocabulary.md"
+      ]
+    },
+    {
+      "id": "c3",
+      "class": "mechanical",
+      "statement": "Exactly 12 items carry the new status value.",
+      "evidence_cmd": "grep -c '^Status: slated' items.md",
+      "check": {
+        "type": "count-eq",
+        "value": 12
+      },
+      "files": [
+        "items.md"
+      ]
+    }
+  ],
+  "headline_numbers": {
+    "roots_linted": 13,
+    "items_touched": 12
+  },
+  "traps": [
+    "The linter only ever acts on the first entry of the roots variable; a single invocation silently skips the rest."
+  ],
+  "attack_first": [
+    "The status rename: green lint proves shape, not that the right items were selected.",
+    "The count in c3 was taken before the last commit."
+  ],
+  "self_flagged": [
+    {
+      "item": "item-014",
+      "judgment": "deferred -> slated",
+      "rationale": "The blocking dependency shipped, so the deferral no longer describes reality."
+    }
+  ],
+  "out_of_scope": [
+    "Two pre-existing broken links in docs/archive/, present at base_sha."
+  ],
+  "artifacts": [
+    "/srv/crosscheck/example/round-1/lint-output.txt"
+  ],
+  "ground_rules": [
+    "Read-only. Do not commit, push, or start stopped services.",
+    "Verify content, not status: a green exit code is not evidence anything was read."
+  ],
+  "disposition_ref": null,
+  "budget": {
+    "est_tokens": 4200,
+    "rendered_bytes": 16800,
+    "cap": 8000,
+    "over_budget": false
+  },
+  "coverage": {
+    "changed_files": 4,
+    "claimed_files": 4,
+    "uncovered": []
+  },
+  "check_results": [
+    {
+      "claim_id": "c1",
+      "ran": true,
+      "exit_code": 0,
+      "matched": true,
+      "output_ref": "checks/c1.out"
+    },
+    {
+      "claim_id": "c3",
+      "ran": true,
+      "exit_code": 0,
+      "matched": true,
+      "output_ref": "checks/c3.out"
+    }
+  ],
+  "reviewer_resolved": {
+    "agent": "bravo",
+    "provider": "cli-b",
+    "model_vendor": "vendor-b",
+    "realized_as": "cli-b --model model-b-2 --effort max",
+    "selection_reason": "clearance >= medium, model_vendor != vendor-a",
+    "availability_checked": false
+  },
+  "prompt_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+}

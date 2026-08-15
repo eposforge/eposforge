@@ -1,0 +1,4 @@
+/srv/repos/example-app	scripts/lint.sh
+/srv/repos/example-app	config/roots.txt
+/srv/repos/example-app	docs/status-vocabulary.md
+/srv/repos/example-app	scripts/release.sh
