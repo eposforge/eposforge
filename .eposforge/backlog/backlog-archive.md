@@ -17,6 +17,7 @@ Resolved issues are grouped by month (`## YYYY-MM`).
 
 
 
+
 ## Issue EF-007 — Resolve component-slot kind-class symmetry
 ID: EF-007
 Title: Resolve component-slot kind-class symmetry
@@ -178,6 +179,7 @@ Notes: Mechanism only — cloud resource/project provisioning, deployment rate (
 Resolved: 2026-05-26
 
 ## 2026-06
+
 
 
 
@@ -345,7 +347,7 @@ Notes: Carved out of EF-053 (its Verify-with clause 5). EF-053 shipped and ratif
 Validation: Minted the kernel vocabulary in `00-vision/01-ontology.ttl` (5-term cluster: ef:Kernel, ef:DetectionRatchet, ef:BootstrapRule [Tenet], ef:FoundationTrust, ef:ProductPromotion; Gall/Lehman/Loop-A-B folded into variants+comments per the doc's reduce-don't-grow mandate). Full KG wipe + bulk rebuild (115 docs, two-pass; ontology-anchored, 71 nodes ontology_valid). Recall verified against all clause-5 probes — "kernel"/"what can I build on" returns the two-property definition + candidate-kernel state + bootstrap rule; "why does my self-improving system keep grinding" returns the Gall/Lehman synthesis; and the distinguish-not-conflate clause holds: recall names foundation-trust (kernel state + bootstrap order) and product-promotion (maturity + release rings) as "orthogonal and independent" axes rather than conflating them.
 Resolved: 2026-06-26
 
-## Issue EF-045 — Implement DCO + SSH commit signing for the framework repo (Phase 0 "signed agent attribution" exit criterion)  [RESOLVED]
+## Issue EF-045 — Implement DCO + SSH commit signing for the framework repo (Phase 0 "signed agent attribution" exit criterion)
 ID: EF-045
 Title: Implement DCO + SSH commit signing for the framework repo (Phase 0 "signed agent attribution" exit criterion)
 Date: 2026-06-15
@@ -363,6 +365,7 @@ Local `git config` and signing verified to function. Gas Town self-improvement r
 Resolved: 2026-06-28
 
 ## 2026-07
+
 
 ## Issue EF-011 — Spec graph recall conflates EposForge components with adopter-side infrastructure
 ID: EF-011
@@ -461,7 +464,7 @@ Notes: Ticket reconciled 2026-06-15 with as-built code state (gap between origin
 
 
 
-## Issue EF-044 — Flatten the framework's `.eposforge/` layer + retire numbered component folders (node identity) [RESOLVED]
+## Issue EF-044 — Flatten the framework's `.eposforge/` layer for full layout symmetry with adopters
 ID: EF-044
 Title: Flatten the framework's `.eposforge/` layer for full layout symmetry with adopters
 Date: 2026-06-14
@@ -533,16 +536,32 @@ Effort: L
 Fix surface: eposforge-pattern
 Depends on: EF-059
 Tags: distribution, backlog-tooling
-Validation: Framework container rename to `.eposforge/` completed; adopter-side renames tracked and executed under adopter-029 in the Adopter Platform Spec repo (see the execution log below).
+Validation: Framework container rename to `.eposforge/` completed; adopter-side renames tracked and executed under the corresponding item in the Adopter Platform Spec repo (adopter IDs stay in the adopter's own backlog per EF-047; see the execution log below).
 Resolved: 2026-07-16
 Verify with: physical renames complete (`git mv instance .eposforge` in framework; `git mv eposforge .eposforge` in primary and secondary adopters); all references updated (framework internal paths, adopter runbooks/docker/compose/gastown configs, skills using EPOSFORGE_HOME, source-control-ci scripts, etc.); workspaces updated; generate-installed-index.py + layout checks + backlog scripts run successfully against new paths; no broken links or mounts remain; optional migration notes/doc updates shipped.
 Notes: Follows EF-059 (the decision + standard). This is the mechanical execution + coordination across repos. Includes cleanup of any legacy numbered paths inside adopters as encountered. After renames, re-ingest affected corpus into cognee where relevant and re-run portfolio views. See the (sanitized) public plan file for high-level steps; detailed private adopter coordination lives in the primary adopter's backlog.
 
 **Execution log (adopters, 2026-07-01+):**
-- Primary adopter + all product adopters with eposforge/ container tracked under adopter-029 in the primary adopter (the Adopter Platform Spec).
+- Primary adopter + all product adopters with eposforge/ container tracked under the corresponding item in the Adopter Platform Spec repo.
 - Repos in scope: the primary adopter (primary, full components + heavy private surface), IAC, OutreachApi, OutreachAssistant, PersonalAiContext.
 - Legal: already completed to .eposforge/ (2026-06-30).
 - Framework: completed.
 - Plan of record for private details/mounts: primary's adopter-dot-eposforge-container-private.md (to be relocated during its rename).
 - Will batch: update workspaces + references first (in each repo), git mv, post-rename fixes + verification per-repo, then global cross-checks.
 - After full set: update this item + EF-059 status, refresh graph, close.
+
+## 2026-08
+
+## Issue EF-074 — Session chairs standard (judgment seats vs skills vs component roles)
+ID: EF-074
+Title: Session chairs standard (judgment seats vs skills vs component roles)
+Date: 2026-08-14
+Status: resolved
+Effort: S
+Fix surface: eposforge-pattern
+Tags: agent-policy
+Depends on:
+Verify with: `04-standards/14-session-chairs/session-chairs.md` exists and is listed from `04-standards/README.md` and `AGENTS.md` §Standards; the standard distinguishes component role / session chair / skill, requires a CLI-agnostic chair store plus a selector in standing `AGENTS.md`, and forbids Orchestrator adapters from substituting for host chairs; no adopter names or host paths appear; incremental Spec Graph ingest of the new standard makes a recall probe ("What session chairs should an adopter install, and how do they differ from skills?") name this layer rather than only Orchestrator / Dev Product.
+Resolved: 2026-08-14
+Notes: Filed 2026-08-14. Closes the gap where recall described factory component roles and adopters kept growing skills while every CLI session sat as implementer. Not a new component slot. Ontology `SessionChair` class deferred (full KG wipe); markdown + incremental ingest first. Adjacency: EF-061 (skills create-side, sibling not parent), EF-032/EF-063 (skill install/fleet — same projection pattern), Standard 08, Standard 05.
+Validation: 2026-08-14. Standard on `main` (`52ad72e`); listed in `04-standards/README.md` and `AGENTS.md`. Incremental ingest: ontology key was missing (`409 Ontology key 'eposforge' not found`), re-uploaded existing TTL, cognify `PipelineRunCompleted`. Recall "What session chairs should an adopter install, and how do they differ from skills?" named implementer/reviewer/elicitor/operator plus the skill-vs-chair split.
