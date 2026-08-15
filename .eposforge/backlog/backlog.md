@@ -231,21 +231,6 @@ Notes: Filed 2026-06-16 during portfolio-review. Single-valued `Theme:` (added b
 
 
 
-## Issue EF-047 — Restore + enforce the public/private backlog boundary
-ID: EF-047
-Title: Restore + enforce the public/private backlog boundary
-Date: 2026-06-16
-Status: open
-Effort: M
-Fix surface: eposforge-pattern
-Tags: backlog-tooling
-Depends on: EF-046
-Verify with: Phase 1 (restore) — no public-repo item names private adopter IDs in Depends on:/Blocks: (EF-032 structural leak removed losslessly); private host paths and named examples genericized to "an adopter's"; EF-023/024 titles sanitized in-place (framework pattern decision recorded); grep for private markers clean on active. Phase 2 (enforce) — visibility="public" for eposforge; lint-backlog.sh builds map and ERRORs on public->private/unknown cross edges + whole-file leak scan; help documents rule + single-root degradation. Full plan: backlog/plans/EF-047-public-private-backlog-boundary.md.
-Notes: Public framework backlog must never reference private adopter items/paths (directional: private declares the Depends on). EF-047 = deterministic floor; EF-048 = semantic complement. Adjacency: EF-011/012, EF-046, EF-032, EF-048.
-
-
-
-
 ## Issue EF-048 — Context-aware (semantic) public→private boundary check, complementing the deterministic lint floor
 ID: EF-048
 Title: Context-aware (semantic) public→private boundary check, complementing the deterministic lint floor
