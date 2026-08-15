@@ -144,6 +144,54 @@ expect_exit 0 "a judgment claim needs no check" \
 ./crosscheck-claim trap "the linter only ever acts on the first roots entry" >/dev/null
 expect_exit 0 "the accumulated payload validates" ./validate-payload.sh handoff "$H"
 
+echo "== scope integrity: a pull can invalidate a handoff nobody rewrote"
+expect_exit 0 "freshly opened scope verifies clean" \
+  ./crosscheck-verify-scope.sh --handoff "$H" --write --quiet
+
+# Reproduce the real failure exactly: an upstream commit lands and an ordinary
+# `git pull --rebase` replays the unpushed local commit onto it. The replacement
+# carries a byte-identical subject line, which is why nobody notices.
+UP="$TMP/upstream"
+git clone -q --bare "$R" "$UP"
+git -C "$R" remote add origin "$UP" 2>/dev/null
+printf 'unrelated upstream work\n' > "$R/docs/upstream.md"
+git -C "$R" add -A && git -C "$R" commit -qm "post"
+git -C "$R" push -q origin main
+git -C "$R" reset -q --hard HEAD~1                       # local no longer has it
+printf 'local work\n' > "$R/docs/local.md"
+git -C "$R" add -A && git -C "$R" commit -qm "backlog: a local commit"
+ORPHAN="$(git -C "$R" rev-parse HEAD)"
+
+./crosscheck-claim scope --repo "$R" --policy-key example_app --clearance medium --base "$BASE" >/dev/null
+expect_exit 0 "verifies clean before the pull" \
+  ./crosscheck-verify-scope.sh --handoff "$H" --write --quiet
+
+git -C "$R" -c pull.rebase=true -c rebase.autoStash=true pull -q origin main 2>/dev/null
+REPLACEMENT="$(git -C "$R" rev-parse HEAD)"
+
+if [[ "$ORPHAN" != "$REPLACEMENT" ]]; then ok "the pull did rebase the local commit"
+else bad "the pull did rebase the local commit" "sha unchanged; test setup did not reproduce it"; fi
+
+expect_exit 10 "scope drift is detected after the pull" \
+  ./crosscheck-verify-scope.sh --handoff "$H" --quiet
+out="$(./crosscheck-verify-scope.sh --handoff "$H" 2>&1)"
+if grep -q 'head-orphaned' <<<"$out" && grep -q 'SAME subject' <<<"$out"; then
+  ok "names it head-orphaned and points at the identical-subject replacement"
+else
+  bad "names it head-orphaned and points at the identical-subject replacement" "$out"
+fi
+
+./crosscheck-verify-scope.sh --handoff "$H" --write --quiet >/dev/null 2>&1 || true
+expect_exit 1 "a drifted payload cannot be finalised" ./validate-payload.sh handoff "$H" --final
+jq '.scope |= map(del(.integrity))' "$H" > "$TMP/unverified.json"
+expect_exit 1 "an unverified payload cannot be finalised either" \
+  ./validate-payload.sh handoff "$TMP/unverified.json" --final
+
+# Put the scope back on the branch so the remaining tests work against a sane payload.
+./crosscheck-claim scope --repo "$R" --policy-key example_app --clearance medium --base "$BASE" >/dev/null
+expect_exit 0 "re-scoping after the drift verifies clean again" \
+  ./crosscheck-verify-scope.sh --handoff "$H" --write --quiet
+
 echo "== the loop finds what was never claimed"
 out="$(./crosscheck-coverage.sh --handoff "$H" --write --strict 2>&1)"; rc=$?
 if [[ $rc -eq 10 ]] && grep -q 'scripts/release.sh' <<<"$out"; then

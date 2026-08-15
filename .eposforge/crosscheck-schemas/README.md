@@ -92,6 +92,30 @@ mechanically checkable, authors would only claim mechanizable things and the
 interesting questions would be excluded by construction — "was live work buried?"
 has no exit code.
 
+## The promise a handoff makes, and how it expires
+
+`scope[]` carries SHAs and the reviewer reads the diff itself. That is the
+largest saving in the whole design — and it means the payload is a promise that
+a specific tree will still be there when the reviewer arrives.
+
+The promise expires, and not only when someone rewrites history on purpose. An
+ordinary `git pull` on a branch with unpushed commits rebases them; the
+replacement carries a **byte-identical commit subject**. No amend, no rebase
+command, no force-push, and nothing a human reads says the revision moved. The
+old commit survives in the reflog, so it still reads correctly on the machine
+that made it and nowhere else.
+
+So `crosscheck-verify-scope.sh` runs at transport, not at authoring, and
+`validate-payload.sh --final` refuses any payload whose `scope[].integrity` is
+missing or not `ok`. The distinction it draws is reachability, not existence:
+`head-orphaned` means the commit is still an object but no longer on the branch,
+which is the case that hides.
+
+**Re-verify, do not refresh.** Advancing `head_sha` to whatever HEAD says now
+makes the payload valid again while destroying the only fact that mattered —
+that the claims were written against a different tree than the one being handed
+over.
+
 Two guards keep the same pressure off the payload:
 
 - **`uncovered_scope[]`** is the counterweight to an author who knows the rubric.
@@ -131,6 +155,7 @@ larger than most of that review's turns has to move its evidence behind
 | Command | Does |
 |---|---|
 | `crosscheck-claim` | open / append to a handoff; validates on every write |
+| `crosscheck-verify-scope.sh` | do the promised revisions still exist and still sit on their branch → `scope[].integrity` |
 | `crosscheck-run-checks.sh` | execute every mechanical claim → `check_results[]` |
 | `crosscheck-coverage.sh` | changed files minus claimed files → `coverage.uncovered[]` |
 | `crosscheck-attribute.sh` | run `repro_cmd` at both SHAs → `attribution_checked` |

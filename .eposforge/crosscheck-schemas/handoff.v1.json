@@ -152,7 +152,15 @@
         "clearance": { "type": "string", "minLength": 1 },
         "base_sha": { "type": "string", "pattern": "^[0-9a-f]{7,40}$" },
         "head_sha": { "type": "string", "pattern": "^[0-9a-f]{7,40}$" },
-        "dirty": { "type": "boolean", "description": "True when the working tree has uncommitted changes, which head_sha does not describe." }
+        "dirty": { "type": "boolean", "description": "True when the working tree has uncommitted changes, which head_sha does not describe." },
+        "integrity": {
+          "enum": ["ok", "head-orphaned", "head-missing", "base-missing", "repo-unreachable"],
+          "description": "Written by the scope verifier, not asserted by the author. A handoff promises the reviewer a specific tree, and that promise expires: an ordinary pull rebases unpushed commits and the replacement carries an identical subject line. Finalising requires 'ok' on every entry."
+        },
+        "verified_at": {
+          "type": "string",
+          "description": "When integrity was last established. The check belongs at transport, because the drift happens after authoring."
+        }
       }
     },
 

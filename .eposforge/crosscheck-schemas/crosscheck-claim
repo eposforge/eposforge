@@ -167,9 +167,14 @@ scope_entry_json() {
   head="$(git_head "$repo")" || die "cannot read HEAD in $repo"
   [[ -n "$base" ]] || base="$(git_base "$repo")"
   dirty="$(git_dirty "$repo")"
+  # Stamped ok because it was just read from this repository. It is true now and
+  # says nothing about transport time — crosscheck-verify-scope.sh re-establishes
+  # it there, which is where an ordinary pull will have moved things.
   jq -n --arg p "$(cd "$repo" && pwd -P)" --arg k "${key:-$(basename "$(cd "$repo" && pwd -P)")}" \
         --arg c "${clear:-unset}" --arg b "$base" --arg h "$head" --argjson d "$dirty" \
-        '{repo_path:$p, policy_key:$k, clearance:$c, base_sha:$b, head_sha:$h, dirty:$d}'
+        --arg t "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+        '{repo_path:$p, policy_key:$k, clearance:$c, base_sha:$b, head_sha:$h, dirty:$d,
+          integrity:"ok", verified_at:$t}'
 }
 
 case "$CMD" in

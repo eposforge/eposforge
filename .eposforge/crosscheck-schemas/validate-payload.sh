@@ -134,6 +134,20 @@ handoff)
     for f in coverage check_results reviewer_resolved prompt_sha256; do
       jq -e --arg f "$f" 'has($f)' "$FILE" >/dev/null || fail "--final: missing $f"
     done
+
+    # The revisions this payload promises must still exist and still be on their
+    # branch. Checked by reading the field rather than by touching git, so this
+    # script stays pure — but the field can only be written by
+    # crosscheck-verify-scope.sh, so it cannot be finalised without that running.
+    unverified="$(jq -r '.scope[] | select((.integrity // "") == "") | .repo_path' "$FILE")"
+    [[ -n "$unverified" ]] && while IFS= read -r u; do
+      fail "--final: scope entry $u has no integrity verdict — run crosscheck-verify-scope.sh --write"
+    done <<<"$unverified"
+
+    drifted="$(jq -r '.scope[] | select((.integrity // "ok") != "ok") | "\(.repo_path) [\(.integrity)]"' "$FILE")"
+    [[ -n "$drifted" ]] && while IFS= read -r d; do
+      fail "--final: scope drift, the reviewer cannot be handed what this promises: $d"
+    done <<<"$drifted"
     # Every mechanical claim must have been run before the reviewer is spawned.
     missing="$(jq -r '
       [ .claims[] | select(.class == "mechanical") | .id ] as $m

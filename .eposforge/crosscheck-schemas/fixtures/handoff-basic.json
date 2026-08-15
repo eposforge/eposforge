@@ -14,7 +14,9 @@
       "clearance": "medium",
       "base_sha": "1111111111111111111111111111111111111111",
       "head_sha": "2222222222222222222222222222222222222222",
-      "dirty": false
+      "dirty": false,
+      "integrity": "ok",
+      "verified_at": "2026-08-15T18:00:00Z"
     }
   ],
   "clearance_required": "medium",
