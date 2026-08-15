@@ -31,7 +31,7 @@
 #       failing claim is exactly the thing the reviewer needs to see.
 set -uo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 # shellcheck source=lib/budget.sh
 . "$SCRIPT_DIR/lib/budget.sh"
 # shellcheck source=lib/claim-cwd.sh

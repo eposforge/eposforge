@@ -24,7 +24,7 @@
 # Exit: 0 ok · 10 uncovered files exist (--strict only) · 2 usage / IO.
 set -uo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 # shellcheck source=lib/budget.sh
 . "$SCRIPT_DIR/lib/budget.sh"
 

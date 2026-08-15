@@ -24,7 +24,7 @@
 # Exit: 0 valid · 1 invalid · 2 usage / unreadable input.
 set -uo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 LIB="$SCRIPT_DIR/lib/jsonschema.jq"
 
 usage() {

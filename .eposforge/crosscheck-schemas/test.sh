@@ -244,6 +244,36 @@ CROSSCHECK_DIR="$R/.crosscheck" CROSSCHECK_SESSION=in-repo \
   expect_exit 2 "refuses a payload directory inside a git work tree" \
   ./crosscheck-claim open --repo "$R" --clearance low
 
+echo "== a payload opened before the work started does not report a vacuous coverage zero"
+# The session-start trigger opens the handoff when the tree is still clean, so
+# `dirty` is stamped false. Left alone, coverage compares base..head over an
+# empty range and says uncovered=0 for a change it never looked at.
+VS="$TMP/vs-repo"
+mkdir -p "$VS"
+git -C "$VS" init -q -b main
+git -C "$VS" config user.email crosscheck@example.invalid
+git -C "$VS" config user.name  crosscheck-test
+echo base > "$VS/tracked.md"
+git -C "$VS" add -A && git -C "$VS" commit -qm base
+VSHA="$(git -C "$VS" rev-parse HEAD)"
+jq -n --arg r "$VS" --arg h "$VSHA" \
+  '{schema:"eposforge.crosscheck.handoff/1",round:1,session:"vs",
+    implementer:{agent:"alpha",provider:"p",model:"m"},
+    scope:[{repo_path:$r,policy_key:"vs",clearance:"low",base_sha:$h,head_sha:$h,dirty:false}],
+    clearance_required:"low",claims:[],traps:[],attack_first:[],out_of_scope:[],
+    ground_rules:[],budget:{est_tokens:1,rendered_bytes:4,cap:8000,over_budget:false}}' \
+  > "$TMP/vs.json"
+echo "work happened after the payload was opened" >> "$VS/tracked.md"
+./crosscheck-verify-scope.sh --handoff "$TMP/vs.json" --write --quiet >/dev/null 2>&1
+expect_out true "verify-scope re-reads dirty rather than believing the payload" \
+  jq -r '.scope[0].dirty' "$TMP/vs.json"
+out="$(./crosscheck-coverage.sh --handoff "$TMP/vs.json" 2>&1)"
+if grep -q 'tracked.md' <<<"$out"; then
+  ok "coverage then sees the working tree it would otherwise have missed"
+else
+  bad "coverage then sees the working tree it would otherwise have missed" "$out"
+fi
+
 echo "== a finding may name a claim without crashing the validator"
 # The claim_ref check used to read `.claim_ref` with the claims array as input,
 # so jq aborted and a well-formed payload read INVALID for a reason that had

@@ -34,7 +34,7 @@
 # Exit: 0 every entry ok · 10 at least one entry drifted · 2 usage / IO.
 set -uo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 
 HANDOFF=""; WRITE=0; QUIET=0
 usage() { sed -n '2,30p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' >&2; exit 2; }
@@ -56,8 +56,10 @@ command -v git >/dev/null 2>&1 || die "git not found"
 [[ -r "$HANDOFF" ]] || die "cannot read $HANDOFF"
 
 RESULTS="$(mktemp)" || die "cannot create temp file"
-trap 'rm -f "$RESULTS" "$RESULTS.tmp"' EXIT
+DIRTY="$(mktemp)" || die "cannot create temp file"
+trap 'rm -f "$RESULTS" "$RESULTS.tmp" "$DIRTY" "$DIRTY.tmp"' EXIT
 echo '{}' > "$RESULTS"
+echo '{}' > "$DIRTY"
 
 NOW="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 DRIFT=0
@@ -75,10 +77,24 @@ verify_one() {
   echo ok
 }
 
-while IFS=$'\t' read -r repo base head; do
+while IFS=$'\t' read -r repo base head was_dirty; do
   [[ -n "$repo" ]] || continue
   verdict="$(verify_one "$repo" "$base" "$head")"
   [[ "$verdict" == "ok" ]] || DRIFT=1
+
+  # `dirty` is not a promise, it is a fact about the tree right now — and the
+  # one fact that decides whether coverage sees anything at all. It is stamped
+  # when the handoff is opened, which for a session-start trigger is BEFORE any
+  # work exists: left alone it says false, coverage compares base..head over an
+  # empty range, and reports uncovered=0 for a change it never looked at. That
+  # zero is vacuous, so re-read it here rather than believing the payload.
+  now_dirty=false
+  if [[ -n "$(git -C "$repo" status --porcelain 2>/dev/null)" ]]; then now_dirty=true; fi
+  jq --arg r "$repo" --argjson v "$now_dirty" '.[$r] = $v' "$DIRTY" > "$DIRTY.tmp" \
+    && mv "$DIRTY.tmp" "$DIRTY"
+  if (( ! QUIET )) && [[ "$now_dirty" != "$was_dirty" ]]; then
+    printf '%-12s %s\n' "dirty=$now_dirty" "$repo (payload said $was_dirty)"
+  fi
 
   if (( ! QUIET )); then
     printf '%-12s %s\n' "$verdict" "$repo"
@@ -107,12 +123,13 @@ while IFS=$'\t' read -r repo base head; do
 
   jq --arg r "$repo" --arg v "$verdict" '.[$r] = $v' "$RESULTS" > "$RESULTS.tmp" \
     && mv "$RESULTS.tmp" "$RESULTS"
-done < <(jq -r '.scope[] | [.repo_path, .base_sha, .head_sha] | @tsv' "$HANDOFF")
+done < <(jq -r '.scope[] | [.repo_path, .base_sha, .head_sha, (.dirty | tostring)] | @tsv' "$HANDOFF")
 
 if (( WRITE )); then
-  jq --slurpfile r "$RESULTS" --arg now "$NOW" '
+  jq --slurpfile r "$RESULTS" --slurpfile d "$DIRTY" --arg now "$NOW" '
     .scope |= map(. as $s
       | .integrity = ($r[0][$s.repo_path] // "repo-unreachable")
+      | .dirty = (if ($d[0] | has($s.repo_path)) then $d[0][$s.repo_path] else .dirty end)
       | .verified_at = $now)' "$HANDOFF" > "$HANDOFF.vs.tmp" \
     && mv "$HANDOFF.vs.tmp" "$HANDOFF" \
     || die "failed to write integrity into $HANDOFF"

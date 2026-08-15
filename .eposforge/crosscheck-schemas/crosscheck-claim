@@ -58,7 +58,7 @@
 # Exit: 0 ok · 1 rejected · 2 usage / IO.
 set -uo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 VALIDATE="$SCRIPT_DIR/validate-payload.sh"
 # shellcheck source=lib/budget.sh
 . "$SCRIPT_DIR/lib/budget.sh"
