@@ -547,7 +547,7 @@ Notes: Follows EF-059 (the decision + standard). This is the mechanical executio
 - Repos in scope: the primary adopter (primary, full components + heavy private surface), IAC, OutreachApi, OutreachAssistant, PersonalAiContext.
 - Legal: already completed to .eposforge/ (2026-06-30).
 - Framework: completed.
-- Plan of record for private details/mounts: primary's adopter-dot-eposforge-container-private.md (to be relocated during its rename).
+- Plan of record for private details/mounts: the primary adopter's private container doc (to be relocated during its rename).
 - Will batch: update workspaces + references first (in each repo), git mv, post-rename fixes + verification per-repo, then global cross-checks.
 - After full set: update this item + EF-059 status, refresh graph, close.
 

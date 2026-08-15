@@ -1,7 +1,7 @@
 # Plan: Adopt uniform `.eposforge/` container folder (EF-059 / EF-060)
 
 **Date:** 2026-06-30  
-**Status:** Framework complete (2026-06-30). Adopter-side execution in progress across all adopting repos (tracked in EF-060 + primary adopter adopter-029). 
+**Status:** Framework complete (2026-06-30). Adopter-side execution in progress across all adopting repos (tracked in EF-060 + a primary adopter item). 
 **Tracking:** EF-059 (decision + standard), EF-060 (execution + migration)
 **Note on private details:** High-level public plan here. Full operational details, private repo paths, mounts, and gastown/docker specifics for adopters are in the primary adopter repo (under its `.eposforge/backlog/plans/`). Specifics are never in the public framework.  
 **Related:** EF-056 (master Phase 0 alignment), EF-057, EF-058 (terminology / roles), adapter-layout-mirror standard, preferred-mode-adoption-plan.md
@@ -271,12 +271,12 @@ It is stored under the backlog plans area so it is discoverable by the file-base
 
 **Framework session complete (2026-06-30, commit d7a06ce):** All reference prep, git mv, generator fixes, internal path repairs (hooks, SPEC, secrets, sync, examples), .gitignore, staged+full sensitive, layout/classify/index, BACKLOG_ROOTS tooling, and verif rg green. Status set to Completed for framework.
 
-**Adopter execution (EF-060 / adopter-029, started 2026-07-01):** Scope expanded to convert *all* active adopting repos for uniformity:
+**Adopter execution (EF-060 / primary-adopter item, started 2026-07-01):** Scope expanded to convert *all* active adopting repos for uniformity:
 - Primary (largest surface): the primary adopter (backlog + router/gastown + secrets-key-management + backup-resilience + extensive docker/gastown/compose/runbook/hardware references)
 - Product / other adopters: IAC (backlog), OutreachApi (backlog), OutreachAssistant (backlog + specs), PersonalAiContext (backlog)
 - Already converted: Legal (.eposforge/ + backlog)
 - Historical: eposforge-scrub-work (workspace update)
 - GraceRag and others: add container opportunistically if/when they adopt backlog tooling.
-Detailed private steps and mount list in primary's adopter-dot-eposforge-container-private.md (will be promoted to .eposforge/ during its rename). Legacy workspace references and cross-repo paths cleaned as encountered.
+Detailed private steps and mount list in the primary adopter's private container doc (will be promoted to .eposforge/ during its rename). Legacy workspace references and cross-repo paths cleaned as encountered.
 
-See EF-060 for execution checklist. After all renames: re-ingest to cognee/spec-graph where boundaries allow, re-run portfolio views, close EF-059/EF-060 + adopter-029.
+See EF-060 for execution checklist. After all renames: re-ingest to cognee/spec-graph where boundaries allow, re-run portfolio views, close EF-059/EF-060 + primary-adopter item.

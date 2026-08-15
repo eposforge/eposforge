@@ -163,8 +163,8 @@ For each selected item record:
 
 | Field | Source |
 |---|---|
-| `repo` | backlog root → Gas Town rig key (`gea`, `eposforge`, `iac`, `outreach_api`, …; else set `REPO_DIR=`) |
-| `ID` | e.g. `adopter-034` |
+| `repo` | backlog root → Gas Town rig key (`adopter`, `eposforge`, `iac`, `outreach_api`, …; else set `REPO_DIR=`) |
+| `ID` | e.g. `ADOPTER-034` |
 | `title` | from the issue block |
 | `effort` | S / M / L |
 | `tier` | `tier1` (well-defined, single-rig, non-epic) or `tier3` (epic/mountain/cross-rig/arch — needs operator gate before sling) |
@@ -204,7 +204,7 @@ For EACH item above, in order:
    Verify with / acceptance criteria.
 4. Between items: self-improve only safe-tier; do not invent extra backlog work.
 5. Agent-discovered findings stay in Beads; promote-back to the file backlog
-   is human-gated (do not write adopter-/EF- items yourself unless asked).
+   is human-gated (do not write ADOPTER-/EF- items yourself unless asked).
 
 When the list is done, report: bead ids per external-ref, convoy status, and
 any blocked/pending_deps.
