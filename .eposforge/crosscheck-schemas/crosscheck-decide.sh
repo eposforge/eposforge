@@ -13,9 +13,18 @@
 #
 #   STOP when
 #     no claims_verified[].result == "refuted"
+#     AND no mechanical claim's own check failed
 #     AND uncovered_scope[] is empty
 #     AND no finding has severity in {blocker, major} with an effective
 #         attribution of "introduced-by-change"
+#
+# The check-results clause exists because a reviewer can confirm a claim the
+# harness already disproved — through inattention, or because the claim reads
+# plausibly. Where the machine has an answer, the machine's answer wins; that is
+# the whole point of running the checks before the reviewer is spawned. It needs
+# the handoff, which is resolved from findings.handoff_ref or given with
+# --handoff. When the handoff cannot be read, the clause is skipped and
+# --explain says so rather than silently passing.
 #
 # It reads only closed-vocabulary fields. `verdict` is deliberately ignored:
 # termination must not depend on either agent's opinion that it is done.
@@ -34,6 +43,7 @@ set -uo pipefail
 FILE=""
 EXPLAIN=0
 ROUND=""
+HANDOFF=""
 MAX_ROUNDS="${CROSSCHECK_MAX_ROUNDS:-3}"
 
 usage() { sed -n '2,10p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' >&2; exit 2; }
@@ -42,6 +52,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --explain)    EXPLAIN=1; shift ;;
     --round)      ROUND="$2"; shift 2 ;;
+    --handoff)    HANDOFF="$2"; shift 2 ;;
     --max-rounds) MAX_ROUNDS="$2"; shift 2 ;;
     -h|--help)    usage ;;
     -*) echo "crosscheck-decide: unknown arg: $1" >&2; usage ;;
@@ -70,8 +81,34 @@ REASONS="$(jq -r '
         | "open " + .severity + " introduced by this change: " + .id + " — " + .what_is_wrong ] )
   | .[]' "$FILE")"
 
+# A mechanical claim the harness already disproved keeps the loop open, whatever
+# the reviewer said about it.
+if [[ -z "$HANDOFF" ]]; then
+  ref="$(jq -r '.handoff_ref // empty' "$FILE")"
+  if [[ -n "$ref" ]]; then
+    if [[ "$ref" == /* ]]; then HANDOFF="$ref"
+    else HANDOFF="$(cd "$(dirname "$FILE")" && pwd)/$ref"; fi
+  fi
+fi
+
+CHECK_REASONS=""
+CHECK_SKIPPED=""
+if [[ -n "$HANDOFF" && -r "$HANDOFF" ]]; then
+  CHECK_REASONS="$(jq -r '
+    (.check_results // [])[]
+    | select(.ran == true and .matched == false)
+    | "failed mechanical check: " + .claim_id
+      + " (exit " + (.exit_code | tostring) + ") — the harness disproved this claim"' "$HANDOFF" 2>/dev/null)"
+else
+  CHECK_SKIPPED="1"
+fi
+
+ALL_REASONS="$REASONS"
+[[ -n "$CHECK_REASONS" ]] && ALL_REASONS="$(printf '%s\n%s' "$ALL_REASONS" "$CHECK_REASONS" | sed '/^$/d')"
+
 DECISION="stop"
-[[ -n "$REASONS" ]] && DECISION="continue"
+[[ -n "$ALL_REASONS" ]] && DECISION="continue"
+REASONS="$ALL_REASONS"
 
 if [[ "$DECISION" == "continue" && -n "$ROUND" ]]; then
   if [[ "$ROUND" =~ ^[0-9]+$ && "$MAX_ROUNDS" =~ ^[0-9]+$ ]] && (( ROUND >= MAX_ROUNDS )); then
@@ -84,10 +121,13 @@ echo "$DECISION"
 if (( EXPLAIN )); then
   {
     if [[ -z "$REASONS" ]]; then
-      echo "  no refuted claim, no uncovered scope, no open blocker/major introduced by this change"
+      echo "  no refuted claim, no failed mechanical check, no uncovered scope,"
+      echo "  no open blocker/major introduced by this change"
     else
       while IFS= read -r r; do echo "  $r"; done <<<"$REASONS"
     fi
+    [[ -n "$CHECK_SKIPPED" ]] && \
+      echo "  WARNING: handoff not readable — mechanical check results were NOT consulted"
     # Name every attribution the machine did not settle, so a decision that
     # rests on the reviewer's word says so out loud.
     jq -r '

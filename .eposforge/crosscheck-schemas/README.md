@@ -34,14 +34,21 @@ carries paths, SHAs and claims that have no business in a public tree.
 
 ## The stop rule
 
-> **Stop** when no `claims_verified[].result == "refuted"`, **and**
-> `uncovered_scope[]` is empty, **and** no finding has `severity` in
-> {blocker, major} with an effective attribution of `introduced-by-change`.
+> **Stop** when no `claims_verified[].result == "refuted"`, **and** no mechanical
+> claim's own check failed, **and** `uncovered_scope[]` is empty, **and** no
+> finding has `severity` in {blocker, major} with an effective attribution of
+> `introduced-by-change`.
 > **Else** another round, to a hard cap.
 
 It reads closed-vocabulary fields only. `verdict` is ignored on purpose:
 termination must not depend on either agent's opinion that it is done. There is
 a test for exactly that.
+
+The check-results clause matters more than it looks. A reviewer can confirm a
+claim the harness already disproved — through inattention, or because the claim
+reads plausibly — and without this clause that confirmation would end the loop.
+Where the machine has an answer, the machine's answer wins. That is the whole
+reason the checks run before the reviewer is spawned.
 
 ## Opened at session start, not assembled at the end
 
@@ -178,6 +185,34 @@ shape and vocabulary, and the shell adds only the rules a schema cannot express.
 | `CROSSCHECK_HANDOFF_TOKEN_CAP` | `8000` | outbound ceiling; a handoff may not declare a larger cap |
 | `CROSSCHECK_FINDINGS_TOKEN_CAP` | `4000` | inbound ceiling, deliberately tighter |
 | `CROSSCHECK_MAX_ROUNDS` | `3` | after which `crosscheck-decide.sh` returns `halt` |
+| `CROSSCHECK_CLEARANCE_ORDER` | unset | adopter clearance vocabulary, weakest first. When set, `clearance_required` is recomputed as the maximum over `scope[]` |
+| `CROSSCHECK_CMD_TIMEOUT` | `120` | seconds before any executed command is killed |
+| `CROSSCHECK_CHECK_OUTPUT_MAX` | `65536` | bytes of captured check output kept |
+| `CROSSCHECK_ALLOW_REVIEWER_EXEC` | `0` | permits executing `repro_cmd` — see below |
+| `CROSSCHECK_SESSION_TTL` | `8 hours` | how recently a payload must have been touched for `open` to treat its session as live |
+
+## Executing the reviewer's commands
+
+`evidence_cmd` is written by the author, so running it grants nothing that was
+not already granted. `repro_cmd` is the opposite: it arrives inside
+`findings.json`, written by a different vendor's model, and attribution would
+otherwise hand it a shell on the host with the operator's ambient credentials.
+It is the only inbound execution path in the contract, and clearance-on-transport
+does not address it — that protects what goes *out*.
+
+So `crosscheck-attribute.sh --findings` **prints every command and refuses**
+(exit 4) unless `--allow-reviewer-exec` or `CROSSCHECK_ALLOW_REVIEWER_EXEC=1`
+says otherwise. Consent is given with the text in view. Without it, attribution
+stays the reviewer's assertion and the stop rule treats it as unverified rather
+than settled — a worse review, not an unsafe one.
+
+`--repo/--cmd` is not gated: that command came from whoever typed the command
+line. Feeding a payload's `repro_cmd` into `--cmd` defeats the gate and is a
+deliberate act.
+
+Everything executed is bounded in time (`CROSSCHECK_CMD_TIMEOUT`) and in
+captured output (`CROSSCHECK_CHECK_OUTPUT_MAX`). A timeout is not a result: it
+fails the check and says so.
 
 ## Where this ends up
 

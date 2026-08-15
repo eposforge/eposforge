@@ -148,6 +148,19 @@ handoff)
     [[ -n "$drifted" ]] && while IFS= read -r d; do
       fail "--final: scope drift, the reviewer cannot be handed what this promises: $d"
     done <<<"$drifted"
+
+    # Without the disposition leg, round N+1 re-asserts instead of answering,
+    # and "both agents agree" is unreachable by construction.
+    round="$(jq -r '.round' "$FILE")"
+    if [[ "$round" =~ ^[0-9]+$ ]] && (( round > 1 )); then
+      dref="$(jq -r '.disposition_ref // empty' "$FILE")"
+      if [[ -z "$dref" ]]; then
+        fail "--final: round $round carries no disposition_ref — the previous round's findings were never answered"
+      else
+        dabs="$dref"; [[ "$dabs" == /* ]] || dabs="$FILE_DIR/$dref"
+        [[ -r "$dabs" ]] || fail "--final: disposition_ref points at $dref, which cannot be read"
+      fi
+    fi
     # Every mechanical claim must have been run before the reviewer is spawned.
     missing="$(jq -r '
       [ .claims[] | select(.class == "mechanical") | .id ] as $m
@@ -169,6 +182,9 @@ findings)
   if [[ -z "$href" || ! -r "$href" ]]; then
     fail "cannot read the handoff this answers (handoff_ref=$(jq -r '.handoff_ref // "null"' "$FILE")); claim coverage is unverifiable"
   else
+    hr="$(jq -r '.round' "$href")"; fr="$(jq -r '.round' "$FILE")"
+    [[ "$hr" == "$fr" ]] || fail "round mismatch: these findings say round $fr, the handoff they answer says round $hr"
+
     uncovered="$(jq -r -n --slurpfile h "$href" --slurpfile f "$FILE" '
       [ $h[0].claims[].id ] as $claims
       | [ $f[0].claims_verified[].claim_id ] as $seen
@@ -200,6 +216,9 @@ disposition)
   if [[ -z "$fref" || ! -r "$fref" ]]; then
     fail "cannot read the findings this answers (findings_ref=$(jq -r '.findings_ref // "null"' "$FILE")); finding coverage is unverifiable"
   else
+    fr="$(jq -r '.round' "$fref")"; dr="$(jq -r '.round' "$FILE")"
+    [[ "$fr" == "$dr" ]] || fail "round mismatch: this disposition says round $dr, the findings it answers say round $fr"
+
     problems="$(jq -r -n --slurpfile f "$fref" --slurpfile d "$FILE" '
       [ $f[0].findings[].id ] as $found
       | [ $d[0].dispositions[].finding_id ] as $seen

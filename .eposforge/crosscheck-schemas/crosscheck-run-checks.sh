@@ -30,6 +30,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/budget.sh
 . "$SCRIPT_DIR/lib/budget.sh"
 
+TIMEOUT="${CROSSCHECK_CMD_TIMEOUT:-120}"
+OUTPUT_MAX="${CROSSCHECK_CHECK_OUTPUT_MAX:-65536}"
 HANDOFF=""; OUT_DIR=""; CWD=""; STRICT=0
 usage() { sed -n '2,26p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' >&2; exit 2; }
 die() { echo "crosscheck-run-checks: $*" >&2; exit 2; }
@@ -40,6 +42,7 @@ while [[ $# -gt 0 ]]; do
     --out-dir) OUT_DIR="$2"; shift 2 ;;
     --cwd)     CWD="$2"; shift 2 ;;
     --strict)  STRICT=1; shift ;;
+    --timeout) TIMEOUT="$2"; shift 2 ;;
     -h|--help) usage ;;
     *) die "unknown arg: $1" ;;
   esac
@@ -68,8 +71,19 @@ ANY_FAIL=0
 while IFS=$'\t' read -r id cmd ctype cvalue; do
   [[ -n "$id" ]] || continue
   out="$OUT_DIR/checks/$id.out"
-  ( cd "$CWD" && bash -c "$cmd" ) >"$out" 2>&1
+  # Bounded in time and in bytes. An unbounded evidence_cmd hangs the loop, and
+  # an unbounded output turns the payload directory into the thing that fills
+  # the disk. A timeout is not a result: it fails the check and says so.
+  timeout --kill-after=10s "$TIMEOUT" bash -c "cd '$CWD' && $cmd" >"$out" 2>&1
   rc=$?
+  if [[ $rc -eq 124 || $rc -eq 137 ]]; then
+    echo "[crosscheck: killed after ${TIMEOUT}s]" >>"$out"
+  fi
+  if [[ "$(wc -c <"$out")" -gt "$OUTPUT_MAX" ]]; then
+    head -c "$OUTPUT_MAX" "$out" > "$out.trunc"
+    printf '\n[crosscheck: truncated at %s bytes]\n' "$OUTPUT_MAX" >> "$out.trunc"
+    mv "$out.trunc" "$out"
+  fi
 
   matched=false
   case "$ctype" in

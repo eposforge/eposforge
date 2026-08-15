@@ -24,10 +24,29 @@
 # and, with --write, the answer is stored as `attribution_checked` — leaving the
 # reviewer's own `attribution` beside it, so a disagreement stays visible.
 #
+# ── repro_cmd is foreign code. It does not run by default. ───────────────────
+# `evidence_cmd` is written by the author, so running it grants nothing that was
+# not already granted. `repro_cmd` is the opposite: it arrives inside
+# findings.json, written by a *different vendor's model*, and this script would
+# otherwise hand it a shell on the host with the operator's ambient credentials.
+# That is the only inbound execution path in the whole contract, and it is not
+# what clearance-on-transport protects against.
+#
+# So --findings mode REFUSES to execute unless the operator says otherwise, with
+# --allow-reviewer-exec or CROSSCHECK_ALLOW_REVIEWER_EXEC=1. Every command is
+# printed before it runs, so approving is done with the text in view.
+#
+# --repo/--cmd is not gated: that command came from whoever typed the command
+# line, which is the same trust as typing it into a shell. Piping a payload's
+# repro_cmd into --cmd defeats the gate, and is a deliberate act.
+#
 # Prints one word per attribution on stdout.
-# Exit: 0 ok · 3 inconclusive (single-finding mode) · 2 usage / IO.
+# Exit: 0 ok · 3 inconclusive (single-finding mode) · 4 execution refused
+#       · 2 usage / IO.
 set -uo pipefail
 
+TIMEOUT="${CROSSCHECK_CMD_TIMEOUT:-120}"
+ALLOW_EXEC="${CROSSCHECK_ALLOW_REVIEWER_EXEC:-0}"
 REPO=""; BASE=""; HEAD=""; CMD=""; FINDINGS=""; HANDOFF=""; WRITE=0
 usage() { sed -n '2,27p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' >&2; exit 2; }
 die() { echo "crosscheck-attribute: $*" >&2; exit 2; }
@@ -41,6 +60,8 @@ while [[ $# -gt 0 ]]; do
     --findings) FINDINGS="$2"; shift 2 ;;
     --handoff)  HANDOFF="$2"; shift 2 ;;
     --write)    WRITE=1; shift ;;
+    --allow-reviewer-exec) ALLOW_EXEC=1; shift ;;
+    --timeout)  TIMEOUT="$2"; shift 2 ;;
     -h|--help)  usage ;;
     *) die "unknown arg: $1" ;;
   esac
@@ -48,6 +69,19 @@ done
 
 command -v git >/dev/null 2>&1 || die "git not found"
 command -v jq  >/dev/null 2>&1 || die "jq not found"
+
+# Worktrees are registered in the repo, so an interrupted probe leaves one
+# behind in somebody's working repository. Track and clean unconditionally.
+ACTIVE_WT=""
+ACTIVE_REPO=""
+cleanup_worktree() {
+  [[ -n "$ACTIVE_WT" ]] || return 0
+  [[ -n "$ACTIVE_REPO" ]] && git -C "$ACTIVE_REPO" worktree remove --force "$ACTIVE_WT" >/dev/null 2>&1
+  rm -rf "$ACTIVE_WT"
+  [[ -n "$ACTIVE_REPO" ]] && git -C "$ACTIVE_REPO" worktree prune >/dev/null 2>&1
+  ACTIVE_WT=""; ACTIVE_REPO=""
+}
+trap 'cleanup_worktree' EXIT INT TERM HUP
 
 # Run $2 at revision $3 in a detached worktree of repo $1.
 # Echoes "present" | "absent" | "error".
@@ -58,11 +92,15 @@ probe_at() {
   if ! git -C "$repo" worktree add --detach --quiet "$wt" "$rev" >/dev/null 2>&1; then
     rm -rf "$wt"; echo error; return
   fi
-  ( cd "$wt" && bash -c "$cmd" ) >/dev/null 2>&1
+  ACTIVE_WT="$wt"; ACTIVE_REPO="$repo"
+  # Bounded: a repro that never returns would otherwise hang the whole loop,
+  # and a timeout is not evidence of anything, so it reports error.
+  timeout --kill-after=10s "$TIMEOUT" bash -c "cd '$wt' && $cmd" >/dev/null 2>&1
   rc=$?
-  git -C "$repo" worktree remove --force "$wt" >/dev/null 2>&1 || rm -rf "$wt"
-  if [[ $rc -eq 0 ]]; then echo present
-  elif [[ $rc -gt 125 ]]; then echo error      # 126/127 = not executable / not found
+  cleanup_worktree
+  if   [[ $rc -eq 0 ]]; then echo present
+  elif [[ $rc -eq 124 || $rc -eq 137 ]]; then echo error   # timed out
+  elif [[ $rc -gt 125 ]]; then echo error                  # 126/127 not executable / not found
   else echo absent; fi
 }
 
@@ -94,6 +132,38 @@ fi
 # ── whole findings payload ───────────────────────────────────────────────────
 [[ -r "$FINDINGS" ]] || die "cannot read $FINDINGS"
 [[ -n "$HANDOFF" && -r "$HANDOFF" ]] || die "--findings needs --handoff (for the scope SHAs)"
+
+# Show the operator exactly what a foreign model is asking to run, then refuse
+# unless they have said yes. Listing first, so --allow-reviewer-exec is given
+# with the commands already in view rather than sight-unseen.
+PENDING="$(jq -r '
+  .findings[]
+  | select(.severity == "blocker" or .severity == "major")
+  | select((.repro_cmd // "") != "")
+  | "  \(.id)  [\(.repo)]  \(.repro_cmd)"' "$FINDINGS")"
+
+if [[ -n "$PENDING" ]]; then
+  {
+    echo "crosscheck-attribute: these commands came from the REVIEWER's payload, not from you:"
+    echo "$PENDING"
+  } >&2
+fi
+
+if [[ "$ALLOW_EXEC" != "1" ]]; then
+  if [[ -z "$PENDING" ]]; then
+    echo "crosscheck-attribute: nothing to attribute (no blocker/major finding carries a repro_cmd)" >&2
+    exit 0
+  fi
+  {
+    echo
+    echo "REFUSED: running them would give a different vendor's model a shell on this host,"
+    echo "in a worktree of your repository, with your ambient credentials."
+    echo "Re-run with --allow-reviewer-exec (or CROSSCHECK_ALLOW_REVIEWER_EXEC=1) to proceed."
+    echo "Without it, attribution stays the reviewer's assertion and the stop rule treats"
+    echo "it as unverified rather than settled."
+  } >&2
+  exit 4
+fi
 
 RESULTS="$(mktemp)" || die "cannot create temp file"
 trap 'rm -f "$RESULTS" "$RESULTS.tmp"' EXIT

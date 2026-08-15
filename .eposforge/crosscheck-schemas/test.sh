@@ -206,13 +206,59 @@ n="$(jq -r '[.check_results[] | select(.ran and .matched)] | length' "$H")"
 [[ "$n" == "1" ]] && ok "the one mechanical claim was executed and matched" \
                   || bad "the one mechanical claim was executed and matched" "got $n"
 
+echo "== reviewer-supplied commands do not run just because they arrived"
+jq --arg h "$H" --arg r "$R" '
+   .handoff_ref = $h | .findings[0].repo = $r
+ | .findings[0].repro_cmd = "touch \"'"$TMP"'/EXECUTED\"; exit 0"
+ | del(.findings[0].attribution_checked)' fixtures/findings-blocker-introduced.json > "$TMP/hostile.json"
+expect_exit 4 "refuses foreign repro_cmd without --allow-reviewer-exec" \
+  ./crosscheck-attribute.sh --findings "$TMP/hostile.json" --handoff "$H"
+if [[ -e "$TMP/EXECUTED" ]]; then bad "the refusal actually prevented execution" "the command ran anyway"
+else ok "the refusal actually prevented execution"; fi
+out="$(./crosscheck-attribute.sh --findings "$TMP/hostile.json" --handoff "$H" 2>&1)"
+grep -q 'touch' <<<"$out" && ok "prints the command so consent is informed" \
+                          || bad "prints the command so consent is informed" "$out"
+./crosscheck-attribute.sh --findings "$TMP/hostile.json" --handoff "$H" --allow-reviewer-exec >/dev/null 2>&1
+if [[ -e "$TMP/EXECUTED" ]]; then ok "runs it once the operator opts in"
+else bad "runs it once the operator opts in" "still did not run"; fi
+
+echo "== a hung command cannot hang the loop"
+jq '.claims=[{"id":"c1",class:"mechanical",statement:"x",evidence_cmd:"sleep 60",
+     check:{type:"exit0"},files:[]}] | .check_results=[]' "$H" > "$TMP/slow.json"
+start=$SECONDS
+./crosscheck-run-checks.sh --handoff "$TMP/slow.json" --out-dir "$TMP" --cwd "$R" --timeout 2 >/dev/null 2>&1
+took=$(( SECONDS - start ))
+if (( took < 20 )); then ok "timed out after ${took}s instead of running to completion"
+else bad "timed out after ${took}s instead of running to completion" "no timeout applied"; fi
+
+echo "== the harness's answer beats the reviewer's on anything the harness decided"
+jq '.check_results=[{claim_id:"c1",ran:true,exit_code:1,matched:false,output_ref:"x"},
+                    {claim_id:"c3",ran:true,exit_code:0,matched:true,output_ref:"y"}]' \
+   fixtures/handoff-basic.json > "$TMP/failedcheck.json"
+jq --arg h "$TMP/failedcheck.json" '.handoff_ref=$h' fixtures/findings-clean.json > "$TMP/fc.json"
+expect_out continue "a failed mechanical check keeps the loop open even when the reviewer confirmed it" \
+  ./crosscheck-decide.sh "$TMP/fc.json"
+
+echo "== payloads cannot be parked somewhere committable"
+CROSSCHECK_DIR="$R/.crosscheck" CROSSCHECK_SESSION=in-repo \
+  expect_exit 2 "refuses a payload directory inside a git work tree" \
+  ./crosscheck-claim open --repo "$R" --clearance low
+
+echo "== rounds must line up"
+jq '.round=99' fixtures/findings-clean.json > "$TMP/r99.json"
+expect_exit 1 "round-99 findings are rejected against a round-1 handoff" \
+  ./validate-payload.sh findings "$TMP/r99.json" --handoff fixtures/handoff-basic.json
+jq '.round=2 | del(.disposition_ref)' fixtures/handoff-basic.json > "$TMP/r2.json"
+expect_exit 1 "round 2 without a disposition_ref cannot be finalised" \
+  ./validate-payload.sh handoff "$TMP/r2.json" --final
+
 echo "== a machine check overrides the reviewer's attribution, in both directions"
 jq --arg h "$H" --arg r "$R" '
    .handoff_ref = $h | .findings[0].repo = $r
  | .findings[0].repro_cmd = "test -f scripts/release.sh"
  | .findings[0].attribution = "pre-existing"
  | del(.findings[0].attribution_checked)' fixtures/findings-blocker-preexisting.json > "$TMP/mis.json"
-./crosscheck-attribute.sh --findings "$TMP/mis.json" --handoff "$H" --write >/dev/null 2>&1
+./crosscheck-attribute.sh --findings "$TMP/mis.json" --handoff "$H" --write --allow-reviewer-exec >/dev/null 2>&1
 expect_out continue "a mis-claimed pre-existing blocker continues the loop" \
   ./crosscheck-decide.sh "$TMP/mis.json"
 
@@ -221,7 +267,7 @@ jq --arg h "$H" --arg r "$R" '
  | .findings[0].repro_cmd = "test -f scripts/lint.sh"
  | .findings[0].attribution = "introduced-by-change"
  | del(.findings[0].attribution_checked)' fixtures/findings-blocker-introduced.json > "$TMP/gen.json"
-./crosscheck-attribute.sh --findings "$TMP/gen.json" --handoff "$H" --write >/dev/null 2>&1
+./crosscheck-attribute.sh --findings "$TMP/gen.json" --handoff "$H" --write --allow-reviewer-exec >/dev/null 2>&1
 expect_out stop "a genuinely pre-existing blocker stops the loop" \
   ./crosscheck-decide.sh "$TMP/gen.json"
 
