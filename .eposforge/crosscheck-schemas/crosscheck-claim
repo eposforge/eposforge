@@ -21,7 +21,7 @@
 #   crosscheck-claim scope --repo <path> [--policy-key K] [--clearance C] [--base SHA]
 #   crosscheck-claim add   --statement TEXT [--class mechanical|judgment]
 #                          [--evidence-cmd CMD] [--check TYPE[:VALUE]] [--expected TEXT]
-#                          [--files a,b,c]
+#                          [--files a,b,c] [--cwd PATH]
 #   crosscheck-claim trap  TEXT
 #   crosscheck-claim attack TEXT                 # ranked; weakest point first
 #   crosscheck-claim flag  --item X --judgment Y --rationale Z
@@ -57,6 +57,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VALIDATE="$SCRIPT_DIR/validate-payload.sh"
 # shellcheck source=lib/budget.sh
 . "$SCRIPT_DIR/lib/budget.sh"
+# shellcheck source=lib/claim-cwd.sh
+. "$SCRIPT_DIR/lib/claim-cwd.sh"
 ROOT="${CROSSCHECK_DIR:-$HOME/.crosscheck}"
 ROUND="${CROSSCHECK_ROUND:-1}"
 CAP="${CROSSCHECK_HANDOFF_TOKEN_CAP:-8000}"
@@ -80,7 +82,7 @@ payload_path() { printf '%s/%s/round-%s/handoff.json' "$ROOT" "$SESSION" "$ROUND
 # ── arg parsing (shared) ─────────────────────────────────────────────────────
 A_REPO=""; A_KEY=""; A_CLEAR=""; A_BASE=""
 A_AGENT=""; A_PROVIDER=""; A_MODEL=""
-A_STATEMENT=""; A_CLASS=""; A_EVIDENCE=""; A_CHECK=""; A_EXPECTED=""; A_FILES=""
+A_STATEMENT=""; A_CLASS=""; A_EVIDENCE=""; A_CHECK=""; A_EXPECTED=""; A_FILES=""; A_CWD=""
 A_ITEM=""; A_JUDGMENT=""; A_RATIONALE=""; A_JQ=""
 POSITIONAL=()
 while [[ $# -gt 0 ]]; do
@@ -100,6 +102,7 @@ while [[ $# -gt 0 ]]; do
     --check)        A_CHECK="$2"; shift 2 ;;
     --expected)     A_EXPECTED="$2"; shift 2 ;;
     --files)        A_FILES="$2"; shift 2 ;;
+    --cwd)          A_CWD="$2"; shift 2 ;;
     --item)         A_ITEM="$2"; shift 2 ;;
     --judgment)     A_JUDGMENT="$2"; shift 2 ;;
     --rationale)    A_RATIONALE="$2"; shift 2 ;;
@@ -286,20 +289,21 @@ add)
         [[ -n "$cval" ]] || no "check type '$ctype' needs a value: --check $ctype:<value>" ;;
       *) no "unknown check type '$ctype' (exit0|equals|regex|absent|count-eq|count-lt)" ;;
     esac
-    # Prove the command at least runs. Its verdict is not recorded here — the
-    # tree is still moving; crosscheck-run-checks.sh settles that at the end.
-    # Run it where crosscheck-run-checks.sh will run it later — the first scope
-    # entry — or a claim that passes on write fails at handoff for no reason
-    # anyone can see.
-    probe_cwd="$(jq -r '.scope[0].repo_path // "."' "$(payload_path)" 2>/dev/null || echo .)"
-    [[ -d "$probe_cwd" ]] || probe_cwd="."
+    # Prove the command at least runs, in the same directory run-checks will
+    # use later. Do not probe in scope[0] just because it is first — that is
+    # how a true exit0 claim about a later repo is refused at write.
+    probe_cwd="$(resolve_claim_cwd "$(payload_path)" "$A_CWD" "$A_FILES" "" || true)"
+    if [[ -z "$probe_cwd" ]]; then
+      no "cannot tell which scope repo to run this in — pass --cwd <repo> or --files that exist in exactly one of them (refusing to probe in scope[0])"
+    fi
+    A_CWD="$probe_cwd"
     ( cd "$probe_cwd" && bash -c "$A_EVIDENCE" ) >/dev/null 2>&1
     rc=$?
     if (( rc != 0 )); then
       if [[ "$ctype" == "exit0" ]]; then
-        no "--check exit0 but the evidence command exited $rc right now; either the claim is false or the command is wrong"
+        no "--check exit0 but the evidence command exited $rc right now in $probe_cwd; either the claim is false or the command is wrong"
       fi
-      echo "crosscheck-claim: note — evidence command exited $rc on write (fine for check type '$ctype')" >&2
+      echo "crosscheck-claim: note — evidence command exited $rc on write in $probe_cwd (fine for check type '$ctype')" >&2
     fi
   fi
 
@@ -326,9 +330,11 @@ add)
       }
       + (if $ev == "" then {} else {evidence_cmd: $ev} end)
       + (if $exp == "" then {} else {expected: $exp} end)
-      + (if $chk == null then {} else {check: $chk} end) ) ]
+      + (if $chk == null then {} else {check: $chk} end)
+      + (if $cwd == "" then {} else {cwd: $cwd} end) ) ]
   ' --arg cls "$A_CLASS" --arg st "$A_STATEMENT" --arg ev "$A_EVIDENCE" \
-    --arg exp "$A_EXPECTED" --argjson chk "$check_json" --argjson files "$files_json"
+    --arg exp "$A_EXPECTED" --argjson chk "$check_json" --argjson files "$files_json" \
+    --arg cwd "$A_CWD"
   jq -r '.claims[-1] | "claim " + .id + " (" + .class + ") recorded"' "$(payload_path)"
   ;;
 

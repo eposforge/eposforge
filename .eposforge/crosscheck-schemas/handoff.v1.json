@@ -175,10 +175,15 @@
         "evidence_cmd": { "type": "string", "minLength": 1 },
         "expected": { "type": "string", "description": "Human-readable expectation. Never a substitute for `check`." },
         "check": { "$ref": "#/$defs/check" },
+        "cwd": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Directory the evidence_cmd runs in. Must be a scope[].repo_path (or a directory under one), or a scope policy_key. When omitted, the harness picks the unique scope entry that contains every files[] path. A multi-repo claim that does not disambiguate is refused rather than run in scope[0]."
+        },
         "files": {
           "type": "array",
           "items": { "type": "string" },
-          "description": "Paths this claim covers. Drives the coverage computation; an empty list means the claim covers nothing."
+          "description": "Paths this claim covers. Drives the coverage computation; an empty list means the claim covers nothing. Also used to resolve cwd when cwd is omitted."
         }
       },
       "allOf": [
@@ -241,7 +246,8 @@
         "ran": { "type": "boolean" },
         "exit_code": { "type": "integer" },
         "matched": { "type": ["boolean", "null"] },
-        "output_ref": { "type": "string", "description": "Path to captured output. The payload carries the pointer, not the bytes." }
+        "output_ref": { "type": "string", "description": "Path to captured output. The payload carries the pointer, not the bytes." },
+        "cwd": { "type": "string", "description": "Directory the evidence_cmd was executed in. Filled by the harness." }
       }
     },
 

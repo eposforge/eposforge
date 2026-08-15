@@ -3,6 +3,11 @@
 #
 #   crosscheck-run-checks.sh --handoff <file> [--out-dir <dir>] [--cwd <path>] [--strict]
 #
+# Each mechanical claim runs in its own directory: claim.cwd if set, otherwise
+# the unique scope repo that contains its files[], otherwise --cwd, otherwise
+# the only scope entry. A multi-repo claim that does not resolve is recorded
+# as a failed check, not executed in scope[0].
+#
 # A mechanical claim carries a command and an expected result, which makes it a
 # test. Running the tests here, not in the reviewer, is what keeps the reviewer's
 # context on the half that actually needs a mind: failures, judgment-class
@@ -29,6 +34,8 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/budget.sh
 . "$SCRIPT_DIR/lib/budget.sh"
+# shellcheck source=lib/claim-cwd.sh
+. "$SCRIPT_DIR/lib/claim-cwd.sh"
 
 TIMEOUT="${CROSSCHECK_CMD_TIMEOUT:-120}"
 OUTPUT_MAX="${CROSSCHECK_CHECK_OUTPUT_MAX:-65536}"
@@ -55,12 +62,12 @@ command -v jq >/dev/null 2>&1 || die "jq not found"
 [[ -n "$OUT_DIR" ]] || OUT_DIR="$(cd "$(dirname "$HANDOFF")" && pwd)"
 mkdir -p "$OUT_DIR/checks" || die "cannot create $OUT_DIR/checks"
 
-# Default working directory: the first scope entry. A claim's command was written
-# from somewhere; recording where it ran is part of the claim being reproducible.
-if [[ -z "$CWD" ]]; then
-  CWD="$(jq -r '.scope[0].repo_path // empty' "$HANDOFF")"
+# --cwd is an operator fallback, not the directory every claim runs in.
+# Per-claim resolution is below; a missing fallback is fine.
+if [[ -n "$CWD" && ! -d "$CWD" ]]; then
+  die "working directory not found: $CWD"
 fi
-[[ -d "$CWD" ]] || die "working directory not found: ${CWD:-<unset>}"
+FALLBACK_CWD="$CWD"
 
 RESULTS="$(mktemp)" || die "cannot create temp file"
 trap 'rm -f "$RESULTS"' EXIT
@@ -68,13 +75,40 @@ echo '[]' > "$RESULTS"
 
 ANY_FAIL=0
 
-while IFS=$'\t' read -r id cmd ctype cvalue; do
-  [[ -n "$id" ]] || continue
+record_result() {
+  local id="$1" rc="$2" matched="$3" ref="$4" run_cwd="${5:-}"
+  jq --arg id "$id" --argjson rc "$rc" --argjson m "$matched" --arg ref "$ref" --arg cwd "$run_cwd" \
+     '. += [{claim_id:$id, ran:true, exit_code:$rc, matched:$m, output_ref:$ref}
+            + (if $cwd == "" then {} else {cwd:$cwd} end)]' \
+     "$RESULTS" > "$RESULTS.tmp" && mv "$RESULTS.tmp" "$RESULTS"
+}
+
+# JSON lines, not TSV: bash read treats tab as IFS whitespace and collapses
+# consecutive empty fields, which is exactly the exit0 + omitted cwd case.
+while IFS= read -r row; do
+  [[ -n "$row" ]] || continue
+  id="$(jq -r '.id' <<<"$row")"
+  cmd="$(jq -r '.evidence_cmd' <<<"$row")"
+  ctype="$(jq -r '.type' <<<"$row")"
+  cvalue="$(jq -r '.value' <<<"$row")"
+  claim_cwd="$(jq -r '.cwd' <<<"$row")"
+  claim_files="$(jq -r '.files' <<<"$row")"
+  [[ -n "$id" && "$id" != "null" ]] || continue
   out="$OUT_DIR/checks/$id.out"
+  run_cwd="$(resolve_claim_cwd "$HANDOFF" "$claim_cwd" "$claim_files" "$FALLBACK_CWD" || true)"
+  if [[ -z "$run_cwd" ]]; then
+    printf '%s\n' "[crosscheck: no cwd — set claim.cwd, or --files that exist in exactly one scope repo]" >"$out"
+    rc=2
+    matched=false
+    ANY_FAIL=1
+    printf '%-6s %-9s exit=%-3s matched=%s\n' "$id" "$ctype" "$rc" "$matched"
+    record_result "$id" "$rc" false "checks/$id.out" ""
+    continue
+  fi
   # Bounded in time and in bytes. An unbounded evidence_cmd hangs the loop, and
   # an unbounded output turns the payload directory into the thing that fills
   # the disk. A timeout is not a result: it fails the check and says so.
-  timeout --kill-after=10s "$TIMEOUT" bash -c "cd '$CWD' && $cmd" >"$out" 2>&1
+  timeout --kill-after=10s "$TIMEOUT" bash -c "cd '$run_cwd' && $cmd" >"$out" 2>&1
   rc=$?
   if [[ $rc -eq 124 || $rc -eq 137 ]]; then
     echo "[crosscheck: killed after ${TIMEOUT}s]" >>"$out"
@@ -92,7 +126,9 @@ while IFS=$'\t' read -r id cmd ctype cvalue; do
     equals)
       [[ "$(tr -d '\n' <"$out" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')" == "$cvalue" ]] && matched=true ;;
     regex)
-      grep -Eq -- "$cvalue" "$out" && matched=true ;;
+      # Whole output, Oniguruma, as the header documents. grep -Eq is ERE and
+      # per-line; (?i)HELLO is true under jq test and a warning under grep.
+      jq -Rse --arg p "$cvalue" 'test($p)' "$out" >/dev/null 2>&1 && matched=true ;;
     absent)
       if [[ -z "$cvalue" || "$cvalue" == "null" ]]; then
         [[ ! -s "$out" ]] && matched=true
@@ -100,8 +136,11 @@ while IFS=$'\t' read -r id cmd ctype cvalue; do
         grep -Fq -- "$cvalue" "$out" || matched=true
       fi ;;
     count-eq|count-lt)
-      n="$(grep -v '^[[:space:]]*$' "$out" | tail -1 | tr -dc '0-9-')"
-      if [[ -n "$n" ]]; then
+      # Last non-empty line must itself be an optional-sign integer (grep -c /
+      # wc -l shape). Stripping every non-digit turns '58 passed, 0 failed'
+      # into 580 and would let count-eq:580 match.
+      n="$(grep -v '^[[:space:]]*$' "$out" | tail -1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+      if [[ "$n" =~ ^-?[0-9]+$ ]]; then
         if [[ "$ctype" == "count-eq" ]]; then
           [[ "$n" -eq "$cvalue" ]] && matched=true
         else
@@ -114,15 +153,15 @@ while IFS=$'\t' read -r id cmd ctype cvalue; do
 
   [[ "$matched" == "true" ]] || ANY_FAIL=1
   printf '%-6s %-9s exit=%-3s matched=%s\n' "$id" "$ctype" "$rc" "$matched"
-
-  jq --arg id "$id" --argjson rc "$rc" --argjson m "$matched" --arg ref "checks/$id.out" \
-     '. += [{claim_id:$id, ran:true, exit_code:$rc, matched:$m, output_ref:$ref}]' \
-     "$RESULTS" > "$RESULTS.tmp" && mv "$RESULTS.tmp" "$RESULTS"
-done < <(jq -r '
+  record_result "$id" "$rc" "$matched" "checks/$id.out" "$run_cwd"
+done < <(jq -c '
   .claims[]
   | select(.class == "mechanical")
-  | [ .id, .evidence_cmd, .check.type, ((.check.value // "") | tostring) ]
-  | @tsv' "$HANDOFF")
+  | {id, evidence_cmd,
+     type: .check.type,
+     value: ((.check.value // "") | tostring),
+     cwd: (.cwd // ""),
+     files: ((.files // []) | join(","))}' "$HANDOFF")
 
 jq --slurpfile r "$RESULTS" '.check_results = $r[0]' "$HANDOFF" > "$HANDOFF.tmp" \
   && mv "$HANDOFF.tmp" "$HANDOFF" \

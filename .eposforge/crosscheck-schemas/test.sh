@@ -252,6 +252,130 @@ jq '.round=2 | del(.disposition_ref)' fixtures/handoff-basic.json > "$TMP/r2.jso
 expect_exit 1 "round 2 without a disposition_ref cannot be finalised" \
   ./validate-payload.sh handoff "$TMP/r2.json" --final
 
+echo "== mechanical claims run in the repo they are about, not in scope[0]"
+RA="$TMP/repo-a"; RB="$TMP/repo-b"
+mkdir -p "$RA" "$RB"
+git -C "$RA" init -q -b main; git -C "$RA" config user.email t@e.invalid; git -C "$RA" config user.name t
+git -C "$RB" init -q -b main; git -C "$RB" config user.email t@e.invalid; git -C "$RB" config user.name t
+echo x >"$RA/f"; git -C "$RA" add -A && git -C "$RA" commit -qm a
+echo y >"$RB/unique2.txt"; git -C "$RB" add -A && git -C "$RB" commit -qm b
+AH="$(git -C "$RA" rev-parse HEAD)"; BH="$(git -C "$RB" rev-parse HEAD)"
+# The Phase 0 reviewer's repro: two-repo handoff, unique2.txt only in repo 2,
+# evidence_cmd is a relative test, files[] names that path, no cwd field.
+jq -n --arg a "$RA" --arg b "$RB" --arg ah "$AH" --arg bh "$BH" \
+  '{schema:"eposforge.crosscheck.handoff/1",round:1,session:"x",
+    implementer:{agent:"a",provider:"p",model:"m"},
+    scope:[
+      {repo_path:$a,policy_key:"a",clearance:"low",base_sha:$ah,head_sha:$ah,dirty:false},
+      {repo_path:$b,policy_key:"b",clearance:"low",base_sha:$bh,head_sha:$bh,dirty:false}
+    ],
+    clearance_required:"low",
+    claims:[{id:"c1",class:"mechanical",statement:"u2",evidence_cmd:"test -f unique2.txt",
+             check:{type:"exit0"},files:["unique2.txt"]}],
+    traps:[],attack_first:[],out_of_scope:[],ground_rules:[],
+    budget:{est_tokens:1,rendered_bytes:4,cap:8000,over_budget:false}}' >"$TMP/two.json"
+./crosscheck-run-checks.sh --handoff "$TMP/two.json" --out-dir "$TMP/two" >/dev/null 2>&1
+expect_out true "files[] in repo 2 is not executed in scope[0]" \
+  jq -r '.check_results[0].matched' "$TMP/two.json"
+got_cwd="$(jq -r '.check_results[0].cwd // empty' "$TMP/two.json")"
+if [[ "$got_cwd" == "$(cd "$RB" && pwd -P)" ]]; then ok "records the resolved cwd as repo 2"
+else bad "records the resolved cwd as repo 2" "got '$got_cwd'"; fi
+
+jq '.claims[0].files=[] | del(.claims[0].cwd) | .check_results=[]' "$TMP/two.json" >"$TMP/two-bare.json"
+./crosscheck-run-checks.sh --handoff "$TMP/two-bare.json" --out-dir "$TMP/two-bare" >/dev/null 2>&1
+expect_out false "multi-repo with no cwd and no files is refused, not run in scope[0]" \
+  jq -r '.check_results[0].matched' "$TMP/two-bare.json"
+
+# add must probe in the resolved repo, not refuse a true exit0 about repo 2
+export CROSSCHECK_DIR="$TMP/payloads-two" CROSSCHECK_SESSION="two-repo-add"
+H2="$(./crosscheck-claim open --repo "$RA" --policy-key a --clearance low --agent a --provider p --model m 2>&1)"
+./crosscheck-claim scope --repo "$RB" --policy-key b --clearance low >/dev/null
+expect_exit 0 "add accepts an exit0 claim that is only true in a later repo" \
+  ./crosscheck-claim add --statement u2 --evidence-cmd 'test -f unique2.txt' \
+    --check exit0 --files unique2.txt
+expect_exit 1 "add still refuses an exit0 claim that is false in its resolved repo" \
+  ./crosscheck-claim add --statement missing --evidence-cmd 'test -f no-such-file' \
+    --check exit0 --cwd "$RB"
+
+echo "== count-eq parses an integer token, not every digit on the line"
+jq --arg r "$R" --arg h "$HEAD_SHA" --arg b "$BASE" \
+  '.scope=[{repo_path:$r,policy_key:"example_app",clearance:"low",base_sha:$b,head_sha:$h,dirty:false}]
+   | .claims=[{id:"c1",class:"mechanical",statement:"x",
+               evidence_cmd:"printf \"58 passed, 0 failed\\n\"",
+               check:{type:"count-eq",value:580},files:[]}]
+   | .check_results=[]' "$H" >"$TMP/cnt-strip.json"
+./crosscheck-run-checks.sh --handoff "$TMP/cnt-strip.json" --out-dir "$TMP/cnt-strip" >/dev/null 2>&1
+expect_out false "58 passed, 0 failed is not the number 580" \
+  jq -r '.check_results[0].matched' "$TMP/cnt-strip.json"
+jq '.claims[0].evidence_cmd="printf \"58\\n\"" | .claims[0].check.value=58 | .check_results=[]' \
+  "$TMP/cnt-strip.json" >"$TMP/cnt-ok.json"
+./crosscheck-run-checks.sh --handoff "$TMP/cnt-ok.json" --out-dir "$TMP/cnt-ok" >/dev/null 2>&1
+expect_out true "a bare 58 matches count-eq:58" \
+  jq -r '.check_results[0].matched' "$TMP/cnt-ok.json"
+
+echo "== regex is jq/Oniguruma over the whole output"
+jq '.claims=[{id:"c1",class:"mechanical",statement:"x",
+              evidence_cmd:"printf hello",
+              check:{type:"regex",value:"(?i)HELLO"},files:[]}]
+    | .check_results=[]' "$TMP/cnt-strip.json" >"$TMP/re.json"
+./crosscheck-run-checks.sh --handoff "$TMP/re.json" --out-dir "$TMP/re" >/dev/null 2>&1
+expect_out true "(?i)HELLO matches hello via jq test" \
+  jq -r '.check_results[0].matched' "$TMP/re.json"
+
+echo "== dirty-tree coverage parses porcelain renames and untracked files"
+RD="$TMP/repo-dirty"
+mkdir -p "$RD/d"
+git -C "$RD" init -q -b main
+git -C "$RD" config user.email t@e.invalid
+git -C "$RD" config user.name t
+echo x >"$RD/d/old.md"
+echo keep >"$RD/keep.md"
+git -C "$RD" add -A && git -C "$RD" commit -qm base
+RDBASE="$(git -C "$RD" rev-parse HEAD)"
+git -C "$RD" mv d/old.md d/new.md
+mkdir -p "$RD/newdir"
+echo z >"$RD/newdir/f.txt"
+jq -n --arg r "$RD" --arg h "$RDBASE" \
+  '{schema:"eposforge.crosscheck.handoff/1",round:1,session:"d",
+    implementer:{agent:"a",provider:"p",model:"m"},
+    scope:[{repo_path:$r,policy_key:"d",clearance:"low",base_sha:$h,head_sha:$h,dirty:true}],
+    clearance_required:"low",
+    claims:[
+      {id:"c1",class:"mechanical",statement:"renamed",evidence_cmd:"true",check:{type:"exit0"},files:["d/new.md"]},
+      {id:"c2",class:"mechanical",statement:"untracked",evidence_cmd:"true",check:{type:"exit0"},files:["newdir/f.txt"]}
+    ],
+    traps:[],attack_first:[],out_of_scope:[],ground_rules:[],
+    budget:{est_tokens:1,rendered_bytes:4,cap:8000,over_budget:false}}' >"$TMP/dirty.json"
+out="$(./crosscheck-coverage.sh --handoff "$TMP/dirty.json" 2>&1)"
+if grep -q 'old.md -> new.md' <<<"$out"; then
+  bad "a rename is not the single path 'old -> new'" "$out"
+else
+  ok "a rename is not the single path 'old -> new'"
+fi
+if grep -q 'newdir/f.txt' <<<"$out"; then
+  bad "an untracked file named in files[] is covered" "$out"
+else
+  ok "an untracked file named in files[] is covered"
+fi
+# The old path of the rename is a changed file and is unclaimed — that is
+# honest set arithmetic. It must appear as its own path, not glued to the new.
+if grep -qE 'd/old\.md$' <<<"$out"; then
+  ok "the rename's old path is listed separately"
+else
+  bad "the rename's old path is listed separately" "$out"
+fi
+
+echo "== --findings EXIT trap still removes the worktree"
+# The previous trap replacement dropped cleanup_worktree from EXIT. Compose,
+# don't replace: a single EXIT trap must still call cleanup.
+if grep -q 'cleanup_all' ./crosscheck-attribute.sh \
+   && ! grep -n "trap " ./crosscheck-attribute.sh | grep -qv cleanup; then
+  ok "attribute EXIT trap still includes worktree cleanup"
+else
+  bad "attribute EXIT trap still includes worktree cleanup" \
+    "$(grep -n 'trap ' ./crosscheck-attribute.sh)"
+fi
+
 echo "== a machine check overrides the reviewer's attribution, in both directions"
 jq --arg h "$H" --arg r "$R" '
    .handoff_ref = $h | .findings[0].repo = $r

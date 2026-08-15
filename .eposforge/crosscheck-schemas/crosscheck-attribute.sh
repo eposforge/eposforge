@@ -81,7 +81,12 @@ cleanup_worktree() {
   [[ -n "$ACTIVE_REPO" ]] && git -C "$ACTIVE_REPO" worktree prune >/dev/null 2>&1
   ACTIVE_WT=""; ACTIVE_REPO=""
 }
-trap 'cleanup_worktree' EXIT INT TERM HUP
+RESULTS=""
+cleanup_all() {
+  cleanup_worktree
+  rm -f "$RESULTS" "$RESULTS.tmp"
+}
+trap 'cleanup_all' EXIT INT TERM HUP
 
 # Run $2 at revision $3 in a detached worktree of repo $1.
 # Echoes "present" | "absent" | "error".
@@ -166,7 +171,6 @@ if [[ "$ALLOW_EXEC" != "1" ]]; then
 fi
 
 RESULTS="$(mktemp)" || die "cannot create temp file"
-trap 'rm -f "$RESULTS" "$RESULTS.tmp"' EXIT
 echo '{}' > "$RESULTS"
 
 while IFS=$'\t' read -r fid frepo fcmd; do

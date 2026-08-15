@@ -59,7 +59,8 @@ handoff when the work starts and appends to it as the work happens:
 crosscheck-claim open  --repo . --clearance medium --agent alpha --provider cli-a --model m1
 crosscheck-claim add   --statement "the linter reports zero errors in every root" \
                        --evidence-cmd './scripts/lint.sh --all' --check exit0 \
-                       --files scripts/lint.sh,config/roots.txt
+                       --files scripts/lint.sh,config/roots.txt \
+                       --cwd .
 crosscheck-claim trap  "the linter only ever acts on the first roots entry"
 crosscheck-claim flag  --item item-014 --judgment "deferred -> slated" --rationale "the blocker shipped"
 ```
@@ -98,6 +99,22 @@ pretend judgment is arithmetic.
 mechanically checkable, authors would only claim mechanizable things and the
 interesting questions would be excluded by construction — "was live work buried?"
 has no exit code.
+
+A mechanical claim names the directory it runs in. `claim.cwd` is the explicit
+form (`crosscheck-claim add --cwd`); when it is omitted the harness picks the
+unique `scope[]` entry that contains every `files[]` path. A multi-repo claim
+that does not disambiguate is refused, not executed in `scope[0]` — that is how
+a true claim about a later repo used to become a harness failure. `--cwd` on
+`crosscheck-run-checks.sh` is an operator fallback for the whole handoff, not
+the directory every claim shares.
+
+Check types that parse output:
+
+- `regex` is `jq test` over the whole captured output (Oniguruma). It is not
+  GNU grep ERE, and it is not per-line: `(?i)HELLO` matches `hello`.
+- `count-eq` / `count-lt` accept the last non-empty line only when that line
+  is itself an optional-sign integer (`grep -c` / `wc -l` shape).
+  `'58 passed, 0 failed'` is not the number 580.
 
 ## The promise a handoff makes, and how it expires
 

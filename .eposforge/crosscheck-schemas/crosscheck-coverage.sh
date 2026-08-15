@@ -72,8 +72,22 @@ else
       | while IFS= read -r f; do printf '%s\t%s\n' "$repo" "$f"; done >> "$CHANGED"
     if [[ "$dirty" == "true" ]]; then
       # Uncommitted work is in scope for the review even though no SHA names it.
-      git -C "$repo" status --porcelain 2>/dev/null | sed 's/^...//' \
-        | while IFS= read -r f; do printf '%s\t%s\n' "$repo" "$f"; done >> "$CHANGED"
+      # -z so a rename is two paths, not the single token "old -> new".
+      # -uall so an untracked directory lists its files, not "dirname/".
+      # Rename/copy records are XY<space>NEW\0OLD\0; everything else is one field.
+      while IFS= read -r -d '' rec; do
+        [[ -n "$rec" ]] || continue
+        xy="${rec:0:2}"
+        path="${rec:3}"
+        [[ -n "$path" ]] && printf '%s\t%s\n' "$repo" "$path"
+        case "$xy" in
+          *R*|*C*)
+            if IFS= read -r -d '' orig; then
+              [[ -n "$orig" ]] && printf '%s\t%s\n' "$repo" "$orig"
+            fi
+            ;;
+        esac
+      done < <(git -C "$repo" status --porcelain -z -uall 2>/dev/null) >> "$CHANGED"
     fi
   done < <(jq -r '.scope[] | [.repo_path, .base_sha, .head_sha, (.dirty|tostring)] | @tsv' "$HANDOFF")
 fi
