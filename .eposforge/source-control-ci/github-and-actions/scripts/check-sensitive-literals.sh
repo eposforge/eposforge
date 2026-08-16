@@ -30,7 +30,7 @@ LOCAL_PATH_PATTERN='([A-Za-z]:[\\/](Users|src|home|work|workspace|repos|projects
 # Specific adopter repository names/identifiers must never appear in the public framework tree.
 # This list is maintained here for deterministic enforcement across all agents and CI.
 # Note: "adopter" treated as short identifier for the (sanitized) primary adopter example; always use generics in public content.
-PRIVATE_ADOPTER_PATTERN='the primary adopter|GraceEnvironment|adopter'
+PRIVATE_ADOPTER_PATTERN='GraceEnterprisesArchitecture|GraceEnvironment|GEA'
 
 has_errors=0
 
