@@ -211,7 +211,22 @@ larger than most of that review's turns has to move its evidence behind
 | `crosscheck-attribute.sh` | run `repro_cmd` at both SHAs → `attribution_checked` |
 | `validate-payload.sh` | schema + cross-field validation of any payload |
 | `crosscheck-decide.sh` | the stop rule; prints `stop` \| `continue` \| `halt` |
+| `crosscheck-next-round.sh` | open round N+1 from a disposed round N |
 | `test.sh` | all of the above, no model involved |
+
+`crosscheck-next-round.sh` is the round-to-round half of the loop, and what it
+*drops* is the part worth reading. It carries the session, the implementer, the
+scope and the ground rules; it carries no claims, no traps, no attacks. Round
+N+1 is a delta — what changed in answer to the findings — because a payload that
+re-asserts everything grows every round and buries the two lines that are new.
+The same discipline shows up as arithmetic: each `base_sha` advances to that
+round's `head_sha`, so coverage measures the fixes rather than the original
+work.
+
+It refuses to open a round the loop has no business opening: findings that were
+never answered, a disposition that skips a finding (presence is not an answer),
+and a loop the stop rule already ended. `--force` overrides the last of those
+and says so.
 
 Only `bash`, `jq` and `git` are required. Schema validation runs against the
 JSON Schema files here via `lib/jsonschema.jq`, a small validator covering the

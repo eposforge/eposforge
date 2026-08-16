@@ -584,6 +584,58 @@ jq --arg h "$H" --arg r "$R" '
 expect_out stop "a genuinely pre-existing blocker stops the loop" \
   ./crosscheck-decide.sh "$TMP/gen.json"
 
+echo "== the next round is a delta, and only opens when the last one was answered"
+NRD="$TMP/nr"
+mk_round1() {  # mk_round1 <dir> <findings-fixture>
+  mkdir -p "$1/round-1"
+  jq --arg r "$R" --arg b "$BASE" --arg h "$HEAD_SHA" '
+     .scope = [{repo_path:$r, policy_key:"example_app", clearance:"medium",
+                base_sha:$b, head_sha:$h, dirty:false, integrity:"ok",
+                verified_at:"2026-01-01T00:00:00Z"}]' \
+     fixtures/handoff-basic.json > "$1/round-1/handoff.json"
+  jq --arg h "$1/round-1/handoff.json" '.handoff_ref=$h' "$2" > "$1/round-1/findings.json"
+  jq --arg f "$1/round-1/findings.json" '.findings_ref=$f' \
+     fixtures/disposition-clean.json > "$1/round-1/disposition.json"
+}
+
+mk_round1 "$NRD/go" fixtures/findings-claim-refuted.json
+expect_exit 0 "a disposed round opens the next one" \
+  ./crosscheck-next-round.sh --handoff "$NRD/go/round-1/handoff.json"
+N2="$NRD/go/round-2/handoff.json"
+expect_exit 0 "the round it wrote validates"      ./validate-payload.sh handoff "$N2"
+expect_out "$HEAD_SHA" "round 2 starts where round 1 ended" \
+  jq -r '.scope[0].base_sha' "$N2"
+expect_out "0 0 0" "claims, traps and attacks do not carry over" \
+  jq -r '"\(.claims|length) \(.traps|length) \(.attack_first|length)"' "$N2"
+expect_out "$NRD/go/round-1/disposition.json" "it points at the answers it was opened on" \
+  jq -r '.disposition_ref' "$N2"
+# The delta is supposed to be visible as a number, not as an intention: a loop
+# whose round 3 is bigger than its round 1 has gone quadratic and nobody noticed.
+b1="$(wc -c <"$NRD/go/round-1/handoff.json")"; b2="$(wc -c <"$N2")"
+if (( b2 < b1 )); then ok "the next round starts smaller than the one it answers ($b2 < $b1 bytes)"
+else bad "the next round starts smaller" "round 2 is $b2 bytes against round 1's $b1"; fi
+expect_exit 1 "a round that already exists is not overwritten" \
+  ./crosscheck-next-round.sh --handoff "$NRD/go/round-1/handoff.json"
+
+mk_round1 "$NRD/undisposed" fixtures/findings-claim-refuted.json
+rm -f "$NRD/undisposed/round-1/disposition.json"
+expect_exit 1 "findings that were never answered do not open a round" \
+  ./crosscheck-next-round.sh --handoff "$NRD/undisposed/round-1/handoff.json"
+
+# The failure this one catches is the quiet kind: a disposition file exists, is
+# well-formed, and skips a finding. Presence would have been enough to pass.
+mk_round1 "$NRD/partial" fixtures/findings-claim-refuted.json
+jq '.dispositions = []' "$NRD/partial/round-1/disposition.json" > "$TMP/part.json"
+mv "$TMP/part.json" "$NRD/partial/round-1/disposition.json"
+expect_exit 1 "a disposition that skips a finding does not open a round" \
+  ./crosscheck-next-round.sh --handoff "$NRD/partial/round-1/handoff.json"
+
+mk_round1 "$NRD/done" fixtures/findings-clean.json
+expect_exit 1 "a loop the stop rule ended does not open another round" \
+  ./crosscheck-next-round.sh --handoff "$NRD/done/round-1/handoff.json"
+expect_exit 0 "--force opens it anyway, and says so" \
+  ./crosscheck-next-round.sh --handoff "$NRD/done/round-1/handoff.json" --force
+
 echo
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ "$FAIL" -eq 0 ]] || exit 1
