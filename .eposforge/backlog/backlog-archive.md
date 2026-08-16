@@ -19,6 +19,7 @@ Resolved issues are grouped by month (`## YYYY-MM`).
 
 
 
+
 ## Issue EF-007 — Resolve component-slot kind-class symmetry
 ID: EF-007
 Title: Resolve component-slot kind-class symmetry
@@ -180,6 +181,7 @@ Notes: Mechanism only — cloud resource/project provisioning, deployment rate (
 Resolved: 2026-05-26
 
 ## 2026-06
+
 
 
 
@@ -371,6 +373,7 @@ Resolved: 2026-06-28
 
 
 
+
 ## Issue EF-011 — Spec graph recall conflates EposForge components with adopter-side infrastructure
 ID: EF-011
 Title: Spec graph recall conflates EposForge components with adopter-side infrastructure
@@ -557,6 +560,7 @@ Notes: Follows EF-059 (the decision + standard). This is the mechanical executio
 ## 2026-08
 
 
+
 ## Issue EF-074 — Session chairs standard (judgment seats vs skills vs component roles)
 ID: EF-074
 Title: Session chairs standard (judgment seats vs skills vs component roles)
@@ -583,3 +587,16 @@ Verify with: three JSON Schemas exist under the framework's `crosscheck-schemas/
 Validation: Operator closed after a different-vendor dispose-pass review (verdict sound-with-caveats; no blocker/major finding attributed introduced-by-change). Verify with re-run 2026-08-15: three schemas under `.eposforge/crosscheck-schemas/` carry versioned schema strings `eposforge.crosscheck.{handoff,findings,disposition}/1`; `validate-payload.sh` exits 1 for `fixtures/findings-missing-claim.json`, `fixtures/disposition-deferred-no-detail.json`, `fixtures/disposition-rejected-no-detail.json`, and `fixtures/handoff-oversized.json`; `crosscheck-decide.sh` returns `continue` for `fixtures/findings-claim-refuted.json`, `fixtures/findings-uncovered-scope.json`, and `fixtures/findings-blocker-introduced.json`, and `stop` for `fixtures/findings-clean.json` and `fixtures/findings-blocker-preexisting.json`; three runs of the clean fixture produce one distinct answer; `./test.sh` reports `70 passed, 0 failed`.
 Resolved: 2026-08-15
 Notes: Filed 2026-08-15. Generalises the practice of having one agent's work validated by a different agent. The reviewer spawns cold, so the payload is the entire contract between them and is the only place the exchange can be designed. Three payloads, because two cannot terminate: without a disposition leg the implementer never answers findings and round N+1 merely re-asserts. Design points the reference practice showed to be load-bearing. (a) The handoff is opened at session start and appended to during the work, not reconstructed at the end — claims get recorded while evidence is fresh, they survive a context compaction that would otherwise destroy the implementer's ability to state what it did, and an implementer that knows a hostile reader is coming writes differently at the moment of temptation. (b) `claims[]` carry `class: mechanical|judgment`; mechanical claims carry a structured `check` so the harness runs them before the reviewer is spawned. This is the same intent as `Verify with:` and must not repeat its mistake — prose that cannot be executed never gets executed. (c) Coverage is set arithmetic over changed files, not something a reviewer might notice, which is what stops an implementer that knows the rubric from claiming only what is trivially checkable. (d) `attribution` is settled by running a `repro_cmd` at both revisions, because "already broken" is the category that decides whether the loop continues and so is the one most worth abusing. (e) Termination reads closed-vocab fields only, never an agent's opinion that it is done. Budgets are asymmetric by design: generous toward the cold reviewer, tight on the return path where the implementer is at its most context-loaded. Which agent reviews, and at what privacy clearance, is adopter routing policy and is deliberately out of scope here. Adjacency: EF-042 (blocker records), EF-046 (multi-valued field precedent), EF-076 (the `Fix surface:` instance of the same extend-don't-collapse principle).
+
+## Issue EF-076 — Make `Fix surface:` multi-valued like `Tags:`
+ID: EF-076
+Title: Make `Fix surface:` multi-valued like `Tags:`
+Date: 2026-08-15
+Status: resolved
+Effort: S
+Fix surface: eposforge-pattern
+Tags: backlog-tooling
+Verify with: `lint-backlog.sh` splits `Fix surface:` on commas and validates each element against `fix_surfaces`, reusing the loop shape already applied to `Tags:`; a single-valued `Fix surface:` still passes unchanged in every root; a comma-separated value whose elements are all in the vocabulary passes; one element outside the vocabulary errors and names only that element; `docs/schema.md` records the field as multi-valued and states that parenthetical qualifiers belong in `Notes:`.
+Validation: Closed after a two-round cross-agent review (session d36f2fe9, reviewer dillon / grok / xai; round 1 refuted the parity claim as circular, round 2 sound-with-caveats with 4/4 claims confirmed and `crosscheck-decide.sh` returning `stop`). Verify with re-run 2026-08-16: `lint-backlog.sh` splits `Fix surface:` on commas and validates each element against `fix_surfaces` using the same loop shape as `Tags:`; a fixture root passes for a single value and for an all-valid compound, and a compound carrying one out-of-vocabulary element exits 1 with exactly one error naming only that element — both cases fail against the pre-change linter; with the pre-change blob pinned at dbd1493 (never HEAD, which is how the first parity claim went vacuous) eight of nine real roots are byte-identical in output and exit code, the ninth differing only because its corpus was migrated to the multi-valued form in the same session; `docs/schema.md` records the field as comma-separated multi-valued with per-element validation and sends parenthetical qualifiers to `Notes:`.
+Resolved: 2026-08-16
+Notes: Filed 2026-08-15. `Fix surface:` is declared single-valued, but real items routinely name two or three surfaces because a change genuinely lands in more than one place. Roots that populated a vocabulary early absorbed this by collapsing compounds to a single primary, which discards what the author knew; roots that left `fix_surfaces = []` avoided the loss only by accident, because an empty list short-circuits the check entirely (`if fix_surfaces and surface and surface not in fix_surfaces`) and so was never validated at all. Neither outcome is good, and the second hides its own scale — one adopter root reached 37 distinct values across 55 items, 33 of them compound, while linting clean. The precedent for the fix is EF-046: where an item legitimately spans several values, extend the representation rather than retag the item to satisfy a lint rule. `Tags:` already demonstrates the multi-valued form in this same linter, so this applies an existing pattern rather than inventing one. Parenthetical detail attached to existing values is qualifier prose, not vocabulary, and moves to `Notes:`. Backfilling any given root is that root's own work and is out of scope here — this item ships the contract and the linter change only. Adjacency: EF-046 (Tags; the multi-valued precedent and the extend-don't-retag decision), EF-040 (portfolio-review, which surfaces vocabulary drift).
