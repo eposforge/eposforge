@@ -89,7 +89,11 @@ hook to call `open` for it; the rest have to be able to just start.
 Two pointers, and the per-repo one is the important half:
 
 - `$CROSSCHECK_DIR/current` — the last session opened. A single slot.
-- `$CROSSCHECK_DIR/by-repo/<repo path>` — the session for that work tree.
+- `$CROSSCHECK_DIR/by-repo/<percent-encoded repo path>` — the session for that
+  work tree. Written by `open`, by `scope` (a session that spans two
+  repositories would otherwise split in half the moment `current` belongs to
+  someone else), and whenever an append resolves the slow way. Percent-encoded
+  because substituting `/` for `_` makes `/a/b/c` and `/a/b_c` the same file.
 
 An append with no session named asks the repository first, then `current` — and
 `current` only counts when the payload it names actually has that repository in

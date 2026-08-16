@@ -288,6 +288,36 @@ expect_out 0 "the live session's payload was not appended to" \
 expect_out other-session "and the global pointer was not stolen" \
   cat "$CS/payloads/current"
 
+echo "== a session that spans two repositories does not split in half"
+# `scope` adds a repository to the handoff. If its pointer is not written too,
+# a bare append in that second tree finds nothing, misses on `current`, and
+# mints a SECOND payload — silently, while `current` belongs to someone else.
+( cd "$CS/repo" && CROSSCHECK_DIR="$CS/payloads" "$OLDPWD/crosscheck-claim" \
+    scope --repo "$CS/repo2" --clearance low >/dev/null 2>&1 )
+first="$(cd "$CS/repo" && CROSSCHECK_DIR="$CS/payloads" "$OLDPWD/crosscheck-claim" show --jq '.session' 2>/dev/null)"
+( cd "$CS/repo2" && CROSSCHECK_DIR="$CS/payloads" "$OLDPWD/crosscheck-claim" \
+    trap 'appended from the second repo' >/dev/null 2>&1 )
+second="$(cd "$CS/repo2" && CROSSCHECK_DIR="$CS/payloads" "$OLDPWD/crosscheck-claim" show --jq '.session' 2>/dev/null)"
+if [[ -n "$first" && "$first" == "$second" ]]; then
+  ok "an append in the second repo lands in the same payload"
+else
+  bad "an append in the second repo lands in the same payload" "first='$first' second='$second'"
+fi
+expect_out 0 "and the foreign session is still untouched" \
+  jq -r '.traps | length' "$CS/payloads/other-session/round-1/handoff.json"
+
+echo "== two repositories cannot share one pointer filename"
+# /a/b/c and /a/b_c both became a_b_c when "/" was replaced by "_", so a bare
+# append could bind to a different tree with no error.
+mkdir -p "$CS/enc/x/y" "$CS/enc/x_y"
+p1="$(CROSSCHECK_DIR="$CS/payloads" bash -c 'ROOT="'"$CS/payloads"'"; source /dev/stdin <<<"$(sed -n "/^repo_pointer()/,/^}/p" ./crosscheck-claim)"; repo_pointer "'"$CS/enc/x/y"'"')"
+p2="$(CROSSCHECK_DIR="$CS/payloads" bash -c 'ROOT="'"$CS/payloads"'"; source /dev/stdin <<<"$(sed -n "/^repo_pointer()/,/^}/p" ./crosscheck-claim)"; repo_pointer "'"$CS/enc/x_y"'"')"
+if [[ -n "$p1" && "$p1" != "$p2" ]]; then
+  ok "x/y and x_y get different pointer files"
+else
+  bad "x/y and x_y get different pointer files" "both '$p1'"
+fi
+
 echo "== a payload opened before the work started does not report a vacuous coverage zero"
 # The session-start trigger opens the handoff when the tree is still clean, so
 # `dirty` is stamped false. Left alone, coverage compares base..head over an
