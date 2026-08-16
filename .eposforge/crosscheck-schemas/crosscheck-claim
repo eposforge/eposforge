@@ -183,13 +183,9 @@ ensure_payload() {
   # overlap; resolving through it is how an append lands in a payload that
   # belongs to somebody else.
   if [[ -n "$repo" ]]; then
-    ptr="$(repo_pointer "$(cd "$repo" && pwd -P)")"
-    if [[ -r "$ptr" ]]; then
-      sess="$(cat "$ptr")"
-      if [[ -n "$sess" && -r "$ROOT/$sess/round-$ROUND/handoff.json" ]]; then
-        SESSION="$sess"
-        return 0
-      fi
+    if sess="$(read_repo_pointer "$(cd "$repo" && pwd -P)")"; then
+      SESSION="$sess"
+      return 0
     fi
   fi
 
@@ -281,6 +277,36 @@ repo_pointer() {
   printf '%s/by-repo/%s' "$ROOT" "${p//\//%2F}"
 }
 
+# The filename this pointer had before it was percent-encoded. Upgrading in the
+# middle of a live session must not orphan a payload: a miss on the new name
+# would mint a second one, silently, mid-work.
+legacy_repo_pointer() {
+  local p="${1#/}"
+  printf '%s/by-repo/%s' "$ROOT" "${p//\//_}"
+}
+
+# read_repo_pointer <abs repo path> — the session this tree belongs to, if any.
+# Migrates a legacy pointer to the current name when it still resolves.
+read_repo_pointer() {
+  local repo="$1" ptr legacy sess
+  ptr="$(repo_pointer "$repo")"
+  if [[ -r "$ptr" ]]; then
+    sess="$(cat "$ptr")"
+    [[ -n "$sess" && -r "$ROOT/$sess/round-$ROUND/handoff.json" ]] && { printf '%s' "$sess"; return 0; }
+  fi
+  legacy="$(legacy_repo_pointer "$repo")"
+  if [[ "$legacy" != "$ptr" && -r "$legacy" ]]; then
+    sess="$(cat "$legacy")"
+    if [[ -n "$sess" && -r "$ROOT/$sess/round-$ROUND/handoff.json" ]]; then
+      mkdir -p "$ROOT/by-repo" 2>/dev/null
+      printf '%s' "$sess" > "$ptr"
+      printf '%s' "$sess"
+      return 0
+    fi
+  fi
+  return 1
+}
+
 # bind_repo_pointer <abs repo path> — this repo's appends belong to this session.
 bind_repo_pointer() {
   local repo="$1"
@@ -299,13 +325,9 @@ resolve_session_readonly() {
   (( SESSION_EXPLICIT )) && return 0
   repo="$(cwd_repo)"
   if [[ -n "$repo" ]]; then
-    ptr="$(repo_pointer "$(cd "$repo" && pwd -P)")"
-    if [[ -r "$ptr" ]]; then
-      sess="$(cat "$ptr")"
-      if [[ -n "$sess" && -r "$ROOT/$sess/round-$ROUND/handoff.json" ]]; then
-        SESSION="$sess"
-        return 0
-      fi
+    if sess="$(read_repo_pointer "$(cd "$repo" && pwd -P)")"; then
+      SESSION="$sess"
+      return 0
     fi
     # `current` only counts if the payload it names is about this repository.
     file="$(payload_path)"

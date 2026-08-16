@@ -252,6 +252,10 @@ CROSSCHECK_DIR="$R/.crosscheck" CROSSCHECK_SESSION=in-repo \
   ./crosscheck-claim open --repo "$R" --clearance low
 
 echo "== an append works from a cold start, because that is the first thing anyone types"
+# Every append below is run with `env -u CROSSCHECK_SESSION`: this suite exports
+# a session for the earlier blocks, and inheriting it would make SESSION_EXPLICIT
+# true and skip the whole pointer path — a test that passes without touching
+# what it claims to test.
 # "Record claims as you go" is an instruction in a persona file every agent
 # reads. Only one CLI has a session-start hook to run `open` first, so on every
 # other one the instruction has to survive being followed literally.
@@ -269,14 +273,14 @@ CROSSCHECK_DIR="$CS/payloads" CROSSCHECK_SESSION=other-session \
   ./crosscheck-claim open --repo "$CS/repo2" --clearance low >/dev/null 2>&1
 printf 'other-session' > "$CS/payloads/current"
 
-out="$(cd "$CS/repo" && CROSSCHECK_DIR="$CS/payloads" "$OLDPWD/crosscheck-claim" \
+out="$(cd "$CS/repo" && env -u CROSSCHECK_SESSION CROSSCHECK_DIR="$CS/payloads" "$OLDPWD/crosscheck-claim" \
        trap 'recorded with no open and no session' 2>&1)"
 if grep -q 'opening one for' <<<"$out"; then
   ok "a bare append opens a payload for the repo it is run in"
 else
   bad "a bare append opens a payload for the repo it is run in" "$out"
 fi
-got="$(cd "$CS/repo" && CROSSCHECK_DIR="$CS/payloads" "$OLDPWD/crosscheck-claim" \
+got="$(cd "$CS/repo" && env -u CROSSCHECK_SESSION CROSSCHECK_DIR="$CS/payloads" "$OLDPWD/crosscheck-claim" \
        show --jq '.scope[0].repo_path' 2>/dev/null)"
 if [[ "$got" == "$(cd "$CS/repo" && pwd -P)" ]]; then
   ok "and reading it back finds that payload, not the one 'current' names"
@@ -292,12 +296,12 @@ echo "== a session that spans two repositories does not split in half"
 # `scope` adds a repository to the handoff. If its pointer is not written too,
 # a bare append in that second tree finds nothing, misses on `current`, and
 # mints a SECOND payload — silently, while `current` belongs to someone else.
-( cd "$CS/repo" && CROSSCHECK_DIR="$CS/payloads" "$OLDPWD/crosscheck-claim" \
+( cd "$CS/repo" && env -u CROSSCHECK_SESSION CROSSCHECK_DIR="$CS/payloads" "$OLDPWD/crosscheck-claim" \
     scope --repo "$CS/repo2" --clearance low >/dev/null 2>&1 )
-first="$(cd "$CS/repo" && CROSSCHECK_DIR="$CS/payloads" "$OLDPWD/crosscheck-claim" show --jq '.session' 2>/dev/null)"
-( cd "$CS/repo2" && CROSSCHECK_DIR="$CS/payloads" "$OLDPWD/crosscheck-claim" \
+first="$(cd "$CS/repo" && env -u CROSSCHECK_SESSION CROSSCHECK_DIR="$CS/payloads" "$OLDPWD/crosscheck-claim" show --jq '.session' 2>/dev/null)"
+( cd "$CS/repo2" && env -u CROSSCHECK_SESSION CROSSCHECK_DIR="$CS/payloads" "$OLDPWD/crosscheck-claim" \
     trap 'appended from the second repo' >/dev/null 2>&1 )
-second="$(cd "$CS/repo2" && CROSSCHECK_DIR="$CS/payloads" "$OLDPWD/crosscheck-claim" show --jq '.session' 2>/dev/null)"
+second="$(cd "$CS/repo2" && env -u CROSSCHECK_SESSION CROSSCHECK_DIR="$CS/payloads" "$OLDPWD/crosscheck-claim" show --jq '.session' 2>/dev/null)"
 if [[ -n "$first" && "$first" == "$second" ]]; then
   ok "an append in the second repo lands in the same payload"
 else
@@ -305,6 +309,28 @@ else
 fi
 expect_out 0 "and the foreign session is still untouched" \
   jq -r '.traps | length' "$CS/payloads/other-session/round-1/handoff.json"
+
+echo "== upgrading mid-session does not orphan a live payload"
+# The pointer filename changed when it was percent-encoded. A miss on the new
+# name would mint a second payload — silently, in the middle of somebody's work.
+UP="$TMP/upgrade"
+mkdir -p "$UP/repo"
+git -C "$UP/repo" init -q -b main
+git -C "$UP/repo" config user.email crosscheck@example.invalid
+git -C "$UP/repo" config user.name crosscheck-test
+echo x > "$UP/repo/f"; git -C "$UP/repo" add -A && git -C "$UP/repo" commit -qm base
+CROSSCHECK_DIR="$UP/p" CROSSCHECK_SESSION=upgraded \
+  ./crosscheck-claim open --repo "$UP/repo" --clearance low >/dev/null 2>&1
+legacy="$(printf '%s' "$(cd "$UP/repo" && pwd -P)" | sed 's|^/||; s|/|_|g')"
+mv "$UP/p/by-repo/"* "$UP/p/by-repo/$legacy"
+printf 'somebody-else' > "$UP/p/current"
+( cd "$UP/repo" && env -u CROSSCHECK_SESSION CROSSCHECK_DIR="$UP/p" "$OLDPWD/crosscheck-claim" trap 'after the upgrade' ) >/dev/null 2>&1
+got="$(cd "$UP/repo" && env -u CROSSCHECK_SESSION CROSSCHECK_DIR="$UP/p" "$OLDPWD/crosscheck-claim" show --jq '.session' 2>/dev/null)"
+if [[ "$got" == "upgraded" ]]; then
+  ok "a pointer written under the old name still finds its payload"
+else
+  bad "a pointer written under the old name still finds its payload" "got '$got'"
+fi
 
 echo "== two repositories cannot share one pointer filename"
 # /a/b/c and /a/b_c both became a_b_c when "/" was replaced by "_", so a bare

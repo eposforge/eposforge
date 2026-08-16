@@ -235,10 +235,11 @@ shape and vocabulary, and the shell adds only the rules a schema cannot express.
 | `CROSSCHECK_SESSION_TTL` | `8 hours` | how recently a payload must have been touched for `open` to treat its session as live |
 
 Liveness is a property of the session, not of a round: `open` looks for a
-recently-touched payload in **any** round of the session `current` names. A
-session that names itself may open alongside a live one and `current` is left
-where it was; a session that does not name itself has no other way back to its
-payload, so it is refused rather than pointed somewhere shared.
+recently-touched payload in **any** round of the session `current` names. When
+one is live, `open` leaves `current` where it is and opens anyway — nothing is
+refused for want of a session name, because `by-repo/` is what finds the payload
+again. Name a session when you want a stable identity across rounds or across
+machines, not in order to start.
 
 ## Executing the reviewer's commands
 
