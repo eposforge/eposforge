@@ -584,6 +584,42 @@ jq --arg h "$H" --arg r "$R" '
 expect_out stop "a genuinely pre-existing blocker stops the loop" \
   ./crosscheck-decide.sh "$TMP/gen.json"
 
+echo "== a session that commits its work does not hand over an empty commit range"
+# The failure this catches is silent by construction: head_sha is stamped when
+# the handoff opens, the session then commits, and base..head is empty. Nothing
+# drifted, so no integrity check fires — coverage just reports 0 uncovered for a
+# change it never looked at.
+RC1="$TMP/repo-commit"
+mkdir -p "$RC1"
+git -C "$RC1" init -q -b main
+git -C "$RC1" config user.email crosscheck@example.invalid
+git -C "$RC1" config user.name  crosscheck-test
+printf 'one\n' > "$RC1/a.txt"
+git -C "$RC1" add -A && git -C "$RC1" commit -qm base
+( export CROSSCHECK_DIR="$TMP/pay-commit" CROSSCHECK_SESSION="commit-session"
+  ./crosscheck-claim open --repo "$RC1" --policy-key example_app --clearance medium >/dev/null 2>&1
+  printf 'two\n' > "$RC1/b.txt"
+  git -C "$RC1" add -A && git -C "$RC1" commit -qm work )
+HC="$TMP/pay-commit/commit-session/round-1/handoff.json"
+if [[ "$(jq -r '.scope[0].base_sha == .scope[0].head_sha' "$HC")" == "true" ]]; then
+  ok "the payload really does freeze head_sha at open time"
+else
+  bad "head_sha frozen at open" "base and head already differ, so this test proves nothing"
+fi
+expect_exit 0 "refresh advances head_sha" \
+  env CROSSCHECK_DIR="$TMP/pay-commit" CROSSCHECK_SESSION="commit-session" \
+      bash -c "cd '$RC1' && '$PWD/crosscheck-claim' refresh"
+expect_out "$(git -C "$RC1" rev-parse HEAD)" "head_sha is now the commit the work ended on" \
+  jq -r '.scope[0].head_sha' "$HC"
+expect_out "$(git -C "$RC1" rev-parse HEAD~1)" "and base_sha was NOT moved with it" \
+  jq -r '.scope[0].base_sha' "$HC"
+n="$(CROSSCHECK_DIR="$TMP/pay-commit" ./crosscheck-coverage.sh --handoff "$HC" 2>&1 | grep -c 'b.txt')"
+[[ "$n" == "1" ]] && ok "coverage now sees the committed file it could not see before" \
+  || bad "coverage sees the committed file" "b.txt not named in the uncovered set"
+expect_exit 2 "refresh does not invent a payload for a session that has none" \
+  env CROSSCHECK_DIR="$TMP/pay-none" CROSSCHECK_SESSION="nothing-here" \
+      bash -c "cd '$RC1' && '$PWD/crosscheck-claim' refresh"
+
 echo "== the next round is a delta, and only opens when the last one was answered"
 NRD="$TMP/nr"
 mk_round1() {  # mk_round1 <dir> <findings-fixture>

@@ -19,6 +19,7 @@
 #   crosscheck-claim open  --repo <path> [--policy-key K] [--clearance C] [--base SHA]
 #                          [--agent A] [--provider P] [--model M] [--session S] [--round N]
 #   crosscheck-claim scope --repo <path> [--policy-key K] [--clearance C] [--base SHA]
+#   crosscheck-claim refresh                     # head_sha := HEAD, base_sha untouched
 #   crosscheck-claim add   --statement TEXT [--class mechanical|judgment]
 #                          [--evidence-cmd CMD] [--check TYPE[:VALUE]] [--expected TEXT]
 #                          [--files a,b,c] [--cwd PATH]
@@ -73,7 +74,7 @@ ROOT="${CROSSCHECK_DIR:-$HOME/.crosscheck}"
 ROUND="${CROSSCHECK_ROUND:-1}"
 CAP="${CROSSCHECK_HANDOFF_TOKEN_CAP:-8000}"
 
-usage() { sed -n '19,45p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' >&2; exit 2; }
+usage() { sed -n '19,46p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' >&2; exit 2; }
 die()   { echo "crosscheck-claim: $*" >&2; exit 2; }
 no()    { echo "crosscheck-claim: rejected — $*" >&2; exit 1; }
 
@@ -444,6 +445,60 @@ scope)
   # example in every adopter's docs is exactly that path.
   bind_repo_pointer "$(cd "$A_REPO" && pwd -P)"
   echo "scope: ${A_REPO}"
+  ;;
+
+refresh)
+  # The payload records the tree as it was when the handoff opened. A session
+  # that COMMITS its work therefore hands over base_sha == head_sha: an empty
+  # commit range, from which coverage computes `uncovered: 0` for a change it
+  # never looked at. That is the same vacuous zero the dirty-tree re-read was
+  # added to prevent, wearing a different hat — and it is silent, because the
+  # promised revision does still exist and does still sit on its branch, so
+  # nothing is drifting and no integrity check fires.
+  #
+  # This advances head_sha, and NOTHING ELSE. base_sha is preserved exactly,
+  # which is what makes it different from `scope --repo X` with no --base: that
+  # re-reads the base from today's HEAD and silently destroys the baseline the
+  # whole review is measured against.
+  #
+  # Call it when the work is finished and before the payload is prepared. Do not
+  # call it after a round has been transported: at that point the promise has
+  # been made, and moving head_sha to today's tip is the refresh that
+  # crosscheck-verify-scope.sh exists to refuse.
+  # Read-only resolution: refresh corrects a payload that exists. If none does,
+  # there is nothing to correct, and minting one here would be a payload with no
+  # claims dated at the end of the work — the reconstruction this design refuses.
+  resolve_session_readonly
+  file="$(payload_path)"
+  [[ -r "$file" ]] || die "no handoff at $file — refresh corrects an existing payload, it does not open one"
+  n=0
+  while read -r repo; do
+    [[ -n "$repo" ]] || continue
+    if ! git -C "$repo" rev-parse --git-dir >/dev/null 2>&1; then
+      echo "crosscheck-claim: refresh — $repo is not readable as a git repository; left as it was" >&2
+      continue
+    fi
+    head="$(git_head "$repo")"; [[ -n "$head" ]] || continue
+    dirty="$(git_dirty "$repo")"
+    was="$(jq -r --arg r "$repo" '.scope[] | select(.repo_path == $r) | .head_sha' "$file")"
+    edit '
+      .scope |= map(if .repo_path == $r
+                    then .head_sha = $h | .dirty = $d
+                       | .integrity = "ok" | .verified_at = $t
+                    else . end)
+    ' --arg r "$repo" --arg h "$head" --argjson d "$dirty" \
+      --arg t "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    if [[ "$was" != "$head" ]]; then
+      [[ "$dirty" == "true" ]] && suffix=" (uncommitted changes as well)" || suffix=""
+      echo "refresh: $repo ${was:0:12} -> ${head:0:12}$suffix"
+      n=$((n + 1))
+    fi
+  done < <(jq -r '.scope[].repo_path' "$file")
+  # Explicitly, because `(( n == 0 ))` as the last statement in this branch
+  # makes the exit status the answer to "did nothing change" — and a caller
+  # reading that as failure is a loop that stops on a successful refresh.
+  if (( n == 0 )); then echo "refresh: every scope entry was already current"; fi
+  exit 0
   ;;
 
 add)

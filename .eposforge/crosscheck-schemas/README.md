@@ -166,6 +166,18 @@ makes the payload valid again while destroying the only fact that mattered —
 that the claims were written against a different tree than the one being handed
 over.
 
+There is exactly one moment when advancing `head_sha` is right, and it is the
+opposite end of the payload's life. `head_sha` is stamped when the handoff
+*opens*, which — with a session-start trigger — is before any work exists. A
+session that commits its work therefore arrives at transport with
+`base_sha == head_sha`: an empty commit range, from which coverage reports
+`uncovered: 0` for a change it never looked at. Nothing drifted, so no integrity
+check fires and nothing says a word. `crosscheck-claim refresh` closes that,
+advancing `head_sha` and leaving `base_sha` exactly alone; run it when the work
+stops and before the payload is prepared, never after a round has been
+transported. (`scope --repo X` with no `--base` is not a substitute: it re-reads
+the base from today's HEAD and silently destroys the baseline.)
+
 Two guards keep the same pressure off the payload:
 
 - **`uncovered_scope[]`** is the counterweight to an author who knows the rubric.
@@ -204,7 +216,7 @@ larger than most of that review's turns has to move its evidence behind
 
 | Command | Does |
 |---|---|
-| `crosscheck-claim` | open / append to a handoff; validates on every write |
+| `crosscheck-claim` | open / append to a handoff; validates on every write; `refresh` re-stamps `head_sha` |
 | `crosscheck-verify-scope.sh` | do the promised revisions still exist and still sit on their branch → `scope[].integrity` |
 | `crosscheck-run-checks.sh` | execute every mechanical claim → `check_results[]` |
 | `crosscheck-coverage.sh` | changed files minus claimed files → `coverage.uncovered[]` |
