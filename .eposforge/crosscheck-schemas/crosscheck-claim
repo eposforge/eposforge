@@ -35,13 +35,18 @@
 # Payload location:  $CROSSCHECK_DIR/<session>/round-<N>/handoff.json
 #   CROSSCHECK_DIR      default ~/.crosscheck   (keep it OUTSIDE any repo: a
 #                       payload that can be committed will eventually be committed)
-#   CROSSCHECK_SESSION  default a generated uuid, remembered in $CROSSCHECK_DIR/current.
-#                       A session that names itself (env or --session) can be
-#                       opened while another session is live: it addresses its
-#                       own payload, so `current` is left pointing where it was.
-#                       A session that does not name itself has no other way
-#                       back to its payload and is refused instead.
+#   CROSSCHECK_SESSION  default a generated uuid, remembered in $CROSSCHECK_DIR/current
+#                       AND in $CROSSCHECK_DIR/by-repo/<repo>. Any append opens a
+#                       payload if this session has none, so `open` is optional:
+#                       an instruction to record claims has to work when followed
+#                       literally, and only one agent CLI has a session-start
+#                       hook to run `open` first. The per-repo pointer is what
+#                       finds that payload again, because `current` is a single
+#                       slot on a host where sessions overlap.
 #   CROSSCHECK_ROUND    default 1
+#   CROSSCHECK_IMPLEMENTER_AGENT / _PROVIDER / _MODEL
+#                       identity used when an append opens its own payload and
+#                       there are no flags to read. Unset stays "unknown".
 #   CROSSCHECK_HANDOFF_TOKEN_CAP  default 8000
 #   CROSSCHECK_CLEARANCE_ORDER    adopter clearance vocabulary, weakest first,
 #                       comma-separated (e.g. "low,medium,high,max"). When set,
@@ -155,8 +160,63 @@ finish() {
   mv "$tmp" "$file"
 }
 
+# ensure_payload — make sure this session HAS a payload before anything appends
+# to it. An append is the first thing an agent following its instructions
+# actually types, so it has to work without a prior `open`; otherwise the
+# instruction is only true on the one CLI that has a session-start hook.
+ensure_payload() {
+  local file repo ptr sess
+
+  if (( SESSION_EXPLICIT )); then
+    [[ -r "$(payload_path)" ]] && return 0
+    repo="$(cwd_repo)"
+    [[ -n "$repo" ]] || die "no handoff for session $SESSION, and $(pwd) is not inside a git repository. Run 'crosscheck-claim open --repo <path>'."
+    echo "crosscheck-claim: no handoff for this session yet — opening one for $repo" >&2
+    do_open "$repo" >/dev/null
+    return 0
+  fi
+
+  repo="$(cwd_repo)"
+
+  # The repository is the one piece of context an append always has, so it is
+  # the first thing asked. `current` is a single slot on a host where sessions
+  # overlap; resolving through it is how an append lands in a payload that
+  # belongs to somebody else.
+  if [[ -n "$repo" ]]; then
+    ptr="$(repo_pointer "$(cd "$repo" && pwd -P)")"
+    if [[ -r "$ptr" ]]; then
+      sess="$(cat "$ptr")"
+      if [[ -n "$sess" && -r "$ROOT/$sess/round-$ROUND/handoff.json" ]]; then
+        SESSION="$sess"
+        return 0
+      fi
+    fi
+  fi
+
+  # Fall back to `current` only if the payload it names is actually about this
+  # repository. A payload that never mentions the tree you are working in is
+  # not yours, whatever the pointer says.
+  file="$(payload_path)"
+  if [[ -n "$SESSION" && -r "$file" && -n "$repo" ]]; then
+    if jq -e --arg r "$(cd "$repo" && pwd -P)" \
+          'any(.scope[]?; .repo_path == $r)' "$file" >/dev/null 2>&1; then
+      return 0
+    fi
+  fi
+
+  [[ -n "$repo" ]] || die "no handoff yet, and $(pwd) is not inside a git repository — a payload has to name the tree it is about. Run 'crosscheck-claim open --repo <path>' from somewhere else."
+  # Do not open under an id inherited from `current`: that id belongs to another
+  # session, and writing a fresh payload into its namespace is how two sessions
+  # end up sharing one. Mint an id and let the per-repo pointer find it again.
+  SESSION=""
+  echo "crosscheck-claim: no handoff for this session yet — opening one for $repo" >&2
+  do_open "$repo" >/dev/null
+}
+
 edit() {  # edit <jq-filter> [jq args...]
-  local file; file="$(payload_path)"
+  local file
+  ensure_payload
+  file="$(payload_path)"
   [[ -r "$file" ]] || die "no handoff at $file — run 'crosscheck-claim open --repo <path>' first"
   local filter="$1"; shift
   # Read-modify-write under an exclusive lock. Several agents run on this host
@@ -197,10 +257,53 @@ scope_entry_json() {
           integrity:"ok", verified_at:$t}'
 }
 
-case "$CMD" in
+# ── opening a handoff ────────────────────────────────────────────────────────
+# One implementation, two callers: the `open` verb, and the first append in a
+# session that has no payload yet. The second caller is the important one — an
+# instruction to "record claims as you go" that fails on its first command is
+# not an instruction, and only one agent CLI has a session-start hook to run
+# `open` for it.
 
-open)
-  [[ -n "$A_REPO" ]] || die "open needs --repo <path>"
+# A per-repository pointer, written next to `current`. `current` is a single
+# slot on a host where sessions overlap, so a bare append that resolves through
+# it can land in a payload that does not exist — or in somebody else's. The
+# repository is the one piece of context an append always has.
+repo_pointer() {
+  local p="${1#/}"
+  printf '%s/by-repo/%s' "$ROOT" "${p//\//_}"
+}
+
+cwd_repo() { git rev-parse --show-toplevel 2>/dev/null; }
+
+# Same pointer preference as ensure_payload, without creating anything. `show`
+# and `path` are how an agent checks what it has recorded; they must not answer
+# about a different session's payload.
+resolve_session_readonly() {
+  local repo ptr sess file
+  (( SESSION_EXPLICIT )) && return 0
+  repo="$(cwd_repo)"
+  if [[ -n "$repo" ]]; then
+    ptr="$(repo_pointer "$(cd "$repo" && pwd -P)")"
+    if [[ -r "$ptr" ]]; then
+      sess="$(cat "$ptr")"
+      if [[ -n "$sess" && -r "$ROOT/$sess/round-$ROUND/handoff.json" ]]; then
+        SESSION="$sess"
+        return 0
+      fi
+    fi
+    # `current` only counts if the payload it names is about this repository.
+    file="$(payload_path)"
+    if [[ -n "$SESSION" && -r "$file" ]]; then
+      jq -e --arg r "$(cd "$repo" && pwd -P)" \
+         'any(.scope[]?; .repo_path == $r)' "$file" >/dev/null 2>&1 || SESSION=""
+    fi
+  fi
+  return 0
+}
+
+
+do_open() {  # do_open <repo> — sets SESSION, prints the payload path
+  local repo="$1" root_abs prev prev_dir prev_payload dir file scope claim_current=1
 
   # A payload carries repository paths, revisions and claims. It must not be
   # committable — least of all into a public tree — and "we agreed not to" is
@@ -228,20 +331,11 @@ open)
                       -newermt "-${CROSSCHECK_SESSION_TTL:-8 hours}" -print -quit 2>/dev/null)"
     fi
     if [[ -n "$prev_payload" ]]; then
-      if (( SESSION_EXPLICIT )); then
-        # Open, but leave the pointer where it is. Refusing outright would make
-        # a per-session trigger unusable on a host where sessions overlap, which
-        # is the normal case; repointing would break the live session. Naming
-        # your own session is what buys the third option.
-        CLAIM_CURRENT=0
-        echo "crosscheck-claim: note — session $prev is still active; leaving 'current' pointing at it. This session is addressed by --session/CROSSCHECK_SESSION=$SESSION." >&2
-      else
-        die "session $prev is still active ($prev_payload touched within ${CROSSCHECK_SESSION_TTL:-8 hours}).
-  Opening here would repoint 'current' and its next append would land in your payload.
-  Run this session with its own id instead:
-      export CROSSCHECK_SESSION=\$(cat /proc/sys/kernel/random/uuid)
-  or pass --session <id>. Use CROSSCHECK_SESSION_TTL=0 to override deliberately."
-      fi
+      # Leave the pointer where it is and open anyway. This used to require the
+      # caller to name its own session; it no longer does, because the per-repo
+      # pointer written below is how this payload is found again.
+      claim_current=0
+      echo "crosscheck-claim: note — session $prev is still active; leaving 'current' pointing at it." >&2
     fi
   fi
 
@@ -251,13 +345,21 @@ open)
   fi
   dir="$ROOT/$SESSION/round-$ROUND"
   mkdir -p "$dir" || die "cannot create $dir"
-  if (( ${CLAIM_CURRENT:-1} )); then printf '%s' "$SESSION" > "$session_file"; fi
+  (( claim_current )) && printf '%s' "$SESSION" > "$session_file"
+  mkdir -p "$ROOT/by-repo" 2>/dev/null
+  printf '%s' "$SESSION" > "$(repo_pointer "$(cd "$repo" && pwd -P)")"
   file="$dir/handoff.json"
   [[ -e "$file" ]] && die "handoff already exists at $file (use 'scope'/'add' to append)"
 
-  scope="$(scope_entry_json "$A_REPO" "$A_KEY" "$A_CLEAR" "$A_BASE")" || exit 2
+  scope="$(scope_entry_json "$repo" "$A_KEY" "$A_CLEAR" "$A_BASE")" || exit 2
+  # An append that opens its own payload has no flags to read, so the identity
+  # comes from the environment when the caller set it. Left unset it stays
+  # "unknown", which is honest: an adopter that routes by vendor will refuse to
+  # guess, and refusing is the correct end to "who wrote this?".
   jq -n --arg s "$SESSION" --argjson r "$ROUND" \
-        --arg ag "${A_AGENT:-unknown}" --arg pr "${A_PROVIDER:-unknown}" --arg mo "${A_MODEL:-unknown}" \
+        --arg ag "${A_AGENT:-${CROSSCHECK_IMPLEMENTER_AGENT:-unknown}}" \
+        --arg pr "${A_PROVIDER:-${CROSSCHECK_IMPLEMENTER_PROVIDER:-unknown}}" \
+        --arg mo "${A_MODEL:-${CROSSCHECK_IMPLEMENTER_MODEL:-unknown}}" \
         --argjson sc "$scope" --arg cl "${A_CLEAR:-unset}" '
     {
       schema: "eposforge.crosscheck.handoff/1",
@@ -282,7 +384,14 @@ open)
       budget: {est_tokens: 0, rendered_bytes: 0, cap: 0, over_budget: false}
     }' > "$file.tmp" || die "cannot write $file"
   finish "$file"
-  echo "$file"
+  printf '%s\n' "$file"
+}
+
+case "$CMD" in
+
+open)
+  [[ -n "$A_REPO" ]] || die "open needs --repo <path>"
+  do_open "$A_REPO"
   ;;
 
 scope)
@@ -297,6 +406,8 @@ scope)
 
 add)
   [[ -n "$A_STATEMENT" ]] || die "add needs --statement"
+  # Before the probe, not after: resolve_claim_cwd reads the payload's scope.
+  ensure_payload
   if [[ -z "$A_CLASS" ]]; then
     if [[ -n "$A_CHECK" ]]; then A_CLASS="mechanical"; else A_CLASS="judgment"; fi
   fi
@@ -423,12 +534,14 @@ flag)
   ;;
 
 show)
+  resolve_session_readonly
   file="$(payload_path)"
   [[ -r "$file" ]] || die "no handoff at $file"
   if [[ -n "$A_JQ" ]]; then jq -r "$A_JQ" "$file"; else jq . "$file"; fi
   ;;
 
 path)
+  resolve_session_readonly
   payload_path
   ;;
 

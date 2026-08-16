@@ -80,6 +80,23 @@ Four things follow from appending rather than reconstructing:
 It is a shell command rather than hook plumbing so that every agent CLI can call
 it. Only the trigger ever needs per-tool work; the accumulate half never did.
 
+`open` is optional. Any append opens a payload when the session has none, using
+the git work tree the command was run in — because "record claims as you go" is
+an instruction agents read in a persona file, and an instruction that fails on
+the first command is not an instruction. Only one agent CLI has a session-start
+hook to call `open` for it; the rest have to be able to just start.
+
+Two pointers, and the per-repo one is the important half:
+
+- `$CROSSCHECK_DIR/current` — the last session opened. A single slot.
+- `$CROSSCHECK_DIR/by-repo/<repo path>` — the session for that work tree.
+
+An append with no session named asks the repository first, then `current` — and
+`current` only counts when the payload it names actually has that repository in
+its `scope[]`. A payload that never mentions the tree you are working in is not
+yours, whatever the pointer says. Getting this wrong is silent: the claim is
+written, to somebody else's payload.
+
 ## What is computed, and what is left to judgment
 
 The tooling exists to stop spending model attention on arithmetic — not to

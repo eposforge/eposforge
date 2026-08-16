@@ -244,6 +244,43 @@ CROSSCHECK_DIR="$R/.crosscheck" CROSSCHECK_SESSION=in-repo \
   expect_exit 2 "refuses a payload directory inside a git work tree" \
   ./crosscheck-claim open --repo "$R" --clearance low
 
+echo "== an append works from a cold start, because that is the first thing anyone types"
+# "Record claims as you go" is an instruction in a persona file every agent
+# reads. Only one CLI has a session-start hook to run `open` first, so on every
+# other one the instruction has to survive being followed literally.
+CS="$TMP/cold"
+mkdir -p "$CS/repo/scripts" "$CS/repo2"
+for d in "$CS/repo" "$CS/repo2"; do
+  git -C "$d" init -q -b main
+  git -C "$d" config user.email crosscheck@example.invalid
+  git -C "$d" config user.name crosscheck-test
+  echo 'exit 0' > "$d/f.sh"
+  git -C "$d" add -A && git -C "$d" commit -qm base
+done
+# somebody else's session, live, holding the global pointer
+CROSSCHECK_DIR="$CS/payloads" CROSSCHECK_SESSION=other-session \
+  ./crosscheck-claim open --repo "$CS/repo2" --clearance low >/dev/null 2>&1
+printf 'other-session' > "$CS/payloads/current"
+
+out="$(cd "$CS/repo" && CROSSCHECK_DIR="$CS/payloads" "$OLDPWD/crosscheck-claim" \
+       trap 'recorded with no open and no session' 2>&1)"
+if grep -q 'opening one for' <<<"$out"; then
+  ok "a bare append opens a payload for the repo it is run in"
+else
+  bad "a bare append opens a payload for the repo it is run in" "$out"
+fi
+got="$(cd "$CS/repo" && CROSSCHECK_DIR="$CS/payloads" "$OLDPWD/crosscheck-claim" \
+       show --jq '.scope[0].repo_path' 2>/dev/null)"
+if [[ "$got" == "$(cd "$CS/repo" && pwd -P)" ]]; then
+  ok "and reading it back finds that payload, not the one 'current' names"
+else
+  bad "and reading it back finds that payload, not the one 'current' names" "got '$got'"
+fi
+expect_out 0 "the live session's payload was not appended to" \
+  jq -r '.traps | length' "$CS/payloads/other-session/round-1/handoff.json"
+expect_out other-session "and the global pointer was not stolen" \
+  cat "$CS/payloads/current"
+
 echo "== a payload opened before the work started does not report a vacuous coverage zero"
 # The session-start trigger opens the handoff when the tree is still clean, so
 # `dirty` is stamped false. Left alone, coverage compares base..head over an
