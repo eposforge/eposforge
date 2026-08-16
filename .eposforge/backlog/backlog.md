@@ -490,7 +490,7 @@ Notes: Filed 2026-08-14. Same carving-out precedent as EF-027 / EF-028 — a slo
 ID: EF-076
 Title: Make `Fix surface:` multi-valued like `Tags:`
 Date: 2026-08-15
-Status: open
+Status: in-progress
 Effort: S
 Fix surface: eposforge-pattern
 Tags: backlog-tooling

@@ -21,7 +21,7 @@ Example:
 | `Date:` | `YYYY-MM-DD` | Discovery date |
 | `Status:` | `open` \| `in-progress` \| `blocked` \| `slated` \| `resolved` | |
 | `Effort:` | `S` \| `M` \| `L` \| `XL` | |
-| `Fix surface:` | Per-repo enum from `backlog/config.toml` | |
+| `Fix surface:` | Per-repo enum from `backlog/config.toml` | Comma-separated when a change genuinely lands on more than one surface (multi-valued, same form as `Tags:`); each element is validated against the vocabulary. Parenthetical qualifiers are not vocabulary — put that detail in `Notes:` |
 | `Verify with:` | One-line observable signal | |
 
 ## Conditional fields

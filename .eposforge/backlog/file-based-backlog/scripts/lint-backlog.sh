@@ -422,11 +422,14 @@ for path in check_files:
         if effort and effort not in effort_values:
             errors.append(f"{issue_ref} invalid `Effort:` `{effort}`")
 
-        surface = fields.get("Fix surface", "").strip()
-        if fix_surfaces and surface and surface not in fix_surfaces:
-            errors.append(
-                f"{issue_ref} invalid `Fix surface:` `{surface}` (expected one of: {', '.join(fix_surfaces)})"
-            )
+        # Fix surface (multi, EF-076) — same comma-split shape as `Tags:`
+        raw_surface = fields.get("Fix surface", "").strip()
+        surface_list = [s.strip() for s in raw_surface.split(",") if s.strip()] if raw_surface else []
+        for s in surface_list:
+            if fix_surfaces and s not in fix_surfaces:
+                errors.append(
+                    f"{issue_ref} invalid `Fix surface:` `{s}` (expected one of: {', '.join(fix_surfaces)})"
+                )
 
         # Tags (multi) with Theme fallback + deprecation (EF-046)
         raw_tags = fields.get("Tags", fields.get("Theme", "")).strip()
