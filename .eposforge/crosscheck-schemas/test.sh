@@ -16,6 +16,13 @@ VERBOSE=0
 [[ "${1:-}" == "-v" ]] && VERBOSE=1
 
 PASS=0; FAIL=0
+# Do not inherit the caller's session. These checks are themselves run by
+# `crosscheck-run-checks.sh` during a finalize, which exports CROSSCHECK_ROUND
+# and CROSSCHECK_SESSION — and a fixture that assumes round-1 paths then fails
+# for a reason that has nothing to do with the contract. A suite that only
+# passes in a clean shell is a suite that will mislead somebody.
+export CROSSCHECK_ROUND=1
+unset CROSSCHECK_SESSION
 TMP="$(mktemp -d)" || exit 2
 cleanup() {
   [[ -d "$TMP/repo/.git" ]] && git -C "$TMP/repo" worktree prune >/dev/null 2>&1
