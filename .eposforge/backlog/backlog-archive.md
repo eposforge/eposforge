@@ -21,6 +21,7 @@ Resolved issues are grouped by month (`## YYYY-MM`).
 
 
 
+
 ## Issue EF-007 — Resolve component-slot kind-class symmetry
 ID: EF-007
 Title: Resolve component-slot kind-class symmetry
@@ -182,6 +183,7 @@ Notes: Mechanism only — cloud resource/project provisioning, deployment rate (
 Resolved: 2026-05-26
 
 ## 2026-06
+
 
 
 
@@ -377,6 +379,7 @@ Resolved: 2026-06-28
 
 
 
+
 ## Issue EF-011 — Spec graph recall conflates EposForge components with adopter-side infrastructure
 ID: EF-011
 Title: Spec graph recall conflates EposForge components with adopter-side infrastructure
@@ -565,6 +568,7 @@ Notes: Follows EF-059 (the decision + standard). This is the mechanical executio
 
 
 
+
 ## Issue EF-074 — Session chairs standard (judgment seats vs skills vs component roles)
 ID: EF-074
 Title: Session chairs standard (judgment seats vs skills vs component roles)
@@ -617,3 +621,17 @@ Tags: agent-policy
 Validation: Cross-checked over 3 rounds, reviewer `dillon` (grok / xai) against a claude implementer — r1 `sound-with-caveats` 3 findings all accepted-fixed, r2 `sound-with-caveats` 2 findings (1 accepted-fixed, 1 accepted-deferred as EF-079), r3 **`sound`, 0 findings, 2/2 claims confirmed**. Both `Verify with:` clauses were re-run independently of the suites that were written for them. Clause 1: the prompt an actual reviewer received carries the required/optional property tables (12 rows) plus an explicit statement that `correct_fix` is the name — checked by reading round 3's `reviewer-prompt.md`, not by asserting on the renderer. Clause 2: on a real findings payload rather than a fixture, renaming one property gives exit 3 (shape-only), removing a claim verdict gives exit 1 (substantive), and the untouched payload gives 0; and a kept-artifact run shows attempt 1 returned `correct_state`, the final payload carries `correct_fix`, no human edited either file, `reask.json` records `attempts: 2 resolved: true`, and the round's `prompt_sha256` still equals the sha of the untouched `reviewer-prompt.md` while the re-ask prompt is a separate file with its own recorded hash. Exit 3 is deliberately reachable for `findings` only — a handoff and a disposition have no remote author to re-ask. Commits: eposforge `3b5ae96`, `54f0d79`; and the harness half in the private infra repo. Suites: contract 105 → 111, new re-ask suite 18, both pre-existing host suites unchanged at 44 / 53.
 Verify with: the rendered reviewer prompt names the required property list for a finding explicitly (not only as an example object), so a reviewer emitting a plausible synonym has been told the exact key; and when a returned findings payload fails validation on schema shape ALONE — no missing claim verdict, no cross-field rule broken — the finalize path re-asks the same reviewer once with the validator's own error text appended, records that a re-ask happened, and only then declares the round unusable; a fixture whose only defect is a renamed property produces a valid findings payload on the second attempt without a human editing the file.
 Notes: Filed 2026-08-16. Observed three times in three consecutive rounds across two sessions: the reviewer returned well-reasoned findings using a near-synonym for one property name, and `validate-payload.sh` correctly refused the payload, which the harness then reported as "not a verdict". The refusal is right — a findings payload that does not conform is not a verdict, and a missing claim verdict must never be treated as a pass. What is wrong is the recovery: the only way forward was a human renaming the key by hand, which puts the implementer in the position of editing the reviewer's answer, exactly the laundering the three-payload design exists to prevent. Two changes, both cheap. Naming the required keys in the prompt removes most of the cause; a single bounded re-ask on a shape-only failure removes the rest, and is safe because the reviewer is re-answering the same pinned prompt with an added error string rather than being asked to change its judgment. Bound it to one attempt so a reviewer that cannot conform still terminates the round. The distinction that matters is shape-only versus substantive: a payload missing a claim verdict must keep failing outright, because that is the check that stops an implementer from shipping unreviewed work. Adjacency: EF-075 (the contract these payloads conform to).
+
+## Issue EF-078 — `lint-backlog.sh` and `sweep-resolved.sh` only act on the first `BACKLOG_ROOTS` entry
+ID: EF-078
+Title: `lint-backlog.sh` and `sweep-resolved.sh` only act on the first `BACKLOG_ROOTS` entry
+Date: 2026-08-17
+Status: resolved
+Resolved: 2026-08-17
+Effort: S
+Fix surface: eposforge-pattern
+Tags: backlog-tooling
+Blocks:
+Validation: Cross-checked in one round, reviewer `dillon` (grok / xai) against a claude implementer — `sound-with-caveats`, 10/10 claims confirmed, 0 uncovered scope, 1 minor + 1 nit, both `accepted-fixed`, and `crosscheck-decide.sh` returned `stop` on round 1. The nit was a stale tier-1 bullet in `resolve-backlog.sh`'s header still reading "first colon-separated entry" while the body probed every entry; the minor was this item's own `Notes:` still misdescribing the defect, caught before the item was closed rather than after — both fixed in `1945092`'s follow-up. All three `Verify with:` clauses were re-run independently of `test-multi-root.sh`, the suite written for them. Clause 1 on a real corpus: one invocation over five cross-referencing roots — this framework plus four adopter repos — produced findings attributed to two different roots, including one that sits fourth in the list and that the old code never opened, and reported zero unknown-ID errors for every prefix present in the set. The only unknown-ID errors remaining referenced adopter repos deliberately left out of the set, which the verifying session was not cleared to read; that is clause 3 behaving correctly, not a gap. Clause 2 with this framework's own repo as the FIRST root and a synthetic adopter root SECOND: the second root's cross-repo `Depends on:` into the first resolved with zero errors, and `sweep-resolved.sh` archived that root's resolved item while leaving the first root's files untouched. Clause 3: adding a link resolving in no root returns lint 1 and sweep 1, and removing only that link returns lint 0 — so the fix is not "stop checking". Separately, the new `test-multi-root.sh` (28 cases, every positive paired with a negative control) fails 14 of 28 when run against the pre-change scripts pinned at `3d6aec5`, so its green run discriminates. Single-root output is byte-identical on this repo's real backlog. Commits: `1945092` and its follow-up.
+Verify with: with `BACKLOG_ROOTS` naming three or more roots that reference each other, a single `lint-backlog.sh` invocation resolves cross-repo links in every root — not only the first — and reports zero unknown-ID errors for links that do resolve somewhere in the set; the same invocation pattern makes `sweep-resolved.sh` able to sweep a resolved item out of a non-first root without aborting on those errors; and a root whose links genuinely do not resolve anywhere in the set still errors, so the fix is not "stop checking".
+Notes: Filed 2026-08-17; Notes corrected 2026-08-17 during the cross-check, because as filed they misdescribed the defect. **What was wrong with the original description.** It claimed cross-repo links in non-first roots false-flag as unknown IDs, and that a `resolved` item left in an active file is itself a lint error. Neither is accurate. Link resolution was already multi-root: `discover_roots` / `collect_all_issues` aggregate `all_ids` across every discovered root. And a `resolved` item in an active file appends to `warnings[]`, not `errors[]`, so it never fails a run on its own. Fixing what the original Notes literally described would have been a no-op. **The actual defect.** `resolve-backlog.sh` probed only `${BACKLOG_ROOTS%%:*}` — the first entry — and the single `BACKLOG_DIR` it produced was the only root whose FILES `lint-backlog.sh` or `sweep-resolved.sh` ever opened. Non-first roots contributed IDs and visibility but were never themselves checked or swept, so an item in one could not be linted or archived without re-running with that root moved to the front. Two modes were also being conflated: with `BACKLOG_ROOTS` unset and cwd inside one repo, cross-repo links genuinely do report as unknown — that is the documented single-root degradation, not this bug, and it is what actually made `sweep-resolved.sh` abort. Folded in, as the same class in the same script: the `Status: blocked` check did not strip the `<repo>:` qualifier that the unknown-ID check strips, so a cross-repo-only dependency could never satisfy `blocked`. Keep the strictness: a link that resolves nowhere in the set must still fail, or the fix trades a false positive for a false negative.

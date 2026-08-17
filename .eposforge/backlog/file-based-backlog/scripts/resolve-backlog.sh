@@ -1,14 +1,19 @@
 #!/usr/bin/env bash
-# resolve-backlog.sh — source this file to populate BACKLOG_DIR.
+# resolve-backlog.sh — source this file to populate BACKLOG_DIR and BACKLOG_DIRS.
 #
-# Resolution precedence (single-root scripts):
-#   1. BACKLOG_ROOTS env  — first colon-separated entry; probe:
+# Resolution precedence:
+#   1. BACKLOG_ROOTS env  — EVERY colon-separated entry is probed, in order, and
+#                           each one that resolves is appended to BACKLOG_DIRS;
+#                           BACKLOG_DIR is the first that resolved. Probes:
 #                           <entry>/backlog/config.toml
 #                           <entry>/.eposforge/backlog/config.toml
 #                           <entry>/eposforge/backlog/config.toml
 #   2. cwd walk-up        — from $PWD upward: same probes (depth-tolerant)
 #   3. VS Code workspace  — VSCODE_WORKSPACE_FILE / WORKSPACE_FILE; same probes
 #   4. git-root fallback  — first existing probe under git root, else <git-root>/backlog
+#
+# Tiers 2-4 resolve exactly one dir, so BACKLOG_DIRS holds that one entry. Only
+# tier 1 can yield several — see the BACKLOG_DIRS note below for why.
 #
 # After sourcing, BACKLOG_DIR is an absolute path to the resolved backlog directory.
 # If no config.toml exists at the resolved path, the caller should emit the bootstrap
