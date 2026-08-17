@@ -22,6 +22,7 @@ Resolved issues are grouped by month (`## YYYY-MM`).
 
 
 
+
 ## Issue EF-007 — Resolve component-slot kind-class symmetry
 ID: EF-007
 Title: Resolve component-slot kind-class symmetry
@@ -183,6 +184,7 @@ Notes: Mechanism only — cloud resource/project provisioning, deployment rate (
 Resolved: 2026-05-26
 
 ## 2026-06
+
 
 
 
@@ -380,6 +382,7 @@ Resolved: 2026-06-28
 
 
 
+
 ## Issue EF-011 — Spec graph recall conflates EposForge components with adopter-side infrastructure
 ID: EF-011
 Title: Spec graph recall conflates EposForge components with adopter-side infrastructure
@@ -569,6 +572,7 @@ Notes: Follows EF-059 (the decision + standard). This is the mechanical executio
 
 
 
+
 ## Issue EF-074 — Session chairs standard (judgment seats vs skills vs component roles)
 ID: EF-074
 Title: Session chairs standard (judgment seats vs skills vs component roles)
@@ -635,3 +639,16 @@ Blocks:
 Validation: Cross-checked in one round, reviewer `dillon` (grok / xai) against a claude implementer — `sound-with-caveats`, 10/10 claims confirmed, 0 uncovered scope, 1 minor + 1 nit, both `accepted-fixed`, and `crosscheck-decide.sh` returned `stop` on round 1. The nit was a stale tier-1 bullet in `resolve-backlog.sh`'s header still reading "first colon-separated entry" while the body probed every entry; the minor was this item's own `Notes:` still misdescribing the defect, caught before the item was closed rather than after — both fixed in `1945092`'s follow-up. All three `Verify with:` clauses were re-run independently of `test-multi-root.sh`, the suite written for them. Clause 1 on a real corpus: one invocation over five cross-referencing roots — this framework plus four adopter repos — produced findings attributed to two different roots, including one that sits fourth in the list and that the old code never opened, and reported zero unknown-ID errors for every prefix present in the set. The only unknown-ID errors remaining referenced adopter repos deliberately left out of the set, which the verifying session was not cleared to read; that is clause 3 behaving correctly, not a gap. Clause 2 with this framework's own repo as the FIRST root and a synthetic adopter root SECOND: the second root's cross-repo `Depends on:` into the first resolved with zero errors, and `sweep-resolved.sh` archived that root's resolved item while leaving the first root's files untouched. Clause 3: adding a link resolving in no root returns lint 1 and sweep 1, and removing only that link returns lint 0 — so the fix is not "stop checking". Separately, the new `test-multi-root.sh` (28 cases, every positive paired with a negative control) fails 14 of 28 when run against the pre-change scripts pinned at `3d6aec5`, so its green run discriminates. Single-root output is byte-identical on this repo's real backlog. Commits: `1945092` and its follow-up.
 Verify with: with `BACKLOG_ROOTS` naming three or more roots that reference each other, a single `lint-backlog.sh` invocation resolves cross-repo links in every root — not only the first — and reports zero unknown-ID errors for links that do resolve somewhere in the set; the same invocation pattern makes `sweep-resolved.sh` able to sweep a resolved item out of a non-first root without aborting on those errors; and a root whose links genuinely do not resolve anywhere in the set still errors, so the fix is not "stop checking".
 Notes: Filed 2026-08-17; Notes corrected 2026-08-17 during the cross-check, because as filed they misdescribed the defect. **What was wrong with the original description.** It claimed cross-repo links in non-first roots false-flag as unknown IDs, and that a `resolved` item left in an active file is itself a lint error. Neither is accurate. Link resolution was already multi-root: `discover_roots` / `collect_all_issues` aggregate `all_ids` across every discovered root. And a `resolved` item in an active file appends to `warnings[]`, not `errors[]`, so it never fails a run on its own. Fixing what the original Notes literally described would have been a no-op. **The actual defect.** `resolve-backlog.sh` probed only `${BACKLOG_ROOTS%%:*}` — the first entry — and the single `BACKLOG_DIR` it produced was the only root whose FILES `lint-backlog.sh` or `sweep-resolved.sh` ever opened. Non-first roots contributed IDs and visibility but were never themselves checked or swept, so an item in one could not be linted or archived without re-running with that root moved to the front. Two modes were also being conflated: with `BACKLOG_ROOTS` unset and cwd inside one repo, cross-repo links genuinely do report as unknown — that is the documented single-root degradation, not this bug, and it is what actually made `sweep-resolved.sh` abort. Folded in, as the same class in the same script: the `Status: blocked` check did not strip the `<repo>:` qualifier that the unknown-ID check strips, so a cross-repo-only dependency could never satisfy `blocked`. Keep the strictness: a link that resolves nowhere in the set must still fail, or the fix trades a false positive for a false negative.
+
+## Issue EF-079 — The validator reports schema errors only as prose, so callers parse its wording
+ID: EF-079
+Title: The validator reports schema errors only as prose, so callers parse its wording
+Date: 2026-08-17
+Status: resolved
+Resolved: 2026-08-17
+Effort: S
+Fix surface: eposforge-pattern
+Tags: agent-policy
+Validation: Cross-checked over 2 rounds, reviewer from a different model vendor against a claude implementer -- r1 `sound-with-caveats`, 1 minor finding plus a REFUTED claim, both about the same defect; r2 **`sound`, 0 findings, 2/2 claims confirmed**, `crosscheck-decide.sh` -> `stop`. The refutation was the valuable part: I had claimed the README stated the re-ask gate as a positive test, while the rule I actually wrote ("no error has phase cross") is VACUOUSLY TRUE of an empty error list -- and because the machine channel deliberately fails open, an empty list is also what a BROKEN channel emits, so a caller following the documented rule could have read a jq failure as permission to re-ask. Fixed in `9bb74c3` by stating the gate positively on both counts (non-empty AND every `phase == "schema"`), binding it to exit 3, and graduating the documented jq expression into `test.sh` as four cases including a hand-made empty list, so it tests the rule rather than a fixture. All three `Verify with:` clauses re-run independently of `test.sh`: the machine form carries `pointer` and `property` as distinct fields and threads correctly into nested paths (`/findings/0/severity` for an enum violation, `/findings/0` + `property: evidence` for a missing required key); and the human output is byte-identical to the pre-change revision `6cfb1af` across all 45 fixture x schema combinations with **stdout+exit and stderr compared separately**, so the added channel did not quietly move a line between streams. The safety property -- that `--json-errors` changes no exit code anywhere -- is asserted across every fixture, and the pre-change copy cannot even accept the flag, so that comparison is against something that genuinely differs. Suite 111 -> 122; the host re-ask suite 18 -> 20 now reads `.errors[].property` instead of grepping `unexpected property`, and fails 2 cases when pointed at a pre-change contract copy. Commits: `bc5dcb4`, `9bb74c3`.
+Verify with: `validate-payload.sh` can emit its schema errors in a machine-readable form that names the offending JSON pointer and, where the error is an unknown or missing property, the property name — as a distinct field rather than embedded in an English sentence; a caller can recover the offending property name from that form without matching on the human-readable `INVALID:` text; and the human-readable output is unchanged for anyone reading it directly, so this adds a channel rather than replacing one.
+Notes: Filed 2026-08-17, deferred out of EF-077's cross-check (round 2) rather than fixed inside it, because a machine-readable error channel is a new capability rather than one of that item's two changes. EF-077 added a bounded re-ask that appends the validator's own error text to a second ask; anything that wants to act on those errors programmatically — the re-ask's own regression suite does — must currently match the literal phrase `unexpected property "X"`. That coupling fails CLOSED, which is why this is not urgent: if the wording is reworded the match stops succeeding, the payload keeps its wrong key, and the suite goes red rather than silently green. The cost is brittleness, not a hole — a routine copy-edit to an error string becomes a test edit in another repo. Keep the strictness when fixing: the machine form must not become a way to accept a payload the human form rejects. Adjacency: EF-077 (the re-ask that consumes these errors), EF-075 (the contract the payloads conform to).

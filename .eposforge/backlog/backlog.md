@@ -43,6 +43,7 @@ Notes: Phase 0 of the strangler-fig rollout for the 2026-06 architecture alignme
 
 
 
+
 ## Issue EF-066 — Strangler-tracking backlog schema: make in-flight migrations legible to agents (Migration/LegacyShapeOf/TargetShapeOf)
 ID: EF-066
 Title: Strangler-tracking backlog schema: make in-flight migrations legible to agents (Migration/LegacyShapeOf/TargetShapeOf)
@@ -53,6 +54,7 @@ Fix surface: eposforge-pattern
 Tags: backlog-tooling
 Verify with: `docs/schema.md` documents three new optional item fields — `Migration:` (a kebab-case migration slug, e.g. `numbered-to-named-components`), `LegacyShapeOf:` and `TargetShapeOf:` (each naming a migration slug), comma-separated in the same style as `Blocks:`; `lint-backlog.sh` validates them (an item carrying `LegacyShapeOf:` or `TargetShapeOf:` names a slug that some other item declares via `Migration:`; a `Migration:` slug resolves to at least one legacy-shape AND one target-shape item; unknown-slug references error) and passes across all roots; `aggregate.sh --strangler` prints one section per migration slug listing its legacy-shape items and its target-shape items, plus an "unlabeled candidates" hint (items whose text matches migration-shape keywords but carry no `Migration:` field); a debt-visibility surface exists so an agent reading an item flagged `LegacyShapeOf:` sees a one-line "this shape is being strangled toward <slug> — do not invest" marker (agent-grounding doc or a lint advisory, per AGENTS.md conventions); the Living Spec `version` bumps and its command list reads `--strangler`; and the framework's OWN numbered-component-folder → name-based-component migration is encoded end-to-end as the dogfood proof (the resolved EF-044/EF-059/EF-060 items backfilled with `Migration: numbered-to-named-components` + shapes), so `aggregate.sh --strangler` renders at least that one migration correctly.
 Notes: Carved out of EF-056 cross-cutting thread (a) so it ships independently — the schema is a decided design, not an empirical unknown, so per "spike the unknowns, not the knowns" it should be placed directly rather than gated behind the multi-graph/GraphRAG build EF-056/EF-057 own. Motivation: several migrations run concurrently across the framework and its adopters (orchestrator platform re-expression, component-folder rename, backlog schema evolution, source-adapter multi-sourcing, execution-sandbox confinement, autonomous-loop replacement, store-backend swaps), but each one's legacy→target intent lives only in free-text `Notes:`, invisible to building agents and to GraphRAG recall. The observable symptom of that invisibility: effort gets sunk into a legacy shape (e.g. tuning an orchestrator subsystem) while a target shape is actively replacing it, because nothing structured told the agent "this is being strangled." This item ships the create-side contract (fields + lint + `--strangler` view + debt marker); adopters then backfill their own in-flight migrations in their own backlogs (adopter-specific migration IDs stay in the adopter's repo, not here — public/private boundary per EF-047). Field semantics stay strictly distinct from dependency edges: `Migration:`/`LegacyShapeOf:`/`TargetShapeOf:` are associative migration-membership edges, NOT `Depends on:`/`Blocks:` (which continue to drive critical-path ordering). Adjacency: EF-056 (parent; this is thread (a)), EF-046 (sibling associative-field schema evolution — mirror its lint/aggregate/schema.md/version surface area), EF-047/048 (keeps adopter migration IDs out of the public backlog), EF-040 (portfolio-review should surface migrations as a class).
+
 
 
 
@@ -78,6 +80,7 @@ Notes: First concrete delivery toward independent file-based backlog graph. Keep
 
 
 
+
 ## Issue EF-058 — Terminology + repository roles & ownership section (Adopter Platform Spec vs Platform Instance)
 ID: EF-058
 Title: Terminology + repository roles & ownership section (Adopter Platform Spec vs Platform Instance)
@@ -91,6 +94,7 @@ Verify with: a short "Repository roles & ownership" section exists (under 00-vis
 Notes: Reduces conflation. The primary repo (Adopter Platform Spec) is the place for overall documentation and portfolio reviews. Part of Phase 0 alignment. Adjacency: EF-056, boundaries capture, 00-vision/01-ontology.ttl, adapter-layout-mirror.
 
 **Section created**: `00-vision/02-roles-ownership.md` (satisfies the primary verify bullet for EF-058). Terminology and model now documented in dedicated file + propagated to plan/capture/layout/skill. Ready for terminology fixes in ontology (next step before rebuild).
+
 
 
 
@@ -122,6 +126,7 @@ Notes: Today the resolver discovers its manifests + vault relative to its own sc
 
 
 
+
 ## Issue EF-023 — Capture cross-IDE agent chat logs inside the adopter's LAN for semantic memory and future distillation
 ID: EF-023
 Title: Capture cross-IDE agent chat logs inside the adopter's LAN for semantic memory and future distillation
@@ -134,6 +139,7 @@ Tags: observability
 Verify with: for both Claude Code and GitHub Copilot sessions, chat transcripts (prompts, assistant responses, tool traces metadata, and session identifiers) are persisted to an adopter-LAN-hosted storage target with a documented retention policy; records include stable account identity and machine identity fields so sessions from the same Claude/Copilot account across different dev machines are correlated into one logical timeline; a semantic index job can ingest new transcripts incrementally and answer recall queries over both IDE sources in one result set; access controls enforce LAN-local storage + operator-only retrieval/export; a dry-run dataset can be exported in a training-ready JSONL format for future fine-tuning/distillation experiments without changing source-of-truth raw logs. Implementation bootstrap exists in `.scratchpad/build-unified-chat-index.py` (index build) and `.scratchpad/search-unified-chat-index.py` (semantic prefilter/search scaffolding).
 Notes: User-story intent: while EposForge is pre-dark-factory and developers still use heterogeneous IDE adapters, conversation exhaust should not remain fragmented across vendor clouds or local workstation silos. Implement an adapter-agnostic chat capture contract (normalized event schema + source adapter field), then add per-adapter collectors for Claude Code and Copilot. Keep raw immutable logs plus derived semantic chunks as separate layers. Include identity provenance fields (provider account key + machine key + workspace key) to support cross-machine continuity for one developer account. Include privacy/safety guardrails (PII redaction mode, secret-token scrubbing, and explicit opt-in boundaries for any downstream training export). Seed artifacts now live in `.scratchpad/unified-chat-index.jsonl` with extraction support from `.scratchpad/export-claude-session-md.py`. This issue is the observability + memory substrate needed to support semantic search now and potential model distillation later.
 Execution update (2026-08-14): the **capture-contract half** is delivered by EF-073 (Interaction Capture slot) plus EF-024 Track 1 (`04-standards/13-chat-event-schema/`). Search / recall and training-export remain open on this item (they are readers of the store, not the store). Redaction is at export, not capture, with a capture-time repo denylist as the only extra omit-path.
+
 
 
 
@@ -175,6 +181,7 @@ Execution update (2026-08-14): **Track 1 delivered** as `04-standards/13-chat-ev
 
 
 
+
 ## Issue EF-030 — Add docs-lint skill: periodic semantic health check for the Markdown corpus (Karpathy LLM-Wiki "lint" operation)
 ID: EF-030
 Title: Add docs-lint skill: periodic semantic health check for the Markdown corpus (Karpathy LLM-Wiki "lint" operation)
@@ -185,6 +192,7 @@ Tags: backlog-tooling, skills
 Fix surface: eposforge-pattern
 Verify with: `skills/docs-lint/SKILL.md` exists following the skills-placement convention (canonical content under `skills/<name>/`, thin wrapper at `.github/skills/docs-lint/SKILL.md` — see AGENTS.md §Conventions); running the skill over the spec layer (`00-vision/` through `04-standards/`) plus `AGENTS.md` and `backlog/` produces a findings report classifying each finding as one of contradiction | stale-claim | orphan-page | missing-cross-reference | broken-pointer; each run appends a parseable entry to a committed run log in the skill's directory (format `## [YYYY-MM-DD] lint | <summary>`, per the upstream pattern) so runs are auditable in git history; the skill detects the seed findings known at filing time — (a) AGENTS.md §Standards points at `04-standards/04-mcp/` and `04-standards/05-canonical-doc-sources/`, neither of which exists on disk; (b) backlog cross-references to EF IDs that have moved to `backlog-archive.md` are flagged with their new location; findings are report-only — the skill MUST NOT auto-edit content (surgical-changes principle, `04-standards/08-agent-coding-guidelines/agent-coding-guidelines.md`).
 Notes: Pattern source: Andrej Karpathy's "LLM Wiki" gist, https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f — a three-layer design (immutable raw sources / LLM-maintained Markdown wiki / schema doc) with three operations: ingest, query, lint. EposForge already implements ingest and query via the Spec Graph (Component 6, cognee adapter, `cognee-sync`); **lint is the missing operation**: a periodic agent pass that hunts contradictions, stale claims, orphan pages, and missing cross-references, with append-only parseable log entries (`## [date] lint | <title>`). This skill applies that operation to the file layer, which is the source of truth the graph is built from. Complementary to, not duplicating, `.eposforge/backlog/file-based-backlog/scripts/lint-backlog.sh` — that script is structural (field presence, ID format) and backlog-only; docs-lint is semantic (contradictions, staleness, dangling references) and corpus-wide. Division of labor with the graph: docs-lint runs pre-graph on files; when a finding shows the graph asserting state the files contradict, that divergence feeds EF-011/EF-012 (graph conflation / design-intent-as-present-tense) rather than this skill — docs-lint is the cheap detector for that class of staleness. Live example found 2026-06-12: the spec graph reports an adopted standard at `04-standards/03-agent-skills/agent-skills.md` that does not exist on disk (graph-side fix belongs to EF-012; the file-side detection belongs here). Implementation references: skill layout precedent in `skills/maintain-ontology/` and `skills/update-spec-graph/`; conformance-command style precedent in `04-standards/00-standards-meta/standards-meta.md` §Conformance; frontmatter taxonomy for staleness checks (`doc_kind`, `maturity`, `source_of_truth`) defined in standards-meta; working files go to `.scratchpad/` (gitignored), only the parseable run log is committed. Scheduling: operator-run pre-release initially; CI integration via source-control-ci is a follow-up once the report format is stable. First-iteration scope boundary: spec layer + AGENTS.md + backlog files in scope; `.eposforge/` adapter internals out of scope; graph-side answer-quality fixes out of scope (owned by EF-011/EF-012). Upstream extensions worth reading before implementing (gist comment thread): provenance/conflict tracking and typed contradiction edges — relevant if findings later become graph nodes. Adjacency: EF-011, EF-012 (consume divergence findings), EF-015+ knowledge-tree migration (corpus shape may change; keep target-path config in the SKILL.md, not hardcoded).
+
 
 
 
@@ -217,6 +225,7 @@ Notes: User-story intent: a developer types a quick prompt into whichever agent 
 
 
 
+
 ## Issue EF-032 — Per-surface skill install adapters: one-command projection of canonical skills/ into agent-CLI prompt surfaces
 ID: EF-032
 Title: Per-surface skill install adapters: one-command projection of canonical skills/ into agent-CLI prompt surfaces
@@ -227,6 +236,7 @@ Fix surface: eposforge-pattern
 Theme: distribution
 Verify with: an installer (script or thin per-surface adapter set) lets an adopter project any canonical `skills/<name>/` into a chosen agent surface with one command, covering at minimum: Claude Code user scope (`~/.claude/skills/` or `~/.claude/commands/`), Copilot workspace prompts (`.github/prompts/` / `.github/skills/`), and Copilot user-scope prompt dirs (including the remote-server variant); the installer supports both adoption modes — fork (in-tree paths) and consume-without-fork (paths into a clone/submodule) — via symlink where the surface tolerates it and copy-with-provenance-header where it does not; re-running is idempotent and reports drift when a copied projection has diverged from canonical; an uninstall/list mode exists; the mechanism is documented generically (no adopter-specific hosts or org names) and a recall query about "installing an EposForge skill into my agent CLI" returns it. **As-built gap (2026-07-17):** `skills/install.sh` already implements a partial surface table (claude-code-user, claude-code-cmd, copilot-workspace, copilot-user) but this item stays open until (1) verify-with passes end-to-end on a clean host, (2) docs + recall describe the installer (not only the script), and (3) sibling gaps below are either closed or explicitly deferred with maturity `partial`. **Sibling scope (do not pretend this item alone is full realization):** EF-061 (Agent Skills standard), EF-062 (script-calling skill anchoring via `EPOSFORGE_HOME`), EF-063 (fleet surfaces: Grok, Antigravity/`agy`, project-scoped dirs), EF-064 (product-repo skill source + create lifecycle). Out of scope remains: runtime skill discovery/registry (C3/C4), containerized agent-home installs (adopter overlay), auto-update watchers.
 Notes: Generalizes the gap surfaced while landing EF-031: the framework ships skills as content but has no complete installer story, so every adopter hand-symlinks or hand-copies per surface — the same "no stable installable artifact" failure class EF-012 documents for `epos-secrets` and EF-022 fixes for the secrets resolver (this is the skills-side sibling of EF-022's relocatable-resolver move). `.github/skills/` thin wrappers solve exactly one surface (Copilot workspace in-repo) and only for fork-mode adopters; all other surfaces are undocumented manual steps today. Design constraints: surface list must be data-driven (new agent CLIs appear frequently; adding one should be a table row, not code); symlink-vs-copy per surface is a property of the surface (some tools don't follow symlinks or sandbox their config dirs); copied projections need a provenance header pointing back to the canonical path + version so drift is detectable; no daemon, no watcher — drift detection on re-run is enough at current maturity. **Maturity until siblings land:** skills remain `partial` (shipped content + incomplete install). Closing only the Claude+Copilot user/workspace rows is L2 minimum, not fleet-complete. Adjacency: EF-031 (first consumer), EF-022 (relocatable-artifact precedent), EF-012 (shipped-vs-intent maturity), EF-011 (installer docs speak at the adopter's adoption layer), EF-033 (backlog scripts relocatable — required for script-calling skills after install), EF-061 / EF-062 / EF-063 / EF-064 (create/consume gap pack filed 2026-07-17). Plan notes: `docs/skill-deployment-and-backlog-relocatability-plan.md`.
+
 
 
 
@@ -258,6 +268,7 @@ Notes: User-story intent (surfaced 2026-06-12): an operator runs agent CLIs from
 
 
 
+
 ## Issue EF-046 — Convert backlog `Theme:` (single-valued) to `Tags:` (multi-valued) across the file-based-backlog tooling
 ID: EF-046
 Title: Convert backlog `Theme:` (single-valued) to `Tags:` (multi-valued) across the file-based-backlog tooling
@@ -279,6 +290,7 @@ Notes: Filed 2026-06-16 during portfolio-review. Single-valued `Theme:` (added b
 
 
 
+
 ## Issue EF-048 — Context-aware (semantic) public→private boundary check, complementing the deterministic lint floor
 ID: EF-048
 Title: Context-aware (semantic) public→private boundary check, complementing the deterministic lint floor
@@ -289,6 +301,7 @@ Fix surface: eposforge-pattern
 Tags: backlog-tooling
 Verify with: a semantic (LLM-driven) check exists — implemented as a new finding class in the docs-lint skill (EF-030, e.g. `boundary-leak`) or a dedicated skill under `skills/` — that, run over a `visibility = "public"` repo's backlog files (active/slated/archive, headers + bodies), flags CONTEXTUAL references to any private repo / private backlog / adopter-internal work that the deterministic `lint-backlog.sh` floor (EF-047) cannot detect: references with no literal private item-ID or host path — e.g. naming a private repo's backlog in prose, an adopter org/repo name, or an oblique paraphrase of private work; the check is driven by the visibility map (private repos enumerated from `config.toml`), not a hardcoded name list, so it generalizes to any repo; it distinguishes a genuine private-repo reference (flag) from the sanctioned generic framing ("an adopter", "the adopter's LAN") (no flag), verified on seed cases — the now-genericized operational header note that named a private repo's backlog WOULD have been flagged, while "an adopter's single-vault migration" is NOT; findings are report-only (no auto-edit, per the surgical-changes principle in `04-standards/08-agent-coding-guidelines/`); and the division of labor is documented — deterministic, zero-false-positive classes (private item-ID references via the visibility map, host paths, `*.lan`, private IPs) stay in the blocking `lint-backlog.sh` floor; semantic/contextual detection lives here.
 Notes: Filed 2026-06-16 immediately after EF-047. EF-047's lint is the deterministic FLOOR: it blocks in pre-commit/CI, offline, with no false positives, on well-defined leak classes (an ID-shaped `PREFIX-NNN` token whose prefix resolves to a private repo via the visibility map, absolute host paths, `*.lan`, private IPs). That floor cannot "understand context": a reference to a private *backlog/repo* in prose — an org name, a repo name, "the <adopter> backlog", an oblique paraphrase — is an open-ended class that no keyword/alias list can cover without the brittle false positives a keyword check invites. Architect directive 2026-06-16: the boundary guard must also prevent references to private backlogs (not just private item IDs) AND must be context-aware, not a keyword match — which requires a semantic (LLM) pass. Placement decided 2026-06-16: keep EF-047 as the deterministic floor; this item is its semantic complement, sharing the visibility map as the single source of truth for what is private. Natural home is EF-030's docs-lint (the existing LLM "lint" operation for contradictions/staleness) as an added `boundary-leak` finding class; a dedicated skill is the alternative if docs-lint's report-only, corpus-wide framing is a poor fit for a gating boundary check. This is the backlog-scoped slice of the wider public→private audit EF-047 named as out-of-scope (the same semantic scan also belongs over specs / `AGENTS.md` / runbooks — sequence that after this proves out). Adjacency: EF-047 (the deterministic floor this complements; shares the visibility map), EF-030 (docs-lint — the semantic-lint host; likely implementation home), EF-011/EF-012 (framework-vs-adopter boundary at the spec-graph layer).
+
 
 
 
@@ -322,6 +335,7 @@ Notes: User-story intent (2026-06-18): a developer types a quick prompt; instead
 
 
 
+
 ## Issue EF-051 — Adopter guidance: highest-altitude, ungameable integration tests wired into the agent iteration loop as the definition of done
 ID: EF-051
 Title: Adopter guidance: highest-altitude, ungameable integration tests wired into the agent iteration loop as the definition of done
@@ -332,6 +346,7 @@ Fix surface: eposforge-pattern
 Tags: source-control
 Verify with: a standard/playbook exists (new doc under `04-standards/`, e.g. a verification & definition-of-done standard, cross-referenced from `01-architecture/02-components/source-control-ci.md`) that guides adopters to establish the highest-altitude integration tests as the task-completion gate, declaring as REQUIREMENTS the anti-gaming properties: (1) test definitions and acceptance criteria live OUTSIDE the implementing agent's write scope (enforced via C8 Agent Policy — the agent that writes the code may not edit the gate that judges it); (2) tests are derived from the Living Spec's declared acceptance criteria (C1), not reverse-engineered from the implementation; (3) the gate verifies the real OUTCOME end-to-end (behavioral/integration altitude), not narrow proxies an agent can satisfy trivially or hardcode; (4) test definitions carry tamper-evidence/provenance so edits are detectable (C11 audit); (5) optional held-out assertions the agent cannot see and overfit to. The same doc specifies the ITERATION LOOP: the Orchestrator (C4) runs dispatch -> execute (C3) -> run gate -> expose results + diagnostics to the agent -> fix -> re-run, until the gate passes; a task may be declared DONE only when the ungameable gate passes, never on agent self-report; C9 enforces the same gate as a required PR status check (the durable, post-loop enforcement). The doc resolves the core tension explicitly — the agent must SEE results to iterate, but must not hold mutate rights over the gate, and held-out assertions cover the overfit case. A recall query about "ungameable tests", "definition of done", "reward hacking", or "can agents game the tests" returns this guidance.
 Notes: User-story intent (2026-06-18): eposforge should help adopters stand up the highest level of integration tests that agents cannot game, yet that feed the agent's fix loop so it resolves issues before declaring a task complete. Why now / what's missing: C9 already runs factory-level integration tests as a required PR check derived from acceptance criteria, and Standard 08 §4 already says agents must loop until success criteria are verified — but NEITHER addresses (a) anti-gaming (who authors/owns the gate and why the implementing agent must not be able to edit it), nor (b) the explicit loop-visibility-vs-ungameable tension, nor (c) "definition of done = gate-pass, not self-report". This item adds that as adopter-facing guidance. Direct tie to EF-012: an agent that self-declares "done" on confident-but-wrong work is the task-level face of the "graph reports intent as shipped state" hazard — agents don't push back on a confident-wrong signal, so the ungameable external gate is the compensating control (same logic as EF-029 framing backup as a compensating control when prevention is weak). Anti-gaming design palette to develop in the doc: external test authority (C8 write-scope), spec-derived not impl-derived tests (C1), outcome altitude over proxy unit tests, provenance/tamper-evidence (C11), held-out assertion sets. Loop ownership: C4 Orchestrator runs the iterate-until-green loop and only then permits a done declaration; C9 is the durable gate; C3 executes and consumes diagnostics. Keep guidance at the adopter's adoption layer, not framework-internal paths (EF-011). Adjacency: EF-050 (rubrics — the graded/qualitative complement to this deterministic gate; the two halves of honest verification), EF-049 (its Part B gate is the same iterate-until-bar pattern at the prompt layer), EF-012 (self-declared-done = act-on-confident-wrong hazard), EF-029 (compensating-control framing), EF-027 (C14 content-safety is a different gate class — payload safety, not outcome verification), C8 / C9 / C1 / C4 (the components this guidance binds together).
+
 
 
 
@@ -356,6 +371,7 @@ Notes: This corrects the folder structure so all adopting libraries (and the fra
 
 
 
+
 ## Issue EF-061 — Ship Agent Skills standard (`04-standards/03-agent-skills/`) as the create-side contract
 ID: EF-061
 Title: Ship Agent Skills standard (`04-standards/03-agent-skills/`) as the create-side contract
@@ -366,6 +382,7 @@ Fix surface: eposforge-pattern
 Theme: agent-policy
 Verify with: `04-standards/03-agent-skills/agent-skills.md` (or package dir with README) exists and is listed from `04-standards/README.md` and `AGENTS.md` §Standards; the standard normatively covers (1) agentskills.io-compatible layout (`skills/<name>/SKILL.md` with `name` + `description` frontmatter); (2) thin `.github/skills/<name>/SKILL.md` wrappers pointing at canonical content; (3) skill vs runbook vs prompt-pack boundary (when to create which); (4) optional eposforge Adapter metadata + required `## Eposforge non-conformances` section for product skills that touch future Adapters; (5) create checklist for agents: SoT + wrapper + install projection notes; (6) consume checklist: which surfaces exist (cross-ref EF-032/EF-063) and that bare `skills/` is content SoT not universal auto-discovery; a recall query about "agent skills standard", "where do skills live", or "skill vs runbook" returns this standard; the graph no longer asserts the standard as adopted-without-files (EF-012 / docs-lint ghost at `04-standards/03-agent-skills/` is resolved by shipping the file).
 Notes: Filed 2026-07-17 to close the create-side gap: install (EF-032) without a normative create contract leaves every product repo inventing skill placement. Renumbered from draft EF-052 after ID collision with Execution Sandbox slot item. Adapter-pattern and summit docs already point at `04-standards/03-agent-skills/` but the path is **missing on disk**. Adjacency: EF-032 (consume), EF-063 / EF-064 (fleet + product lifecycle), Standard 08, AGENTS.md skills-placement bullet.
+
 
 
 
@@ -391,6 +408,7 @@ Notes: Filed 2026-07-17 from `docs/skill-deployment-and-backlog-relocatability-p
 
 
 
+
 ## Issue EF-063 — Fleet skill surfaces: Grok, Antigravity (agy), project-scoped, and `.agents/skills`
 ID: EF-063
 Title: Fleet skill surfaces: Grok, Antigravity (agy), project-scoped, and `.agents/skills`
@@ -402,6 +420,7 @@ Theme: distribution
 Depends on: EF-032
 Verify with: the installer's data-driven surface table (EF-032) gains rows for at least: (1) Grok user and/or project skills (`~/.grok/skills/<name>/` and/or `<repo>/.grok/skills/<name>/` per Grok Build discovery rules); (2) shared project agents path (`<repo>/.agents/skills/<name>/` — scanned by Grok and aligned with multi-harness practice); (3) Claude **project** scope (`<repo>/.claude/skills/<name>/`, distinct from user `~/.claude/skills/`); (4) Antigravity CLI (`agy`) — documented target path(s) once verified against the CLI's discovery rules, or an explicit "unsupported / manual" maturity tag if the vendor has no skill dir yet; each new row states symlink vs copy method; `install.sh --list` shows the new surfaces; installing one canonical skill onto each supported surface is idempotent; generic docs (no private host names) describe the fleet table; a recall query about "install skill for grok" or "project skills directory" returns this capability.
 Notes: Filed 2026-07-17. Renumbered from draft EF-054. EF-032's minimum verify-with only requires Claude user + Copilot workspace/user — insufficient for the adopter fleet that runs claude/copilot/grok/agy. Adjacency: EF-032, EF-061, EF-064.
+
 
 
 
@@ -427,6 +446,7 @@ Notes: Filed 2026-07-17. Renumbered from draft EF-055 after ID collision with va
 
 
 
+
 ## Issue EF-065 — Context plane observability behavioral implementation (manifest, viewer, envelope)
 ID: EF-065
 Title: Context plane observability behavioral implementation (manifest, viewer, envelope)
@@ -445,6 +465,7 @@ Notes: Split from EF-034 to separate the metadata contract (EF-034) from the beh
 
 
 
+
 ## Issue EF-067 — Standards Catalog + name-based standard references (create-side contract)
 ID: EF-067
 Title: Standards Catalog + name-based standard references (create-side contract)
@@ -456,6 +477,7 @@ Tags: simplification
 Blocks: EF-068, EF-069
 Verify with: `04-standards/README.md` carries a canonical **Standards Catalog** roster table (Standard name | file | one-line scope) that is the machine-readable source of truth a lint parses, plus the name-not-number rationale paragraph, and lists every standard on disk (today `04-mcp/` and `05-canonical-doc-sources/` are missing from it); `04-standards/00-standards-meta/standards-meta.md` normative requirement 1 changes `04-standards/<nn>-<slug>/` to `04-standards/<slug>/` (numeric directory prefixes forbidden) with Conformance updated to match; `04-standards/01-naming-conventions/naming-conventions.md` gains normative requirements mirroring its own #7–9 for standards (canonical-name-not-number, shortcut-reference-link form `[Ungameable Gates]`, capitalize-for-standard) plus a `## Standard references` section; a lint resolves standard labels against the catalog and supports `--write-defs` / `--check`, failing on numeric standard identifiers (`Standard 11`, `Standard 09`, `standards 10`), undefined labels, and definitions pointing at missing files; one standard is converted end-to-end as the proof file with `--check` clean on it.
 Notes: Filed 2026-07-25. Applies to `04-standards/` the same treatment the components got in the 2026-07 name-based-reference series (catalog + naming rules + lint + proof, then contracts, then a normative-layer sweep, then CI, then the research mirror). The rationale transfers exactly: numbers are opaque to readers, have no decoder, and drift. The standards tree has already drifted three ways — there is no `03-` on disk yet 9 live references point at `04-standards/03-agent-skills/`; `02-` was reused after the vocabulary standard was superseded while 7 references still point at `04-standards/02-vocabulary/`; and `04-mcp/` + `05-canonical-doc-sources/` exist on disk but appear nowhere in the README roster. Implementation recommendation: generalize the existing `check-component-links.py` to parse two catalogs (components, standards) rather than fork a near-identical script — the definitions-block machinery, reference regexes and `--write-defs` rewrite are identical; if generalized, keep the `<!-- component-links -->` block marker working and add a sibling `<!-- standard-links -->` marker so the two blocks stay independently regenerable. Note the ordering interaction with EF-061: that item ships the Agent Skills standard at `04-standards/03-agent-skills/`; if it lands first it should be created at the unnumbered path directly. Adjacency: EF-061 (would otherwise add a thirteenth numbered dir), EF-066 (once its schema ships, backfill this chain with `Migration: numbered-to-named-standards` — and note that this work reopens EF-066's open question (1), since `numbered-to-named-components` is no longer "nearly complete" as a dogfood candidate but has a live second phase), EF-044 (retired numbered component folders in the adapter layer), EF-030 (lint as companion).
+
 
 
 
@@ -482,6 +504,7 @@ Notes: Filed 2026-07-25. Mechanical and scriptable, but it breaks every inbound 
 
 
 
+
 ## Issue EF-069 — Convert standard citations across the normative layer to name-based links
 ID: EF-069
 Title: Convert standard citations across the normative layer to name-based links
@@ -494,6 +517,7 @@ Depends on: EF-067
 Blocks: EF-070
 Verify with: `Standard 10:` is stripped from the `ungameable-gate.md` H1 (the only numbered standard heading) so titles read as names; every inline `Standard NN` citation becomes a resolvable shortcut-reference link on the canonical name — in the component contracts (`living-spec.md` ×4, `source-control-ci.md` ×5, `tool-transport.md` ×1), in the standards' own cross-references (`paired-change-enforcement.md` ×5, `code-surface-encapsulation.md` ×3), and in `AGENTS.md` ×2, `00-vision/00-vision.md` ×1, `02-roadmap/product-factory-phases.md` ×2; verbose `[04-standards/nn-slug/slug.md](path)` sibling links in `04-standards/README.md` and each standard's `Related` section collapse to `[Name]` form; per-file `<!-- standard-links -->` definition blocks are generated by `--write-defs`; `--check` is clean over the normative layer (00-vision, 01-architecture, 02-roadmap, 04-standards, AGENTS.md); no bare unbracketed `Standard N` survives outside fenced code and `03-research/`.
 Notes: Filed 2026-07-25. Mirrors the components sweep: the citations are the payload, the numbers are the defect. Two live examples of why — `source-control-ci.md` cites "Standard 09: Paired Detection" and "Standard 10: Ungameable Gates" in the same list, so a reader must hold a number→name table that exists nowhere; `code-surface-encapsulation.md` cites "Standard 11 (paired-change)" inline with no link at all, which is unresolvable and unlintable. Historical backlog `Notes:` in `backlog.md` / `backlog-archive.md` also carry `Standard 08`/`Standard 09` citations — leave archived items alone (immutable record), but the lint scope must exclude the backlog files or they will fail the check. Adjacency: EF-067 (contract + lint), EF-068 (paths), EF-071 (enforcement).
+
 
 
 
@@ -519,6 +543,7 @@ Notes: Filed 2026-07-25. Directly mirrors the components research sweep, which f
 
 
 
+
 ## Issue EF-071 — Enforce name-based standard references in CI and docs-lint
 ID: EF-071
 Title: Enforce name-based standard references in CI and docs-lint
@@ -530,6 +555,7 @@ Tags: source-control
 Depends on: EF-069, EF-070
 Verify with: `.github/workflows/doc-lint.yml` runs the standard-reference check over the enforced normative layer plus `03-research` (either by extending the existing `component-links` job or as a sibling job, named to cover both), from the tracked source path; the lint's `DEFAULT_SCOPE` covers the same surface and excludes `.eposforge/backlog/*.md` and `docs/` (historical capture); the docs-lint skill gains a `standard-ref` semantic finding class for bare unbracketed standard names, noting that the deterministic floor already owns numbers, undefined labels and broken links; a deliberately numbered reference introduced in a scratch file makes the job fail, and removing it makes it pass.
 Notes: Filed 2026-07-25. Last in the chain by design — the precedent enforced only after the corpus was clean, otherwise CI is red on main while the sweep lands. The one judgment call: whether this is a second job or the existing `component-links` job broadened to "spec reference links". Recommend broadening if EF-067 generalizes the script (one invocation, one catalog parse, one failure surface); keep them separate only if EF-067 ships a sibling script. Adjacency: EF-067 (script shape decides this), EF-069, EF-070, EF-030.
+
 
 
 
@@ -554,6 +580,7 @@ Notes: Filed 2026-07-25 after measuring the split against its own rationale. FOU
 
 
 
+
 ## Issue EF-073 — Add Interaction Capture component slot — durable corpus of what agents were asked and returned
 ID: EF-073
 Title: Add Interaction Capture component slot — durable corpus of what agents were asked and returned
@@ -564,16 +591,3 @@ Fix surface: eposforge-pattern
 Tags: observability
 Verify with: `01-architecture/02-components/interaction-capture.md` exists as a `source_of_truth: yes` slot contract declaring purpose (durable corpus of agent interaction content), layer separation (immutable raw / derived index / gated export), idempotent ingest, provenance and correlation identity, `training_eligible` as a tag not a filter, declared redaction modes, and additive retention; Required Adapter metadata includes `capture_layer`, `providers_covered`, `identity_fields_supported`, `redaction_mode`, `retention_policy`, `export_gate`; Boundaries distinguish the slot from Audit & Observability (factory events), Inference Layer (serves the call), Spec Graph (intent), Content Safety (acts on live payloads), and the slated Working Memory slot (active recall); the Component Catalog roster has an Interaction Capture row; `check-component-links.py --check` passes; reference implementations name the wire-proxy and transcript-collector shapes.
 Notes: Filed 2026-08-14. Same carving-out precedent as EF-027 / EF-028 — a slot that resembles Audit & Observability but has a different contract (corpus semantics, training eligibility, reconstructable input half). The contract is public; implementations are adopter infra. Name chosen over "Conversation Capture" because the record includes tool events. EF-024 Track 1 (the schema this contract requires) lives at `04-standards/13-chat-event-schema/`. Search (Track 3) and training export (Track 4) are readers, out of this item. Adjacency: EF-023 (capture-contract half), EF-024 Track 1, EF-028 (depends on this schema; do not copy its stale `15-working-memory.md` filename).
-
-
-
-## Issue EF-079 — The validator reports schema errors only as prose, so callers parse its wording
-ID: EF-079
-Title: The validator reports schema errors only as prose, so callers parse its wording
-Date: 2026-08-17
-Status: open
-Effort: S
-Fix surface: eposforge-pattern
-Tags: agent-policy
-Verify with: `validate-payload.sh` can emit its schema errors in a machine-readable form that names the offending JSON pointer and, where the error is an unknown or missing property, the property name — as a distinct field rather than embedded in an English sentence; a caller can recover the offending property name from that form without matching on the human-readable `INVALID:` text; and the human-readable output is unchanged for anyone reading it directly, so this adds a channel rather than replacing one.
-Notes: Filed 2026-08-17, deferred out of EF-077's cross-check (round 2) rather than fixed inside it, because a machine-readable error channel is a new capability rather than one of that item's two changes. EF-077 added a bounded re-ask that appends the validator's own error text to a second ask; anything that wants to act on those errors programmatically — the re-ask's own regression suite does — must currently match the literal phrase `unexpected property "X"`. That coupling fails CLOSED, which is why this is not urgent: if the wording is reworded the match stops succeeding, the payload keeps its wrong key, and the suite goes red rather than silently green. The cost is brittleness, not a hole — a routine copy-edit to an error string becomes a test edit in another repo. Keep the strictness when fixing: the machine form must not become a way to accept a payload the human form rejects. Adjacency: EF-077 (the re-ask that consumes these errors), EF-075 (the contract the payloads conform to).
