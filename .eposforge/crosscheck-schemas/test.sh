@@ -71,6 +71,23 @@ echo "== payload validation"
 expect_exit 0 "a conforming handoff passes"                  ./validate-payload.sh handoff fixtures/handoff-basic.json --final
 expect_exit 1 "incomplete claims_verified[] is rejected"     ./validate-payload.sh findings fixtures/findings-missing-claim.json
 expect_exit 1 "over-cap handoff blocks, not truncates"       ./validate-payload.sh handoff fixtures/handoff-oversized.json
+
+echo "== invalid splits into shape-only (3) and substantive (1)"
+# The whole point of the split: 3 says a caller MAY re-ask the reviewer once, 1
+# says it may not. Get this backwards in either direction and the loop either
+# throws away good reviews or retries its way past a missing verdict.
+expect_exit 3 "a renamed property alone is shape-only" \
+  ./validate-payload.sh findings fixtures/findings-renamed-property.json --handoff fixtures/handoff-basic.json
+expect_exit 1 "a missing claim verdict is substantive, never shape-only" \
+  ./validate-payload.sh findings fixtures/findings-missing-claim.json --handoff fixtures/handoff-basic.json
+expect_exit 1 "shape AND substance together is substantive — the shape error must not launder the missing verdict" \
+  ./validate-payload.sh findings fixtures/findings-renamed-and-missing-claim.json --handoff fixtures/handoff-basic.json
+expect_exit 0 "a conforming findings payload is unaffected by the split" \
+  ./validate-payload.sh findings fixtures/findings-clean.json --handoff fixtures/handoff-basic.json
+# An over-budget payload is about content, not shape: no re-ask.
+jq '.budget.cap = 10' fixtures/findings-clean.json > "$TMP/overcapf.json"
+expect_exit 1 "an over-cap findings payload is substantive, not shape-only" \
+  ./validate-payload.sh findings "$TMP/overcapf.json" --handoff fixtures/handoff-basic.json
 jq --arg pad "$(head -c 40000 /dev/zero | tr '\0' 'x')" '.traps += [$pad]' \
    fixtures/handoff-basic.json > "$TMP/fat.json"
 expect_exit 1 "a payload that really is too big is measured, not believed" \

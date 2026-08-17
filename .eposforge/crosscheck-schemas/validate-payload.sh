@@ -21,7 +21,33 @@
 # `--final` additionally requires the fields the harness fills in just before
 # transport: coverage, check_results, reviewer_resolved, prompt_sha256.
 #
-# Exit: 0 valid · 1 invalid · 2 usage / unreadable input.
+# ── Why invalid has two exit codes ───────────────────────────────────────────
+# A reviewer that emits a plausible synonym for a property name has still done
+# the review. Refusing that payload is right — it does not conform, so it is not
+# a verdict — but discarding the round over a key name is not, and the only
+# recovery used to be a human renaming the field by hand, which puts the author
+# in the position of editing the reviewer's answer.
+#
+# So invalid is split by *what* is wrong, and the split is the safety boundary:
+#
+#   3  shape only — the JSON Schema rejected it and nothing else did. Nobody's
+#      judgment is missing; the payload is the wrong shape. A caller MAY re-ask
+#      the same reviewer once with these errors appended.
+#   1  substantive — a cross-field rule broke: a claim has no verdict, a verdict
+#      names a claim that does not exist, the round does not match, the budget
+#      is over. These say something about the review's CONTENT. A caller must
+#      NEVER re-ask on these, because "every claim got a verdict" is the check
+#      that stops an author shipping unreviewed work, and a retry loop around it
+#      would let a reviewer be asked again until it produced a pass.
+#
+# A payload that trips both is substantive (1). Shape-only is the narrow case,
+# and it is narrow on purpose.
+#
+# 3 is reachable for `findings` ONLY. A handoff and a disposition have no remote
+# author to re-ask, so a shape failure in either is a bug in whatever wrote it.
+#
+# Exit: 0 valid · 1 invalid (substantive) · 3 invalid, findings, schema shape
+#       only · 2 usage / unreadable input.
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
@@ -33,7 +59,17 @@ usage() {
 }
 
 die()  { echo "validate-payload: $*" >&2; exit 2; }
-fail() { echo "INVALID: $*" >&2; FAILED=1; }
+
+# PHASE tags every failure with the region that raised it, so the exit code can
+# distinguish "wrong shape" from "wrong answer". Anything raised while PHASE is
+# `cross` is substantive and forecloses a re-ask.
+PHASE=schema
+fail() {
+  echo "INVALID: $*" >&2
+  FAILED=1
+  [[ "$PHASE" == cross ]] && CROSS_FAILED=1
+  return 0
+}
 
 KIND="${1:-}"; shift || usage
 FILE="${1:-}"; shift || usage
@@ -67,6 +103,7 @@ esac
 jq -e . "$FILE" >/dev/null 2>&1 || die "$FILE is not valid JSON"
 
 FAILED=0
+CROSS_FAILED=0
 
 # ── 1. Schema ────────────────────────────────────────────────────────────────
 ERRORS="$(jq -r --slurpfile s "$SCHEMA" -L "$SCRIPT_DIR/lib" \
@@ -116,12 +153,17 @@ check_budget() {
 # budget refusal belongs at transport time (--final), not at every append.
 if (( SCHEMA_ONLY )); then
   if (( FAILED )); then
+    # Stays 1, not 3. In this mode every failure is a shape failure by
+    # construction, so the shape/substance split carries no information — and
+    # the append helper only asks whether it may keep writing.
     echo "validate-payload: $KIND $FILE — INVALID (schema only)" >&2
     exit 1
   fi
   echo "validate-payload: $KIND $FILE — ok (schema only)"
   exit 0
 fi
+
+PHASE=cross
 
 case "$KIND" in
 handoff)
@@ -237,8 +279,20 @@ disposition)
 esac
 
 if (( FAILED )); then
-  echo "validate-payload: $KIND $FILE — INVALID" >&2
-  exit 1
+  # Only `findings` can be shape-only, because only `findings` has an author who
+  # can be re-asked. A handoff and a disposition are written by the harness and
+  # the work's author, so a shape failure there is a bug to fix in the writer,
+  # not a payload to request again — reporting 3 would offer a recovery that
+  # does not exist.
+  if (( CROSS_FAILED )) || [[ "$KIND" != findings ]]; then
+    echo "validate-payload: $KIND $FILE — INVALID" >&2
+    exit 1
+  fi
+  # Shape alone. Every claim still carries a verdict; the reviewer's judgment is
+  # intact and only the container is wrong. See the header for what a caller may
+  # and may not do with this.
+  echo "validate-payload: $KIND $FILE — INVALID (schema shape only)" >&2
+  exit 3
 fi
 echo "validate-payload: $KIND $FILE — ok"
 exit 0
