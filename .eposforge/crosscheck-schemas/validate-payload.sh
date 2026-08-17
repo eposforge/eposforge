@@ -215,7 +215,7 @@ handoff)
   ;;
 
 findings)
-  check_budget "${CROSSCHECK_FINDINGS_TOKEN_CAP:-4000}"
+  check_budget "${CROSSCHECK_FINDINGS_TOKEN_CAP:-6000}"
 
   href="$REF_HANDOFF"
   if [[ -z "$href" ]]; then

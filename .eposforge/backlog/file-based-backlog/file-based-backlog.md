@@ -18,7 +18,7 @@ source_of_truth: yes
 |---|---|
 | `name` | `file-based-backlog` |
 | `component` | `backlog` |
-| `version` | `0.3.0` (Tags: multi-valued; Theme: legacy alias) |
+| `version` | `0.4.0` (lint + sweep act on every `BACKLOG_ROOTS` entry; Tags: multi-valued; Theme: legacy alias) |
 | `status` | `experimental` |
 | `privacy_posture` | `local` |
 | `cost_hint` | `free` |
@@ -68,6 +68,31 @@ The adapter supports aggregation across repos using discovery precedence:
 2. `$BACKLOG_ROOTS` (colon-separated roots)
 3. `aggregate.sh --roots <path...>`
 4. Current repo fallback
+
+### What a root contributes (0.4.0, EF-078)
+
+Two distinct things, and they were long conflated:
+
+- **Resolution context** — the aggregated ID set and the prefix→visibility map.
+  *Every* discovered root contributes, in every mode. This is what lets a
+  `Depends on: <repo>:<ID>` edge resolve at all; a single-root run has no foreign
+  context, so its cross-repo links legitimately report as unknown IDs (the
+  documented single-root degradation).
+- **Files acted on** — the backlog files a command actually lints, sweeps or
+  writes to. Through 0.3.0 this was always the *first* root alone, so a set of
+  three roots had to be linted by looping three times with each root moved to the
+  front in turn. From 0.4.0 `lint-backlog.sh` and `sweep-resolved.sh` act on every
+  `BACKLOG_ROOTS` entry in one invocation, each root checked against its own
+  `config.toml`.
+
+Only `BACKLOG_ROOTS` widens the second set. The cwd walk-up, workspace file and
+git-root fallback still act on one root, because those are incidental to where the
+command was run rather than a set the caller chose — widening them would let a bare
+`lint-backlog.sh`, or a pre-commit hook, reach into repos nobody named.
+`new-issue.sh` remains single-root by nature: it writes into one repo.
+
+The strictness is unchanged. A link that resolves in *no* root in the set is still
+an error, and `sweep-resolved.sh` still refuses to run when lint reports any error.
 
 ### Repo roles: substrate vs product
 

@@ -9,9 +9,29 @@ if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
 lint-backlog.sh — structural + boundary lint for a file-based backlog.
 
 USAGE
-  lint-backlog.sh            Lint active + slated backlog files at the resolved root.
+  lint-backlog.sh            Lint active + slated backlog files at EVERY resolved root.
   lint-backlog.sh --staged   Lint only the backlog files staged in git (pre-commit use).
   lint-backlog.sh --help     Show this help.
+
+MULTI-ROOT (eposforge:EF-078)
+  When `BACKLOG_ROOTS` names several colon-separated roots, ONE invocation lints
+  all of them, each against its own config.toml (prefix, fix_surfaces, tags,
+  visibility). Previously only the first entry was linted while the rest merely
+  contributed IDs, so the documented workaround was to loop with each root placed
+  first in turn. That loop is no longer needed.
+
+  Findings are prefixed with the owning repo directory whenever more than one root
+  is linted, so `repo/.eposforge/backlog/backlog.md:XX-001` names the repo; the
+  single-root form is unchanged.
+
+  `--staged` stays single-root. The git index is per repository, and a pre-commit
+  hook must not fail on a sibling repo the committer is not touching.
+
+  Only `BACKLOG_ROOTS` widens the set of files ACTED ON. The cwd walk-up, the VS
+  Code workspace file and the git-root fallback each resolve one root, because
+  those are incidental to where the script was run rather than a set the caller
+  chose. ID aggregation and visibility resolution still span every discovered
+  root in all modes — that is what makes cross-repo links resolve.
 
 WHAT IT CHECKS
   - Required fields, ID/date/status/effort format, supersede + dependency integrity.
@@ -61,9 +81,6 @@ fi
 
 # shellcheck source=resolve-backlog.sh
 source "${SCRIPT_DIR_LINT}/resolve-backlog.sh"
-ACTIVE_FILE="${BACKLOG_DIR}/backlog.md"
-SLATED_FILE="${BACKLOG_DIR}/backlog-slated.md"
-ARCHIVE_FILE="${BACKLOG_DIR}/backlog-archive.md"
 CONFIG_FILE="${BACKLOG_DIR}/config.toml"
 
 staged_only=0
@@ -96,7 +113,7 @@ if [[ -n "${BACKLOG_HOME:-}" && -f "${BACKLOG_HOME}/scripts/VERSION" ]]; then
   fi
 fi
 
-python3 - "$REPO_ROOT" "$ACTIVE_FILE" "$SLATED_FILE" "$ARCHIVE_FILE" "$CONFIG_FILE" "$staged_only" "$workspace_file" "${BACKLOG_ROOTS:-}" <<'PY'
+python3 - "$REPO_ROOT" "$staged_only" "$workspace_file" "${BACKLOG_ROOTS:-}" "${BACKLOG_DIRS[@]}" <<'PY'
 import json
 import os
 import re
@@ -105,13 +122,11 @@ import sys
 from pathlib import Path
 
 repo_root = Path(sys.argv[1]).resolve()
-active_file = Path(sys.argv[2])
-slated_file = Path(sys.argv[3])
-archive_file = Path(sys.argv[4])
-config_file = Path(sys.argv[5])
-staged_only = sys.argv[6] == "1"
-workspace_file = sys.argv[7].strip()
-backlog_roots_env = sys.argv[8].strip()
+staged_only = sys.argv[2] == "1"
+workspace_file = sys.argv[3].strip()
+backlog_roots_env = sys.argv[4].strip()
+# Every backlog dir resolve-backlog.sh found, BACKLOG_DIR first (eposforge:EF-078).
+lint_dirs = [Path(p).resolve() for p in sys.argv[5:] if p.strip()]
 
 status_values = {"open", "in-progress", "blocked", "slated", "resolved"}
 effort_values = {"S", "M", "L", "XL"}
@@ -185,6 +200,26 @@ def build_visibility_map(roots):
             continue
         vis_map[pm.group(1)] = parse_visibility(text)
     return vis_map
+
+
+def strip_repo_qualifier(dep_id: str) -> str:
+    # Cross-repo edges use `<repo>:<ID>` notation (the directional form
+    # eposforge:EF-047 prescribes for the private side). EVERY check that resolves
+    # an edge against the aggregated ID set must drop the qualifier first.
+    # eposforge:EF-078: the `Status: blocked` check did not, so an item whose only
+    # dependency was cross-repo could never satisfy it and `blocked` was unusable —
+    # the documented workaround being `Status: open` with the dependency in `Notes:`.
+    return dep_id.split(":")[-1].strip()
+
+
+def repo_root_for(backlog_dir: Path) -> Path:
+    # `<repo>/backlog`, `<repo>/.eposforge/backlog` and `<repo>/eposforge/backlog`
+    # are the three layouts backlog_parent_with_config probes; invert that to get
+    # the repo directory, which is what findings are displayed relative to.
+    parent = backlog_dir.parent
+    if parent.name in (".eposforge", "eposforge"):
+        return parent.parent
+    return parent
 
 
 def ref_prefix(dep_id: str):
@@ -330,7 +365,6 @@ def csv_ids(raw: str):
     return [x.strip() for x in raw.split(",") if x.strip()]
 
 
-prefix, fix_surfaces, tags, local_visibility = parse_config(config_file)
 roots = discover_roots(repo_root)
 all_ids, id_status, superseded_by = collect_all_issues(roots)
 visibility_map = build_visibility_map(roots)
@@ -349,49 +383,109 @@ private_ip_re = re.compile(
 # a hardcoded/guessed name list, so it generalizes to ANY prefix any config
 # declares and matches only real item IDs (prose like "UTF-8" or a bare repo name
 # never false-positives). Longest prefixes first so e.g. OAPI-041 isn't split as OA.
-private_prefixes = sorted(
-    (p for p, v in visibility_map.items() if v == "private" and p != prefix),
-    key=len,
-    reverse=True,
-)
-private_id_re = (
-    re.compile(r"\b(?:[A-Za-z0-9_.-]+:)?((?:" + "|".join(private_prefixes) + r")-[0-9]+)\b")
-    if private_prefixes
-    else None
-)
-
-check_files = [active_file, slated_file]
-if staged_only:
-    proc = subprocess.run(
-        ["git", "-C", str(repo_root), "diff", "--cached", "--name-only"],
-        capture_output=True,
-        text=True,
-        check=False,
+# Built per root, because "private, and not my own prefix" depends on whose root
+# is being scanned (eposforge:EF-078).
+def private_id_pattern(own_prefix: str):
+    private_prefixes = sorted(
+        (p for p, v in visibility_map.items() if v == "private" and p != own_prefix),
+        key=len,
+        reverse=True,
     )
-    staged = set(proc.stdout.splitlines())
-    candidate = []
-    for path in check_files:
-        rel = path.resolve().relative_to(repo_root)
-        if str(rel).replace("\\", "/") in staged:
-            candidate.append(path)
-    if not candidate:
-        print("backlog lint: no staged backlog files, skipping")
-        sys.exit(0)
-    check_files = candidate
+    if not private_prefixes:
+        return None
+    return re.compile(
+        r"\b(?:[A-Za-z0-9_.-]+:)?((?:" + "|".join(private_prefixes) + r")-[0-9]+)\b"
+    )
+
+
+# --- Per-root lint contexts (eposforge:EF-078) -------------------------------
+# Each root is linted against its OWN config: prefix, fix_surfaces, tags and
+# visibility all differ between repos, so a shared context would lint every root
+# with the first root's vocabulary.
+if staged_only:
+    # `--staged` stays single-root. The git index is per repository, and a
+    # pre-commit hook must not fail on a sibling repo the committer is not touching.
+    lint_dirs = lint_dirs[:1]
+
+multi_root = len(lint_dirs) > 1
+
+contexts = []
+for backlog_dir in lint_dirs:
+    cfg = backlog_dir / "config.toml"
+    if not cfg.exists():
+        continue
+    ctx_prefix, ctx_surfaces, ctx_tags, ctx_visibility = parse_config(cfg)
+    contexts.append(
+        {
+            "repo": repo_root_for(backlog_dir),
+            "prefix": ctx_prefix,
+            "fix_surfaces": ctx_surfaces,
+            "tags": ctx_tags,
+            "visibility": ctx_visibility,
+            "active": backlog_dir / "backlog.md",
+            "slated": backlog_dir / "backlog-slated.md",
+            "archive": backlog_dir / "backlog-archive.md",
+            "private_id_re": private_id_pattern(ctx_prefix),
+        }
+    )
+
+if not contexts:
+    raise SystemExit(
+        "ERROR: no backlog config.toml found under any resolved root: "
+        + ", ".join(str(d) for d in lint_dirs)
+    )
+
+
+def display(path: Path, ctx) -> str:
+    # Qualify with the repo directory only when more than one root is linted, so
+    # single-root output stays byte-identical for the pre-commit hook and anything
+    # else parsing it.
+    try:
+        rel = str(Path(path).resolve().relative_to(ctx["repo"]))
+    except ValueError:
+        return str(path)
+    return f"{ctx['repo'].name}/{rel}" if multi_root else rel
+
+
+check_files = []  # (path, ctx) pairs
+for ctx in contexts:
+    ctx_files = [ctx["active"], ctx["slated"]]
+    if staged_only:
+        proc = subprocess.run(
+            ["git", "-C", str(ctx["repo"]), "diff", "--cached", "--name-only"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        staged = set(proc.stdout.splitlines())
+        candidate = []
+        for path in ctx_files:
+            try:
+                rel = path.resolve().relative_to(ctx["repo"])
+            except ValueError:
+                continue
+            if str(rel).replace("\\", "/") in staged:
+                candidate.append(path)
+        ctx_files = candidate
+    check_files.extend((path, ctx) for path in ctx_files)
+
+if staged_only and not check_files:
+    print("backlog lint: no staged backlog files, skipping")
+    sys.exit(0)
 
 errors = []
 warnings = []
 
-for path in check_files:
+for path, ctx in check_files:
+    prefix = ctx["prefix"]
+    fix_surfaces = ctx["fix_surfaces"]
+    tags = ctx["tags"]
+    local_visibility = ctx["visibility"]
     parsed = parse_issues(path)
     issues = parsed["issues"]
 
     for issue in issues:
-        try:
-            _display_path = str(path.relative_to(repo_root))
-        except ValueError:
-            _display_path = str(path)
-        issue_ref = f"{_display_path}:{issue['header_id']}"
+        issue_ref = f"{display(path, ctx)}:{issue['header_id']}"
         fields = issue["fields"]
 
         for req in required_fields:
@@ -470,8 +564,13 @@ for path in check_files:
         if status == "blocked":
             open_dep_statuses = {"open", "in-progress", "blocked", "slated"}
             dep_ids = csv_ids(fields.get("Depends on", ""))
+            # Strip the `<repo>:` qualifier before resolving, exactly as the
+            # unknown-ID check below does. Without this an item whose only
+            # dependency is cross-repo can never satisfy `blocked`, which made the
+            # status unusable in a multi-repo set (eposforge:EF-078).
             has_open_dep = any(
-                id_status.get(d, "") in open_dep_statuses for d in dep_ids
+                id_status.get(strip_repo_qualifier(d), "") in open_dep_statuses
+                for d in dep_ids
             )
             if not has_open_dep:
                 errors.append(
@@ -503,10 +602,7 @@ for path in check_files:
 
         for link_field in ["Depends on", "Blocks"]:
             for dep_id in csv_ids(fields.get(link_field, "")):
-                # Cross-repo edges use `<repo>:<ID>` notation (the directional form
-                # eposforge:EF-047 prescribes for the private side); strip the
-                # qualifier before resolving against the aggregated ID set.
-                if dep_id.split(":")[-1].strip() not in all_ids:
+                if strip_repo_qualifier(dep_id) not in all_ids:
                     errors.append(
                         f"{issue_ref} {link_field} references unknown issue ID `{dep_id}`"
                     )
@@ -539,25 +635,25 @@ for path in check_files:
         for issue in issues:
             status = issue["fields"].get("Status", "").strip()
             if status and status != "slated":
-                try:
-                    _slated_path = str(path.relative_to(repo_root))
-                except ValueError:
-                    _slated_path = str(path)
                 errors.append(
-                    f"{_slated_path}:{issue['header_id']} has status `{status}` in backlog-slated.md"
+                    f"{display(path, ctx)}:{issue['header_id']} has status `{status}` in backlog-slated.md"
                 )
 
 # Whole-file private-leak scan (eposforge:EF-047): in a public repo NO private
 # marker may appear ANYWHERE — file headers / operational notes included, not just
 # issue bodies. Covers active, slated, and the (also-public) archive. These are
 # blocking ERRORS, not warnings: a public repo must leak nothing whatsoever.
-if local_visibility == "public":
-    leak_files = check_files if staged_only else [active_file, slated_file, archive_file]
+# Run per root (eposforge:EF-078), so every public root in a mixed set is scanned
+# rather than only whichever one happened to be first.
+for ctx in contexts:
+    if ctx["visibility"] != "public":
+        continue
+    private_id_re = ctx["private_id_re"]
+    if staged_only:
+        leak_files = [p for p, c in check_files if c is ctx]
+    else:
+        leak_files = [ctx["active"], ctx["slated"], ctx["archive"]]
     for path in leak_files:
-        try:
-            _display_path = str(path.resolve().relative_to(repo_root))
-        except ValueError:
-            _display_path = str(path)
         for lineno, line in enumerate(read_text(path).splitlines(), start=1):
             markers = []
             markers += host_path_re.findall(line)
@@ -567,7 +663,7 @@ if local_visibility == "public":
                 markers += private_id_re.findall(line)
             for marker in dict.fromkeys(markers):  # de-dupe, preserve order
                 errors.append(
-                    f"{_display_path}:{lineno} public-repo leak — private marker `{marker}`: a public "
+                    f"{display(path, ctx)}:{lineno} public-repo leak — private marker `{marker}`: a public "
                     f"repo must reference no private-repo backlog items, nor private host paths, `.lan` "
                     f"hostnames, or private IPs (eposforge:EF-047; see `lint-backlog.sh --help`)"
                 )

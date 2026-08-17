@@ -204,13 +204,31 @@ A payload declares its own `budget.cap`, so the cap needs a ceiling of its own �
 otherwise "under budget" is satisfied by raising the budget. `validate-payload.sh`
 enforces the environment's ceiling against the declared cap.
 
-The shipped defaults (8000 out, 4000 back) come from measuring one real
-cross-vendor review, not from intuition: the hand-written reviewer prompt that
-motivated this contract was ~2.6k tokens, and the reviewer's own replies across
-that session had a median of ~0.7k and a 90th percentile of ~3.2k. Outbound gets
-3× the reference prompt; inbound sits just above p90, so a findings payload
-larger than most of that review's turns has to move its evidence behind
-`evidence_ref`. Re-measure on your own traffic and set your own numbers.
+The shipped defaults (8000 out, 6000 back) come from measurement, not intuition,
+and the inbound one has already been re-set once by it.
+
+The first numbers (8000 / 4000) were derived from a single hand-written
+cross-vendor review: its reviewer prompt was ~2.6k tokens and the reviewer's own
+replies had a median of ~0.7k and a 90th percentile of ~3.2k. Outbound got 3× the
+reference prompt; inbound was put just above p90.
+
+Nineteen real findings payloads later, inbound at 4000 was tighter than reality:
+the largest was 3519 and three sat within 15 % of the cap. Outbound was never
+close — 4468 against 8000 across eighteen handoffs — so only one number moved.
+
+The asymmetry of the two errors is what set it. A cap too low **refuses a review
+that already happened**, costing a whole round, and where rounds run unattended
+nobody is watching when it does. A cap too high costs a longer payload for the
+next round's reader — bounded, visible, and already reported by the round-delta
+guard. When the evidence is that a default is nearly binding on ordinary traffic,
+the cheap error is the one to take.
+
+These caps gate the size of the payload **files** (`check_budget` measures
+`wc -c / 4`), not what the reviewer spent at the model, so they can be measured
+exactly from a payload corpus on disk. Re-measure on your own traffic and set your
+own numbers — and if you override, set the environment variable rather than
+editing the literal, since a harness that writes `budget.cap` and the validator
+that enforces the ceiling both read it and must agree.
 
 ## Tools
 
@@ -253,7 +271,7 @@ shape and vocabulary, and the shell adds only the rules a schema cannot express.
 | `CROSSCHECK_SESSION` | generated | session id; adopters capturing wire traffic should reuse theirs |
 | `CROSSCHECK_ROUND` | `1` | round within the loop |
 | `CROSSCHECK_HANDOFF_TOKEN_CAP` | `8000` | outbound ceiling; a handoff may not declare a larger cap |
-| `CROSSCHECK_FINDINGS_TOKEN_CAP` | `4000` | inbound ceiling, deliberately tighter |
+| `CROSSCHECK_FINDINGS_TOKEN_CAP` | `6000` | inbound ceiling; raised from 4000 by measurement — see above |
 | `CROSSCHECK_MAX_ROUNDS` | `3` | after which `crosscheck-decide.sh` returns `halt` |
 | `CROSSCHECK_CLEARANCE_ORDER` | unset | adopter clearance vocabulary, weakest first. When set, `clearance_required` is recomputed as the maximum over `scope[]` |
 | `CROSSCHECK_CMD_TIMEOUT` | `120` | seconds before any executed command is killed |

@@ -6,9 +6,6 @@ REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || echo "")"
 # shellcheck source=resolve-backlog.sh
 source "${SCRIPTS_DIR}/resolve-backlog.sh"
 [[ -z "${REPO_ROOT}" ]] && REPO_ROOT="$(realpath "${BACKLOG_DIR}/..")"
-ACTIVE_FILE="${BACKLOG_DIR}/backlog.md"
-ARCHIVE_FILE="${BACKLOG_DIR}/backlog-archive.md"
-ARCHIVE_INDEX_FILE="${BACKLOG_DIR}/backlog-archive-index.md"
 
 if [[ ! -f "${BACKLOG_DIR}/config.toml" ]]; then
   echo "ERROR: no backlog found at ${BACKLOG_DIR}/config.toml." >&2
@@ -18,9 +15,20 @@ if [[ ! -f "${BACKLOG_DIR}/config.toml" ]]; then
   exit 1
 fi
 
+# Lint the WHOLE set once, before touching anything. This still aborts the sweep on
+# any error — that gate is the point, and eposforge:EF-078 does not relax it. What
+# changed is that lint now covers every root, so the errors it reports are real
+# rather than an artefact of only the first root having been resolvable.
 "${SCRIPTS_DIR}/lint-backlog.sh"
 
-python3 - "$REPO_ROOT" "$ACTIVE_FILE" "$ARCHIVE_FILE" "$ARCHIVE_INDEX_FILE" <<'PY'
+# Sweep EVERY resolved root, not just the first (eposforge:EF-078). Previously a
+# `resolved` item in a non-first root could only be archived by re-running with that
+# root moved to the front of BACKLOG_ROOTS.
+for _backlog_dir in "${BACKLOG_DIRS[@]}"; do
+  [[ -f "${_backlog_dir}/config.toml" ]] || continue
+  _repo_root="$(git -C "${_backlog_dir}" rev-parse --show-toplevel 2>/dev/null || realpath "${_backlog_dir}/..")"
+
+python3 - "$_repo_root" "${_backlog_dir}/backlog.md" "${_backlog_dir}/backlog-archive.md" "${_backlog_dir}/backlog-archive-index.md" <<'PY'
 import re
 import sys
 from pathlib import Path
@@ -111,7 +119,7 @@ for issue in issues:
     moved.append(issue)
 
 if not moved:
-    print("sweep-resolved: no resolved issues found in backlog.md")
+    print(f"sweep-resolved: no resolved issues found in {active_file}")
     raise SystemExit(0)
 
 # Rewrite backlog.md with non-resolved issues.
@@ -182,5 +190,8 @@ for row in rows:
     )
 archive_index_file.write_text("\n".join(index_lines) + "\n", encoding="utf-8")
 
-print(f"sweep-resolved: moved {len(moved)} issue(s) to backlog archive")
+print(f"sweep-resolved: moved {len(moved)} issue(s) to {archive_file}")
 PY
+
+done
+unset _backlog_dir _repo_root

@@ -20,6 +20,7 @@ Resolved issues are grouped by month (`## YYYY-MM`).
 
 
 
+
 ## Issue EF-007 — Resolve component-slot kind-class symmetry
 ID: EF-007
 Title: Resolve component-slot kind-class symmetry
@@ -181,6 +182,7 @@ Notes: Mechanism only — cloud resource/project provisioning, deployment rate (
 Resolved: 2026-05-26
 
 ## 2026-06
+
 
 
 
@@ -374,6 +376,7 @@ Resolved: 2026-06-28
 
 
 
+
 ## Issue EF-011 — Spec graph recall conflates EposForge components with adopter-side infrastructure
 ID: EF-011
 Title: Spec graph recall conflates EposForge components with adopter-side infrastructure
@@ -561,6 +564,7 @@ Notes: Follows EF-059 (the decision + standard). This is the mechanical executio
 
 
 
+
 ## Issue EF-074 — Session chairs standard (judgment seats vs skills vs component roles)
 ID: EF-074
 Title: Session chairs standard (judgment seats vs skills vs component roles)
@@ -600,3 +604,16 @@ Verify with: `lint-backlog.sh` splits `Fix surface:` on commas and validates eac
 Validation: Closed after a two-round cross-agent review (session d36f2fe9, reviewer dillon / grok / xai; round 1 refuted the parity claim as circular, round 2 sound-with-caveats with 4/4 claims confirmed and `crosscheck-decide.sh` returning `stop`). Verify with re-run 2026-08-16: `lint-backlog.sh` splits `Fix surface:` on commas and validates each element against `fix_surfaces` using the same loop shape as `Tags:`; a fixture root passes for a single value and for an all-valid compound, and a compound carrying one out-of-vocabulary element exits 1 with exactly one error naming only that element — both cases fail against the pre-change linter; with the pre-change blob pinned at dbd1493 (never HEAD, which is how the first parity claim went vacuous) eight of nine real roots are byte-identical in output and exit code, the ninth differing only because its corpus was migrated to the multi-valued form in the same session; `docs/schema.md` records the field as comma-separated multi-valued with per-element validation and sends parenthetical qualifiers to `Notes:`.
 Resolved: 2026-08-16
 Notes: Filed 2026-08-15. `Fix surface:` is declared single-valued, but real items routinely name two or three surfaces because a change genuinely lands in more than one place. Roots that populated a vocabulary early absorbed this by collapsing compounds to a single primary, which discards what the author knew; roots that left `fix_surfaces = []` avoided the loss only by accident, because an empty list short-circuits the check entirely (`if fix_surfaces and surface and surface not in fix_surfaces`) and so was never validated at all. Neither outcome is good, and the second hides its own scale — one adopter root reached 37 distinct values across 55 items, 33 of them compound, while linting clean. The precedent for the fix is EF-046: where an item legitimately spans several values, extend the representation rather than retag the item to satisfy a lint rule. `Tags:` already demonstrates the multi-valued form in this same linter, so this applies an existing pattern rather than inventing one. Parenthetical detail attached to existing values is qualifier prose, not vocabulary, and moves to `Notes:`. Backfilling any given root is that root's own work and is out of scope here — this item ships the contract and the linter change only. Adjacency: EF-046 (Tags; the multi-valued precedent and the extend-don't-retag decision), EF-040 (portfolio-review, which surfaces vocabulary drift).
+
+## Issue EF-077 — A schema-invalid review discards a good verdict; re-ask once instead
+ID: EF-077
+Title: A schema-invalid review discards a good verdict; re-ask once instead
+Date: 2026-08-16
+Status: resolved
+Resolved: 2026-08-17
+Effort: S
+Fix surface: eposforge-pattern
+Tags: agent-policy
+Validation: Cross-checked over 3 rounds, reviewer `dillon` (grok / xai) against a claude implementer — r1 `sound-with-caveats` 3 findings all accepted-fixed, r2 `sound-with-caveats` 2 findings (1 accepted-fixed, 1 accepted-deferred as EF-079), r3 **`sound`, 0 findings, 2/2 claims confirmed**. Both `Verify with:` clauses were re-run independently of the suites that were written for them. Clause 1: the prompt an actual reviewer received carries the required/optional property tables (12 rows) plus an explicit statement that `correct_fix` is the name — checked by reading round 3's `reviewer-prompt.md`, not by asserting on the renderer. Clause 2: on a real findings payload rather than a fixture, renaming one property gives exit 3 (shape-only), removing a claim verdict gives exit 1 (substantive), and the untouched payload gives 0; and a kept-artifact run shows attempt 1 returned `correct_state`, the final payload carries `correct_fix`, no human edited either file, `reask.json` records `attempts: 2 resolved: true`, and the round's `prompt_sha256` still equals the sha of the untouched `reviewer-prompt.md` while the re-ask prompt is a separate file with its own recorded hash. Exit 3 is deliberately reachable for `findings` only — a handoff and a disposition have no remote author to re-ask. Commits: eposforge `3b5ae96`, `54f0d79`; and the harness half in the private infra repo. Suites: contract 105 → 111, new re-ask suite 18, both pre-existing host suites unchanged at 44 / 53.
+Verify with: the rendered reviewer prompt names the required property list for a finding explicitly (not only as an example object), so a reviewer emitting a plausible synonym has been told the exact key; and when a returned findings payload fails validation on schema shape ALONE — no missing claim verdict, no cross-field rule broken — the finalize path re-asks the same reviewer once with the validator's own error text appended, records that a re-ask happened, and only then declares the round unusable; a fixture whose only defect is a renamed property produces a valid findings payload on the second attempt without a human editing the file.
+Notes: Filed 2026-08-16. Observed three times in three consecutive rounds across two sessions: the reviewer returned well-reasoned findings using a near-synonym for one property name, and `validate-payload.sh` correctly refused the payload, which the harness then reported as "not a verdict". The refusal is right — a findings payload that does not conform is not a verdict, and a missing claim verdict must never be treated as a pass. What is wrong is the recovery: the only way forward was a human renaming the key by hand, which puts the implementer in the position of editing the reviewer's answer, exactly the laundering the three-payload design exists to prevent. Two changes, both cheap. Naming the required keys in the prompt removes most of the cause; a single bounded re-ask on a shape-only failure removes the rest, and is safe because the reviewer is re-answering the same pinned prompt with an added error string rather than being asked to change its judgment. Bound it to one attempt so a reviewer that cannot conform still terminates the round. The distinction that matters is shape-only versus substantive: a payload missing a claim verdict must keep failing outright, because that is the check that stops an implementer from shipping unreviewed work. Adjacency: EF-075 (the contract these payloads conform to).
