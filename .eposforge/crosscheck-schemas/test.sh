@@ -146,6 +146,36 @@ if (( mismatch == 0 ))
 then ok "--json-errors changes no exit code across every fixture x schema"
 else bad "--json-errors changes no exit code" "$mismatch mismatches"; fi
 
+# 3b. The re-ask gate EXACTLY as the README tells a caller to write it. Round 1's
+#     reviewer refuted the claim that the documented rule was safe: the earlier
+#     wording ("no error has phase cross") is vacuously true of an empty list,
+#     and an empty list is also what a FAILED machine channel produces, since it
+#     fails open. So the documented rule is asserted here rather than trusted,
+#     against all three cases a caller can meet.
+GATE='(.errors | length) > 0 and all(.errors[]; .phase == "schema")'
+gate_says() { jq -e "$GATE" >/dev/null 2>&1 <<<"$1" && echo permit || echo refuse; }
+
+je_shape="$(./validate-payload.sh findings fixtures/findings-renamed-property.json \
+             --handoff fixtures/handoff-basic.json --json-errors 2>/dev/null)"
+je_cross="$(./validate-payload.sh findings fixtures/findings-missing-claim.json \
+             --handoff fixtures/handoff-basic.json --json-errors 2>/dev/null)"
+je_valid="$(./validate-payload.sh findings fixtures/findings-clean.json \
+             --handoff fixtures/handoff-basic.json --json-errors 2>/dev/null)"
+
+[[ "$(gate_says "$je_shape")" == permit ]] \
+  && ok "the documented re-ask gate permits a shape-only failure" \
+  || bad "gate permits shape-only" "got $(gate_says "$je_shape")"
+[[ "$(gate_says "$je_cross")" == refuse ]] \
+  && ok "and refuses a substantive one" \
+  || bad "gate refuses substantive" "got $(gate_says "$je_cross")"
+# The case the old wording got wrong, and the reason this block exists.
+[[ "$(gate_says "$je_valid")" == refuse ]] \
+  && ok "and refuses an EMPTY error list, which a broken channel also produces" \
+  || bad "gate refuses an empty error list" "an empty list read as re-ask permission"
+[[ "$(gate_says '{"errors":[]}')" == refuse ]] \
+  && ok "  including a hand-made empty list, so it is the rule and not the fixture" \
+  || bad "gate refuses a bare empty list" "got $(gate_says '{"errors":[]}')"
+
 # 4. `valid` must agree with the exit code, or a caller could trust the field
 #    over the code and accept a payload the human form rejected.
 je="$(./validate-payload.sh findings fixtures/findings-renamed-property.json \

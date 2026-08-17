@@ -276,9 +276,23 @@ exactly the shape of thing that grows a way to say "close enough":
   even accept the flag, so the comparison is against something that really differs.
 - **`phase` tells you which errors you may act on.** `schema` errors are shape;
   `cross` errors are substantive and must never be re-asked, because "every claim
-  got a verdict" is the check that stops an author shipping unreviewed work. A
-  caller that re-asks should require that *no* error has `phase: "cross"` — a
-  positive test, not an inference from an absence.
+  got a verdict" is the check that stops an author shipping unreviewed work.
+
+  State the gate carefully, because the obvious phrasing is wrong. "No error has
+  `phase: "cross"`" is **vacuously true of an empty list**, and an empty list is
+  reachable two ways: the payload was fine, or the machine channel itself failed
+  — it fails open by design, so a jq error leaves correct exit codes and no JSON.
+  A caller re-asking on that rule would treat a broken channel as permission.
+
+  The gate a caller must implement is positive on both counts: **the error list is
+  non-empty AND every entry has `phase: "schema"`.**
+
+  ```sh
+  jq -e '(.errors | length) > 0 and all(.errors[]; .phase == "schema")'
+  ```
+
+  And re-asking is permitted only when the exit code was **3**. The JSON is a
+  description of a refusal, never the authority for one.
 
 `crosscheck-next-round.sh` is the round-to-round half of the loop, and what it
 *drops* is the part worth reading. It carries the session, the implementer, the
