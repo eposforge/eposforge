@@ -64,10 +64,19 @@ die()  { echo "validate-payload: $*" >&2; exit 2; }
 # distinguish "wrong shape" from "wrong answer". Anything raised while PHASE is
 # `cross` is substantive and forecloses a re-ask.
 PHASE=schema
+# Cross-field failures are raised here, in bash, rather than by the schema
+# library, so they have no JSON pointer to report. They are still collected for
+# --json-errors (eposforge:EF-079) with the phase that raised them — a caller
+# that acts only on `schema`-phase errors must be able to see that substantive
+# failures were also present, not infer it from their absence.
+CROSS_MSGS=()
 fail() {
   echo "INVALID: $*" >&2
   FAILED=1
-  [[ "$PHASE" == cross ]] && CROSS_FAILED=1
+  if [[ "$PHASE" == cross ]]; then
+    CROSS_FAILED=1
+    CROSS_MSGS+=("$*")
+  fi
   return 0
 }
 
@@ -77,12 +86,14 @@ FILE="${1:-}"; shift || usage
 
 FINAL=0
 SCHEMA_ONLY=0
+JSON_ERRORS=0
 REF_HANDOFF=""
 REF_FINDINGS=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --final)    FINAL=1; shift ;;
     --schema-only) SCHEMA_ONLY=1; shift ;;
+    --json-errors) JSON_ERRORS=1; shift ;;
     --handoff)  REF_HANDOFF="$2"; shift 2 ;;
     --findings) REF_FINDINGS="$2"; shift 2 ;;
     -h|--help)  usage ;;
@@ -104,12 +115,60 @@ jq -e . "$FILE" >/dev/null 2>&1 || die "$FILE is not valid JSON"
 
 FAILED=0
 CROSS_FAILED=0
+SCHEMA_ERR_JSON='[]'
+
+# --json-errors (eposforge:EF-079): a second CHANNEL, never a second verdict.
+# It writes one JSON object to stdout; the `INVALID:` lines still go to stderr
+# unchanged, and — this is the part that matters — the exit code is computed
+# exactly as it is without the flag and is passed in here rather than derived.
+# There is deliberately no code path in which asking for machine-readable errors
+# can turn a refusal into a pass.
+emit_json_errors() {
+  (( JSON_ERRORS )) || return 0
+  local code="$1"
+  jq -n -c \
+    --argjson schema_errors "$SCHEMA_ERR_JSON" \
+    --arg kind "$KIND" --arg file "$FILE" \
+    --argjson code "$code" \
+    --args '
+      {
+        schema: "eposforge.crosscheck.validation-errors/1",
+        kind: $kind,
+        file: $file,
+        valid: ($code == 0),
+        exit: $code,
+        errors: (
+          ($schema_errors | map(. + {phase: "schema"}))
+          + ($ARGS.positional | map({
+              path: null, pointer: null, keyword: null,
+              message: ., phase: "cross"
+            }))
+        )
+      }' "${CROSS_MSGS[@]+"${CROSS_MSGS[@]}"}"
+}
+
+# The `ok` lines are the only human output that ever went to stdout. Under
+# --json-errors stdout belongs to the JSON object, so they move to stderr — but
+# ONLY in that mode. A caller that does not pass the flag sees byte-identical
+# output to before EF-079, which is what "adds a channel rather than replacing
+# one" has to mean in practice.
+say_ok() {
+  if (( JSON_ERRORS )); then echo "$*" >&2; else echo "$*"; fi
+}
 
 # ── 1. Schema ────────────────────────────────────────────────────────────────
 ERRORS="$(jq -r --slurpfile s "$SCHEMA" -L "$SCRIPT_DIR/lib" \
   'include "jsonschema"; jsonschema_errors($s[0])[]' "$FILE" 2>&1)"
 if [[ -n "$ERRORS" ]]; then
   while IFS= read -r line; do fail "$line"; done <<<"$ERRORS"
+fi
+# Computed only when asked: validate runs on every claim append, and a second
+# pass over the schema on that hot path would be paid by everyone to benefit
+# the rare caller that wants structure.
+if (( JSON_ERRORS )); then
+  SCHEMA_ERR_JSON="$(jq -c --slurpfile s "$SCHEMA" -L "$SCRIPT_DIR/lib" \
+    'include "jsonschema"; jsonschema_error_objects($s[0])' "$FILE" 2>/dev/null)"
+  [[ -z "$SCHEMA_ERR_JSON" ]] && SCHEMA_ERR_JSON='[]'
 fi
 
 # Resolve a payload-relative reference (handoff_ref / findings_ref) against the
@@ -156,10 +215,12 @@ if (( SCHEMA_ONLY )); then
     # Stays 1, not 3. In this mode every failure is a shape failure by
     # construction, so the shape/substance split carries no information — and
     # the append helper only asks whether it may keep writing.
+    emit_json_errors 1
     echo "validate-payload: $KIND $FILE — INVALID (schema only)" >&2
     exit 1
   fi
-  echo "validate-payload: $KIND $FILE — ok (schema only)"
+  emit_json_errors 0
+  say_ok "validate-payload: $KIND $FILE — ok (schema only)"
   exit 0
 fi
 
@@ -285,14 +346,17 @@ if (( FAILED )); then
   # not a payload to request again — reporting 3 would offer a recovery that
   # does not exist.
   if (( CROSS_FAILED )) || [[ "$KIND" != findings ]]; then
+    emit_json_errors 1
     echo "validate-payload: $KIND $FILE — INVALID" >&2
     exit 1
   fi
   # Shape alone. Every claim still carries a verdict; the reviewer's judgment is
   # intact and only the container is wrong. See the header for what a caller may
   # and may not do with this.
+  emit_json_errors 3
   echo "validate-payload: $KIND $FILE — INVALID (schema shape only)" >&2
   exit 3
 fi
-echo "validate-payload: $KIND $FILE — ok"
+emit_json_errors 0
+say_ok "validate-payload: $KIND $FILE — ok"
 exit 0

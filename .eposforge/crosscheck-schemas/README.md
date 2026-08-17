@@ -239,10 +239,46 @@ that enforces the ceiling both read it and must agree.
 | `crosscheck-run-checks.sh` | execute every mechanical claim → `check_results[]` |
 | `crosscheck-coverage.sh` | changed files minus claimed files → `coverage.uncovered[]` |
 | `crosscheck-attribute.sh` | run `repro_cmd` at both SHAs → `attribution_checked` |
-| `validate-payload.sh` | schema + cross-field validation of any payload |
+| `validate-payload.sh` | schema + cross-field validation of any payload; `--json-errors` adds a machine-readable error channel |
 | `crosscheck-decide.sh` | the stop rule; prints `stop` \| `continue` \| `halt` |
 | `crosscheck-next-round.sh` | open round N+1 from a disposed round N |
 | `test.sh` | all of the above, no model involved |
+
+### Acting on a validator error without parsing its prose
+
+`validate-payload.sh --json-errors` writes one JSON object to stdout describing
+every error it found. The human `INVALID:` lines still go to stderr exactly as
+before; this adds a channel rather than replacing one, and without the flag the
+output and the exit code are byte-for-byte what they were.
+
+```json
+{ "schema": "eposforge.crosscheck.validation-errors/1",
+  "kind": "findings", "valid": false, "exit": 3,
+  "errors": [ { "pointer": "/findings/0", "path": "$.findings[0]",
+                "keyword": "additionalProperties", "property": "correct_state",
+                "message": "unexpected property \"correct_state\"",
+                "phase": "schema" } ] }
+```
+
+It exists because the bounded re-ask has to *act* on these errors, and the only
+way to do that used to be matching the English of `unexpected property "X"` — so
+a copy-edit to an error string became a test edit in another repository.
+`pointer` is RFC 6901; `property` is present whenever the error names a key.
+
+Two properties worth stating plainly, because a machine-readable channel is
+exactly the shape of thing that grows a way to say "close enough":
+
+- **It is never a second verdict.** The exit code is computed identically with
+  and without the flag, and `valid` is derived from that code rather than from a
+  second look at the errors. There is no input for which asking for structured
+  errors turns a refusal into a pass; `test.sh` asserts this across every fixture
+  and schema, and separately asserts that the pre-`--json-errors` revision cannot
+  even accept the flag, so the comparison is against something that really differs.
+- **`phase` tells you which errors you may act on.** `schema` errors are shape;
+  `cross` errors are substantive and must never be re-asked, because "every claim
+  got a verdict" is the check that stops an author shipping unreviewed work. A
+  caller that re-asks should require that *no* error has `phase: "cross"` — a
+  positive test, not an inference from an absence.
 
 `crosscheck-next-round.sh` is the round-to-round half of the loop, and what it
 *drops* is the part worth reading. It carries the session, the implementer, the

@@ -16,6 +16,13 @@ VERBOSE=0
 [[ "${1:-}" == "-v" ]] && VERBOSE=1
 
 PASS=0; FAIL=0
+# The revision immediately BEFORE --json-errors existed, pinned by SHA so the
+# "human output is unchanged" case compares against a fixed point rather than
+# against whatever HEAD~ happens to be (eposforge:EF-079). A clone that does not
+# have this commit — shallow, or a vendored copy — skips that one case and says
+# so, rather than passing silently for want of a comparison.
+PRE_079_SHA="6cfb1af21c02c1cffb0831d2edbf461a10b46bde"
+SCRIPT_DIR_REPO="$(git rev-parse --show-toplevel 2>/dev/null || echo "$PWD")"
 # Do not inherit the caller's session. These checks are themselves run by
 # `crosscheck-run-checks.sh` during a finalize, which exports CROSSCHECK_ROUND
 # and CROSSCHECK_SESSION — and a fixture that assumes round-1 paths then fails
@@ -102,6 +109,83 @@ ln -s "$PWD/lib" "$TMP/nc/lib"
 for _s in handoff findings disposition; do ln -s "$PWD/$_s.v1.json" "$TMP/nc/$_s.v1.json"; done
 expect_exit 3 "negative control: with the phase tag removed, a missing verdict misclassifies as shape-only" \
   "$TMP/nc/validate-payload.sh" findings fixtures/findings-renamed-and-missing-claim.json --handoff fixtures/handoff-basic.json
+echo "== --json-errors is a second channel, never a second verdict (EF-079)"
+# The reason this exists: acting on a validator error used to mean matching the
+# English of `unexpected property "X"`. The reason it is dangerous: a machine
+# channel is exactly the shape of thing that grows a way to say "close enough".
+
+# 1. The property name is recoverable as a FIELD, with no prose matching at all.
+je="$(./validate-payload.sh findings fixtures/findings-renamed-property.json \
+        --handoff fixtures/handoff-basic.json --json-errors 2>/dev/null)"
+if [[ "$(jq -r '[.errors[]|select(.keyword=="additionalProperties")|.property]|join(",")' <<<"$je")" == "correct_state" ]]
+then ok "the offending property is a distinct field, not embedded in a sentence"
+else bad "the offending property is a distinct field" "got: $je"; fi
+if [[ "$(jq -r '.errors[0].pointer' <<<"$je")" == "/findings/0" ]]
+then ok "and it carries an RFC 6901 pointer to the offending location"
+else bad "an RFC 6901 pointer is reported" "got: $(jq -r '.errors[0].pointer' <<<"$je")"; fi
+
+# 2. A substantive failure is reported AS substantive. A caller that re-asks on
+#    schema-phase errors must be able to see it was not one, positively, rather
+#    than inferring it from an absence.
+je="$(./validate-payload.sh findings fixtures/findings-missing-claim.json \
+        --handoff fixtures/handoff-basic.json --json-errors 2>/dev/null)"
+if [[ "$(jq -r '[.errors[].phase]|unique|join(",")' <<<"$je")" == *cross* ]]
+then ok "a missing claim verdict is tagged phase=cross in the machine form"
+else bad "a missing claim verdict is tagged phase=cross" "got: $je"; fi
+
+# 3. THE SAFETY PROPERTY. The flag must not change any verdict, anywhere.
+mismatch=0
+for _f in fixtures/*.json; do
+  for _k in handoff findings disposition; do
+    ./validate-payload.sh "$_k" "$_f" >/dev/null 2>&1; _a=$?
+    ./validate-payload.sh "$_k" "$_f" --json-errors >/dev/null 2>&1; _b=$?
+    [[ "$_a" != "$_b" ]] && mismatch=$((mismatch+1))
+  done
+done
+if (( mismatch == 0 ))
+then ok "--json-errors changes no exit code across every fixture x schema"
+else bad "--json-errors changes no exit code" "$mismatch mismatches"; fi
+
+# 4. `valid` must agree with the exit code, or a caller could trust the field
+#    over the code and accept a payload the human form rejected.
+je="$(./validate-payload.sh findings fixtures/findings-renamed-property.json \
+        --handoff fixtures/handoff-basic.json --json-errors 2>/dev/null)"
+if [[ "$(jq -r '.valid' <<<"$je")" == "false" && "$(jq -r '.exit' <<<"$je")" == "3" ]]
+then ok "valid:false travels with the non-zero exit it describes"
+else bad "valid agrees with the exit code" "got: $je"; fi
+
+# 5. Human output is UNCHANGED without the flag — this adds a channel, it does
+#    not replace one. Compared against the pre-EF-079 script in a patched COPY.
+mkdir -p "$TMP/pre079"
+git -C "$SCRIPT_DIR_REPO" show "$PRE_079_SHA:.eposforge/crosscheck-schemas/validate-payload.sh" \
+  > "$TMP/pre079/validate-payload.sh" 2>/dev/null
+mkdir -p "$TMP/pre079/lib"
+git -C "$SCRIPT_DIR_REPO" show "$PRE_079_SHA:.eposforge/crosscheck-schemas/lib/jsonschema.jq" \
+  > "$TMP/pre079/lib/jsonschema.jq" 2>/dev/null
+if [[ -s "$TMP/pre079/validate-payload.sh" && -s "$TMP/pre079/lib/jsonschema.jq" ]]; then
+  chmod +x "$TMP/pre079/validate-payload.sh"
+  for _s in handoff findings disposition; do ln -sf "$PWD/$_s.v1.json" "$TMP/pre079/$_s.v1.json"; done
+  ln -sfn "$PWD/fixtures" "$TMP/pre079/fixtures"
+  # Control the control: the old copy must actually differ from the new one, or
+  # "identical output" would only mean we compared a file with itself.
+  if (cd "$TMP/pre079" && ./validate-payload.sh findings fixtures/findings-clean.json --json-errors) >/dev/null 2>&1
+  then bad "control: the pre-EF-079 copy rejects --json-errors" "it accepted the flag"
+  else ok "control: the pre-EF-079 copy does not know --json-errors"; fi
+  diffs=0
+  for _f in fixtures/*.json; do
+    for _k in handoff findings disposition; do
+      _o="$( (cd "$TMP/pre079" && ./validate-payload.sh "$_k" "fixtures/$(basename "$_f")") 2>&1; echo "rc=$?")"
+      _n="$( ./validate-payload.sh "$_k" "$_f" 2>&1; echo "rc=$?")"
+      [[ "$_o" != "$_n" ]] && diffs=$((diffs+1))
+    done
+  done
+  if (( diffs == 0 ))
+  then ok "without the flag, output and exit are identical to pre-EF-079"
+  else bad "without the flag, output is identical to pre-EF-079" "$diffs combinations differ"; fi
+else
+  ok "SKIPPED: pre-EF-079 revision $PRE_079_SHA not reachable in this clone"
+fi
+
 jq --arg pad "$(head -c 40000 /dev/zero | tr '\0' 'x')" '.traps += [$pad]' \
    fixtures/handoff-basic.json > "$TMP/fat.json"
 expect_exit 1 "a payload that really is too big is measured, not believed" \
