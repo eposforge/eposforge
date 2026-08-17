@@ -88,6 +88,20 @@ expect_exit 0 "a conforming findings payload is unaffected by the split" \
 jq '.budget.cap = 10' fixtures/findings-clean.json > "$TMP/overcapf.json"
 expect_exit 1 "an over-cap findings payload is substantive, not shape-only" \
   ./validate-payload.sh findings "$TMP/overcapf.json" --handoff fixtures/handoff-basic.json
+
+# Negative control, executed rather than asserted. Cases above are green
+# whenever the new fixtures parse; none of them witnesses the classifier
+# BREAKING, so on their own they cannot tell a working split from a split that
+# never ran. Here the phase tag is removed from a copy and the both-defects
+# fixture is re-checked: without it a missing claim verdict misclassifies as
+# shape-only, which is precisely the failure the split exists to prevent.
+mkdir -p "$TMP/nc"
+sed 's/^PHASE=cross$/PHASE=schema/' validate-payload.sh > "$TMP/nc/validate-payload.sh"
+chmod +x "$TMP/nc/validate-payload.sh"
+ln -s "$PWD/lib" "$TMP/nc/lib"
+for _s in handoff findings disposition; do ln -s "$PWD/$_s.v1.json" "$TMP/nc/$_s.v1.json"; done
+expect_exit 3 "negative control: with the phase tag removed, a missing verdict misclassifies as shape-only" \
+  "$TMP/nc/validate-payload.sh" findings fixtures/findings-renamed-and-missing-claim.json --handoff fixtures/handoff-basic.json
 jq --arg pad "$(head -c 40000 /dev/zero | tr '\0' 'x')" '.traps += [$pad]' \
    fixtures/handoff-basic.json > "$TMP/fat.json"
 expect_exit 1 "a payload that really is too big is measured, not believed" \
