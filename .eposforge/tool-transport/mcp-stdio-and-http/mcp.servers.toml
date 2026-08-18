@@ -13,9 +13,15 @@ schema_version = "1"
 
 [[server]]
 name         = "cognee"
-transport    = "sse"
-url          = "https://<your-cognee-mcp-host>/sse"
+transport    = "stdio"
+command      = "uvx"
+args         = ["cognee-mcp"]
 scope        = "project"
+
+[server.non_secret_env]
+COGNEE_MCP_AGENT_SCOPED = "false"
+ENABLE_BACKEND_ACCESS_CONTROL = "false"
+API_URL = "http://127.0.0.1:18000"
 
 [[server]]
 name         = "github"
@@ -31,4 +37,4 @@ scope        = "project"
 name      = "ms-docs"
 transport = "http"
 url       = "https://learn.microsoft.com/api/mcp"
-scope     = "user"
+scope     = "project"

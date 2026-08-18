@@ -105,7 +105,7 @@ def _wrap_with_epos_secrets(server: dict, runtime_map: dict[str, str]) -> tuple[
         sys.exit(1)
 
     cmd = [server["command"]] + server.get("args", [])
-    epos_secrets = "epos-secrets"
+    epos_secrets = str(_EPOS_SECRETS)
     python_cmd = "python3"
 
     if runtime_names:
@@ -196,8 +196,10 @@ def _generate_toml(content: str, active: list[dict], all_srv: list[dict], rmap: 
         out.append(f"[mcp_servers.{name}]")
         out.append("enabled = true")
         if t in ("http", "sse"):
+            out.append(f'type = "{t}"')
             out.append(f'url = "{s["url"]}"')
         elif t == "stdio":
+            out.append('type = "stdio"')
             cmd, env = _wrap_with_epos_secrets(s, rmap)
             out.append(f'command = "{cmd[0]}"')
             out.append(f'args = {json.dumps(cmd[1:])}')
