@@ -72,6 +72,10 @@ ef:Agent rdf:type owl:Class ;
     rdfs:label "Agent" ;
     rdfs:comment "An autonomous AI-driven executor." .
 
+ef:SessionChair rdf:type owl:Class ;
+    rdfs:label "Session Chair" ;
+    rdfs:comment "A named judgment seat that must not blend with another seat. A chair sits on a Dev Product for the duration of a turn or a spawned subagent. Distinct from a Component (a factory slot) and from a Skill (a discoverable procedure a chair may invoke). The same Agent may sit different chairs; the chair is the seat, not the executor. The operator chair is not ef:Operator (the human in charge of an instance). Governed by the Session Chairs standard." .
+
 ef:Spec rdf:type owl:Class ;
     rdfs:label "Spec" ;
     rdfs:comment "A declarative statement of desired capability." .
@@ -124,8 +128,8 @@ ef:DevProduct rdf:type owl:Class ;
 
 ef:Router rdf:type owl:Class ;
     rdfs:subClassOf ef:Adapter ;
-    rdfs:label "Router" ;
-    rdfs:comment "The decomposition and dispatch layer of the Product Factory." .
+    rdfs:label "Orchestrator" ;
+    rdfs:comment "The decomposition and dispatch layer of the Product Factory. Canonical name is Orchestrator (EF-026). IRI kept as ef:Router; 'Router' is a deprecated alias, not a second slot." .
 
 ef:ToolTransport rdf:type owl:Class ;
     rdfs:subClassOf ef:Adapter ;
@@ -191,6 +195,21 @@ ef:BacklogAdapter rdf:type owl:Class ;
     rdfs:subClassOf ef:Adapter ;
     rdfs:label "Backlog Adapter" ;
     rdfs:comment "An Adapter kind that fulfills the Backlog component slot." .
+
+ef:InteractionCaptureAdapter rdf:type owl:Class ;
+    rdfs:subClassOf ef:Adapter ;
+    rdfs:label "Interaction Capture Adapter" ;
+    rdfs:comment "An Adapter kind that fulfills the Interaction Capture component slot." .
+
+ef:ContentSafetyAdapter rdf:type owl:Class ;
+    rdfs:subClassOf ef:Adapter ;
+    rdfs:label "Content Safety Adapter" ;
+    rdfs:comment "An Adapter kind that fulfills the Content Safety component slot." .
+
+ef:BackupResilienceAdapter rdf:type owl:Class ;
+    rdfs:subClassOf ef:Adapter ;
+    rdfs:label "Backup / Data Resilience Adapter" ;
+    rdfs:comment "An Adapter kind that fulfills the Backup / Data Resilience component slot." .
 
 ef:Migration rdf:type owl:Class ;
     rdfs:label "Migration" ;
@@ -509,7 +528,7 @@ See the scopeNote on ef:KnowledgeTree for current access model. This node is the
     ef:kind ef:NodeKindGuidance ;
     ef:lifecycleStatus ef:StatusAdopted ;
     skos:broader ef:KnowledgeTree ;
-    skos:related ef:ScopeSpecGraph, ef:FactorySpecGraph .
+    skos:related ef:ScopeSpecGraph, ef:FactorySpecGraph, ef:SessionChairs, ef:CrossAgentReviewContract, ef:DiscoverBeforeBuild .
 
 ef:RandianConceptFormation rdf:type ef:Tenet, skos:Concept ;
     skos:prefLabel "Randian concept formation" ;
@@ -594,7 +613,8 @@ ef:DetectionRatchet rdf:type ef:Concept, skos:Concept ;
     ef:adoptedDefinition "A cheap, re-runnable, one-command pass/fail check that proves an element is still good, supplying the continuous detection that keeps a kernel a kernel." ;
     ef:variants "smoke gate", "smoke test", "hard gate", "one-command gate", "negentropy input", "paired detection", "Lehman's Laws", "Lehman" ;
     ef:kind ef:NodeKindConcept ;
-    ef:lifecycleStatus ef:StatusAdopted .
+    ef:lifecycleStatus ef:StatusAdopted ;
+    skos:related ef:PairedDetection .
 
 ef:Kernel rdf:type ef:Concept, skos:Concept ;
     skos:prefLabel "kernel" ;
@@ -651,6 +671,15 @@ ef:FactorySpecGraph rdf:type ef:Concept, skos:Concept ;
     skos:broader ef:SpecGraphComponent ;
     skos:related ef:ScopeSpecGraph, ef:MultiGraphArchitecture .
 
+ef:DiscoverBeforeBuild rdf:type ef:Concept, skos:Concept ;
+    skos:prefLabel "discover-before-build" ;
+    skos:altLabel "outbound discovery plane", "inbound co-priority", "OSS flywheel", "dynamic on-demand software" ;
+    skos:definition "When a factory needs a capability, it first queries the shared Spec Graph and commodity OSS discovery surfaces for an existing Living Spec or Adapter that satisfies the intent; building new is the fallback. The other half of the loop is inbound: shipping publishable, matchable Living Specs and Adapters (intent, contract, license, install surface). Discover-before-build without a publish surface is half a loop. Reuse is at the spec layer (intent and contract), not only package names. Vertical niche indexes such as MCP server marketplaces are optional human recon, not factory infrastructure or Tool Transport adapters." ;
+    skos:inScheme ef:KnowledgeTree ;
+    ef:kind ef:NodeKindConcept ;
+    ef:lifecycleStatus ef:StatusAdopted ;
+    skos:related ef:SpecGraphComponent, ef:LivingSpecComponent, ef:RouterComponent, ef:PillarProductEngine .
+
 ef:MultiGraphArchitecture rdf:type ef:Concept, skos:Concept ;
     skos:prefLabel "Multi-Graph Architecture" ;
     skos:definition "How the Factory Spec Graph is usually deployed: one Scope Spec Graph per scope (EposForge pattern + references, Adopter Platform Spec, IAC, product repos). Scope graphs are connected by the shared ontology (ef:fulfillsSlot, ef:adoptsFrom, etc.) plus explicit mappings and deliberate agent orchestration (query relevant dataset(s) and synthesize). Not automatic federation. Enables scoped GraphRAG over pure file RAG. Disk (Living Specs + backlog markup) remains canonical. See EF-056/057, Component 6 (Scope vs Factory Spec Graph), and the architecture capture." ;
@@ -659,7 +688,7 @@ ef:MultiGraphArchitecture rdf:type ef:Concept, skos:Concept ;
     ef:lifecycleStatus ef:StatusAdopted ;
     skos:related ef:SpecGraphComponent, ef:BacklogComponent, ef:ScopeSpecGraph, ef:FactorySpecGraph .
 
-ef:CodeSurfaceEncapsulation rdf:type ef:Concept, skos:Concept ;
+ef:CodeSurfaceEncapsulation rdf:type ef:Concept, ef:Standard, skos:Concept ;
     skos:prefLabel "Code-surface encapsulation" ;
     skos:altLabel "conversational-first delivery", "declared code roots" ;
     skos:definition "Product delivery starts conversational (agents, skills, structured intent) and promotes to deterministic source code and UIs when use demands it. Implementation code and UI code must live in declared code roots (e.g. src/, apps/) or code-focused repos so Tool Transport code-structure tools can be scoped via product registry code_globs — not scattered through prose-primary knowledge trees or whole-repo indexed as a code graph. See Standard 12." ;
@@ -668,7 +697,7 @@ ef:CodeSurfaceEncapsulation rdf:type ef:Concept, skos:Concept ;
     ef:lifecycleStatus ef:StatusAdopted ;
     skos:related ef:LivingSpecComponent, ef:ToolTransportComponent, ef:PairedChangeEnforcement, ef:SpecGraphComponent .
 
-ef:PairedChangeEnforcement rdf:type ef:Concept, skos:Concept ;
+ef:PairedChangeEnforcement rdf:type ef:Concept, ef:Standard, skos:Concept ;
     skos:prefLabel "Paired-Change Enforcement" ;
     skos:definition "Fail-closed CI and product-registry machinery that keeps Product Living Specs current: code path changes require Spec path changes or a finite audited exemption; Spec-derived tests must stay green. Ceremony (light in-place Spec edit vs heavy specify episode) may scale with ambiguity; Spec fidelity must not. Prompt-only compliance is non-conformant. Without this gate Living Specs rot and code becomes de facto process truth. See Standard 11, Component 2, Component 9." ;
     skos:inScheme ef:KnowledgeTree ;
@@ -692,11 +721,11 @@ ef:MultiGraphArchitecture skos:broader ef:SpecGraphComponent .
 
 ef:SpecInput rdf:type ef:Component, skos:Concept ;
     skos:prefLabel "Spec Input" ;
-    skos:definition "Component contract defined (draft). No installed adapter in this instance. Spec input happens informally via backlog files; no tooling normalizes it for Router consumption." ;
+    skos:definition "Component contract defined (draft). No installed adapter in this instance. Spec input happens informally via backlog files; no tooling normalizes it for Orchestrator consumption." ;
     skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindComponent ;
     ef:componentMaturity ef:MaturityIntent ;
-    rdfs:comment "Component contract defined (draft). No installed adapter in this instance. Spec input happens informally via backlog files; no tooling normalizes it for Router consumption. See 03-research/ for candidate adapters." .
+    rdfs:comment "Component contract defined (draft). No installed adapter in this instance. Spec input happens informally via backlog files; no tooling normalizes it for Orchestrator consumption. See 03-research/ for candidate adapters." .
 
 ef:LivingSpecComponent rdf:type ef:Component, skos:Concept ;
     skos:prefLabel "Living Spec" ;
@@ -715,12 +744,13 @@ ef:DevProductComponent rdf:type ef:Component, skos:Concept ;
     rdfs:comment "Multiple adapters installed: claude-code (approved), copilot (approved), gemini-cli (experimental). All are operational." .
 
 ef:RouterComponent rdf:type ef:Component, skos:Concept ;
-    skos:prefLabel "Router" ;
-    skos:definition "No reference implementation installed in this EposForge instance. EF-013 (Router v0) is slated, gated on EF-011 and EF-012 recall quality. Adopters may install their own adapter (e.g. Gas Town at the primary adopter instance) — that is an adopter-side installation, not this framework layer. Do not present Router patterns as currently operational at the framework level." ;
+    skos:prefLabel "Orchestrator" ;
+    skos:altLabel "Router" ;
+    skos:definition "Decomposition and dispatch layer of the Product Factory. Canonical name is Orchestrator (EF-026); 'Router' is a deprecated alias for this same slot, not a second component. No reference implementation installed in this EposForge instance. EF-013 (Orchestrator v0) is slated, gated on EF-011 and EF-012 recall quality. Adopters may install their own adapter (e.g. Gas Town at the primary adopter instance) — that is an adopter-side installation, not this framework layer. Do not present Orchestrator patterns as currently operational at the framework level." ;
     skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindComponent ;
     ef:componentMaturity ef:MaturityIntent ;
-    rdfs:comment "No reference implementation installed in this EposForge instance. EF-013 (Router v0) is slated, gated on EF-011 and EF-012 recall quality. Adopters may install their own adapter (e.g. Gas Town at the primary adopter instance) — that is an adopter-side installation, not this framework layer. Do not present Router patterns as currently operational at the framework level." .
+    rdfs:comment "Canonical name Orchestrator (EF-026). IRI kept as ef:RouterComponent; Router is a deprecated alias. No framework-level reference implementation. EF-013 slated. Adopter-side installations are not this framework layer." .
 
 ef:ToolTransportComponent rdf:type ef:Component, skos:Concept ;
     skos:prefLabel "Tool Transport" ;
@@ -747,7 +777,8 @@ ef:WorkingMemoryComponent rdf:type ef:Component, skos:Concept ;
     ef:componentMaturity ef:MaturityIntent ;
     rdfs:comment "Component contract defined (draft). No installed adapter in this EposForge instance. Depends on Tool Transport. Distinct from Spec Graph, Interaction Capture, and code-structure. Native per-CLI memory is what this slot displaces." ;
     skos:related ef:SpecGraphComponent ;
-    skos:related ef:ToolTransportComponent .
+    skos:related ef:ToolTransportComponent ;
+    skos:related ef:InteractionCaptureComponent .
 
 ef:ExecutionSandboxComponent rdf:type ef:Component, skos:Concept ;
     rdfs:label "Execution Sandbox" ;
@@ -820,6 +851,91 @@ ef:BacklogComponent rdf:type ef:Component, skos:Concept ;
     ef:componentMaturity ef:MaturityShipped ;
     rdfs:comment "file-based-backlog adapter installed: per-repo markdown backlog files under backlog/ with EF- (and adopter-specific) IDs (with repo-scoped prefixes). Beads (bd, Dolt-backed) is available via Gas Town at adopter instances as a complementary agent-facing ledger. The independent backlog graph (items) is distinct from backlog mechanics projected into Scope Spec Graphs. See ef:MultiGraphArchitecture, ef:ScopeSpecGraph, ef:IndependentBacklogGraph, and the file-based-backlog Living Spec." ;
     skos:broader ef:PillarProductEngine .
+
+ef:InteractionCaptureComponent rdf:type ef:Component, skos:Concept ;
+    skos:prefLabel "Interaction Capture" ;
+    skos:definition "The durable corpus of what agents were asked and what they returned, across Dev Product adapters. Contract defined (draft). No installed adapter in this instance. Emits the Chat Event Schema. Distinct from Audit & Observability (that things happened), Working Memory, and Spec Graph." ;
+    skos:inScheme ef:KnowledgeTree ;
+    ef:kind ef:NodeKindComponent ;
+    ef:componentMaturity ef:MaturityIntent ;
+    rdfs:comment "Component contract defined (draft). No installed adapter in this instance. Durable corpus of what agents were asked and returned (Chat Event Schema). Distinct from Audit & Observability, Working Memory, and Spec Graph." ;
+    skos:related ef:AuditObservabilityComponent, ef:WorkingMemoryComponent, ef:SpecGraphComponent, ef:ChatEventSchema .
+
+ef:ContentSafetyComponent rdf:type ef:Component, skos:Concept ;
+    skos:prefLabel "Content Safety" ;
+    skos:definition "Runtime payload content inspection (input, output, tool-call arguments) with fail-closed decisions in {log, warn, block, escalate}. Contract defined (draft). No installed adapter in this instance. Distinct from Agent Policy (action authorization) and Audit & Observability (records)." ;
+    skos:inScheme ef:KnowledgeTree ;
+    ef:kind ef:NodeKindComponent ;
+    ef:componentMaturity ef:MaturityIntent ;
+    rdfs:comment "Component contract defined (draft). No installed adapter in this instance. Runtime payload content inspection, fail-closed. Distinct from Agent Policy and Audit & Observability." ;
+    skos:related ef:AgentPolicyComponent, ef:AuditObservabilityComponent .
+
+ef:BackupResilienceComponent rdf:type ef:Component, skos:Concept ;
+    skos:prefLabel "Backup / Data Resilience" ;
+    skos:definition "Centralized backup, restore, and disaster recovery with declared RPO/RTO and tamper-resistance for the privileged-agent threat model. Contract defined (draft). No installed adapter in this instance." ;
+    skos:inScheme ef:KnowledgeTree ;
+    ef:kind ef:NodeKindComponent ;
+    ef:componentMaturity ef:MaturityIntent ;
+    rdfs:comment "Component contract defined (draft). No installed adapter in this instance. Backup, restore, and disaster recovery with declared RPO/RTO." ;
+    skos:related ef:SourceControlCIComponent, ef:AuditObservabilityComponent, ef:SecretsKeyManagementComponent .
+
+### Knowledge-Tree Individuals — Session Chairs and Cross-Agent Review (EF-074 / EF-075)
+
+ef:ChairCollisionTest rdf:type ef:Guidance, skos:Concept ;
+    skos:prefLabel "chair collision test" ;
+    skos:definition "Mint a new session chair only when two jobs must not blend and that collision can be named in one sentence. A procedure without a collision is a skill. When the current chair collides with the job, the session must refuse and name the file to load — it must not stay and be careful." ;
+    skos:inScheme ef:KnowledgeTree ;
+    ef:kind ef:NodeKindGuidance ;
+    ef:lifecycleStatus ef:StatusAdopted ;
+    ef:governedBy ef:SessionChairs ;
+    skos:related ef:SessionChairs, ef:ImplementerChair, ef:ReviewerChair, ef:ElicitorChair, ef:OperatorChair .
+
+ef:ImplementerChair rdf:type ef:SessionChair, skos:Concept ;
+    skos:prefLabel "implementer" ;
+    skos:definition "Default builder chair. Makes the smallest change that satisfies the request. Must not be the only reviewer of its own artifact." ;
+    skos:inScheme ef:KnowledgeTree ;
+    ef:kind ef:NodeKindConcept ;
+    ef:lifecycleStatus ef:StatusAdopted ;
+    ef:governedBy ef:SessionChairs ;
+    skos:related ef:ReviewerChair, ef:ChairCollisionTest .
+
+ef:ReviewerChair rdf:type ef:SessionChair, skos:Concept ;
+    skos:prefLabel "reviewer" ;
+    skos:definition "Judgment seat that must not have written the artifact under review. Reviews; does not edit source." ;
+    skos:inScheme ef:KnowledgeTree ;
+    ef:kind ef:NodeKindConcept ;
+    ef:lifecycleStatus ef:StatusAdopted ;
+    ef:governedBy ef:SessionChairs ;
+    skos:related ef:ImplementerChair, ef:CrossAgentReviewContract, ef:ChairCollisionTest .
+
+ef:ElicitorChair rdf:type ef:SessionChair, skos:Concept ;
+    skos:prefLabel "elicitor" ;
+    skos:definition "Judgment seat that locks acceptance criteria. Must not implement, dispatch, or invent acceptance criteria silently." ;
+    skos:inScheme ef:KnowledgeTree ;
+    ef:kind ef:NodeKindConcept ;
+    ef:lifecycleStatus ef:StatusAdopted ;
+    ef:governedBy ef:SessionChairs ;
+    skos:related ef:ChairCollisionTest .
+
+ef:OperatorChair rdf:type ef:SessionChair, skos:Concept ;
+    skos:prefLabel "operator" ;
+    skos:altLabel "operator chair" ;
+    skos:definition "Judgment seat that verifies content, not status, before mutation. Distinct from ef:Operator, the human in charge of an instance. Must not mutate before verifying content." ;
+    skos:inScheme ef:KnowledgeTree ;
+    ef:kind ef:NodeKindConcept ;
+    ef:lifecycleStatus ef:StatusAdopted ;
+    ef:governedBy ef:SessionChairs ;
+    skos:related ef:Operator, ef:ChairCollisionTest .
+
+ef:CrossAgentReviewContract rdf:type ef:Concept, skos:Concept ;
+    skos:prefLabel "cross-agent review contract" ;
+    skos:altLabel "crosscheck", "cross-check", "cross-agent review" ;
+    skos:definition "A decidable contract between the agent that did the work and a different agent that checks it. Three payloads (handoff, findings, disposition), claims recorded as the work happens, and a stop rule over closed-vocabulary fields so termination does not depend on either agent's opinion that it is done. Instance tooling lives under .eposforge/crosscheck-schemas/. Which agent reviews, and at what privacy clearance, is adopter routing policy." ;
+    skos:inScheme ef:KnowledgeTree ;
+    ef:kind ef:NodeKindConcept ;
+    ef:lifecycleStatus ef:StatusAdopted ;
+    ef:governedBy ef:SessionChairs ;
+    skos:related ef:ReviewerChair, ef:ImplementerChair, ef:UngameableGate, ef:ChairCollisionTest .
 
 ### Adapter Status Individuals
 
@@ -896,8 +1012,9 @@ ef:ProductPhaseC rdf:type ef:Phase, skos:Concept ;
     ef:maturesTo ef:ProductPhaseD .
 
 ef:ProductPhaseD rdf:type ef:Phase, skos:Concept ;
-    skos:prefLabel "Phase D: Router v0" ;
-    skos:definition "Basic decomposition and dispatch via Router." ;
+    skos:prefLabel "Phase D: Orchestrator v0" ;
+    skos:altLabel "Phase D: Router v0" ;
+    skos:definition "Basic decomposition and dispatch via the Orchestrator (formerly named Router)." ;
     skos:inScheme ef:KnowledgeTree ;
     ef:maturesTo ef:ProductPhaseE .
 
@@ -929,6 +1046,60 @@ ef:ResearchMirror rdf:type ef:Standard, skos:Concept ;
     skos:prefLabel "Research Mirror" ;
     skos:definition "Adopted standard governing how external research is mirrored into the repo." ;
     skos:inScheme ef:KnowledgeTree .
+
+ef:OntologyTaxonomy rdf:type ef:Standard, skos:Concept ;
+    skos:prefLabel "Ontology and Knowledge Taxonomy Policy" ;
+    skos:definition "Adopted standard governing the combined domain ontology (OWL) and knowledge taxonomy (SKOS + ef:kind). Source of truth is 00-vision/01-ontology.ttl. Supersedes the previous vocabulary standard." ;
+    skos:inScheme ef:KnowledgeTree .
+
+ef:McpFirstRouting rdf:type ef:Standard, skos:Concept ;
+    skos:prefLabel "MCP-First Routing" ;
+    skos:definition "Adopted standard requiring agents to route capability and knowledge queries through MCP rather than reinventing integrations or hitting stores directly." ;
+    skos:inScheme ef:KnowledgeTree ;
+    skos:related ef:ToolTransportComponent, ef:EposForgeMCPUsage .
+
+ef:CanonicalDocSources rdf:type ef:Standard, skos:Concept ;
+    skos:prefLabel "Canonical Source Policy" ;
+    skos:definition "Adopted standard establishing AGENTS.md as the canonical entry point and requiring IDE-specific instruction files to be thin pointers." ;
+    skos:inScheme ef:KnowledgeTree .
+
+ef:AdapterLayoutMirror rdf:type ef:Standard, skos:Concept ;
+    skos:prefLabel "Adapter Layout Mirror" ;
+    skos:definition "Adopted standard governing where adopting repos place installed adapters and backlog data so the layout mirrors EposForge." ;
+    skos:inScheme ef:KnowledgeTree .
+
+ef:AgentCodingGuidelines rdf:type ef:Standard, skos:Concept ;
+    skos:prefLabel "Agent Coding Guidelines" ;
+    skos:definition "Adopted standard for agent conduct during an edit task. Session chairs decide which task this is; this standard governs how the implementer works once seated." ;
+    skos:inScheme ef:KnowledgeTree ;
+    skos:related ef:SessionChairs, ef:ImplementerChair .
+
+ef:PairedDetection rdf:type ef:Standard, skos:Concept ;
+    skos:prefLabel "Paired Detection" ;
+    skos:definition "Adopted standard that operationalizes the detection ratchet: one end-to-end, single-command pass/fail check per layer." ;
+    skos:inScheme ef:KnowledgeTree ;
+    skos:related ef:DetectionRatchet .
+
+ef:UngameableGate rdf:type ef:Standard, skos:Concept ;
+    skos:prefLabel "Ungameable Gate" ;
+    skos:definition "Adopted standard: a task may be declared done only when an ungameable integration gate passes, never on agent self-report. Five anti-gaming requirements, including write-scope separation between implementer and gate." ;
+    skos:inScheme ef:KnowledgeTree ;
+    skos:related ef:CrossAgentReviewContract, ef:ReviewerChair .
+
+# Standard 11 is also typed on ef:PairedChangeEnforcement (Concept + Standard).
+# Standard 12 is also typed on ef:CodeSurfaceEncapsulation (Concept + Standard).
+
+ef:ChatEventSchema rdf:type ef:Standard, skos:Concept ;
+    skos:prefLabel "Chat Event Schema" ;
+    skos:definition "Draft standard for the normalized Interaction Capture record (schema_version, provenance, identity, training_eligible, dedupe_key). Records what was said; distinct from Audit & Observability factory events." ;
+    skos:inScheme ef:KnowledgeTree ;
+    skos:related ef:InteractionCaptureComponent .
+
+ef:SessionChairs rdf:type ef:Standard, skos:Concept ;
+    skos:prefLabel "Session Chairs" ;
+    skos:definition "Adopted standard distinguishing three layers adopters must keep separate: component role (factory slot), session chair (named judgment seat that must not blend with another seat), and skill (discoverable procedure a chair may invoke). Governs CLI-agnostic chair installation, the selector in standing instructions, the collision test, and load-then-refuse." ;
+    skos:inScheme ef:KnowledgeTree ;
+    skos:related ef:DevProductComponent, ef:AgentPolicyComponent, ef:RouterComponent, ef:ChairCollisionTest, ef:ImplementerChair, ef:ReviewerChair, ef:ElicitorChair, ef:OperatorChair, ef:CrossAgentReviewContract .
 
 ### Vision Pillar Individuals
 
@@ -1017,3 +1188,6 @@ ef:AuditObservabilityComponent ef:usesAdapterPattern ef:UniversalAdapterPattern 
 ef:SecretsKeyManagementComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
 ef:BacklogComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
 ef:ReleaseRingsComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
+ef:InteractionCaptureComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
+ef:ContentSafetyComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
+ef:BackupResilienceComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
