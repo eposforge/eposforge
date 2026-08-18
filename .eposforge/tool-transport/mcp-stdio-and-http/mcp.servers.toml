@@ -1,17 +1,21 @@
 schema_version = "1"
 # Canonical MCP server declarations for this repo instance.
-# This is the source of truth — DO NOT edit .mcp.json or .vscode/mcp.json directly.
+# This is the source of truth — DO NOT edit native configs (.mcp.json, .vscode/mcp.json, etc.) directly.
+# Each server MUST declare a `scope`:
+#   scope = "project"  # (written to project-level files like .mcp.json, .github/mcp.json, .vscode/mcp.json, .grok/config.toml)
+#   scope = "user"     # (written to user-level files like ~/.claude.json, ~/.copilot/mcp-config.json, ~/.grok/config.toml)
 #
-# After editing this file, regenerate the two JSON config files:
-#   python.eposforge/tool-transport/mcp-stdio-and-http/scripts/sync-mcp.py
+# After editing this file, regenerate the native config files:
+#   python .eposforge/tool-transport/mcp-stdio-and-http/scripts/sync-mcp.py
 #
 # To check for drift:
-#   python.eposforge/tool-transport/mcp-stdio-and-http/scripts/sync-mcp.py --check
+#   python .eposforge/tool-transport/mcp-stdio-and-http/scripts/sync-mcp.py --check
 
 [[server]]
 name         = "cognee"
 transport    = "sse"
 url          = "https://<your-cognee-mcp-host>/sse"
+scope        = "project"
 
 [[server]]
 name         = "github"
@@ -19,6 +23,7 @@ transport    = "stdio"
 command      = "npx"
 args         = ["-y", "@modelcontextprotocol/server-github"]
 uses_secrets = ["github_pat_operator_dev"]
+scope        = "project"
 
 [server.non_secret_env]
 
@@ -26,3 +31,4 @@ uses_secrets = ["github_pat_operator_dev"]
 name      = "ms-docs"
 transport = "http"
 url       = "https://learn.microsoft.com/api/mcp"
+scope     = "user"

@@ -23,6 +23,7 @@ Resolved issues are grouped by month (`## YYYY-MM`).
 
 
 
+
 ## Issue EF-007 — Resolve component-slot kind-class symmetry
 ID: EF-007
 Title: Resolve component-slot kind-class symmetry
@@ -184,6 +185,7 @@ Notes: Mechanism only — cloud resource/project provisioning, deployment rate (
 Resolved: 2026-05-26
 
 ## 2026-06
+
 
 
 
@@ -383,6 +385,7 @@ Resolved: 2026-06-28
 
 
 
+
 ## Issue EF-011 — Spec graph recall conflates EposForge components with adopter-side infrastructure
 ID: EF-011
 Title: Spec graph recall conflates EposForge components with adopter-side infrastructure
@@ -573,6 +576,7 @@ Notes: Follows EF-059 (the decision + standard). This is the mechanical executio
 
 
 
+
 ## Issue EF-074 — Session chairs standard (judgment seats vs skills vs component roles)
 ID: EF-074
 Title: Session chairs standard (judgment seats vs skills vs component roles)
@@ -652,3 +656,16 @@ Tags: agent-policy
 Validation: Cross-checked over 2 rounds, reviewer from a different model vendor against a claude implementer -- r1 `sound-with-caveats`, 1 minor finding plus a REFUTED claim, both about the same defect; r2 **`sound`, 0 findings, 2/2 claims confirmed**, `crosscheck-decide.sh` -> `stop`. The refutation was the valuable part: I had claimed the README stated the re-ask gate as a positive test, while the rule I actually wrote ("no error has phase cross") is VACUOUSLY TRUE of an empty error list -- and because the machine channel deliberately fails open, an empty list is also what a BROKEN channel emits, so a caller following the documented rule could have read a jq failure as permission to re-ask. Fixed in `9bb74c3` by stating the gate positively on both counts (non-empty AND every `phase == "schema"`), binding it to exit 3, and graduating the documented jq expression into `test.sh` as four cases including a hand-made empty list, so it tests the rule rather than a fixture. All three `Verify with:` clauses re-run independently of `test.sh`: the machine form carries `pointer` and `property` as distinct fields and threads correctly into nested paths (`/findings/0/severity` for an enum violation, `/findings/0` + `property: evidence` for a missing required key); and the human output is byte-identical to the pre-change revision `6cfb1af` across all 45 fixture x schema combinations with **stdout+exit and stderr compared separately**, so the added channel did not quietly move a line between streams. The safety property -- that `--json-errors` changes no exit code anywhere -- is asserted across every fixture, and the pre-change copy cannot even accept the flag, so that comparison is against something that genuinely differs. Suite 111 -> 122; the host re-ask suite 18 -> 20 now reads `.errors[].property` instead of grepping `unexpected property`, and fails 2 cases when pointed at a pre-change contract copy. Commits: `bc5dcb4`, `9bb74c3`.
 Verify with: `validate-payload.sh` can emit its schema errors in a machine-readable form that names the offending JSON pointer and, where the error is an unknown or missing property, the property name — as a distinct field rather than embedded in an English sentence; a caller can recover the offending property name from that form without matching on the human-readable `INVALID:` text; and the human-readable output is unchanged for anyone reading it directly, so this adds a channel rather than replacing one.
 Notes: Filed 2026-08-17, deferred out of EF-077's cross-check (round 2) rather than fixed inside it, because a machine-readable error channel is a new capability rather than one of that item's two changes. EF-077 added a bounded re-ask that appends the validator's own error text to a second ask; anything that wants to act on those errors programmatically — the re-ask's own regression suite does — must currently match the literal phrase `unexpected property "X"`. That coupling fails CLOSED, which is why this is not urgent: if the wording is reworded the match stops succeeding, the payload keeps its wrong key, and the suite goes red rather than silently green. The cost is brittleness, not a hole — a routine copy-edit to an error string becomes a test edit in another repo. Keep the strictness when fixing: the machine form must not become a way to accept a payload the human form rejects. Adjacency: EF-077 (the re-ask that consumes these errors), EF-075 (the contract the payloads conform to).
+
+## Issue EF-080 — MCP assignment plane: generate per-CLI native config from a server × scope matrix
+ID: EF-080
+Title: MCP assignment plane: generate per-CLI native config from a server × scope matrix
+Date: 2026-08-18
+Status: resolved
+Resolved: 2026-08-18
+Validation: sync-mcp.py generates configs for target CLIs respecting scope; fixed double-header bug and check mode user skipping bug.
+Effort: L
+Fix surface: eposforge-pattern
+Tags: distribution
+Verify with: the Tool Transport adapter's canonical server list (`mcp.servers.toml` or its successor) can declare each server as `user` (every launch) or `project` (only when the session's working tree is that project); `sync-mcp.py` (or its successor) emits native config for at least Claude Code, Copilot CLI, Grok, and VS Code Copilot Chat; a `project`-scoped server appears only in that project's generated project-level file and is absent from every user-level file; a `user`-scoped server appears in user-level files and is not the only copy of a project-only server; `--check` exits non-zero on drift; adding a Dev Product is an emitter/table row, not a hand-edit of each native file; generated files carry a do-not-edit provenance header; no CLI is required to read another CLI's config format (shared-file redirects are not the design).
+Notes: Filed 2026-08-18. Today's generator already owns one TOML source and writes Claude `.mcp.json` plus VS Code `.vscode/mcp.json` at a single repo root. That is not the plane: Copilot CLI does not read `.vscode/mcp.json` (unsupported `servers` key; it wants user `mcp-config.json` and project `.mcp.json` / `.github/mcp.json`), Grok wants TOML, and a project-only code-structure MCP (the Spec Graph's as-built counterpart — AST/calls/routes, not Living Spec intent) has no scope field, so it either leaks into every session via user-scope registration or is missing from CLIs the generator does not emit. The missing contract is the assignment matrix (which Dev Product, which server, which scope), with native-format copies as the output. Duplication is required: schemas differ (`mcpServers` vs `servers` vs `[mcp_servers.x]`, `stdio` vs `local`, HTTP vs SSE vs a stdio proxy). A symlink or one common file cannot satisfy two dialects. Sibling, not this item: EF-032 (same projection pattern for skills); EF-034 (observes which MCP servers a launch already loaded — does not assign the set); EF-013 (Orchestrator dispatch through Tool Transport). Do not implement this by adopting an instruction-file sync tool; those surfaces overlap only accidentally. Public/pattern only — adopter assignment contents live in the adopter instance.

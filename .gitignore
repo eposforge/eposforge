@@ -5,6 +5,8 @@
 # AI assistant machine-specific configs
 .mcp.json
 .vscode/mcp.json
+.github/mcp.json
+.grok/config.toml
 .claude/settings.local.json
 
 # Age private key — never commit
