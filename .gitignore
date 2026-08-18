@@ -78,6 +78,7 @@ portfolio.md
 .claude/
 .opencode/
 .logs/
+.github/hooks/gastown.json
 __pycache__/
 state.json
 CLAUDE.md
