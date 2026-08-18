@@ -13,15 +13,12 @@ schema_version = "1"
 
 [[server]]
 name         = "cognee"
-transport    = "stdio"
-command      = "uvx"
-args         = ["cognee-mcp"]
+transport    = "sse"
+# Placeholder on purpose — this is a public repo. sync-mcp.py fills the
+# instance URL from ~/.claude.json projects[<repo>].mcpServers.cognee
+# (same assignment Claude already uses) into gitignored native configs.
+url          = "https://<your-cognee-mcp-host>/sse"
 scope        = "project"
-
-[server.non_secret_env]
-COGNEE_MCP_AGENT_SCOPED = "false"
-ENABLE_BACKEND_ACCESS_CONTROL = "false"
-API_URL = "http://127.0.0.1:18000"
 
 [[server]]
 name         = "github"
@@ -33,8 +30,3 @@ scope        = "project"
 
 [server.non_secret_env]
 
-[[server]]
-name      = "ms-docs"
-transport = "http"
-url       = "https://learn.microsoft.com/api/mcp"
-scope     = "project"

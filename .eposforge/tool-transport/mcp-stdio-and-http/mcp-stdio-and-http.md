@@ -49,7 +49,7 @@ Self-consumption and adopter onboarding steps for Cognee MCP are documented in
 
 | Server | Transport | Capability set | Notes |
 |---|---|---|---|
-| `cognee` | `stdio` (loopback) | `graph-query`, `memory` | Local Cognee MCP service; external LLM API calls via env keys |
+| `cognee` | `sse` | `graph-query`, `memory` | Shared Docker MCP (`dkr-cgnee-mcp`). Tracked toml keeps a placeholder; `sync-mcp.py` copies the instance URL from `~/.claude.json` `projects[<repo>].mcpServers.cognee` into gitignored native configs. |
 | `github` | `stdio` | `repo-query` | Requires `GITHUB_PERSONAL_ACCESS_TOKEN` |
 | `microsoft.docs` | `http` | `docs-query` | Public endpoint |
 

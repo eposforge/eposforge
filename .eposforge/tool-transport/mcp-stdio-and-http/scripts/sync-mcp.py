@@ -86,6 +86,66 @@ def _build_runtime_name_map() -> dict[str, str]:
 def _substitute_env_vars(value: str) -> str:
     return value.replace("${REPO_ROOT}", str(_REPO_ROOT).replace("\\", "/"))
 
+def _claude_project_mcp_url(server_name: str) -> str | None:
+    """Instance URL from the existing Claude project assignment (not the vault).
+
+    The host already stores the Cognee SSE endpoint in ~/.claude.json
+    under projects[<repo>].mcpServers. Do not put that hostname in
+    tracked files.
+    """
+    claude = pathlib.Path.home() / ".claude.json"
+    if not claude.is_file():
+        return None
+    try:
+        data = json.loads(claude.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    repo_key = str(_REPO_ROOT)
+    for entry in (
+        data.get("projects", {}).get(repo_key, {}).get("mcpServers", {}).get(server_name),
+        data.get("mcpServers", {}).get(server_name),
+    ):
+        if isinstance(entry, dict):
+            url = entry.get("url")
+            if isinstance(url, str) and url and "<" not in url:
+                return url
+    return None
+
+def _resolve_url(server: dict) -> str:
+    url = server.get("url", "")
+    if "<" not in url:
+        return url
+    resolved = _claude_project_mcp_url(server["name"])
+    return resolved if resolved else url
+
+def _node_extra_ca_certs() -> str | None:
+    """Instance-local reverse-proxy certs verify via the OS trust store but not
+    Node's bundled one; point mcp-remote at the CA file when present."""
+    for candidate in (
+        pathlib.Path("/etc/ssl/certs/caddy-local-root.pem"),
+        pathlib.Path.home() / ".grok" / "certs" / "caddy-local-authority.pem",
+    ):
+        if candidate.is_file():
+            return str(candidate)
+    return None
+
+def _grok_sse_proxy_env() -> dict[str, str]:
+    """Grok merges this table onto its own (possibly llm-capture-wrapped)
+    environment, so PATH/HOME must be explicit or npx can't resolve mcp-remote,
+    and any inherited HTTP(S)_PROXY must be cleared or npm's registry lookup for
+    mcp-remote hangs indefinitely trying to reach it through the MITM proxy."""
+    env: dict[str, str] = {}
+    for var in ("PATH", "HOME"):
+        val = os.environ.get(var)
+        if val:
+            env[var] = val
+    for var in ("HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy"):
+        env[var] = ""
+    ca_cert = _node_extra_ca_certs()
+    if ca_cert:
+        env["NODE_EXTRA_CA_CERTS"] = ca_cert
+    return env
+
 def _build_env_block(server: dict, runtime_map: dict[str, str]) -> dict[str, str]:
     non_secret = server.get("non_secret_env", {})
     result = {}
@@ -120,7 +180,7 @@ def _build_json_entry(server: dict, runtime_map: dict[str, str], format_style: s
     is_copilot_cli = (format_style == "copilot_cli")
     
     if t in ("http", "sse"):
-        entry = {"type": t, "url": server["url"]}
+        entry = {"type": t, "url": _resolve_url(server)}
         if is_copilot_cli:
             entry["tools"] = ["*"]
         return entry
@@ -166,13 +226,13 @@ def _generate_toml(content: str, active: list[dict], all_srv: list[dict], rmap: 
     lines = content.splitlines() if content.strip() else []
     out = []
     skip = False
-    all_names = {s["name"] for s in all_srv}
-    
+
     for line in lines:
         stripped = line.strip()
         if stripped.startswith("[mcp_servers.") and stripped.endswith("]"):
-            name = stripped[13:-1].split(".")[0]
-            skip = (name in all_names)
+            # Drop unconditionally: this whole namespace is generator-owned, so a
+            # server removed entirely from mcp.servers.toml must not survive here.
+            skip = True
         elif stripped.startswith("[") and stripped.endswith("]"):
             skip = False
             
@@ -195,9 +255,21 @@ def _generate_toml(content: str, active: list[dict], all_srv: list[dict], rmap: 
             out.append(f"# {_GENERATOR_NOTE}")
         out.append(f"[mcp_servers.{name}]")
         out.append("enabled = true")
-        if t in ("http", "sse"):
+        if t == "sse":
+            # Grok's native sse transport drives Streamable HTTP against
+            # classic-SSE servers (405s). Force classic SSE via an mcp-remote stdio proxy.
+            out.append('type = "stdio"')
+            out.append('command = "npx"')
+            out.append(f'args = {json.dumps(["-y", "mcp-remote", _resolve_url(s), "--transport", "sse-only"])}')
+            out.append("startup_timeout_sec = 60")
+            proxy_env = _grok_sse_proxy_env()
+            if proxy_env:
+                out.append(f"[mcp_servers.{name}.env]")
+                for k, v in proxy_env.items():
+                    out.append(f'{k} = {json.dumps(v)}')
+        elif t == "http":
             out.append(f'type = "{t}"')
-            out.append(f'url = "{s["url"]}"')
+            out.append(f'url = "{_resolve_url(s)}"')
         elif t == "stdio":
             out.append('type = "stdio"')
             cmd, env = _wrap_with_epos_secrets(s, rmap)
