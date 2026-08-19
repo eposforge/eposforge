@@ -10,27 +10,81 @@ source_of_truth: yes
 ## Status
 
 - adopted: 2026-07-17
+- revised: 2026-08-19 (two duties: consume existing MCP, and expose factory
+  system-of-record verbs as first-class tools)
 - supersedes: none
-- declined-options: embedding integration logic in bash scripts or standalone CLI tools when an MCP abstraction applies.
+- declined-options:
+  - embedding integration logic in bash scripts or standalone CLI tools
+    when an MCP abstraction applies
+  - "MCP is only Spec Graph recall" — declined; recall is one verb.
+    Agent verbs on a factory system of record are Tool Transport tools
+    too
+  - "each MCP server must be its own Living Spec repository before it
+    counts" — declined at pattern level. A thin MCP adapter over an
+    existing API or CLI is valid. An instance MAY raise that bar; the
+    pattern MUST NOT, because the bar is how verbs stay as skills
 - spec-version: n/a
 
 ## Scope
 
-This standard governs how agents and tools access external capabilities, query knowledge graphs, and interact with adopter-provided context within the EposForge architecture. It enforces the Model Context Protocol (MCP) as the primary abstraction for capability routing.
+This standard governs how agents access capabilities: semantic
+retrieval **and** actions against factory systems of record. MCP is
+the default [Tool Transport] protocol. Other transports are acceptable
+when the [Tool Transport] contract is met.
+
+It does not govern skill layout
+([agent-skills](../03-agent-skills/agent-skills.md)) or session chairs
+([session-chairs](../14-session-chairs/session-chairs.md)).
 
 ## Normative requirements
 
-1. **MCP is the Authoritative Source.** If a capability, index, or context is exposed via an MCP server (e.g., the Cognee Spec Graph), agents MUST use the MCP surface to query or interact with it rather than reinventing integration scripts, hitting databases directly, or assuming filesystem structures.
-2. **When to Route to MCP.** When an agent needs to retrieve semantic information, domain knowledge, or contextual rules, it MUST route the query through the configured MCP server. Local filesystem searches (`rg`, `find`) should be reserved for deterministic structural checks, not semantic questions.
-3. **Avoid Hardcoded Abstractions.** Agents MUST NOT build bespoke python scripts to query the graph if an MCP `recall` or equivalent tool is available. The MCP server is the single point of abstraction.
-4. **Graceful Degradation.** If an MCP server is unreachable, agents MUST notify the operator and fall back to file-based tools (where applicable) rather than silently failing or providing ungrounded responses.
+1. **Two duties.** Adopters MUST (a) **consume** MCP servers that
+   already exist rather than re-wrapping them, and (b) **expose**
+   agent verbs on a factory system of record as first-class Tool
+   Transport tools (MCP tools or an equivalent registered function
+   with a schema). Duty (a) alone is not conformance.
+2. **MCP is the Authoritative Source when it exists.** If a
+   capability, index, or context is exposed via an MCP server, agents
+   MUST use that surface rather than reinventing integration scripts,
+   hitting databases directly, or assuming filesystem structures.
+3. **Route semantic retrieval through MCP.** When an agent needs
+   semantic information, domain knowledge, or contextual rules, it
+   MUST route the query through the configured MCP server. Local
+   filesystem searches (`rg`, `find`) are reserved for deterministic
+   structural checks, not semantic questions.
+4. **Factory store verbs are tools.** An agent verb on a factory
+   system of record (the factory source-control host, Spec Graph,
+   Working Memory, and any other factory store the Tool Transport
+   contract names) MUST be a registered transport tool. A skill that
+   only documents shell flags against that store is non-conformant;
+   see [agent-skills](../03-agent-skills/agent-skills.md) requirement 4.
+5. **Thin adapters are valid.** A thin MCP server over an existing
+   HTTP API or CLI FULFILLS_SLOT [Tool Transport] for that capability.
+   The pattern does not require a new product repository per wrapper.
+6. **Avoid Hardcoded Abstractions.** Agents MUST NOT build bespoke
+   scripts to query a graph or store if an MCP tool is available.
+7. **Graceful Degradation.** If an MCP server is unreachable, agents
+   MUST notify the operator and fall back to file-based tools (where
+   applicable) rather than silently failing or providing ungrounded
+   responses.
 
 ## Conformance
 
-- Verify that agent instructions and skills prioritize MCP tool calls for semantic retrieval.
-- Review scripts to ensure no redundant API/DB wrappers are built when an MCP server already covers the surface area.
+- Verify agent instructions name both duties:
+  `rg -n "Two duties|expose" 04-standards/04-mcp/README.md`
+- Verify skills and standing instructions prioritize MCP tool calls
+  for semantic retrieval **and** do not treat a skill-wrapped shell
+  recipe as the factory `git` / `graph-query` / `working-memory`
+  surface.
+- Review scripts for redundant API/DB wrappers when an MCP server
+  already covers the surface.
 
 ## Related
 
 - [../../AGENTS.md](../../AGENTS.md) — points to this standard for MCP-first behavior.
 - [../00-standards-meta/standards-meta.md](../00-standards-meta/standards-meta.md)
+- [agent-skills](../03-agent-skills/agent-skills.md) — designation test.
+- [Tool Transport] — capability contract this standard routes through.
+
+<!-- component-links (generated by check-component-links.py --write-defs) -->
+[Tool Transport]: ../../01-architecture/02-components/tool-transport.md

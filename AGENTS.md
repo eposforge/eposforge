@@ -96,9 +96,10 @@ cross-repo host-stack coordination, and the migration design source
 
 - Ontology + Taxonomy: `00-vision/01-ontology.ttl` is the source combining the domain ontology (dark factory pattern in OWL) and knowledge taxonomy (SKOS + ef:kind for the canonical tree). Editorial workflow is governed by the maintain-ontology skill (and evolving 04-standards policy).
 - MCP-first and canonical source policy: `04-standards/05-canonical-doc-sources/` and `04-standards/04-mcp/`
+- Agent skills create-side contract (skill vs tool vs runbook vs prompt pack): `04-standards/03-agent-skills/agent-skills.md`
 - Naming and documentation hygiene: `04-standards/01-naming-conventions/naming-conventions.md`
 - Refactoring discipline for mirrored research paths: `04-standards/06-research-mirror/research-mirror.md`
-- Session chairs (judgment seats vs skills vs component roles): `04-standards/14-session-chairs/session-chairs.md`
+- Session chairs (judgment seats vs skills vs tools vs component roles): `04-standards/14-session-chairs/session-chairs.md`
 
 ---
 
@@ -193,7 +194,9 @@ Operational conventions retained here:
   dot remains gitignored as a legacy alias.)
 - Skills placement: store canonical skill content under `skills/<name>/`.
   Keep `.github/skills/<name>/SKILL.md` as a thin wrapper that points to the
-  canonical location.
+  canonical location. Create-side contract (including when the artifact
+  must be a Tool Transport tool instead of a skill):
+  `04-standards/03-agent-skills/agent-skills.md`.
 - Syncing to the Spec Graph (Cognee, default): from `.eposforge/spec-graph/cognee/sync`, run `epos-secrets uv run cognee-sync --modified <files>` (use `--added`/`--deleted` as appropriate; see sync/README.md for setup and full-corpus seed).
 - Rebuilding the Spec Graph (GraphRAG, fallback): `python .eposforge/secrets-key-management/bin/epos-secrets -- bash .eposforge/spec-graph/graphrag/scripts/rebuild.sh`
   (secrets are declared in [.eposforge/secrets-key-management/sops-age/secrets.toml](.eposforge/secrets-key-management/sops-age/secrets.toml)).

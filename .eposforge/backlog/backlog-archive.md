@@ -24,6 +24,7 @@ Resolved issues are grouped by month (`## YYYY-MM`).
 
 
 
+
 ## Issue EF-007 — Resolve component-slot kind-class symmetry
 ID: EF-007
 Title: Resolve component-slot kind-class symmetry
@@ -185,6 +186,7 @@ Notes: Mechanism only — cloud resource/project provisioning, deployment rate (
 Resolved: 2026-05-26
 
 ## 2026-06
+
 
 
 
@@ -386,6 +388,7 @@ Resolved: 2026-06-28
 
 
 
+
 ## Issue EF-011 — Spec graph recall conflates EposForge components with adopter-side infrastructure
 ID: EF-011
 Title: Spec graph recall conflates EposForge components with adopter-side infrastructure
@@ -577,6 +580,7 @@ Notes: Follows EF-059 (the decision + standard). This is the mechanical executio
 
 
 
+
 ## Issue EF-074 — Session chairs standard (judgment seats vs skills vs component roles)
 ID: EF-074
 Title: Session chairs standard (judgment seats vs skills vs component roles)
@@ -669,3 +673,16 @@ Fix surface: eposforge-pattern
 Tags: distribution
 Verify with: the Tool Transport adapter's canonical server list (`mcp.servers.toml` or its successor) can declare each server as `user` (every launch) or `project` (only when the session's working tree is that project); `sync-mcp.py` (or its successor) emits native config for at least Claude Code, Copilot CLI, Grok, and VS Code Copilot Chat; a `project`-scoped server appears only in that project's generated project-level file and is absent from every user-level file; a `user`-scoped server appears in user-level files and is not the only copy of a project-only server; `--check` exits non-zero on drift; adding a Dev Product is an emitter/table row, not a hand-edit of each native file; generated files carry a do-not-edit provenance header; no CLI is required to read another CLI's config format (shared-file redirects are not the design).
 Notes: Filed 2026-08-18. Today's generator already owns one TOML source and writes Claude `.mcp.json` plus VS Code `.vscode/mcp.json` at a single repo root. That is not the plane: Copilot CLI does not read `.vscode/mcp.json` (unsupported `servers` key; it wants user `mcp-config.json` and project `.mcp.json` / `.github/mcp.json`), Grok wants TOML, and a project-only code-structure MCP (the Spec Graph's as-built counterpart — AST/calls/routes, not Living Spec intent) has no scope field, so it either leaks into every session via user-scope registration or is missing from CLIs the generator does not emit. The missing contract is the assignment matrix (which Dev Product, which server, which scope), with native-format copies as the output. Duplication is required: schemas differ (`mcpServers` vs `servers` vs `[mcp_servers.x]`, `stdio` vs `local`, HTTP vs SSE vs a stdio proxy). A symlink or one common file cannot satisfy two dialects. Sibling, not this item: EF-032 (same projection pattern for skills); EF-034 (observes which MCP servers a launch already loaded — does not assign the set); EF-013 (Orchestrator dispatch through Tool Transport). Do not implement this by adopting an instruction-file sync tool; those surfaces overlap only accidentally. Public/pattern only — adopter assignment contents live in the adopter instance.
+
+## Issue EF-061 — Ship Agent Skills standard (`04-standards/03-agent-skills/`) as the create-side contract
+ID: EF-061
+Title: Ship Agent Skills standard (`04-standards/03-agent-skills/`) as the create-side contract
+Date: 2026-07-17
+Status: resolved
+Effort: M
+Fix surface: eposforge-pattern
+Theme: agent-policy
+Verify with: `04-standards/03-agent-skills/agent-skills.md` (or package dir with README) exists and is listed from `04-standards/README.md` and `AGENTS.md` §Standards; the standard normatively covers (1) agentskills.io-compatible layout (`skills/<name>/SKILL.md` with `name` + `description` frontmatter); (2) thin `.github/skills/<name>/SKILL.md` wrappers pointing at canonical content; (3) skill vs runbook vs prompt-pack boundary (when to create which); (4) optional eposforge Adapter metadata + required `## Eposforge non-conformances` section for product skills that touch future Adapters; (5) create checklist for agents: SoT + wrapper + install projection notes; (6) consume checklist: which surfaces exist (cross-ref EF-032/EF-063) and that bare `skills/` is content SoT not universal auto-discovery; a recall query about "agent skills standard", "where do skills live", or "skill vs runbook" returns this standard; the graph no longer asserts the standard as adopted-without-files (EF-012 / docs-lint ghost at `04-standards/03-agent-skills/` is resolved by shipping the file).
+Validation: 2026-08-19. Shipped `04-standards/03-agent-skills/agent-skills.md` with the original create-side contract plus a skill-versus-tool designation test (requirement 4). Listed in `04-standards/README.md` and `AGENTS.md`. Companion revisions: `04-mcp` two duties, Tool Transport built-in-shell cheat closed, session chairs four-layer vocabulary, `ef:EposForgeMCPUsage` / `ef:AgentSkills` / `ef:McpFirstRouting` in the ontology. Recall ingest is incremental after merge; the docs-lint ghost path now exists on disk.
+Resolved: 2026-08-19
+Notes: Filed 2026-07-17 to close the create-side gap: install (EF-032) without a normative create contract leaves every product repo inventing skill placement. Renumbered from draft EF-052 after ID collision with Execution Sandbox slot item. Adapter-pattern and summit docs already point at `04-standards/03-agent-skills/` but the path is **missing on disk**. Adjacency: EF-032 (consume), EF-063 / EF-064 (fleet + product lifecycle), Standard 08, AGENTS.md skills-placement bullet. Widened at ship time so a store verb is a Tool Transport tool, not a skill.

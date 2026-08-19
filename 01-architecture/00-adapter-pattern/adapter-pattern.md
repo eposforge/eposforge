@@ -39,8 +39,11 @@ Adapter:
   metered, n/a).
 - `capabilities` — set of capability tags relevant to its component.
 - `invocation_surface` — how the Adapter is invoked (CLI, HTTP, library,
-  process, etc.). Invocation-surface conventions are standardized under
-  `04-standards/04-mcp/` and `04-standards/03-agent-skills/` once adopted.
+  process, MCP tool, etc.). Invocation-surface conventions are
+  standardized under
+  [MCP-first routing](../../04-standards/04-mcp/README.md) and
+  [agent-skills](../../04-standards/03-agent-skills/agent-skills.md).
+  Use the skill-versus-tool designation test before choosing.
 - `status` — `experimental` | `approved` | `deprecated` | `shelved`.
 
 **Status values:**

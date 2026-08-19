@@ -10,7 +10,7 @@ ef:Ontology rdf:type owl:Ontology ;
     rdfs:comment """Domain ontology (OWL) + knowledge taxonomy (SKOS) for the EposForge dark factory pattern.
 The domain model defines the pattern (Component, Adapter, fulfillsSlot, etc.).
 The taxonomy organizes the knowledge tree for navigation.
-Adopter agents accessing via the EposForge Cognee MCP should prefer SKOS relations (inScheme, broader, prefLabel) for knowledge structure queries and start with recall of 'EposForge MCP usage'.
+Adopter agents accessing via the EposForge Cognee MCP should prefer SKOS relations (inScheme, broader, prefLabel) for knowledge structure queries and start with recall of 'EposForge MCP usage'. MCP is recall and action: factory store verbs are Tool Transport tools, not only Spec Graph recall.
 Source of truth: this file. See maintain-ontology skill for editorial workflow and usage patterns.""" .
 
 ### Classes
@@ -244,6 +244,7 @@ ef:KnowledgeTree rdf:type skos:ConceptScheme ;
     skos:definition "The structured taxonomy of EposForge knowledge: pillars and groups for architecture, plus concepts, guidance, and tenets with explicit definitions and relationships. Governed by the ontology and taxonomy policy." ;
     skos:scopeNote """For agents using the EposForge Cognee MCP: prefer SKOS relations (skos:inScheme, skos:broader, skos:prefLabel) when navigating knowledge structure and hierarchy. Use ef:kind and OWL classes/properties when working with the dark factory pattern semantics (e.g. fulfillsSlot, maturesTo).
 Start navigation with recall("EposForge MCP usage") or recall on this scheme's label.
+MCP usage here is Spec Graph recall plus the rule that factory store verbs are Tool Transport tools (not skill-wrapped shell). See ef:EposForgeMCPUsage and ef:AgentSkills.
 See ef:EposForgeMCPUsage for current recommended query patterns and access model.""" ;
     skos:related ef:EposForgeMCPUsage ;
     skos:hasTopConcept ef:EposForgeMCPUsage,
@@ -518,17 +519,19 @@ ef:relationshipEdge rdf:type owl:DatatypeProperty ;
 
 ef:EposForgeMCPUsage rdf:type ef:Guidance, skos:Concept ;
     skos:prefLabel "EposForge MCP usage" ;
-    skos:definition """Adopter agents should start here. The EposForge pattern-scope Spec Graph (not the whole Factory Spec Graph) is exposed via the Cognee MCP (recall, graph queries) over the framework repo corpus.
+    skos:definition """Adopter agents should start here. MCP is recall and action, not recall alone.
+The EposForge pattern-scope Spec Graph (not the whole Factory Spec Graph) is exposed via the Cognee MCP (recall, graph queries) over the framework repo corpus.
 Preferred access: Use SKOS (skos:inScheme on ef:KnowledgeTree, skos:broader/narrower, skos:prefLabel) for knowledge tree navigation and classification.
 Use OWL domain model (ef:kind, ef:fulfillsSlot, ef:maturesTo, etc.) for the dark factory pattern itself.
 For product or adopter implementation questions, query that scope's Scope Spec Graph (or disk) — do not assume pattern-scope recall contains product Living Specs.
+Factory systems of record expose agent verbs as Tool Transport tools (MCP or equivalent). A skill is a procedure over tools; a store verb is not a skill. See ef:AgentSkills, ef:McpFirstRouting, and ef:ToolTransportComponent.
 Always begin with recall("EposForge MCP usage") or recall("EposForge Canonical Knowledge Tree").
 See the scopeNote on ef:KnowledgeTree for current access model. This node is the canonical entry point for proper MCP usage.""" ;
     skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindGuidance ;
     ef:lifecycleStatus ef:StatusAdopted ;
     skos:broader ef:KnowledgeTree ;
-    skos:related ef:ScopeSpecGraph, ef:FactorySpecGraph, ef:SessionChairs, ef:CrossAgentReviewContract, ef:DiscoverBeforeBuild .
+    skos:related ef:ScopeSpecGraph, ef:FactorySpecGraph, ef:SessionChairs, ef:CrossAgentReviewContract, ef:DiscoverBeforeBuild, ef:McpFirstRouting, ef:AgentSkills, ef:ToolTransportComponent .
 
 ef:RandianConceptFormation rdf:type ef:Tenet, skos:Concept ;
     skos:prefLabel "Randian concept formation" ;
@@ -883,12 +886,12 @@ ef:BackupResilienceComponent rdf:type ef:Component, skos:Concept ;
 
 ef:ChairCollisionTest rdf:type ef:Guidance, skos:Concept ;
     skos:prefLabel "chair collision test" ;
-    skos:definition "Mint a new session chair only when two jobs must not blend and that collision can be named in one sentence. A procedure without a collision is a skill. When the current chair collides with the job, the session must refuse and name the file to load — it must not stay and be careful." ;
+    skos:definition "Mint a new session chair only when two jobs must not blend and that collision can be named in one sentence. A procedure without a collision is a skill. A verb on a system of record is a Tool Transport tool, not a skill and not a chair. When the current chair collides with the job, the session must refuse and name the file to load — it must not stay and be careful." ;
     skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindGuidance ;
     ef:lifecycleStatus ef:StatusAdopted ;
     ef:governedBy ef:SessionChairs ;
-    skos:related ef:SessionChairs, ef:ImplementerChair, ef:ReviewerChair, ef:ElicitorChair, ef:OperatorChair .
+    skos:related ef:SessionChairs, ef:ImplementerChair, ef:ReviewerChair, ef:ElicitorChair, ef:OperatorChair, ef:AgentSkills .
 
 ef:ImplementerChair rdf:type ef:SessionChair, skos:Concept ;
     skos:prefLabel "implementer" ;
@@ -1054,9 +1057,16 @@ ef:OntologyTaxonomy rdf:type ef:Standard, skos:Concept ;
 
 ef:McpFirstRouting rdf:type ef:Standard, skos:Concept ;
     skos:prefLabel "MCP-First Routing" ;
-    skos:definition "Adopted standard requiring agents to route capability and knowledge queries through MCP rather than reinventing integrations or hitting stores directly." ;
+    skos:definition "Adopted standard with two duties: consume MCP servers that already exist, and expose agent verbs on a factory system of record as first-class Tool Transport tools. Recall is one verb; a skill-wrapped shell recipe does not fulfill factory git, graph-query, or working-memory. A thin MCP adapter over an existing API or CLI is valid." ;
     skos:inScheme ef:KnowledgeTree ;
-    skos:related ef:ToolTransportComponent, ef:EposForgeMCPUsage .
+    skos:related ef:ToolTransportComponent, ef:EposForgeMCPUsage, ef:AgentSkills .
+
+ef:AgentSkills rdf:type ef:Standard, skos:Concept ;
+    skos:prefLabel "Agent Skills" ;
+    skos:altLabel "skill vs tool", "03-agent-skills" ;
+    skos:definition "Adopted create-side contract for agent skills: agentskills.io layout under skills/<name>/SKILL.md, thin .github/skills wrappers, and a designation test (tool vs skill vs runbook vs prompt pack). A skill whose body is only a store verb is non-conformant unless it wraps an existing Tool Transport tool with chair, order, dry-run, or a human gate." ;
+    skos:inScheme ef:KnowledgeTree ;
+    skos:related ef:SessionChairs, ef:McpFirstRouting, ef:ToolTransportComponent, ef:EposForgeMCPUsage .
 
 ef:CanonicalDocSources rdf:type ef:Standard, skos:Concept ;
     skos:prefLabel "Canonical Source Policy" ;
@@ -1097,9 +1107,9 @@ ef:ChatEventSchema rdf:type ef:Standard, skos:Concept ;
 
 ef:SessionChairs rdf:type ef:Standard, skos:Concept ;
     skos:prefLabel "Session Chairs" ;
-    skos:definition "Adopted standard distinguishing three layers adopters must keep separate: component role (factory slot), session chair (named judgment seat that must not blend with another seat), and skill (discoverable procedure a chair may invoke). Governs CLI-agnostic chair installation, the selector in standing instructions, the collision test, and load-then-refuse." ;
+    skos:definition "Adopted standard distinguishing four layers adopters must keep separate: component role (factory slot), session chair (named judgment seat that must not blend with another seat), skill (discoverable procedure a chair may invoke), and tool (named Tool Transport function against a capability or system of record). Governs CLI-agnostic chair installation, the selector in standing instructions, the collision test, and load-then-refuse. A store verb is a tool, not a skill or a chair." ;
     skos:inScheme ef:KnowledgeTree ;
-    skos:related ef:DevProductComponent, ef:AgentPolicyComponent, ef:RouterComponent, ef:ChairCollisionTest, ef:ImplementerChair, ef:ReviewerChair, ef:ElicitorChair, ef:OperatorChair, ef:CrossAgentReviewContract .
+    skos:related ef:DevProductComponent, ef:AgentPolicyComponent, ef:RouterComponent, ef:ChairCollisionTest, ef:ImplementerChair, ef:ReviewerChair, ef:ElicitorChair, ef:OperatorChair, ef:CrossAgentReviewContract, ef:AgentSkills, ef:ToolTransportComponent, ef:McpFirstRouting .
 
 ### Vision Pillar Individuals
 
