@@ -1,15 +1,17 @@
-## Agent Workflows
-
-### `/modifyef` — Reconcile and apply design changes
-Use this workflow when the user provides a description of additions, deletions, or edits to the EposForge architecture.
-
-3. **Implement (Graph-Influence Checklist):**
-  *   **Adapter status enforcement:** Agents MUST NOT select or invoke adapters whose status is `shelved`. Only adapters with status `experimental`, `approved`, or `deprecated` may be considered for use. Adapters marked `shelved` are retained for possible future work but are not eligible for selection or invocation by agents.
 # Agent Instructions — EposForge
 
 Shared instructions for AI coding assistants (GitHub Copilot, Claude Code,
 and others) working in this repo. `.github/copilot-instructions.md`,
 `CLAUDE.md`, and `GEMINI.md` are thin pointers to this file.
+
+## How to talk in chat
+
+Write for a human who has not read this repo. Use ordinary English.
+Do not lead with backlog IDs or internal shorthand. If a tracked item
+must be named, say what it is in words first, then the ID in parentheses.
+Do not carry names from instruction files into chat unless the operator
+used them first. IDs belong in files, commits, and review records — not
+as the conversation vocabulary.
 
 ---
 
@@ -52,6 +54,12 @@ The bias is toward caution over speed; for trivial edits, use judgment.
    for a rubric must sit external to the implementing agent. For multi-step work,
    state a brief plan with a verify step per item, and loop until verified.
 5. **Public/private boundary hygiene.** This public repo and all its docs, plans, standards, comments, and backlog items MUST NEVER name a specific adopter repository, its short identifier, or internal paths. Use only generic language ("the primary adopter", "an adopting repository", "the Adopter Platform Spec"). Specific names are leaks. Run the sensitive-literals check (and any adopter-name check) before proposing changes. When the task touches adoption, layout, or examples, first recall the boundary rules.
+6. **Operator-facing language.** Chat in ordinary English. Do not lead
+   with backlog IDs or internal shorthand. If a tracked item must be named,
+   say what it is in words first, then the ID in parentheses. Do not carry
+   names from instruction files into chat unless the operator used them
+   first. IDs belong in files, commits, and review records — not as the
+   conversation vocabulary.
 
 ---
 

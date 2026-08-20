@@ -10,6 +10,8 @@ source_of_truth: yes
 ## Status
 
 - adopted: 2026-06-12
+- revised: 2026-08-20 (operator-facing language: chat in ordinary English;
+  backlog IDs belong in files and records, not as conversation vocabulary)
 - supersedes: none
 - declined-options: per-tool installation (Claude Code plugin or per-project
   `CLAUDE.md` copies) — declined because tool-specific instruction files in
@@ -19,10 +21,10 @@ source_of_truth: yes
 
 ## Scope
 
-This standard adopts four behavioral principles for AI coding agents working
+This standard adopts behavioral principles for AI coding agents working
 in EposForge and in adopting repos that follow the `AGENTS.md`
-single-source-of-truth pattern. It governs agent conduct during any edit
-task. It does not govern document formats
+single-source-of-truth pattern. It governs agent conduct during edit
+tasks and in operator-facing chat. It does not govern document formats
 ([naming-conventions](../01-naming-conventions/naming-conventions.md)) or
 backlog mechanics.
 
@@ -56,7 +58,15 @@ coding pitfalls and the MIT-licensed distillation at
    the implementing agent. For multi-step work, state a brief plan with a
    verify step per item.
 5. **Public/private boundary hygiene (no leaking adopter identifiers).** Agents MUST NEVER name, reference by identifier, or include paths for any specific adopter repository (including the primary Adopter Platform Spec or examples such as any private org repo) inside this public repository's docs, plans, standards, comments, examples, backlog items, or code. Always use only abstract/generic language: "the primary adopter", "an adopting repository", "the Adopter Platform Spec", etc. Specific names and operational details belong exclusively in the adopter's private trees. Before editing any document that discusses adoption or layout, recall the current public/private rules via the appropriate tool. Violations must be treated as sensitive-literal errors.
-6. `AGENTS.md` MUST carry a condensed statement of principles 1–5 so they
+6. **Operator-facing language.** Agents MUST write chat replies for a human
+   who has not read the repository. Use ordinary English. Do not lead with
+   backlog IDs, internal shorthand, or terms copied from instruction files
+   the operator did not use. If a tracked item must be named, say what it
+   is in words first, then the ID in parentheses. IDs and internal names
+   belong in files, commits, and review records — not as the conversation
+   vocabulary. This rule governs chat. It does not forbid IDs in files,
+   commit messages, or review records.
+7. `AGENTS.md` MUST carry a condensed statement of principles 1–6 so they
    are in loaded context every session; this file remains the source of
    truth.
 
@@ -67,9 +77,12 @@ obvious one-liners), proportional judgment applies.
 
 - Verify `AGENTS.md` carries the condensed section:
   `rg "Agent coding guidelines" AGENTS.md`
+- Verify operator-facing language is in loaded context:
+  `rg "ordinary English" AGENTS.md`
 - Review signal in pull requests: diffs contain only requested changes;
   clarifying questions appear before implementation, not after mistakes;
-  no drive-by refactoring or "improvements".
+  no drive-by refactoring or "improvements"; chat replies in the PR
+  discussion use ordinary English rather than leading with backlog IDs.
 
 ## Related
 
