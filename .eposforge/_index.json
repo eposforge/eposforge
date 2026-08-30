@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-30T22:04:16Z",
+  "generated_at": "2026-08-30T00:13:36Z",
   "adapters": [
     {
       "component": "agent-policy",
@@ -213,6 +213,23 @@
         "workflow-runs"
       ],
       "invocation_surface": "github.com + GitHub Actions"
+    },
+    {
+      "component": "source-control-ci",
+      "adapter": "posix-standing-runner",
+      "spec": ".eposforge/source-control-ci/posix-standing-runner/posix-standing-runner.md",
+      "scripts_dir": ".eposforge/source-control-ci/posix-standing-runner/scripts",
+      "name": "posix-standing-runner",
+      "status": "experimental",
+      "privacy_posture": "local",
+      "cost_hint": "free",
+      "capabilities": [
+        "standing-suite",
+        "clone-local",
+        "held-out",
+        "gate-write-scope"
+      ],
+      "invocation_surface": "CLI scripts"
     },
     {
       "component": "spec-graph",

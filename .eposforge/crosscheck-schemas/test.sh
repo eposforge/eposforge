@@ -296,6 +296,35 @@ expect_exit 0 "a judgment claim needs no check" \
 ./crosscheck-claim trap "the linter only ever acts on the first roots entry" >/dev/null
 expect_exit 0 "the accumulated payload validates" ./validate-payload.sh handoff "$H"
 
+echo "== standing claims must be repo-local standing-suite commands"
+# Own session: successful adds must not pollute the payload later tests count.
+STAND_SESS="$CROSSCHECK_SESSION"
+export CROSSCHECK_SESSION="test-standing"
+./crosscheck-claim open --repo "$R" --policy-key example_app --clearance medium \
+  --base "$BASE" --agent alpha --provider cli-a --model model-a-1 >/dev/null
+mkdir -p "$R/.eposforge" "$R/scripts"
+printf '%s\n' '#!/usr/bin/env bash' 'exit 0' > "$R/scripts/standing-check.sh"
+chmod +x "$R/scripts/standing-check.sh"
+printf '%s\n' "scripts/standing-check.sh" > "$R/.eposforge/standing-suite"
+expect_exit 0 "standing claim for a listed script is accepted" \
+  ./crosscheck-claim add --standing --statement "lint is standing" \
+    --evidence-cmd 'scripts/standing-check.sh' --check exit0 --files scripts/standing-check.sh --cwd "$R"
+expect_exit 1 "standing claim for a PATH binary is refused" \
+  ./crosscheck-claim add --standing --statement "pytest" \
+    --evidence-cmd 'pytest' --check exit0 --cwd "$R"
+expect_exit 1 "standing claim for an absolute path is refused" \
+  ./crosscheck-claim add --standing --statement "abs" \
+    --evidence-cmd '/tmp/x.sh' --check exit0 --cwd "$R"
+printf '%s\n' '#!/usr/bin/env bash' 'true' > "$R/.eposforge/standing-suite"
+chmod +x "$R/.eposforge/standing-suite"
+expect_exit 0 "executable suite accepts the suite path" \
+  ./crosscheck-claim add --standing --statement "suite itself" \
+    --evidence-cmd './.eposforge/standing-suite' --check exit0 --cwd "$R"
+expect_exit 1 "executable suite refuses a listed-looking extra script" \
+  ./crosscheck-claim add --standing --statement "not listed when executable" \
+    --evidence-cmd 'scripts/standing-check.sh' --check exit0 --cwd "$R"
+export CROSSCHECK_SESSION="$STAND_SESS"
+
 echo "== scope integrity: a pull can invalidate a handoff nobody rewrote"
 expect_exit 0 "freshly opened scope verifies clean" \
   ./crosscheck-verify-scope.sh --handoff "$H" --write --quiet

@@ -20,7 +20,7 @@
 #                          [--agent A] [--provider P] [--model M] [--session S] [--round N]
 #   crosscheck-claim scope --repo <path> [--policy-key K] [--clearance C] [--base SHA]
 #   crosscheck-claim refresh                     # head_sha := HEAD, base_sha untouched
-#   crosscheck-claim add   --statement TEXT [--class mechanical|judgment]
+#   crosscheck-claim add   --statement TEXT [--class mechanical|judgment] [--standing]
 #                          [--evidence-cmd CMD] [--check TYPE[:VALUE]] [--expected TEXT]
 #                          [--files a,b,c] [--cwd PATH]
 #   crosscheck-claim trap  TEXT
@@ -100,6 +100,7 @@ payload_path() { printf '%s/%s/round-%s/handoff.json' "$ROOT" "$SESSION" "$ROUND
 A_REPO=""; A_KEY=""; A_CLEAR=""; A_BASE=""
 A_AGENT=""; A_PROVIDER=""; A_MODEL=""
 A_STATEMENT=""; A_CLASS=""; A_EVIDENCE=""; A_CHECK=""; A_EXPECTED=""; A_FILES=""; A_CWD=""
+A_STANDING=0
 A_ITEM=""; A_JUDGMENT=""; A_RATIONALE=""; A_JQ=""
 POSITIONAL=()
 while [[ $# -gt 0 ]]; do
@@ -120,6 +121,7 @@ while [[ $# -gt 0 ]]; do
     --expected)     A_EXPECTED="$2"; shift 2 ;;
     --files)        A_FILES="$2"; shift 2 ;;
     --cwd)          A_CWD="$2"; shift 2 ;;
+    --standing)     A_STANDING=1; shift ;;
     --item)         A_ITEM="$2"; shift 2 ;;
     --judgment)     A_JUDGMENT="$2"; shift 2 ;;
     --rationale)    A_RATIONALE="$2"; shift 2 ;;
@@ -505,10 +507,39 @@ add)
   [[ -n "$A_STATEMENT" ]] || die "add needs --statement"
   # Before the probe, not after: resolve_claim_cwd reads the payload's scope.
   ensure_payload
+  if (( A_STANDING )); then
+    A_CLASS="mechanical"
+  fi
   if [[ -z "$A_CLASS" ]]; then
     if [[ -n "$A_CHECK" ]]; then A_CLASS="mechanical"; else A_CLASS="judgment"; fi
   fi
   case "$A_CLASS" in mechanical|judgment) ;; *) die "--class must be mechanical or judgment" ;; esac
+
+  standing_accepts() {
+    local repo="$1" cmd="$2"
+    local suite="$repo/.eposforge/standing-suite"
+    [[ -e "$suite" ]] || return 1
+    local tok
+    tok="$(awk '{print $1; exit}' <<<"$cmd")"
+    tok="${tok#./}"
+    case "$tok" in ""|/*|*..*|~*) return 1 ;; esac
+    [[ "$tok" == ".eposforge/standing-suite" ]] && return 0
+    [[ -f "$repo/$tok" && -x "$repo/$tok" ]] || return 1
+    local resolved root
+    resolved="$(cd "$repo" && realpath -m "$tok")"
+    root="$(cd "$repo" && realpath -m .)"
+    [[ "$resolved" == "$root"/* ]] || return 1
+    if [[ -x "$suite" && ! -d "$suite" ]]; then
+      return 1
+    fi
+    local line
+    while IFS= read -r line || [[ -n "$line" ]]; do
+      [[ -z "$line" || "$line" == \#* ]] && continue
+      line="${line#./}"
+      [[ "$line" == "$tok" ]] && return 0
+    done < "$suite"
+    return 1
+  }
 
   ctype=""; cval=""
   if [[ -n "$A_CHECK" ]]; then
@@ -531,6 +562,11 @@ add)
     probe_cwd="$(resolve_claim_cwd "$(payload_path)" "$A_CWD" "$A_FILES" "" || true)"
     if [[ -z "$probe_cwd" ]]; then
       no "cannot tell which scope repo to run this in — pass --cwd <repo> or --files that exist in exactly one of them (refusing to probe in scope[0])"
+    fi
+    if (( A_STANDING )); then
+      if ! standing_accepts "$probe_cwd" "$A_EVIDENCE"; then
+        no "standing claim evidence_cmd is not a repo-local script the standing-suite can execute: $A_EVIDENCE"
+      fi
     fi
     # Probe where the claim will later run, but do NOT bake the resolved
     # directory into the claim when the caller only passed --files. Writing it

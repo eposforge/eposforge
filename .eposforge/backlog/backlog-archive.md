@@ -25,6 +25,7 @@ Resolved issues are grouped by month (`## YYYY-MM`).
 
 
 
+
 ## Issue EF-007 — Resolve component-slot kind-class symmetry
 ID: EF-007
 Title: Resolve component-slot kind-class symmetry
@@ -186,6 +187,7 @@ Notes: Mechanism only — cloud resource/project provisioning, deployment rate (
 Resolved: 2026-05-26
 
 ## 2026-06
+
 
 
 
@@ -389,6 +391,7 @@ Resolved: 2026-06-28
 
 
 
+
 ## Issue EF-011 — Spec graph recall conflates EposForge components with adopter-side infrastructure
 ID: EF-011
 Title: Spec graph recall conflates EposForge components with adopter-side infrastructure
@@ -581,6 +584,7 @@ Notes: Follows EF-059 (the decision + standard). This is the mechanical executio
 
 
 
+
 ## Issue EF-074 — Session chairs standard (judgment seats vs skills vs component roles)
 ID: EF-074
 Title: Session chairs standard (judgment seats vs skills vs component roles)
@@ -686,3 +690,16 @@ Verify with: `04-standards/03-agent-skills/agent-skills.md` (or package dir with
 Validation: 2026-08-19. Shipped `04-standards/03-agent-skills/agent-skills.md` with the original create-side contract plus a skill-versus-tool designation test (requirement 4). Listed in `04-standards/README.md` and `AGENTS.md`. Companion revisions: `04-mcp` two duties, Tool Transport built-in-shell cheat closed, session chairs four-layer vocabulary, `ef:EposForgeMCPUsage` / `ef:AgentSkills` / `ef:McpFirstRouting` in the ontology. Recall ingest is incremental after merge; the docs-lint ghost path now exists on disk.
 Resolved: 2026-08-19
 Notes: Filed 2026-07-17 to close the create-side gap: install (EF-032) without a normative create contract leaves every product repo inventing skill placement. Renumbered from draft EF-052 after ID collision with Execution Sandbox slot item. Adapter-pattern and summit docs already point at `04-standards/03-agent-skills/` but the path is **missing on disk**. Adjacency: EF-032 (consume), EF-063 / EF-064 (fleet + product lifecycle), Standard 08, AGENTS.md skills-placement bullet. Widened at ship time so a store verb is a Tool Transport tool, not a skill.
+
+## Issue EF-082 — Test-runner slot: contract, research catalog, and a reference — not a mandated vendor
+ID: EF-082
+Title: Test-runner slot: contract, research catalog, and a reference — not a mandated vendor
+Date: 2026-08-28
+Status: resolved
+Resolved: 2026-08-30
+Effort: L
+Fix surface: eposforge-pattern
+Tags: source-control
+Verify with: a `source_of_truth: yes` contract exists (new component file under `01-architecture/02-components/` or a named runner contract owned by Source Control + CI) that any adopter runner must satisfy: one command can prove a standing property; the same command runs in an implementer tree and in an isolated orchestrator clone; coverage includes agent-config, platform, and product repos; tests the implementing agent does not own; spec-derived not impl-derived; held-out assertions are possible; a few checks stay hidden so the builder cannot overfit; already-shipped behavior gets a standing test when a bug is found, not as a corpus backfill; `03-research/` has a candidate catalog scoring existing runners against those properties; one worked reference exists and is tagged example-not-mandate; no document requires a named vendor (pytest, Jest, etc.); a recall about "test runner", "how do I run ungameable gates", or "which test harness should an adopter pick" returns this contract and catalog, not "CI will handle it" with no runner properties.
+Notes: Filed 2026-08-28. Operator-confirmed: EposForge should guide every implementer to *have* a runner and should research which runners can actually host the ungameable-gate rules; it must not mandate a vendor; tests for old features are added when a bug is found, not by backfilling the universe. Agent-proposed: whether this is a new component number or a named sub-contract of Source Control + CI is decided at design time (EF-052 is the slot+catalog precedent; folding testing into "CI will handle it" is the thin guidance this item replaces). EF-051 / the ungameable-gate standard remain the *rules* a runner must enforce — this item is the missing *slot* those rules run in. Kernel one-command detection (EF-053) is a required property of the runner, not a second harness. The cross-agent review contract (EF-075) is also not the runner: mechanical claims are review-time assertions; standing properties have to live in the tree and run with no review payload. Adjacency: EF-051 (gate rules), EF-053 (one-command detection), EF-075 (review contract), EF-052 (ship the empty slot + candidate catalog). Out of scope: eager backfill of already-shipped features; adopter instance picks.
+Validation: Named sub-contract (not a roster component) at `01-architecture/02-components/source-control-ci-test-runner.md`; Source Control + CI contract and Standard 10 point at it; research catalog `03-research/01-architecture/02-components/source-control-ci/test-runners.md` scores existing runners and forbids a vendor mandate; POSIX standing-suite dispatcher installed as example-not-mandate; `test-posix-standing-runner.sh` 18 passed; `crosscheck-schemas/test.sh` 127 passed including `--standing`; ontology `ef:TestRunner`; recall "which test harness should an adopter pick" returns sub-contract-not-component. Making the GitHub workflow a required status check on `main` is an operator UI action (same class as EF-045).

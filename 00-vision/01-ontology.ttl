@@ -1094,7 +1094,18 @@ ef:UngameableGate rdf:type ef:Standard, skos:Concept ;
     skos:prefLabel "Ungameable Gate" ;
     skos:definition "Adopted standard: a task may be declared done only when an ungameable integration gate passes, never on agent self-report. Five anti-gaming requirements, including write-scope separation between implementer and gate." ;
     skos:inScheme ef:KnowledgeTree ;
-    skos:related ef:CrossAgentReviewContract, ef:ReviewerChair .
+    skos:related ef:CrossAgentReviewContract, ef:ReviewerChair, ef:TestRunner .
+
+ef:TestRunner rdf:type ef:Concept, skos:Concept ;
+    skos:prefLabel "test runner" ;
+    skos:altLabel "standing runner", "how do I run ungameable gates", "which test harness should an adopter pick", "test harness" ;
+    skos:definition "Named sub-contract of Source Control + CI, not a component slot: one command proves a standing property in an implementer tree and in an isolated orchestrator clone; the same command can cover agent-config, platform, and product repositories; the implementing agent does not own the gate; held-out assertions are possible; already-shipped behavior is tested when a bug is found, not as a corpus backfill. Kernel one-command detection is a required property of this runner, not a second harness. The cross-agent review contract is not the runner. No named vendor is mandated." ;
+    ef:adoptedDefinition "The slot the ungameable-gate rules run in — one clone-local command, not a mandated vendor, and not a new component." ;
+    ef:variants "standing-suite", "posix standing runner", "example-not-mandate" ;
+    ef:kind ef:NodeKindConcept ;
+    ef:lifecycleStatus ef:StatusDraft ;
+    skos:broader ef:SourceControlCIComponent ;
+    skos:related ef:SourceControlCIComponent, ef:Kernel, ef:UngameableGate, ef:DetectionRatchet, ef:CrossAgentReviewContract .
 
 # Standard 11 is also typed on ef:PairedChangeEnforcement (Concept + Standard).
 # Standard 12 is also typed on ef:CodeSurfaceEncapsulation (Concept + Standard).

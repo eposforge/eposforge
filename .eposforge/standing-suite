@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Standing properties for this tree. Clone-local: run from any checkout.
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+"$ROOT/.eposforge/source-control-ci/posix-standing-runner/scripts/test-posix-standing-runner.sh"
+bash "$ROOT/.eposforge/source-control-ci/github-and-actions/scripts/check-installed-scripts-layout.sh"
+python3 "$ROOT/.eposforge/source-control-ci/github-and-actions/scripts/check-component-links.py" --check

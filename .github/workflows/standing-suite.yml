@@ -1,0 +1,27 @@
+name: Standing suite
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  standing:
+    name: Standing properties
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history for gate range)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run the standing suite
+        run: ./.eposforge/standing-suite
+      - name: Refuse a mixed gate+code change
+        run: .eposforge/source-control-ci/posix-standing-runner/scripts/run-standing.sh --check-gate
