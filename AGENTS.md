@@ -63,6 +63,28 @@ The bias is toward caution over speed; for trivial edits, use judgment.
 
 ---
 
+## Declaring work done
+
+Source of truth:
+[04-standards/10-ungameable-gate/ungameable-gate.md](04-standards/10-ungameable-gate/ungameable-gate.md)
+§Declaring Done When There Is No Gate. Done means the gate passed — never the
+agent's own say-so. Where the gate exists, that rule already decides it. Where
+it does not, these three apply:
+
+- **A done claim carries its evidence.** Name the command, have run it in this
+  task, show the result. No command behind it, no done claim — say what you did
+  and call it a progress report.
+- **No gate, no done.** If nothing runnable covers the behavior you changed,
+  do not declare the task done. Say what you changed and what you could not
+  verify. Writing the missing check is part of the task, not follow-up work.
+- **A proxy is not the outcome.** A green lint, a clean build, a commit message
+  naming the item, a container reporting healthy, a check only ever run on
+  well-formed input, a test written from the code instead of the spec, or your
+  own re-read of your own diff — none of these is evidence the work is done.
+  They pass while the outcome fails; that is the whole failure mode.
+
+---
+
 ## Active execution plan (instance)
 
 When executing backlog items for the in-flight **inference cost-control +
