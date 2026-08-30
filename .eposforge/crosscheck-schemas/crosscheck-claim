@@ -146,7 +146,7 @@ finish() {
   if [[ -n "${CROSSCHECK_CLEARANCE_ORDER:-}" ]]; then
     jq --arg order "$CROSSCHECK_CLEARANCE_ORDER" '
       ($order | split(",") | map(gsub("^\\s+|\\s+$"; ""))) as $ord
-      | ([ .scope[].clearance ] | map({c: ., r: ($ord | index(.) // -1)}) | max_by(.r)) as $top
+      | ([ .scope[].clearance ] | map(. as $c | {c: $c, r: ($ord | index($c) // -1)}) | max_by(.r)) as $top
       | if $top == null or $top.r < 0 then . else .clearance_required = $top.c end
     ' "$tmp" > "$tmp.c" && mv "$tmp.c" "$tmp"
   elif [[ "$(jq -r '[.scope[].clearance] | unique | length' "$tmp")" -gt 1 ]]; then
