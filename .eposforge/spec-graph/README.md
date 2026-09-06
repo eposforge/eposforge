@@ -11,7 +11,7 @@ active path, the other is a shelved opt-in fallback.
 
 | Adapter | Status | Where | Backend | Notes |
 |---|---|---|---|---|
-| `cognee-ontology-preprocessor` | **active (default)** | [`./cognee/`](./cognee/) | Cognee's embedded Kuzu graph + LanceDB vector store inside `dkr-cgnee-api` | Ontology-grounded extraction; per-file incremental sync via `cognee-sync` |
+| `cognee-ontology-preprocessor` | **active (default)** | [`./cognee/`](./cognee/) | Cognee's embedded Ladybug graph (Kuzu fork) + LanceDB vector store inside `dkr-cgnee-api` | Ontology-grounded extraction; per-file incremental sync via `cognee-sync` |
 | `graphrag` | shelved fallback | [`./graphrag/`](./graphrag/) | Microsoft GraphRAG → separate Neo4j Community Edition | Full nuke-and-reproject only; not on the active path |
 
 Component slot contract: [`../../../01-architecture/02-components/spec-graph.md`](../../../01-architecture/02-components/spec-graph.md).

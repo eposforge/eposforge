@@ -27,10 +27,10 @@ source_of_truth: yes
 > Differences from the description below:
 >
 > - **Storage backend:** cognee no longer writes to Neo4j. As of cognee
->   1.0.4+, the KG is stored entirely in cognee's embedded Kuzu graph
->   (`cognee_graph_ladybug`) + embedded LanceDB vector store. The
->   `NEO4J_*` env vars and Cypher query surface described here apply
->   only to the shelved GraphRAG fallback path.
+>   1.0.4+, the KG is stored entirely in cognee's embedded Ladybug graph
+>   (the Kuzu fork, file `cognee_graph_ladybug`) + embedded LanceDB vector
+>   store. The `NEO4J_*` env vars and Cypher query surface described here
+>   apply only to the shelved GraphRAG fallback path.
 > - **Deployment shape:** the active path is now a **two-container**
 >   setup — `dkr-cgnee-api` (owns the KG) and `dkr-cgnee-mcp` (stateless
 >   proxy via `API_URL=http://dkr-cgnee-api:8000`) — not a `uvx

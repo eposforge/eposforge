@@ -193,7 +193,7 @@ rm -f.eposforge/spec-graph/cognee/sync/.cognee-state.db
 | Field | Value |
 |---|---|
 | `query_languages` | cognee HTTP API (`/api/v1/recall`, `/api/v1/search`); natural language via cognee MCP |
-| `projection_format` | graph nodes/edges in embedded Kuzu + embeddings in embedded LanceDB |
+| `projection_format` | graph nodes/edges in embedded Ladybug/Kuzu-fork + embeddings in embedded LanceDB |
 | `rebuild_target` | per-file via cognee-sync (incremental); bulk cognify over the whole dataset typically completes in a few minutes |
 | `incremental_update` | true — `cognee-sync` provides git-diff-driven incremental updates (Phases 0–5 complete) |
 
@@ -205,7 +205,7 @@ rm -f.eposforge/spec-graph/cognee/sync/.cognee-state.db
 | `ontology_file` | `00-vision/01-ontology.ttl` |
 | `llm_provider` | `anthropic` → `claude-haiku-4-5-20251001` (pinned in `.env` on the cognee compose project) |
 | `embedding_provider` | cognee default (OpenAI `text-embedding-3-small` via `EMBEDDING_API_KEY`; runs on `dkr-cgnee-api`) |
-| `graph_database` | embedded Kuzu (`cognee_graph_ladybug`) + embedded LanceDB (`cognee.lancedb/`), both on the `dkr-cgnee-api` volume at `./data/cognee_system/databases/` |
+| `graph_database` | embedded Ladybug/Kuzu-fork (`cognee_graph_ladybug`) + embedded LanceDB (`cognee.lancedb/`), both on the `dkr-cgnee-api` volume at `./data/cognee_system/databases/` |
 | `cognee_root` | `dkr-cgnee-api`'s `/app/cognee/.cognee_system/` (host-mounted at `/mnt/raid-storage/docker-volume-mounts/cognee/data/cognee_system/`) |
 
 ---
