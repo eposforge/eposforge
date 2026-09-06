@@ -101,6 +101,16 @@ its `scope[]`. A payload that never mentions the tree you are working in is not
 yours, whatever the pointer says. Getting this wrong is silent: the claim is
 written, to somebody else's payload.
 
+The per-repo pointer is last-writer-wins, which is the right answer for one
+agent at a time and the wrong one for several. An adopter running concurrent
+agent sessions should stamp `owner_session` at `open` (`--owner-session`, or
+`CROSSCHECK_OWNER_SESSION`) with whatever identifies the session, and refuse a
+pointer whose payload names a different owner. Note that this is a separate
+question from `session`, which names the *payload*: a payload opened under a
+chosen name still belongs to exactly one running agent. Left unset the field is
+`null` and every tool behaves as it did before it existed — an adopter running
+one session at a time can ignore it.
+
 ## What is computed, and what is left to judgment
 
 The tooling exists to stop spending model attention on arithmetic — not to
@@ -319,6 +329,7 @@ shape and vocabulary, and the shell adds only the rules a schema cannot express.
 |---|---|---|
 | `CROSSCHECK_DIR` | `~/.crosscheck` | payload root; keep it outside every repo |
 | `CROSSCHECK_SESSION` | generated | session id; adopters capturing wire traffic should reuse theirs |
+| `CROSSCHECK_OWNER_SESSION` | unset | the agent session that owns the payload, stamped at `open`. Unset means unknown, which never reads as "mine" |
 | `CROSSCHECK_ROUND` | `1` | round within the loop |
 | `CROSSCHECK_HANDOFF_TOKEN_CAP` | `8000` | outbound ceiling; a handoff may not declare a larger cap |
 | `CROSSCHECK_FINDINGS_TOKEN_CAP` | `6000` | inbound ceiling; raised from 4000 by measurement — see above |

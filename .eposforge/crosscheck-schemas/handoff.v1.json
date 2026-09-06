@@ -34,6 +34,11 @@
       "description": "Opaque session identifier. Adopters that capture LLM wire traffic should reuse the capture session id here so a review joins its own transcript."
     },
 
+    "owner_session": {
+      "type": ["string", "null"],
+      "description": "The agent session that owns this payload, when one can be named. Distinct from `session`, which names the payload: a payload may be opened under a chosen name and still belong to exactly one running agent window. Consent is taken per window, so a tool that resolves a payload by repository rather than by session id must not hand one window's payload to another. Null or absent means unknown, which reads as 'not necessarily mine' and never as 'mine' - adopters running one session at a time can ignore this field entirely."
+    },
+
     "implementer": { "$ref": "#/$defs/actor" },
 
     "scope": {

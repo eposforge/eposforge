@@ -18,6 +18,7 @@
 # Usage:
 #   crosscheck-claim open  --repo <path> [--policy-key K] [--clearance C] [--base SHA]
 #                          [--agent A] [--provider P] [--model M] [--session S] [--round N]
+#                          [--owner-session ID]
 #   crosscheck-claim scope --repo <path> [--policy-key K] [--clearance C] [--base SHA]
 #   crosscheck-claim refresh                     # head_sha := HEAD, base_sha untouched
 #   crosscheck-claim add   --statement TEXT [--class mechanical|judgment] [--standing]
@@ -94,6 +95,23 @@ SESSION_EXPLICIT=0
 [[ -n "$SESSION" ]] && SESSION_EXPLICIT=1
 if [[ -z "$SESSION" && -r "$session_file" ]]; then SESSION="$(cat "$session_file")"; fi
 
+# The agent session that OWNS this payload, which is not the same question as
+# what the payload is NAMED. A payload may be opened under a chosen name
+# (`--session my-feature-review`) and still belong to exactly one
+# running agent window; conversely a payload named after a session id belongs to
+# that window by construction. Only the owner can answer for it — the consent
+# question is per window, and a second window must never inherit the first's
+# answer through the per-repo pointer.
+#
+# Left unset it stays absent, and an absent owner reads as "unknown", never as
+# "mine": a resolver that cannot tell whose payload this is falls back to the
+# behaviour that existed before the field, rather than claiming it. That is what
+# keeps older payloads and other vendors' CLIs working unchanged.
+#
+# Deliberately taken from a neutral variable. The mapping from one vendor's
+# session id lives in the host wrapper, not here.
+OWNER_SESSION="${CROSSCHECK_OWNER_SESSION:-}"
+
 payload_path() { printf '%s/%s/round-%s/handoff.json' "$ROOT" "$SESSION" "$ROUND"; }
 
 # ── arg parsing (shared) ─────────────────────────────────────────────────────
@@ -113,6 +131,7 @@ while [[ $# -gt 0 ]]; do
     --provider)     A_PROVIDER="$2"; shift 2 ;;
     --model)        A_MODEL="$2"; shift 2 ;;
     --session)      SESSION="$2"; SESSION_EXPLICIT=1; shift 2 ;;
+    --owner-session) OWNER_SESSION="$2"; shift 2 ;;
     --round)        ROUND="$2"; shift 2 ;;
     --statement)    A_STATEMENT="$2"; shift 2 ;;
     --class)        A_CLASS="$2"; shift 2 ;;
@@ -396,7 +415,7 @@ do_open() {  # do_open <repo> — sets SESSION, prints the payload path
   # comes from the environment when the caller set it. Left unset it stays
   # "unknown", which is honest: an adopter that routes by vendor will refuse to
   # guess, and refusing is the correct end to "who wrote this?".
-  jq -n --arg s "$SESSION" --argjson r "$ROUND" \
+  jq -n --arg s "$SESSION" --argjson r "$ROUND" --arg ow "$OWNER_SESSION" \
         --arg ag "${A_AGENT:-${CROSSCHECK_IMPLEMENTER_AGENT:-unknown}}" \
         --arg pr "${A_PROVIDER:-${CROSSCHECK_IMPLEMENTER_PROVIDER:-unknown}}" \
         --arg mo "${A_MODEL:-${CROSSCHECK_IMPLEMENTER_MODEL:-unknown}}" \
@@ -405,6 +424,7 @@ do_open() {  # do_open <repo> — sets SESSION, prints the payload path
       schema: "eposforge.crosscheck.handoff/1",
       round: $r,
       session: $s,
+      owner_session: (if $ow == "" then null else $ow end),
       implementer: {agent: $ag, provider: $pr, model: $mo},
       scope: [$sc],
       clearance_required: $cl,

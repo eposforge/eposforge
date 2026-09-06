@@ -11,7 +11,8 @@
 #
 # What this carries forward, and what it deliberately does not:
 #
-#   carried   session and implementer identity; the scope repositories, with
+#   carried   session, owning agent session and implementer identity; the
+#             scope repositories, with
 #             each `base_sha` advanced to that round's `head_sha`; the ground
 #             rules; `disposition_ref` pointing at the answers just given.
 #   dropped   claims, traps, attacks, flags, headline numbers, artifacts.
@@ -135,7 +136,11 @@ done < <(jq -c '.[]' <<<"$SCOPE")
 
 mkdir -p "$NEXT_DIR" || die "cannot create $NEXT_DIR"
 
+# Ownership is a property of the payload, not of the round: the window that
+# opened round 1 is the one whose operator answered the consent question, and
+# every later round runs under that same answer.
 jq -n --argjson r "$NEXT" --arg s "$SESSION" \
+      --argjson owner "$(jq -c '.owner_session // null' "$HANDOFF")" \
       --argjson impl "$(jq -c '.implementer' "$HANDOFF")" \
       --argjson scope "$NEW_SCOPE" \
       --arg clr "$(jq -r '.clearance_required' "$HANDOFF")" \
@@ -145,6 +150,7 @@ jq -n --argjson r "$NEXT" --arg s "$SESSION" \
     schema: "eposforge.crosscheck.handoff/1",
     round: $r,
     session: $s,
+    owner_session: $owner,
     implementer: $impl,
     scope: $scope,
     clearance_required: $clr,
