@@ -27,6 +27,7 @@
 #   crosscheck-claim trap  TEXT
 #   crosscheck-claim attack TEXT                 # ranked; weakest point first
 #   crosscheck-claim flag  --item X --judgment Y --rationale Z
+#   crosscheck-claim dispose <fN> <accepted-fixed|accepted-deferred|rejected> [detail]
 #   crosscheck-claim out-of-scope TEXT
 #   crosscheck-claim ground-rule TEXT
 #   crosscheck-claim artifact PATH
@@ -75,7 +76,7 @@ ROOT="${CROSSCHECK_DIR:-$HOME/.crosscheck}"
 ROUND="${CROSSCHECK_ROUND:-1}"
 CAP="${CROSSCHECK_HANDOFF_TOKEN_CAP:-8000}"
 
-usage() { sed -n '19,46p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' >&2; exit 2; }
+usage() { sed -n '19,47p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' >&2; exit 2; }
 die()   { echo "crosscheck-claim: $*" >&2; exit 2; }
 no()    { echo "crosscheck-claim: rejected — $*" >&2; exit 1; }
 
@@ -684,6 +685,98 @@ flag)
   edit '.self_flagged += [{item:$i, judgment:$j, rationale:$r}]' \
     --arg i "$A_ITEM" --arg j "$A_JUDGMENT" --arg r "$A_RATIONALE"
   echo "self-flagged call recorded"
+  ;;
+
+dispose)
+  # The third leg of the loop, written one finding at a time. It was a JSON
+  # template in the Stop-hook block and hand-written into the file, which meant
+  # the round's answer went through a write-then-validate-then-fix loop before
+  # it was a valid answer at all.
+  #
+  # Deliberately one call per finding rather than one call per round: a
+  # disposition is written at the moment the finding is dealt with, for the same
+  # reason a claim is written while the evidence is on screen.
+  (( ${#POSITIONAL[@]} >= 2 )) \
+    || die "dispose needs <finding-id> <accepted-fixed|accepted-deferred|rejected> [detail]"
+  d_id="${POSITIONAL[0]}"; d_action="${POSITIONAL[1]}"
+  d_detail=""
+  (( ${#POSITIONAL[@]} > 2 )) && d_detail="${POSITIONAL[*]:2}"
+  [[ "$d_id" =~ ^f[0-9]+$ ]] || die "finding ids are f1, f2, … — '$d_id' is not one"
+  case "$d_action" in
+    accepted-fixed|accepted-deferred|rejected) ;;
+    *) die "unknown action '$d_action' — accepted-fixed, accepted-deferred or rejected" ;;
+  esac
+  # The schema requires it, but saying so here is the point: deferring without
+  # naming the item and rejecting without arguing are the two ways this leg gets
+  # hollowed out, and both are easier to do than to defend.
+  if [[ -z "$d_detail" ]]; then
+    case "$d_action" in
+      accepted-deferred) die "accepted-deferred needs a detail: the work item you filed the deferral as" ;;
+      rejected)          die "rejected needs a detail: why the reviewer is wrong" ;;
+    esac
+  fi
+
+  # Read-only resolution, like refresh and show: a disposition answers findings
+  # that already exist, so there is never a payload to mint here.
+  resolve_session_readonly
+  round_dir="$(dirname "$(payload_path)")"
+  findings="$round_dir/findings.json"
+  disp="$round_dir/disposition.json"
+  [[ -r "$findings" ]] || die "no findings at $findings — nothing has been reviewed in round $ROUND, so there is nothing to dispose"
+
+  exec 9>"$disp.lock"
+  flock -w 30 -x 9 || die "timed out waiting for the lock on $disp"
+
+  # round comes from the findings, not from CROSSCHECK_ROUND: the validator
+  # requires the two to agree, and the findings are the ones that were actually
+  # reviewed.
+  d_round="$(jq -r '.round' "$findings")"
+  [[ "$d_round" =~ ^[0-9]+$ ]] || die "$findings has no usable round"
+
+  if [[ ! -r "$disp" ]]; then
+    # findings_ref stays round-relative. The pair moves together or not at all,
+    # and an absolute path in a file that lives beside its referent is a path
+    # that breaks the first time the directory is copied.
+    jq -n --argjson r "$d_round" '{schema: "eposforge.crosscheck.disposition/1",
+                                   round: $r,
+                                   findings_ref: "findings.json",
+                                   dispositions: []}' > "$disp" \
+      || die "cannot write $disp"
+  fi
+
+  jq -e --arg i "$d_id" 'any(.findings[]?; .id == $i)' "$findings" >/dev/null 2>&1 \
+    || no "round $d_round has no finding '$d_id' — it has: $(jq -r '[.findings[]?.id] | join(" ") // "(none)"' "$findings")"
+  if jq -e --arg i "$d_id" 'any(.dispositions[]?; .finding_id == $i)' "$disp" >/dev/null 2>&1; then
+    no "'$d_id' is already answered: $(jq -r --arg i "$d_id" '.dispositions[] | select(.finding_id == $i) | .action + (if .detail then " — " + .detail else "" end)' "$disp")"
+  fi
+
+  jq --arg i "$d_id" --arg a "$d_action" --arg d "$d_detail" '
+    .dispositions += [ {finding_id: $i, action: $a}
+                       + (if $d == "" then {} else {detail: $d} end) ]
+  ' "$disp" > "$disp.tmp" || die "jq edit failed"
+  if ! "$VALIDATE" disposition "$disp.tmp" --schema-only >/dev/null 2>&1; then
+    "$VALIDATE" disposition "$disp.tmp" --schema-only >&2
+    rm -f "$disp.tmp"
+    no "the resulting disposition does not conform; nothing was written"
+  fi
+  mv "$disp.tmp" "$disp"
+
+  owed="$(jq -r -n --slurpfile f "$findings" --slurpfile d "$disp" \
+            '([$f[0].findings[].id] - [$d[0].dispositions[].finding_id]) | join(" ")')"
+  if [[ -n "$owed" ]]; then
+    echo "$d_id $d_action recorded · still unanswered: $owed"
+    exec 9>&-
+    exit 0
+  fi
+  # Every id answered, so the cross-field rules can finally be checked — which
+  # is the moment they mean something, and the one the author used to have to
+  # remember to run by hand.
+  if ! "$VALIDATE" disposition "$disp" --findings "$findings" >&2; then
+    exec 9>&-
+    no "every finding is answered but the disposition does not validate (above); $disp is on disk to correct"
+  fi
+  echo "$d_id $d_action recorded · every finding answered · $disp"
+  exec 9>&-
   ;;
 
 show)

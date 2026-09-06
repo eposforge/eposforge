@@ -846,6 +846,72 @@ expect_exit 1 "a loop the stop rule ended does not open another round" \
 expect_exit 0 "--force opens it anyway, and says so" \
   ./crosscheck-next-round.sh --handoff "$NRD/done/round-1/handoff.json" --force
 
+echo "== dispose writes the third leg one finding at a time"
+# The disposition used to be a JSON template in a Stop-hook block, hand-written
+# into the file and validated afterwards. These cases pin the refusals the
+# template could only describe.
+DR="$TMP/dispose-root"
+mkdir -p "$DR/dsess/round-1"
+# Every fixture carries one finding, and one finding cannot show a partial
+# answer — the state the whole subcommand exists to keep straight. So the second
+# one is made here.
+jq '.findings += [(.findings[0] | .id = "f2" | .severity = "nit")]' \
+   fixtures/findings-claim-refuted.json > "$DR/dsess/round-1/findings.json"
+D_FILE="$DR/dsess/round-1/disposition.json"
+D_FIRST=f1
+export CROSSCHECK_DIR="$DR" CROSSCHECK_SESSION=dsess CROSSCHECK_ROUND=1
+
+expect_exit 2 "dispose refuses an id that is not a finding id" \
+  ./crosscheck-claim dispose xyz accepted-fixed
+expect_exit 2 "dispose refuses an unknown action" \
+  ./crosscheck-claim dispose "$D_FIRST" accepted "detail"
+expect_exit 2 "rejected without a rebuttal is refused" \
+  ./crosscheck-claim dispose "$D_FIRST" rejected
+expect_exit 2 "accepted-deferred without the item it was filed as is refused" \
+  ./crosscheck-claim dispose "$D_FIRST" accepted-deferred
+expect_exit 0 "the first dispose creates the file" \
+  ./crosscheck-claim dispose "$D_FIRST" accepted-fixed "rewrote the guard"
+expect_out "eposforge.crosscheck.disposition/1 1 findings.json" \
+  "it stamps schema, the findings' round, and a round-relative findings_ref" \
+  jq -r '"\(.schema) \(.round) \(.findings_ref)"' "$D_FILE"
+expect_exit 1 "a second answer for the same finding is refused" \
+  ./crosscheck-claim dispose "$D_FIRST" rejected "changed my mind"
+expect_exit 1 "an answer for a finding that does not exist is refused" \
+  ./crosscheck-claim dispose f99 rejected "no such finding"
+
+# What is still owed is named on the way out, so the author never has to diff
+# the two files by hand to find out what is left. This is also the state the
+# validator must NOT be run in: f2 is unanswered, and a partial disposition is
+# incomplete rather than wrong.
+D_OUT="$(./crosscheck-claim dispose f1 accepted-fixed "again" 2>&1; ./crosscheck-claim dispose f2 accepted-deferred "EF-999" 2>&1)"
+case "$D_OUT" in
+  *"every finding answered"*) ok "the answer that completes the round says so" ;;
+  *) bad "the answer that completes the round says so" "$D_OUT" ;;
+esac
+expect_exit 0 "the completed disposition validates against its findings" \
+  ./validate-payload.sh disposition "$D_FILE" --findings "$DR/dsess/round-1/findings.json"
+
+# The partial state, on its own payload: one of two answered, and the one still
+# owed named by id.
+mkdir -p "$DR/partial/round-1"
+cp "$DR/dsess/round-1/findings.json" "$DR/partial/round-1/findings.json"
+export CROSSCHECK_SESSION=partial
+expect_out "f1 accepted-fixed recorded · still unanswered: f2" \
+  "a partial disposition names the finding still owed" \
+  ./crosscheck-claim dispose f1 accepted-fixed "the first of two"
+expect_exit 1 "and it does not validate until the second is answered" \
+  ./validate-payload.sh disposition "$DR/partial/round-1/disposition.json" \
+    --findings "$DR/partial/round-1/findings.json"
+export CROSSCHECK_SESSION=dsess
+
+# A disposition answers findings that exist. Minting one here would be an answer
+# to a review that never happened.
+mkdir -p "$DR/empty/round-1"
+export CROSSCHECK_SESSION=empty
+expect_exit 2 "dispose refuses when no findings have come back" \
+  ./crosscheck-claim dispose f1 accepted-fixed "nothing to answer"
+unset CROSSCHECK_DIR CROSSCHECK_SESSION
+
 echo
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ "$FAIL" -eq 0 ]] || exit 1
