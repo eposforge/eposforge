@@ -11,11 +11,16 @@ source_of_truth: yes
 
 - draft: 2026-07-19
 - supersedes: none
+- amended: 2026-09-08 (EF-088) — carved known procedures out to Standard 15;
+  see the new §1.5 and the tightened thin-glue allowance in §2.
 - declined-options:
   - "index whole mixed prose+code monorepo as one code graph" — declined;
     blurs intent vs implementation and defeats scoped code-structure tools.
   - "require code/UI before conversational delivery" — declined; contradicts
     pain-driven and AI-native factory bias.
+  - "treat a written-down procedure as cheaper to keep in a skill than in a
+    program" — declined; once the steps are known, Standard 15 governs and
+    the program is the source of truth.
 - related: [Living Spec], [Tool Transport]
   (code-structure), [Spec Graph], Standard 11 (paired-change)
 - spec-version: n/a
@@ -57,6 +62,16 @@ forbid monorepos. It requires **clear encapsulation** when code exists.
    structure when the current approach breaks or costs too much, not
    because a stack is fashionable.
 
+### 1.5 Known procedures are out of scope for this rule
+
+Requirement 1 governs **product UX** only. Once the steps of a factory or
+product **procedure** are known, it is out of this standard's
+conversational-first rule and is governed instead by
+[Standard 15](../15-program-first-procedures/program-first-procedures.md)
+(program-first; judgment stays in prose). A skill whose body is the step
+list of a known procedure is non-conformant under Standard 15 even if this
+standard would have called it conversational delivery.
+
 ### 2. Encapsulate code surfaces
 
 When deterministic code or UI code exists for a Product:
@@ -74,7 +89,9 @@ When deterministic code or UI code exists for a Product:
    only if listed in the product registry as **out of code-graph scope**
    or moved into a code root as soon as it grows past trivial size
    (instance rule of thumb: more than a handful of non-trivial modules,
-   or any shared library surface).
+   or any shared library surface). A known procedure's helper program is
+   not thin glue next to docs — Standard 15 requirement 7 puts it in a
+   code root regardless of size.
 4. Product registry `code_globs` (Standard 11 / [Source Control + CI]) MUST point at
    these code roots or code-focused repos — not at the entire mixed
    monorepo by default.
@@ -151,6 +168,8 @@ my-product/
   — intent graph, not code graph.
 - [../11-paired-change-enforcement/paired-change-enforcement.md](../11-paired-change-enforcement/paired-change-enforcement.md)
   — product registry `code_globs`.
+- [../15-program-first-procedures/program-first-procedures.md](../15-program-first-procedures/program-first-procedures.md)
+  — known procedures live in a program; classification and code-root rules.
 - [../../03-research/01-architecture/02-components/dev-product/dev-products.md](../../03-research/01-architecture/02-components/dev-product/dev-products.md)
   — codebase-memory-mcp candidate.
 

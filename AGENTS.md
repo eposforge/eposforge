@@ -19,9 +19,12 @@ as the conversation vocabulary.
 
 EposForge is the specification and reference implementation of the
 **dark-factory pattern** — a system where the operator declares capabilities
-and AI agents build, deploy, and operate them. The repo contains vision
-docs, architecture decision records, component contracts, and research.
-There is no application code; the artefacts are Markdown files.
+and AI agents build, deploy, and operate them. The repo is prose-first:
+vision docs, architecture decision records, component contracts, and
+research. It does carry code, but only in declared code roots
+(`.eposforge/**/scripts` and `skills/*/scripts`) — once a procedure's steps
+are known, the program lives there and a skill or runbook wraps it (see
+Standard 15).
 
 This repo has two layers that must stay explicit:
 
@@ -265,10 +268,21 @@ Operational conventions retained here:
   - `bash .eposforge/backlog/file-based-backlog/scripts/aggregate.sh --plan`
   - `bash .eposforge/backlog/file-based-backlog/scripts/aggregate.sh --regressions <keyword>`
   - `bash .eposforge/backlog/file-based-backlog/scripts/aggregate.sh --graph`
+  - `bash .eposforge/backlog/file-based-backlog/scripts/aggregate.sh --strangler`
+- Migration debt visibility (EF-066): an item carrying `LegacyShapeOf: <slug>`
+  means this shape is being strangled toward `<slug>` — do not invest further
+  here; check `aggregate.sh --strangler` for the migration's target shape before
+  building on a legacy-flagged item. `Migration:`/`LegacyShapeOf:`/
+  `TargetShapeOf:` are associative fields (`docs/schema.md`), not
+  `Depends on:`/`Blocks:`.
 - Named migration `procedure-skills-to-programs` (EF-086/EF-087): a step-list
   procedure skill or a cwd-relative invocation is the legacy shape — do not
   invest, wrap a program instead. Skills carrying `legacy_shape_of:
   procedure-skills-to-programs` in frontmatter are marked instances of this.
+- Program-first procedures (Standard 15, EF-088): call a procedure's program
+  via its documented home variable, never cwd-relative; name a `vehicle-class:`
+  before committing any new program ("default" and "quicker" are not valid
+  reasons); Living Specs declare `operating_inference` where it applies.
 
 ---
 

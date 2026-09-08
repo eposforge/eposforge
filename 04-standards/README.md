@@ -26,6 +26,7 @@ This section is the source of truth for cross-cutting standards adopted by EposF
 - [12-code-surface-encapsulation/code-surface-encapsulation.md](12-code-surface-encapsulation/code-surface-encapsulation.md) — conversational-first delivery; encapsulate deterministic code/UI so code-structure graphs stay scopable
 - [13-chat-event-schema/chat-event-schema.md](13-chat-event-schema/chat-event-schema.md) — normalized Interaction Capture record (schema_version, provenance, identity, training_eligible, dedupe_key)
 - [14-session-chairs/session-chairs.md](14-session-chairs/session-chairs.md) — session chairs vs component roles vs skills vs tools; CLI-agnostic selector
+- [15-program-first-procedures/program-first-procedures.md](15-program-first-procedures/program-first-procedures.md) — known procedures live in a program, not a skill; vehicle classification; names no programming language
 
 ## Superseded standards
 
