@@ -16,8 +16,8 @@ source_of_truth: yes
     declined; once the steps are written, the program is the source of truth.
   - "hard language default in agent instructions" — declined; classification first,
     and an adopter may record a class-3 prior in its own overlay.
-  - "dual POSIX and PowerShell implementations of every shared program" — declined;
-    write once, thin launchers.
+  - "dual POSIX-shell and Windows-native-shell implementations of every shared
+    program" — declined; write once, thin launchers.
   - "one factory-wide mega-library" — declined; second consumer plus
     home-follows-subject.
   - "born-public shared libraries with private trees only as bindings" — declined;
@@ -56,19 +56,19 @@ not govern product UX ([Standard 12](../12-code-surface-encapsulation/code-surfa
    installed. Cwd-relative invocation is non-conformant. Product procedures
    MUST NOT be required to use `EPOSFORGE_HOME`; they use their product's own
    documented home.
-5. **Reuse / home.** Share a library only with a second consumer, or a named one
-   about to exist. Home follows subject: factory substrate → the pattern repo
-   or the adopter's factory overlay; cross-product machinery that is not
-   factory substrate → that product family's shared tree; one product's
-   domain → that product.
+5. **Reuse / home.** A library MUST be shared only with a second consumer, or a
+   named one about to exist. Home follows subject: factory substrate → the
+   pattern repo or the adopter's factory overlay; cross-product machinery that
+   is not factory substrate → that product family's shared tree; one
+   product's domain → that product.
 6. **Write-publishable.** Programs and their docs MUST NOT contain instance
    data, adopter identifiers, or host names (Standard 08 requirement 5).
    Extract and publish is a separate, operator-gated decision;
    write-publishable is not a stage gate that delays usefulness.
-7. **Code roots.** Programs live in declared code roots: product `code_globs`
-   where a registry exists, plus `<container>/**/scripts` and `skills/*/scripts`
-   for framework and self-host script trees. A procedure helper is not "thin
-   glue next to docs".
+7. **Code roots.** Programs MUST live in declared code roots: product
+   `code_globs` where a registry exists, plus `<container>/**/scripts` and
+   `skills/*/scripts` for framework and self-host script trees. A procedure
+   helper is not "thin glue next to docs".
 
 ### The vehicle-class table
 
