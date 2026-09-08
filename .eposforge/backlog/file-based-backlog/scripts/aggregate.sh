@@ -30,6 +30,10 @@ while [[ $# -gt 0 ]]; do
       MODE="themes"
       shift
       ;;
+    --strangler)
+      MODE="strangler"
+      shift
+      ;;
     --critical-path)
       MODE="critical-path"
       TARGET_ID="${2:-}"
@@ -327,6 +331,11 @@ for issue in all_active + all_slated + all_archive:
         "blocks": csv_ids(fields.get("Blocks", "")),
         "bundle_hint": fields.get("Bundle hint", "").strip(),
         "repo": issue["repo"],
+        # Migration tracking (eposforge:EF-066)
+        "migration": csv_ids(fields.get("Migration", "")),
+        "legacy_of": csv_ids(fields.get("LegacyShapeOf", "")),
+        "target_of": csv_ids(fields.get("TargetShapeOf", "")),
+        "raw_text": "\n".join(issue["raw"]),
     }
 
 OPEN_STATUSES = {"open", "in-progress", "blocked", "slated"}
@@ -465,6 +474,66 @@ if mode == "themes" or mode == "tags":
                 e = all_issues_index[iid]
                 print(f"  {iid} [{e['status']}][{e['effort']}] {e['title']}  ({e['repo']})")
             print("")
+
+    raise SystemExit(0)
+
+if mode == "strangler":
+    # One section per migration slug: legacy-shape items, target-shape items, plus
+    # an "unlabeled candidates" hint. Spans every status (including resolved/
+    # archived) so an already-completed dogfood migration still renders correctly.
+    migration_slugs = []
+    for iid, e in all_issues_index.items():
+        for slug in e["migration"]:
+            if slug not in migration_slugs:
+                migration_slugs.append(slug)
+
+    legacy_by_slug: dict[str, list] = {}
+    target_by_slug: dict[str, list] = {}
+    for iid, e in all_issues_index.items():
+        for slug in e["legacy_of"]:
+            legacy_by_slug.setdefault(slug, []).append(iid)
+        for slug in e["target_of"]:
+            target_by_slug.setdefault(slug, []).append(iid)
+
+    def strangler_row(iid):
+        e = all_issues_index[iid]
+        return f"  {iid} [{e['status']}][{e['effort']}] {e['title']}  ({e['repo']})"
+
+    for slug in migration_slugs:
+        print(f"## {slug}")
+        print("")
+        print("Legacy shape (do not invest):")
+        for iid in sorted(legacy_by_slug.get(slug, [])):
+            print(strangler_row(iid))
+        if not legacy_by_slug.get(slug):
+            print("  (none)")
+        print("")
+        print("Target shape:")
+        for iid in sorted(target_by_slug.get(slug, [])):
+            print(strangler_row(iid))
+        if not target_by_slug.get(slug):
+            print("  (none)")
+        print("")
+
+    # Unlabeled candidates: active/slated items whose text looks migration-shaped
+    # but carry none of Migration:/LegacyShapeOf:/TargetShapeOf: yet.
+    keywords = ("migrat", "legacy shape", "target shape", "strangl")
+    candidates = []
+    for iid, e in all_issues_index.items():
+        if e["status"] not in {"open", "in-progress", "blocked", "slated"}:
+            continue
+        if e["migration"] or e["legacy_of"] or e["target_of"]:
+            continue
+        blob = e["raw_text"].lower()
+        if any(k in blob for k in keywords):
+            candidates.append(iid)
+
+    if candidates:
+        print("## (unlabeled candidates — migration-shaped text, no Migration:/LegacyShapeOf:/TargetShapeOf:)")
+        print("")
+        for iid in sorted(candidates):
+            print(strangler_row(iid))
+        print("")
 
     raise SystemExit(0)
 

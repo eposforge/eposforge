@@ -35,6 +35,13 @@ MULTI-ROOT (eposforge:EF-078)
 
 WHAT IT CHECKS
   - Required fields, ID/date/status/effort format, supersede + dependency integrity.
+  - Migration tracking (eposforge:EF-066): `Migration:`/`LegacyShapeOf:`/
+    `TargetShapeOf:` slugs are kebab-case, a shape field names a slug some item
+    declares via `Migration:`, and each declared migration resolves to at least
+    one target-shape item (ERROR if missing — a migration must show where it is
+    going); a missing legacy-shape item is only a WARNING, since a migration's
+    legacy side is sometimes diffuse corpus state rather than a single ticket.
+    A `LegacyShapeOf:` item gets a "do not invest" advisory (see `docs/schema.md`).
   - Public/private boundary (eposforge:EF-047): a repo whose config.toml declares
     `visibility = "public"` may NOT carry an outbound cross-repo `Depends on:` /
     `Blocks:` edge to a private (or unknown) repo. Cross-repo edges are directional:
@@ -142,6 +149,7 @@ required_fields = [
 id_pattern = re.compile(r"^[A-Z]+-[0-9]{3,}$")
 date_pattern = re.compile(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}$")
 header_pattern = re.compile(r"^## Issue ([A-Z]+-[0-9]{3,}) — (.+)$")
+migration_slug_pattern = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 
 
 def read_text(path: Path) -> str:
@@ -343,6 +351,13 @@ def collect_all_issues(roots):
     id_status = {}
     # Maps: superseded_id -> list of superseding_ids (for bidirectional check)
     superseded_by: dict = {}
+    # Migration tracking (eposforge:EF-066): slug -> list of issue IDs declaring
+    # that side. Collected across active+slated+archive in every root, exactly
+    # like superseded_by, because a migration's shapes may already be archived
+    # (e.g. a resolved dogfood item) while another side is still open.
+    migration_owners: dict = {}
+    legacy_of: dict = {}
+    target_of: dict = {}
     for root in roots:
         backlog_root = root / "backlog"
         config = backlog_root / "config.toml"
@@ -356,7 +371,13 @@ def collect_all_issues(roots):
                 id_status[issue_id] = issue["fields"].get("Status", "").strip().lower()
                 for sup_id in csv_ids(issue["fields"].get("Supersedes", "")):
                     superseded_by.setdefault(sup_id, []).append(issue_id)
-    return all_ids, id_status, superseded_by
+                for slug in csv_ids(issue["fields"].get("Migration", "")):
+                    migration_owners.setdefault(slug, []).append(issue_id)
+                for slug in csv_ids(issue["fields"].get("LegacyShapeOf", "")):
+                    legacy_of.setdefault(slug, []).append(issue_id)
+                for slug in csv_ids(issue["fields"].get("TargetShapeOf", "")):
+                    target_of.setdefault(slug, []).append(issue_id)
+    return all_ids, id_status, superseded_by, migration_owners, legacy_of, target_of
 
 
 def csv_ids(raw: str):
@@ -366,7 +387,8 @@ def csv_ids(raw: str):
 
 
 roots = discover_roots(repo_root)
-all_ids, id_status, superseded_by = collect_all_issues(roots)
+all_ids, id_status, superseded_by, migration_owners, legacy_of, target_of = collect_all_issues(roots)
+known_migration_slugs = set(migration_owners.keys())
 visibility_map = build_visibility_map(roots)
 
 # Private-marker patterns for the public-repo whole-file leak scan (ERRORS).
@@ -536,6 +558,29 @@ for path, ctx in check_files:
         if fields.get("Theme") and not fields.get("Tags"):
             print(f"WARNING: {issue_ref} uses legacy `Theme:`; migrate to `Tags:` (EF-046)", file=sys.stderr)
 
+        # Migration tracking (eposforge:EF-066): Migration:/LegacyShapeOf:/TargetShapeOf:
+        # are associative migration-membership edges, distinct from Depends on:/Blocks:.
+        for slug in csv_ids(fields.get("Migration", "")):
+            if not migration_slug_pattern.match(slug):
+                errors.append(f"{issue_ref} invalid `Migration:` slug `{slug}` (expected kebab-case)")
+
+        for shape_field in ("LegacyShapeOf", "TargetShapeOf"):
+            for slug in csv_ids(fields.get(shape_field, "")):
+                if not migration_slug_pattern.match(slug):
+                    errors.append(f"{issue_ref} invalid `{shape_field}:` slug `{slug}` (expected kebab-case)")
+                elif slug not in known_migration_slugs:
+                    errors.append(
+                        f"{issue_ref} `{shape_field}:` references unknown migration slug `{slug}` "
+                        f"(no item declares `Migration: {slug}`)"
+                    )
+
+        # Debt-visibility marker (adoption-strategy.md obligation 3): a lint advisory
+        # so an agent touching a legacy-shape item sees the strangling in progress.
+        for slug in csv_ids(fields.get("LegacyShapeOf", "")):
+            warnings.append(
+                f"{issue_ref} — this shape is being strangled toward `{slug}` — do not invest"
+            )
+
         for sup_id in csv_ids(fields.get("Supersedes", "")):
             if sup_id not in all_ids:
                 errors.append(
@@ -638,6 +683,32 @@ for path, ctx in check_files:
                 errors.append(
                     f"{display(path, ctx)}:{issue['header_id']} has status `{status}` in backlog-slated.md"
                 )
+
+# Migration completeness (eposforge:EF-066): every declared migration slug must
+# resolve to at least one target-shape item (an ERROR — a migration must show
+# where it is going), across the full discovery set (active+slated+archive,
+# every root) — not just the files linted above, since a migration's shapes may
+# already be archived. A missing legacy-shape item is only a WARNING, not an
+# error: a migration's legacy side is sometimes diffuse corpus state (scattered
+# across files, not a single ticket — e.g. still-unconverted skill files tracked
+# via file-level frontmatter, not a backlog field) rather than a real candidate
+# item. Forcing an item into LegacyShapeOf just to satisfy a hard completeness
+# rule produced a wrong, misleading "do not invest" advisory on target-side work
+# in two dogfood cases found by cross-vendor review (2026-09-08) — do not
+# resurrect the hard requirement without also solving that fabrication pressure.
+for slug, owner_ids in migration_owners.items():
+    owners_display = ", ".join(owner_ids)
+    if slug not in legacy_of:
+        warnings.append(
+            f"Migration `{slug}` (declared by {owners_display}) has no legacy-shape item; "
+            f"if its legacy side is a real, trackable item add `LegacyShapeOf: {slug}` to it — "
+            f"if it is diffuse corpus state, this is expected"
+        )
+    if slug not in target_of:
+        errors.append(
+            f"Migration `{slug}` (declared by {owners_display}) has no target-shape item; "
+            f"add `TargetShapeOf: {slug}` to at least one item"
+        )
 
 # Whole-file private-leak scan (eposforge:EF-047): in a public repo NO private
 # marker may appear ANYWHERE — file headers / operational notes included, not just

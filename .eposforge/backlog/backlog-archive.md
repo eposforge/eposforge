@@ -500,6 +500,7 @@ Status: resolved
 Effort: L
 Tags: backlog-tooling, simplification
 Fix surface: eposforge-pattern
+TargetShapeOf: theme-to-tags
 Validation: Framework adapter layer flattened — adapters live at `.eposforge/<name>/<adapter>/`, numbered component-folder prefixes retired, `_index.json` regenerated, and layout checks + backlog scripts pass against the flat paths.
 Resolved: 2026-07-16
 Verify with: adapters live at `.eposforge/<stable-name>/<adapter>/` (e.g. `.eposforge/backlog/file-based-backlog/scripts/`, `.eposforge/dev-product/...`); no numeric prefixes anywhere on component dirs; `_index.json` at.eposforge/_index.json (regenerated); adapter-layout-mirror and scripts updated; example adopter containers also migrated; layout check/generate pass. The numbered folder scheme is retired.

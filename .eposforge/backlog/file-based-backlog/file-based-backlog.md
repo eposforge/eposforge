@@ -18,7 +18,7 @@ source_of_truth: yes
 |---|---|
 | `name` | `file-based-backlog` |
 | `component` | `backlog` |
-| `version` | `0.4.0` (lint + sweep act on every `BACKLOG_ROOTS` entry; Tags: multi-valued; Theme: legacy alias) |
+| `version` | `0.5.0` (adds `Migration:`/`LegacyShapeOf:`/`TargetShapeOf:` strangler-tracking fields + `aggregate.sh --strangler`; lint + sweep act on every `BACKLOG_ROOTS` entry; Tags: multi-valued; Theme: legacy alias) |
 | `status` | `experimental` |
 | `privacy_posture` | `local` |
 | `cost_hint` | `free` |
@@ -123,10 +123,13 @@ The backlog data is stored in structured Markdown files that explicitly encode a
 - Individual issues are nodes carrying attributes (`Status`, `Effort`, `Tags`, `Fix surface`, etc.).
 - `Depends on:`, `Blocks:`, and `Supersedes:` define directed edges.
 - `Tags:` (multi-valued; see EF-046) provide natural community groupings.
+- `Migration:`/`LegacyShapeOf:`/`TargetShapeOf:` (see EF-066) are associative
+  migration-membership edges — not dependency edges — linking items to a named
+  in-flight strangler-fig migration and the side of it they sit on.
 
 This explicit structure gives agents a high-quality, deterministic graph skeleton without requiring LLM entity extraction.
 
-GraphRAG-style capabilities (dependency traversal, impact analysis, tag-based communities, thematic summarization, semantic search over items) are provided by separate tooling and skills that read and process these files. Examples include `aggregate.sh --tags/--critical-path/--mermaid` (themes, critical-path, portfolio graphs) and the `portfolio-review` skill. Additional dedicated skills or a lightweight GraphRAG processor can be added for richer queries.
+GraphRAG-style capabilities (dependency traversal, impact analysis, tag-based communities, thematic summarization, semantic search over items) are provided by separate tooling and skills that read and process these files. Examples include `aggregate.sh --tags/--critical-path/--mermaid/--strangler` (themes, critical-path, portfolio graphs, in-flight migration debt) and the `portfolio-review` skill. Additional dedicated skills or a lightweight GraphRAG processor can be added for richer queries.
 
 The GraphRAG capability lives in the tooling layer, not in the Markdown files themselves. This keeps the core data format (plain Markdown following the schema) completely portable and free of heavy runtime dependencies such as Cognee.
 
@@ -140,16 +143,17 @@ The GraphRAG capability lives in the tooling layer, not in the Markdown files th
 
 From repo root (preferred: run-from-clone via `BACKLOG_HOME`; these paths are the vendored-copy fallback):
 
-- `bash.eposforge/backlog/file-based-backlog/scripts/new-issue.sh`
-- `bash.eposforge/backlog/file-based-backlog/scripts/lint-backlog.sh`
-- `bash.eposforge/backlog/file-based-backlog/scripts/sweep-resolved.sh`
-- `bash.eposforge/backlog/file-based-backlog/scripts/aggregate.sh --plan`
-- `bash.eposforge/backlog/file-based-backlog/scripts/aggregate.sh --regressions <keyword>`
-- `bash.eposforge/backlog/file-based-backlog/scripts/aggregate.sh --graph`
-- `bash.eposforge/backlog/file-based-backlog/scripts/aggregate.sh --tags` (or `--themes` alias)
-- `bash.eposforge/backlog/file-based-backlog/scripts/aggregate.sh --critical-path <ID>`
-- `bash.eposforge/backlog/file-based-backlog/scripts/ready.sh`
-- `bash.eposforge/backlog/file-based-backlog/scripts/ready.sh --json`
+- `bash .eposforge/backlog/file-based-backlog/scripts/new-issue.sh`
+- `bash .eposforge/backlog/file-based-backlog/scripts/lint-backlog.sh`
+- `bash .eposforge/backlog/file-based-backlog/scripts/sweep-resolved.sh`
+- `bash .eposforge/backlog/file-based-backlog/scripts/aggregate.sh --plan`
+- `bash .eposforge/backlog/file-based-backlog/scripts/aggregate.sh --regressions <keyword>`
+- `bash .eposforge/backlog/file-based-backlog/scripts/aggregate.sh --graph`
+- `bash .eposforge/backlog/file-based-backlog/scripts/aggregate.sh --tags` (or `--themes` alias)
+- `bash .eposforge/backlog/file-based-backlog/scripts/aggregate.sh --strangler`
+- `bash .eposforge/backlog/file-based-backlog/scripts/aggregate.sh --critical-path <ID>`
+- `bash .eposforge/backlog/file-based-backlog/scripts/ready.sh`
+- `bash .eposforge/backlog/file-based-backlog/scripts/ready.sh --json`
 
 ### Tooling distribution
 

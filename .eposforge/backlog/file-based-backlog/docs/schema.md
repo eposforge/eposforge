@@ -37,6 +37,9 @@ Example:
 | `Resolved:` | `Status: resolved` | `YYYY-MM-DD` |
 | `Slated:` | `Status: slated` | `YYYY-MM-DD` |
 | `Re-evaluate by:` | `Status: slated` | `YYYY-MM-DD` (mandatory) |
+| `Migration:` | Item is the owner/anchor of a named migration | Kebab-case slug (e.g. `numbered-to-named-components`). Declares the slug exists; other items reference it via `LegacyShapeOf:` / `TargetShapeOf:`. |
+| `LegacyShapeOf:` | Item's work sits on the legacy side of an in-flight migration | Comma-separated migration slugs, same comma-separated style as `Blocks:`. Each slug must be declared by some item's `Migration:`. |
+| `TargetShapeOf:` | Item's work sits on the target side of an in-flight migration | Comma-separated migration slugs, same comma-separated style as `Blocks:`. Each slug must be declared by some item's `Migration:`. |
 
 ## File-level rules
 
@@ -65,6 +68,29 @@ constraint declare `Depends on: <blocker-id>`. Resolution is recorded via the no
 
 `fix_surfaces` in `config.toml` must include `"external"` for blocker records to
 pass lint.
+
+## Migration tracking (EF-066)
+
+`Migration:`, `LegacyShapeOf:`, and `TargetShapeOf:` make an in-flight strangler-fig
+migration (see `02-roadmap/adoption-strategy.md`) legible to agents, independent of
+free-text `Notes:`. Exactly one item declares a migration slug via `Migration:`; any
+number of other items then declare which side of that migration they sit on via
+`LegacyShapeOf:` (do not invest further here — it is being replaced) or
+`TargetShapeOf:` (this is the destination shape). These are associative
+migration-membership edges, **not** `Depends on:` / `Blocks:`, which continue to
+drive critical-path ordering. `aggregate.sh --strangler` renders one section per
+migration slug, its legacy-shape and target-shape items, and a hint for items whose
+text looks migration-shaped but carry none of the three fields yet. Adopter-specific
+migration IDs stay in the adopter's own backlog (EF-047 public/private boundary).
+
+**Completeness is asymmetric.** Lint errors if a declared `Migration:` has no
+`TargetShapeOf:` item — a migration must show where it is going. It only warns if
+one has no `LegacyShapeOf:` item, because a migration's legacy side is sometimes
+diffuse corpus state (scattered across files, not a single ticket) rather than a
+real candidate item — forcing target-side work into `LegacyShapeOf:` just to
+satisfy a hard rule produces a wrong "do not invest" advisory on work that should
+be invested in. Do not add `LegacyShapeOf:` to an item unless its own work is
+genuinely still building or extending the legacy shape.
 
 ## Validation and sweep rules
 
