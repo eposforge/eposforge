@@ -5,6 +5,7 @@ Subcommands:
   request   - target machine: ensure local age key and emit authorization request JSON
   authorize - approver machine: verify fingerprint, add recipient to .sops.yaml, rekey secrets
 """
+# vehicle-class: in-repo-pipeline
 
 from __future__ import annotations
 
@@ -24,8 +25,8 @@ AGE_PUBKEY_RE = re.compile(r"^age1[0-9a-z]{58}$")
 
 
 def _repo_root() -> pathlib.Path:
-    # setup_core.py -> scripts -> sops-age -> secrets-key-management -> installed -> instance -> repo
-    return pathlib.Path(__file__).resolve().parents[5]
+    # setup_core.py -> scripts -> sops-age -> secrets-key-management -> .eposforge -> repo
+    return pathlib.Path(__file__).resolve().parents[4]
 
 
 def _default_key_path() -> pathlib.Path:
@@ -204,8 +205,8 @@ def _authorize_cmd(args: argparse.Namespace) -> int:
     _require_tool("git")
 
     repo_root = pathlib.Path(args.repo_root) if args.repo_root else _repo_root()
-    sops_yaml = repo_root / "instance" / "installed" / "secrets-key-management" / "sops-age" / ".sops.yaml"
-    enc_yaml = repo_root / "instance" / "installed" / "secrets-key-management" / "sops-age" / "secrets.enc.yaml"
+    sops_yaml = repo_root / ".eposforge" / "secrets-key-management" / "sops-age" / ".sops.yaml"
+    enc_yaml = repo_root / ".eposforge" / "secrets-key-management" / "sops-age" / "secrets.enc.yaml"
 
     # Debug output
     # print(f"DEBUG: machine={args.machine!r}, fingerprint={args.fingerprint!r}, pubkey={getattr(args, 'pubkey', None)!r}, public_key={args.public_key!r}", file=sys.stderr)

@@ -1,10 +1,16 @@
 #!/usr/bin/env bash
+# vehicle-class: host-ci-glue
 # check-sensitive-literals.sh
 #
 # Detects potentially sensitive literals in text files:
 # - Private RFC1918 IPv4 addresses (LAN endpoints)
 # - Machine-local absolute paths (common user/workstation paths)
 # - Private adopter repository names/identifiers (forbidden in the public framework)
+# - `.lan` hostnames **under `skills/`** (EF-091): hard fail there only — a
+#   skill is the public surface an adopter installs, so a leaked instance
+#   hostname there is a real leak. The rest of the tree is not scanned for
+#   this pattern (several historical files under docs/ are already red;
+#   cleaning them is a separate follow-up, not this check's job).
 #
 # Modes:
 #   --staged                     Scan staged content only (for pre-commit)
@@ -31,8 +37,18 @@ LOCAL_PATH_PATTERN='([A-Za-z]:[\\/](Users|src|home|work|workspace|repos|projects
 # This list is maintained here for deterministic enforcement across all agents and CI.
 # Note: "adopter" treated as short identifier for the (sanitized) primary adopter example; always use generics in public content.
 PRIVATE_ADOPTER_PATTERN='GraceEnterprisesArchitecture|GraceEnvironment|GEA'
+# Same regex lint-backlog.sh already uses (lan_host_re); a glob mention like
+# `*.lan` in prose does not match this (no literal label char before `.lan`).
+LAN_HOSTNAME_PATTERN='\b[a-z0-9][a-z0-9-]*\.lan\b'
 
 has_errors=0
+
+is_under_skills() {
+  case "$1" in
+    skills/*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
 
 should_skip_file() {
   local file="$1"
@@ -63,8 +79,10 @@ scan_file() {
     # (e.g. naming-conventions.md conformance section, plan files quoting the enforcement).
     base="$(basename "${file_path}")"
     # For --staged, file_path is a temp file; derive base from label (e.g. "path/to/check-....sh (staged)")
+    repo_path="${file_path}"
     if [[ -n "${label:-}" ]]; then
       base="$(basename "${label%% (*}")"
+      repo_path="${label%% (*}"
     fi
     if [[ "${base}" == "check-sensitive-literals.sh" || "${base}" == "naming-conventions.md" ]]; then
       adopter_hits=""
@@ -74,7 +92,12 @@ scan_file() {
       adopter_hits=$(printf '%s\n' "${adopter_hits}" | grep -vE '(PRIVATE_ADOPTER_PATTERN|rg ".*(Grace|adopter)|forbidden in public|adopter name matches|specific adopter repository names|Use `rg|must never appear)' || true)
     fi
 
-    if [[ -n "${ip_hits}" || -n "${path_hits}" || -n "${adopter_hits}" ]]; then
+    lan_hits=""
+    if [[ "${base}" != "check-sensitive-literals.sh" ]] && is_under_skills "${repo_path}"; then
+      lan_hits=$(grep -nE "${LAN_HOSTNAME_PATTERN}" "${file_path}" || true)
+    fi
+
+    if [[ -n "${ip_hits}" || -n "${path_hits}" || -n "${adopter_hits}" || -n "${lan_hits}" ]]; then
       has_errors=1
       echo ""
       echo "Sensitive literal check failed in ${label}:"
@@ -89,6 +112,10 @@ scan_file() {
       if [[ -n "${adopter_hits}" ]]; then
         echo "  Private adopter name matches (forbidden in public framework):"
         printf '%s\n' "${adopter_hits}" | sed 's/^/    /'
+      fi
+      if [[ -n "${lan_hits}" ]]; then
+        echo "  .lan hostname matches under skills/ (forbidden — a skill is public surface):"
+        printf '%s\n' "${lan_hits}" | sed 's/^/    /'
       fi
     fi
   fi
@@ -132,7 +159,7 @@ fi
 
 if [[ "${has_errors}" -ne 0 ]]; then
   echo ""
-  echo "Commit blocked: remove machine-local paths, private IPs, or private adopter names."
+  echo "Commit blocked: remove machine-local paths, private IPs, private adopter names, or (under skills/) .lan hostnames."
   echo "Use placeholders like <abs-path-to-repo-root>, bolt://<neo4j-host-or-ip>:7688, or generic terms (\"the primary adopter\")."
   echo "Specific adopter repository names/paths are never allowed in this public tree."
   exit 1

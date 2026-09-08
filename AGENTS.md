@@ -184,8 +184,8 @@ Use this workflow when the user provides a description of additions, deletions, 
   *   **Metadata Tables:** Ensure every Adapter and Component doc includes a machine-readable metadata table per the [Adapter Pattern](01-architecture/00-adapter-pattern/adapter-pattern.md).
 4.  **Validate & Rebuild:**
   *   Once files are updated, offer to perform the required steps to rebuild the Spec Graph:
-      - Cognee (default): from `.eposforge/spec-graph/cognee/sync`, run `epos-secrets uv run cognee-sync --modified <changed-files>` (see sync/README.md for setup; use `--added` for new files, `--deleted` for removed files)
-      - GraphRAG (fallback): `bash .eposforge/spec-graph/graphrag/scripts/rebuild.sh`
+      - Cognee (default): from `"${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/.eposforge/spec-graph/cognee/sync`, run `epos-secrets uv run cognee-sync --modified <changed-files>` (see sync/README.md for setup; use `--added` for new files, `--deleted` for removed files)
+      - GraphRAG (fallback): `bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/.eposforge/spec-graph/graphrag/scripts/rebuild.sh`
 
 ---
 
@@ -230,8 +230,8 @@ Operational conventions retained here:
   canonical location. Create-side contract (including when the artifact
   must be a Tool Transport tool instead of a skill):
   `04-standards/03-agent-skills/agent-skills.md`.
-- Syncing to the Spec Graph (Cognee, default): from `.eposforge/spec-graph/cognee/sync`, run `epos-secrets uv run cognee-sync --modified <files>` (use `--added`/`--deleted` as appropriate; see sync/README.md for setup and full-corpus seed).
-- Rebuilding the Spec Graph (GraphRAG, fallback): `python .eposforge/secrets-key-management/bin/epos-secrets -- bash .eposforge/spec-graph/graphrag/scripts/rebuild.sh`
+- Syncing to the Spec Graph (Cognee, default): from `"${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/.eposforge/spec-graph/cognee/sync`, run `epos-secrets uv run cognee-sync --modified <files>` (use `--added`/`--deleted` as appropriate; see sync/README.md for setup and full-corpus seed).
+- Rebuilding the Spec Graph (GraphRAG, fallback): `python "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/.eposforge/secrets-key-management/bin/epos-secrets -- bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/.eposforge/spec-graph/graphrag/scripts/rebuild.sh`
   (secrets are declared in [.eposforge/secrets-key-management/sops-age/secrets.toml](.eposforge/secrets-key-management/sops-age/secrets.toml)).
 - **Technical findings go in the repo, not personal memory.** When you discover
   vendor bugs, version-specific behavior, API quirks, or diagnostic recipes for
@@ -259,16 +259,17 @@ Operational conventions retained here:
   - Load `.eposforge/backlog/backlog-archive-index.md` first for regression checks;
     open `.eposforge/backlog/backlog-archive.md` only for full historical detail.
 - Cross-repo planning: when multiple working directories are present,
-  run `bash .eposforge/backlog/file-based-backlog/scripts/aggregate.sh --plan`
+  run `bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/.eposforge/backlog/file-based-backlog/scripts/aggregate.sh --plan`
   before planning the next iteration.
-- Operator commands:
-  - `bash .eposforge/backlog/file-based-backlog/scripts/new-issue.sh`
-  - `bash .eposforge/backlog/file-based-backlog/scripts/lint-backlog.sh`
-  - `bash .eposforge/backlog/file-based-backlog/scripts/sweep-resolved.sh`
-  - `bash .eposforge/backlog/file-based-backlog/scripts/aggregate.sh --plan`
-  - `bash .eposforge/backlog/file-based-backlog/scripts/aggregate.sh --regressions <keyword>`
-  - `bash .eposforge/backlog/file-based-backlog/scripts/aggregate.sh --graph`
-  - `bash .eposforge/backlog/file-based-backlog/scripts/aggregate.sh --strangler`
+- Operator commands (each anchored via `EPOSFORGE_HOME`,
+  `.eposforge/backlog/file-based-backlog/scripts/<name>`):
+  - `new-issue.sh`
+  - `lint-backlog.sh`
+  - `sweep-resolved.sh`
+  - `aggregate.sh --plan`
+  - `aggregate.sh --regressions <keyword>`
+  - `aggregate.sh --graph`
+  - `aggregate.sh --strangler`
 - Migration debt visibility (EF-066): an item carrying `LegacyShapeOf: <slug>`
   means this shape is being strangled toward `<slug>` — do not invest further
   here; check `aggregate.sh --strangler` for the migration's target shape before
@@ -353,8 +354,7 @@ Use when the KG needs to be rebuilt from a clean state — after a KG wipe,
 a container migration, or any time incremental state is suspect.
 
 ```bash
-# From repo root:
-bash .eposforge/spec-graph/cognee/scripts/bulk-rebuild.sh
+bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/.eposforge/spec-graph/cognee/scripts/bulk-rebuild.sh
 ```
 
 The script collects all git-tracked `*.md` and `*.ttl` files, wipes the

@@ -6,6 +6,7 @@ Usage:
   epos-authorize --request-file <path>
   epos-authorize --public-key <key> <machine> <fingerprint>
 """
+# vehicle-class: host-ci-glue
 
 import pathlib
 import subprocess
@@ -13,8 +14,7 @@ import sys
 
 
 def main() -> int:
-    repo_root = pathlib.Path(__file__).resolve().parents[4]
-    core = repo_root / "instance" / "installed" / "12-secrets-key-management" / "sops-age" / "scripts" / "setup_core.py"
+    core = pathlib.Path(__file__).resolve().parent.parent / "sops-age" / "scripts" / "setup_core.py"
     cmd = [sys.executable, str(core), "authorize", *sys.argv[1:]]
     return subprocess.call(cmd)
 

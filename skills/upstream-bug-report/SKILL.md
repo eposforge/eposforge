@@ -1,7 +1,7 @@
 ---
 name: upstream-bug-report
 description: File a well-formed bug report against an upstream open-source dependency (GitHub issue). Use when EposForge or one of its adapter dependencies exhibits a reproducible defect that must be fixed upstream, particularly for silent failures, incorrect defaults, or API contract violations that affect ontology grounding, graph correctness, or agent reliability.
-legacy_shape_of: procedure-skills-to-programs
+target_shape_of: procedure-skills-to-programs
 ---
 
 Files a GitHub issue against a dependency repo on behalf of the EposForge
@@ -140,7 +140,7 @@ $EDITOR backlog/backlog.md   # find the item by ID and append:
 If no backlog item exists yet, create one with `new-issue.sh`:
 
 ```bash
-bash .eposforge/backlog/file-based-backlog/scripts/new-issue.sh
+bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}/.eposforge/backlog/file-based-backlog/scripts/new-issue.sh"
 # Title: Track upstream fix for {defect summary}
 # Fix surface: repo-instance (or eposforge-pattern if it affects all adopters)
 # Dependencies: link to whichever EposForge item is blocked

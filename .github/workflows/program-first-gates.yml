@@ -1,0 +1,68 @@
+name: Program-First Gates (G1-G4)
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  select-diff-base:
+    name: Select diff base
+    runs-on: ubuntu-latest
+    outputs:
+      ref: ${{ steps.base.outputs.ref }}
+    steps:
+      - name: Select diff base
+        id: base
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "ref=${{ github.event.pull_request.base.sha }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=${{ github.event.before }}" >> "$GITHUB_OUTPUT"
+          fi
+
+  g1-vehicle-class:
+    name: G1 - vehicle-class classification (added files)
+    needs: select-diff-base
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Every added file in a declared code root carries a vehicle-class marker
+        run: bash .eposforge/source-control-ci/github-and-actions/scripts/check-vehicle-class.sh --changed-against "${{ needs.select-diff-base.outputs.ref }}"
+
+  g2-g3-procedure-skills:
+    name: G2/G3 - procedure skills wrap programs (warn stage)
+    needs: select-diff-base
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: No cwd-relative invocation; procedure recipes point at a program
+        run: bash .eposforge/source-control-ci/github-and-actions/scripts/check-procedure-skills.sh --changed-against "${{ needs.select-diff-base.outputs.ref }}"
+
+  g4-operating-inference:
+    name: G4 - Living Spec operating_inference
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Allowlisted Living Specs declare operating_inference
+        run: bash .eposforge/source-control-ci/github-and-actions/scripts/check-operating-inference.sh
+
+  self-tests:
+    name: Checker self-tests (fixtures, no LLM)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: G1 fixtures
+        run: bash .eposforge/source-control-ci/github-and-actions/scripts/test-check-vehicle-class.sh
+      - name: G2/G3 fixtures
+        run: bash .eposforge/source-control-ci/github-and-actions/scripts/test-check-procedure-skills.sh
+      - name: G4 fixtures
+        run: bash .eposforge/source-control-ci/github-and-actions/scripts/test-check-operating-inference.sh

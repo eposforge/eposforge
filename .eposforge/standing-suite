@@ -5,3 +5,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 "$ROOT/.eposforge/source-control-ci/posix-standing-runner/scripts/test-posix-standing-runner.sh"
 bash "$ROOT/.eposforge/source-control-ci/github-and-actions/scripts/check-installed-scripts-layout.sh"
 python3 "$ROOT/.eposforge/source-control-ci/github-and-actions/scripts/check-component-links.py" --check
+bash "$ROOT/.eposforge/source-control-ci/github-and-actions/scripts/test-check-vehicle-class.sh"
+bash "$ROOT/.eposforge/source-control-ci/github-and-actions/scripts/test-check-procedure-skills.sh"
+bash "$ROOT/.eposforge/source-control-ci/github-and-actions/scripts/test-check-operating-inference.sh"
+bash "$ROOT/.eposforge/source-control-ci/github-and-actions/scripts/check-operating-inference.sh"

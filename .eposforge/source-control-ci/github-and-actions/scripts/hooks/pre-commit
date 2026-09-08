@@ -10,9 +10,12 @@ SCRIPTS_DIR="${REPO_ROOT}/.eposforge/source-control-ci/github-and-actions/script
 
 SENSITIVE_LITERALS="${SCRIPTS_DIR}/check-sensitive-literals.sh"
 LAYOUT_CHECK="${SCRIPTS_DIR}/check-installed-scripts-layout.sh"
+VEHICLE_CLASS="${SCRIPTS_DIR}/check-vehicle-class.sh"
+PROCEDURE_SKILLS="${SCRIPTS_DIR}/check-procedure-skills.sh"
+OPERATING_INFERENCE="${SCRIPTS_DIR}/check-operating-inference.sh"
 
 status=0
-for script in "$SENSITIVE_LITERALS" "$LAYOUT_CHECK"; do
+for script in "$SENSITIVE_LITERALS" "$LAYOUT_CHECK" "$VEHICLE_CLASS" "$PROCEDURE_SKILLS" "$OPERATING_INFERENCE"; do
   if [[ ! -x "$script" ]]; then
     echo "ERROR: checker script is missing or not executable: $script" >&2
     status=1
@@ -21,7 +24,10 @@ for script in "$SENSITIVE_LITERALS" "$LAYOUT_CHECK"; do
 done
 [ "$status" -eq 0 ] || exit "$status"
 
-"$SENSITIVE_LITERALS" --staged || status=$?
-"$LAYOUT_CHECK"                || status=$?
+"$SENSITIVE_LITERALS" --staged   || status=$?
+"$LAYOUT_CHECK"                  || status=$?
+"$VEHICLE_CLASS" --staged        || status=$?
+"$PROCEDURE_SKILLS" --staged     || status=$?  # G2/G3, warn stage: never non-zero for now
+"$OPERATING_INFERENCE" --staged  || status=$?
 
 exit "$status"

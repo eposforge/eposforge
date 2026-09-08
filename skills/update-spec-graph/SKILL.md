@@ -1,7 +1,7 @@
 ---
 name: update-spec-graph
 description: Keeps the Cognee Spec Graph (Component 6) knowledge graph in sync with the repo. Use to update the KG after doc changes (incremental), rebuild it from scratch or after editing the ontology (full), or when recall is stale, the graph looks wrong, or entities are not ontology-anchored.
-legacy_shape_of: procedure-skills-to-programs
+target_shape_of: procedure-skills-to-programs
 ---
 
 Updates the Cognee knowledge graph that backs the Spec Graph (Component 6) so
@@ -46,31 +46,26 @@ changed ontology without wiping the KG.
 
 ## Incremental path (doc changes)
 
-Compute the diff since the last synced commit, then dispatch per-file changes.
-Always pass `--ontology-key` so cognify anchors entities to the ontology.
+`sync-incremental.sh` computes the diff since the last synced commit and
+dispatches the per-file changes; it always passes `--ontology-key` so cognify
+anchors entities to the ontology.
 
 ```bash
-# From repo root. BASE = last commit whose changes are already in the KG.
-ADDED=$(git diff --name-only --diff-filter=A "$BASE..HEAD" -- '*.md' '*.ttl' | grep -vxF '00-vision/01-ontology.ttl' | grep -vE '(^|/)(backlog/|.eposforge/backlog/|plans/)')
-MODIFIED=$(git diff --name-only --diff-filter=M "$BASE..HEAD" -- '*.md' '*.ttl' | grep -vxF '00-vision/01-ontology.ttl' | grep -vE '(^|/)(backlog/|.eposforge/backlog/|plans/)')
-DELETED=$(git diff --name-only --diff-filter=D "$BASE..HEAD" -- '*.md' '*.ttl' | grep -vxF '00-vision/01-ontology.ttl' | grep -vE '(^|/)(backlog/|.eposforge/backlog/|plans/)')
-
-cd .eposforge/spec-graph/cognee/sync
-epos-secrets uv run cognee-sync --ontology-key eposforge \
-    ${ADDED:+--added $ADDED} \
-    ${MODIFIED:+--modified $MODIFIED} \
-    ${DELETED:+--deleted $DELETED}
+bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}/.eposforge/spec-graph/cognee/scripts/sync-incremental.sh" <base-commit>
 ```
 
+`<base-commit>` = the last commit whose changes are already in the KG.
+
 Notes:
-- The ontology TTL is the **anchor, not a corpus document** — exclude it from
-  `--added`/`--modified`. If it changed, you are on the wrong path (use full
-  rebuild).
+- The ontology TTL is the **anchor, not a corpus document** — the script
+  excludes it from `--added`/`--modified`. If it changed, you are on the wrong
+  path (use full rebuild).
 - Raw backlog items (`backlog/`, `.eposforge/backlog/`, `plans/`) are excluded from the main Spec Graph by default (EF-057). They live in the independent file-based backlog graph. The main graph may still reference backlog *mechanics* via ontology terms. Use aggregate.sh / portfolio-review for backlog GraphRAG views.
 - The incremental path assumes the ontology is already uploaded. If unsure,
-  add `--upload-ontology 00-vision/01-ontology.ttl` once (it is idempotent:
-  delete + re-upload).
-- `--dry-run` prints planned actions with no API calls.
+  pass `--upload-ontology 00-vision/01-ontology.ttl` through to cognee-sync
+  once (it is idempotent: delete + re-upload):
+  `bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}/.eposforge/spec-graph/cognee/scripts/sync-incremental.sh" <base-commit> --upload-ontology 00-vision/01-ontology.ttl`
+- Pass `--dry-run` through to print planned actions with no API calls.
 - update = delete old `data_id` + add new; the state DB (`sync/.cognee-state.db`)
   maps `file_path → data_id` and is committed to source. Commit the updated
   state DB after a successful run.
@@ -98,7 +93,7 @@ docker compose -f "$COMPOSE_FILE" start dkr-cgnee-api
 ### 2. Rebuild
 
 ```bash
-bash .eposforge/spec-graph/cognee/scripts/bulk-rebuild.sh
+bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}/.eposforge/spec-graph/cognee/scripts/bulk-rebuild.sh"
 ```
 
 `bulk-rebuild.sh` wipes the sync state DB, stages every tracked `*.md`/`*.ttl`
@@ -119,8 +114,9 @@ rebuild, that anchoring actually took:
   they diverge, cognify did not run (see cognee.md §Pipeline behavior).
 - **Anchoring took (full rebuild):** the definitive signal is node
   `ontology_valid`. Fetch the graph
-  (`GET https://cognee.grace.lan/api/v1/datasets/<id>/graph`) and confirm nodes
-  carry `properties.ontology_valid: true` — if *every* node is `false`, nothing
+  (`GET $COGNEE_API_URL/api/v1/datasets/<id>/graph` — see the private deployment
+  runbook for the concrete host) and confirm nodes carry
+  `properties.ontology_valid: true` — if *every* node is `false`, nothing
   anchored. Corroborate in the API log: a storm of
   `OntologyAdapter: No close match found for '<x>' in category 'classes'` during
   cognify means the ontology did not load (most often it was uploaded as Turtle

@@ -8,7 +8,7 @@ description: >-
   EF-039 portfolio views (aggregate.sh --tags/--themes, --critical-path, --mermaid).
 
 **Important**: For an adopter, run this from the **primary repo** that acts as the Adopter Platform Spec (the single repo containing documentation of the overall eposforge implementation for both product and platform factories, plus the `.eposforge/` adopted slice). This is where the real portfolio view lives. If your workspace only contains the framework or a sub-project, the tool can still operate on what is present, but that yields only a partial (single-project) backlog view rather than the adopter's portfolio.
-legacy_shape_of: procedure-skills-to-programs
+target_shape_of: procedure-skills-to-programs
 ---
 
 Runs the periodic semantic garbage-collection pass that keeps the backlog corpus
@@ -41,7 +41,7 @@ spawn rule). Without that handoff, the review is incomplete.
 - When Gas Town is the orchestrator adapter: knowledge of the spawn path
   (`backlog-to-beads.sh` / skill `gastown-backlog-to-beads`, adopter-007 boundary)
 
-**Invocation context**: Run from (or point tooling at) the adopter's primary repo (the Adopter Platform Spec). Set `BACKLOG_ROOTS` (or use `.code-workspace`) so that the primary repo's `..eposforge/backlog` (and any other project backlogs it tracks) are discovered. The framework clone supplies the `aggregate.sh` / scripts. See the adapter-layout-mirror standard and EF-056 plan.
+**Invocation context**: Run from (or point tooling at) the adopter's primary repo (the Adopter Platform Spec). Set `BACKLOG_ROOTS` (or use `.code-workspace`) so that the primary repo's `.eposforge/backlog` (and any other project backlogs it tracks) are discovered. The framework clone supplies the `aggregate.sh` / scripts. See the adapter-layout-mirror standard and EF-056 plan.
 
 ## Step 1 — Gather portfolio state
 
@@ -50,15 +50,15 @@ Run the views (adjust paths for your primary adopter repo; the framework clone p
 ```bash
 # From (or with EPOSFORGE_HOME pointing to) the framework
 # BACKLOG_ROOTS includes the primary repo's .eposforge/backlog (and any other roots)
-bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/..eposforge/backlog/file-based-backlog/scripts/aggregate.sh --tags
-bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/..eposforge/backlog/file-based-backlog/scripts/ready.sh
-bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/..eposforge/backlog/file-based-backlog/scripts/aggregate.sh --mermaid
+bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/.eposforge/backlog/file-based-backlog/scripts/aggregate.sh --tags
+bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/.eposforge/backlog/file-based-backlog/scripts/ready.sh
+bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/.eposforge/backlog/file-based-backlog/scripts/aggregate.sh --mermaid
 ```
 
 For each anchor item identified in the backlog, also run:
 
 ```bash
-bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/..eposforge/backlog/file-based-backlog/scripts/aggregate.sh --critical-path <anchor-ID>
+bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/.eposforge/backlog/file-based-backlog/scripts/aggregate.sh --critical-path <anchor-ID>
 ```
 
 If Cognee MCP is available, recall recent portfolio and roadmap state:
@@ -260,7 +260,7 @@ For each proposal the operator accepts during the review session:
 Run lint after applying edits:
 
 ```bash
-bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/..eposforge/backlog/file-based-backlog/scripts/lint-backlog.sh
+bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}"/.eposforge/backlog/file-based-backlog/scripts/lint-backlog.sh
 ```
 
 Do **not** block Step 7 on Step 8. The implement handoff is produced even when
