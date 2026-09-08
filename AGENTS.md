@@ -265,6 +265,10 @@ Operational conventions retained here:
   - `bash .eposforge/backlog/file-based-backlog/scripts/aggregate.sh --plan`
   - `bash .eposforge/backlog/file-based-backlog/scripts/aggregate.sh --regressions <keyword>`
   - `bash .eposforge/backlog/file-based-backlog/scripts/aggregate.sh --graph`
+- Named migration `procedure-skills-to-programs` (EF-086/EF-087): a step-list
+  procedure skill or a cwd-relative invocation is the legacy shape — do not
+  invest, wrap a program instead. Skills carrying `legacy_shape_of:
+  procedure-skills-to-programs` in frontmatter are marked instances of this.
 
 ---
 

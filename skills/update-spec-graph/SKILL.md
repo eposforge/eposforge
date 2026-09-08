@@ -1,6 +1,7 @@
 ---
 name: update-spec-graph
 description: Keeps the Cognee Spec Graph (Component 6) knowledge graph in sync with the repo. Use to update the KG after doc changes (incremental), rebuild it from scratch or after editing the ontology (full), or when recall is stale, the graph looks wrong, or entities are not ontology-anchored.
+legacy_shape_of: procedure-skills-to-programs
 ---
 
 Updates the Cognee knowledge graph that backs the Spec Graph (Component 6) so

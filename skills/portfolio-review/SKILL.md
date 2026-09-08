@@ -8,6 +8,7 @@ description: >-
   EF-039 portfolio views (aggregate.sh --tags/--themes, --critical-path, --mermaid).
 
 **Important**: For an adopter, run this from the **primary repo** that acts as the Adopter Platform Spec (the single repo containing documentation of the overall eposforge implementation for both product and platform factories, plus the `.eposforge/` adopted slice). This is where the real portfolio view lives. If your workspace only contains the framework or a sub-project, the tool can still operate on what is present, but that yields only a partial (single-project) backlog view rather than the adopter's portfolio.
+legacy_shape_of: procedure-skills-to-programs
 ---
 
 Runs the periodic semantic garbage-collection pass that keeps the backlog corpus
