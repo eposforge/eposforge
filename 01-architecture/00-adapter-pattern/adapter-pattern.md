@@ -46,6 +46,14 @@ Adapter:
   Use the skill-versus-tool designation test before choosing.
 - `status` — `experimental` | `approved` | `deprecated` | `shelved`.
 
+Where the Adapter *is* the capability described by its own Living Spec
+(the adapter's metadata table doubles as that capability's Living Spec —
+see [Living Spec's Required Adapter
+metadata](../02-components/living-spec.md#required-adapter-metadata)),
+it also carries `operating_inference` (`none` | `on-demand-judgment` |
+`continuous-loop`), plus `operating_inference_reason` and
+`operating_inference_budget` when the value is `continuous-loop`.
+
 **Status values:**
 
 - `experimental`: Adapter is under active development or evaluation.

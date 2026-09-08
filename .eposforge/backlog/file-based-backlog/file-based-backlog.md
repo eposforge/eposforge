@@ -24,6 +24,7 @@ source_of_truth: yes
 | `cost_hint` | `free` |
 | `capabilities` | `issue-tracking`, `dependency-linking`, `cross-repo-aggregation`, `archive-indexing`, `linting`, `ready-work-query`, `portfolio-views`, `version-sync` |
 | `invocation_surface` | `bash scripts` |
+| `operating_inference` | `none` — lint, aggregate and sweep are deterministic; no model is consulted to operate the backlog |
 
 ### Backlog required fields
 

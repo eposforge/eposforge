@@ -66,6 +66,8 @@ and [../01-architecture/02-components/spec-graph.md](../01-architecture/02-compo
 | `capabilities` | ontology-grounded-extraction, entity-normalization, graph-query |
 | `invocation_surface` | `cognee-sync` CLI at `.eposforge/spec-graph/cognee/sync/` (incremental, HTTP to `dkr-cgnee-api`); GraphRAG opt-in fallback at `.eposforge/spec-graph/graphrag/scripts/rebuild.sh` |
 | `status` | `experimental` |
+| `operating_inference` | `on-demand-judgment` — a program (`cognee-sync`) holds the path; extraction/cognify is load-bearing inference invoked per file via the budget preflight gate |
+| `operating_inference_budget` | `.eposforge/inference/budget-policy.json` (repo token wallet, `check-budget-gate.sh` preflight) plus the documented full-rebuild embedding-token envelope: `.eposforge/spec-graph/cognee/scripts/bulk-rebuild.sh` records a full 97-file corpus rebuild at roughly 180K-200K embedding tokens, checked against `.eposforge/.audit/inference-budget-counters.json` |
 | `query_languages` | cognee HTTP API (`/api/v1/recall`, `/api/v1/search`); natural language via cognee MCP (`dkr-cgnee-mcp`) |
 | `projection_format` | hybrid (graph nodes/edges in embedded Ladybug/Kuzu-fork + embeddings in LanceDB) |
 | `rebuild_target` | per-file via cognee-sync (incremental); 15 minutes for the shelved GraphRAG fallback full-rebuild |
