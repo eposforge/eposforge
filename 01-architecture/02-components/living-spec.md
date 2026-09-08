@@ -120,8 +120,9 @@ Any Adapter for this slot must:
   budget policy and envelope) are also required;
   `operating_inference_budget` is recommended when the value is
   `on-demand-judgment`. A `continuous-loop` capability that cannot name
-  a budget policy is non-conformant — see the [Inference Layer]'s
-  budget preflight gate.
+  a budget policy is non-conformant — see the [Inference Layer] slot's
+  reference budget preflight gate at
+  `.eposforge/inference/budget-enforcement.md`.
 - Declare inputs/outputs and non-functional bounds with enough precision
   that black-box test partitions can be derived from the Spec without
   reading implementation code.
@@ -148,8 +149,9 @@ In addition to the universal fields in
 Where the Adapter *is* the capability this Living Spec describes (a
 platform capability whose adapter metadata table doubles as its Living
 Spec, e.g. `.eposforge/SPEC.md`), that table also carries
-`operating_inference`, `operating_inference_reason` and
-`operating_inference_budget` alongside the universal `privacy_posture`,
+`operating_inference` — plus `operating_inference_reason` and
+`operating_inference_budget` when the value is `continuous-loop` —
+alongside the universal `privacy_posture`,
 `cost_hint` and `invocation_surface` fields defined in the
 [Adapter Pattern](../00-adapter-pattern/adapter-pattern.md).
 
