@@ -38,7 +38,7 @@ source_of_truth: yes
 
 | Field | Value |
 |---|---|
-| `mcp_config_source` | `sync-mcp.py` matrix (`mcp.servers.toml` -> `.mcp.json`, `.vscode/mcp.json`, `.grok/config.toml`, `.github/mcp.json`, plus `$HOME` equivalents based on `scope`) |
+| `mcp_config_source` | `sync-mcp.py` matrix (`mcp.servers.toml` -> `.mcp.json`, `.vscode/mcp.json`, `.grok/config.toml`, `.codex/config.toml`, `.github/mcp.json`, plus `$HOME` equivalents based on `scope`) |
 | `policy_anchor` | [../../../../AGENTS.md](../../../../AGENTS.md) MCP-first policy |
 | `scope_note` | this is this repo's Tool Transport choice, not a normative requirement for other instances |
 

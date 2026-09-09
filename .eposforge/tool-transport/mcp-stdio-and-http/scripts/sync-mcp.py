@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""sync-mcp.py — Generate native config for Claude Code, Copilot CLI, VS Code Copilot Chat, Grok.
+"""sync-mcp.py — Generate native config for Claude Code, Copilot CLI, VS Code Copilot Chat, Grok, Codex.
 
 This script is the canonical generator for the MCP configuration files.
 It reads mcp.servers.toml and maps each server (by scope) into the target CLIs.
@@ -67,7 +67,13 @@ DEV_PRODUCTS = [
         "format": "toml_mcp_servers",
         "project_path": _REPO_ROOT / ".grok" / "config.toml",
         "user_path": pathlib.Path.home() / ".grok" / "config.toml",
-    }
+    },
+    {
+        "name": "Codex",
+        "format": "toml_mcp_servers",
+        "project_path": _REPO_ROOT / ".codex" / "config.toml",
+        "user_path": pathlib.Path.home() / ".codex" / "config.toml",
+    },
 ]
 
 def _build_runtime_name_map() -> dict[str, str]:
@@ -256,8 +262,9 @@ def _generate_toml(content: str, active: list[dict], all_srv: list[dict], rmap: 
         out.append(f"[mcp_servers.{name}]")
         out.append("enabled = true")
         if t == "sse":
-            # Grok's native sse transport drives Streamable HTTP against
-            # classic-SSE servers (405s). Force classic SSE via an mcp-remote stdio proxy.
+            # Grok (and Codex, which reuses this TOML dialect) drive Streamable
+            # HTTP against classic-SSE servers (405s). Force classic SSE via an
+            # mcp-remote stdio proxy.
             out.append('type = "stdio"')
             out.append('command = "npx"')
             out.append(f'args = {json.dumps(["-y", "mcp-remote", _resolve_url(s), "--transport", "sse-only"])}')

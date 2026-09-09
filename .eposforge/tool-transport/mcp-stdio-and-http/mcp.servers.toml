@@ -2,8 +2,8 @@ schema_version = "1"
 # Canonical MCP server declarations for this repo instance.
 # This is the source of truth — DO NOT edit native configs (.mcp.json, .vscode/mcp.json, etc.) directly.
 # Each server MUST declare a `scope`:
-#   scope = "project"  # (written to project-level files like .mcp.json, .github/mcp.json, .vscode/mcp.json, .grok/config.toml)
-#   scope = "user"     # (written to user-level files like ~/.claude.json, ~/.copilot/mcp-config.json, ~/.grok/config.toml)
+#   scope = "project"  # (written to project-level files like .mcp.json, .github/mcp.json, .vscode/mcp.json, .grok/config.toml, .codex/config.toml)
+#   scope = "user"     # (written to user-level files like ~/.claude.json, ~/.copilot/mcp-config.json, ~/.grok/config.toml, ~/.codex/config.toml)
 #
 # After editing this file, regenerate the native config files:
 #   python .eposforge/tool-transport/mcp-stdio-and-http/scripts/sync-mcp.py
