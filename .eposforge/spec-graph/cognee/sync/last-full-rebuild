@@ -1,0 +1,4 @@
+# Last full Spec Graph KG rebuild. Written by bulk-rebuild.sh; do not edit by hand.
+# Drift detection for maintain-ontology starts at this commit, not at the last TTL edit.
+commit=76f4bb1879b39f9f6b9db52bf9dc151eb0b2331c
+date=2026-09-10T02:10:37Z

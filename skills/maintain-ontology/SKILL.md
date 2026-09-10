@@ -24,31 +24,25 @@ If this ontology drifts, consumer agents can still query Cognee MCP, but the gui
 
 - `00-vision/01-ontology.ttl` — the ontology file under review
 - previous ontology-grounded KG state via Cognee MCP when available — use it as the last published graph-backed memory of the ontology, not as authority over newer unrebuild corpus changes
-- `git log` — commit history to detect drift
+- last full KG rebuild — `.eposforge/spec-graph/cognee/sync/last-full-rebuild` (written by `bulk-rebuild.sh`) or, if missing, the majority `synced_at` cluster in `.cognee-state.db`
 - adapter cards and specs — `.eposforge/`, `.eposforge/SPEC.md`, and core spec files under `00-vision/`, `01-architecture/`, `02-roadmap/`, `04-standards/`
 - [owl-turtle-primer](./references/owl-turtle-primer.md) — OWL/Turtle reference (load when coaching is needed)
 
-## Detect drift from git history
+## Detect drift since the last full KG rebuild
 
-Find the last commit that edited `00-vision/01-ontology.ttl`. Then collect relevant spec and adapter-card changes between that commit and HEAD.
-
-```bash
-git log --oneline -- 00-vision/01-ontology.ttl
-```
-
-Store the most recent hash as `$last`. Then list changed markdown files:
+The live graph last re-anchored at the last **full KG rebuild**, not the last TTL edit. A TTL commit can land without a rebuild; corpus between the rebuild and that TTL edit is still unanchored drift. Do **not** use `git log -- 00-vision/01-ontology.ttl` as the window.
 
 ```bash
-git diff --name-only "${last}..HEAD" -- "*.md"
+bash "${EPOSFORGE_HOME:?set EPOSFORGE_HOME}/skills/maintain-ontology/scripts/drift-window.sh"
 ```
 
-For each changed file, inspect the diff to identify new terms, new relationship keywords, new component docs, or new status values:
+The program prints `rebuild_commit`, `rebuild_date`, and `git diff --name-only ${rebuild}..HEAD -- "*.md"`. For each listed file, inspect the diff to identify new terms, new relationship keywords, new component docs, or new status values:
 
 ```bash
-git diff "${last}..HEAD" -- <file>
+git diff "${rebuild}..HEAD" -- <file>
 ```
 
-The `drift report` is the list of changed files and the new concepts or relationships found in their diffs.
+The `drift report` is that file list and the new concepts or relationships found in their diffs.
 
 ## Query the previous KG first when available
 
@@ -210,7 +204,7 @@ Load `[owl-turtle-primer](./references/owl-turtle-primer.md)` (now includes SKOS
 
 ## Outputs
 
-- `drift report` — markdown files changed since last TTL edit, with new concepts highlighted
+- `drift report` — markdown files changed since the last full KG rebuild, with new concepts highlighted
 - `previous-kg report` — existing ontology-grounded graph terms relevant to the candidate concept, when Cognee is available
 - `gap report` — concepts and relationships in the corpus not yet modeled in the TTL
 - updated `00-vision/01-ontology.ttl` — ontology with all identified gaps closed

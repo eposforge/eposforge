@@ -120,4 +120,12 @@ else
   echo "bulk-rebuild: WARNING — checkpoint call failed; graph may be WAL-only (not durable)." >&2
 fi
 
-echo "bulk-rebuild: done — commit updated .cognee-state.db to source"
+STAMP="${SYNC_DIR}/last-full-rebuild"
+{
+  echo "# Last full Spec Graph KG rebuild. Written by bulk-rebuild.sh; do not edit by hand."
+  echo "# Drift detection for maintain-ontology starts at this commit, not at the last TTL edit."
+  echo "commit=$(git -C "$REPO_ROOT" rev-parse HEAD)"
+  echo "date=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+} > "$STAMP"
+echo "bulk-rebuild: wrote ${STAMP}"
+echo "bulk-rebuild: done — commit updated .cognee-state.db and last-full-rebuild to source"

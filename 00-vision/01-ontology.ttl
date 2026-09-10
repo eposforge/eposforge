@@ -83,7 +83,7 @@ ef:Spec rdf:type owl:Class ;
 ef:LivingSpec rdf:type owl:Class ;
     rdfs:subClassOf ef:Spec ;
     rdfs:label "Living Spec" ;
-    rdfs:comment "Current canonical intent (HEAD) for one Product — or one Platform Factory capability at the same grain. Not one Spec per repo/module of a multi-repo product, and not a Spec Kit episode folder. Episodes fold into this Spec when applied. Fulfillment artifacts (code across repos) implement it. Projected into Scope / Factory Spec Graph. See Component 2 contract." .
+    rdfs:comment "Current canonical intent (HEAD) for one Product — or one Platform Factory capability at the same grain. Not one Spec per repo/module of a multi-repo product, and not a Spec Kit episode folder. Episodes fold into this Spec when applied. Fulfillment artifacts (code across repos) implement it. Projected into Scope / Factory Spec Graph. Required field operating_inference (none | on-demand-judgment | continuous-loop) declares how the capability consumes model inference while operating; continuous-loop also requires operating_inference_reason and operating_inference_budget. See Component 2 contract and Standard 15." .
 
 ef:Phase rdf:type owl:Class ;
     rdfs:label "Phase" ;
@@ -489,6 +489,24 @@ ef:autonomyTosPosture rdf:type owl:DatatypeProperty ;
     rdfs:domain ef:Adapter ;
     rdfs:range xsd:string .
 
+ef:operatingInference rdf:type owl:DatatypeProperty ;
+    rdfs:label "operating_inference" ;
+    rdfs:comment "How a Living Spec's capability consumes model inference while operating: none | on-demand-judgment | continuous-loop. Distinct from ef:AutonomyMode (factory human-in-loop posture) and from ef:costHint (cost tier). none = a program holds the path and no model is consulted to operate the procedure; on-demand-judgment = a program holds the path and occasionally asks a model, or a skill wraps a program and the choice of path is the judgment; continuous-loop = an agent stays in the loop as the operating path. Grain is the Living Spec (one Product or one platform capability), not every script. When an Adapter's metadata table doubles as that capability's Living Spec, the same field appears there." ;
+    rdfs:domain ef:LivingSpec ;
+    rdfs:range xsd:string .
+
+ef:operatingInferenceReason rdf:type owl:DatatypeProperty ;
+    rdfs:label "operating_inference_reason" ;
+    rdfs:comment "Written reason a program cannot hold the operating path. Required when operating_inference is continuous-loop." ;
+    rdfs:domain ef:LivingSpec ;
+    rdfs:range xsd:string .
+
+ef:operatingInferenceBudget rdf:type owl:DatatypeProperty ;
+    rdfs:label "operating_inference_budget" ;
+    rdfs:comment "Pointer to a budget policy and envelope. Required when operating_inference is continuous-loop; recommended when on-demand-judgment. A continuous-loop capability that cannot name a budget policy is non-conformant." ;
+    rdfs:domain ef:LivingSpec ;
+    rdfs:range xsd:string .
+
 ### Datatype Properties (Concept / Guidance / Tenet Schemas)
 
 ef:adoptedDefinition rdf:type owl:DatatypeProperty ;
@@ -531,7 +549,7 @@ See the scopeNote on ef:KnowledgeTree for current access model. This node is the
     ef:kind ef:NodeKindGuidance ;
     ef:lifecycleStatus ef:StatusAdopted ;
     skos:broader ef:KnowledgeTree ;
-    skos:related ef:ScopeSpecGraph, ef:FactorySpecGraph, ef:SessionChairs, ef:CrossAgentReviewContract, ef:DiscoverBeforeBuild, ef:McpFirstRouting, ef:AgentSkills, ef:ToolTransportComponent .
+    skos:related ef:ScopeSpecGraph, ef:FactorySpecGraph, ef:SessionChairs, ef:CrossAgentReviewContract, ef:DiscoverBeforeBuild, ef:McpFirstRouting, ef:AgentSkills, ef:ToolTransportComponent, ef:ProgramFirstProcedures .
 
 ef:RandianConceptFormation rdf:type ef:Tenet, skos:Concept ;
     skos:prefLabel "Randian concept formation" ;
@@ -694,11 +712,11 @@ ef:MultiGraphArchitecture rdf:type ef:Concept, skos:Concept ;
 ef:CodeSurfaceEncapsulation rdf:type ef:Concept, ef:Standard, skos:Concept ;
     skos:prefLabel "Code-surface encapsulation" ;
     skos:altLabel "conversational-first delivery", "declared code roots" ;
-    skos:definition "Product delivery starts conversational (agents, skills, structured intent) and promotes to deterministic source code and UIs when use demands it. Implementation code and UI code must live in declared code roots (e.g. src/, apps/) or code-focused repos so Tool Transport code-structure tools can be scoped via product registry code_globs — not scattered through prose-primary knowledge trees or whole-repo indexed as a code graph. See Standard 12." ;
+    skos:definition "Product UX starts conversational (agents, skills, structured intent) and promotes to GUI and API when use pulls them. Implementation code and UI code must live in declared code roots (e.g. src/, apps/) or code-focused repos so Tool Transport code-structure tools can be scoped via product registry code_globs — not scattered through prose-primary knowledge trees or whole-repo indexed as a code graph. Known procedures are out of this standard's conversational-first rule and are governed by Standard 15 (program-first). See Standard 12." ;
     skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindConcept ;
     ef:lifecycleStatus ef:StatusAdopted ;
-    skos:related ef:LivingSpecComponent, ef:ToolTransportComponent, ef:PairedChangeEnforcement, ef:SpecGraphComponent .
+    skos:related ef:LivingSpecComponent, ef:ToolTransportComponent, ef:PairedChangeEnforcement, ef:SpecGraphComponent, ef:ProgramFirstProcedures .
 
 ef:PairedChangeEnforcement rdf:type ef:Concept, ef:Standard, skos:Concept ;
     skos:prefLabel "Paired-Change Enforcement" ;
@@ -711,11 +729,11 @@ ef:PairedChangeEnforcement rdf:type ef:Concept, ef:Standard, skos:Concept ;
 
 ef:IndependentBacklogGraph rdf:type ef:Concept, skos:Concept ;
     skos:prefLabel "Independent File-Based Backlog Graph" ;
-    skos:definition "Backlog items (the work) live in their own independent file-based graph, separate from Spec Graph projections (Component 6 Scope/Factory Spec Graphs; see EF-056 / EF-057). Structured Markdown provides the explicit skeleton: issues are nodes (Status, Effort, Tags, Fix surface, etc. attributes); Depends on:/Blocks:/Supersedes: are directed edges; Tags supply communities. GraphRAG-style capabilities (critical-path, thematic views, traversal) are supplied by separate tooling and skills over the files (aggregate.sh, portfolio-review, etc.). The capability lives in the tooling layer. Disk (the Markdown) is canonical; no Cognee dependency for the core backlog graph. See .eposforge/backlog/file-based-backlog/file-based-backlog.md and EF-056/057." ;
+    skos:definition "Backlog items (the work) live in their own independent file-based graph, separate from Spec Graph projections (Component 6 Scope/Factory Spec Graphs; see EF-056 / EF-057). Structured Markdown provides the explicit skeleton: issues are nodes (Status, Effort, Tags, Fix surface, etc. attributes); Depends on:/Blocks:/Supersedes: are directed edges; Tags supply communities; Migration:/LegacyShapeOf:/TargetShapeOf: are associative membership edges on a named in-flight strangler (not Depends on:/Blocks:). GraphRAG-style capabilities (critical-path, thematic views, strangler view, traversal) are supplied by separate tooling and skills over the files (aggregate.sh, portfolio-review, etc.). The capability lives in the tooling layer. Disk (the Markdown) is canonical; no Cognee dependency for the core backlog graph. See .eposforge/backlog/file-based-backlog/file-based-backlog.md and EF-056/057/066." ;
     skos:inScheme ef:KnowledgeTree ;
     ef:kind ef:NodeKindConcept ;
     ef:lifecycleStatus ef:StatusAdopted ;
-    skos:related ef:BacklogComponent ;
+    skos:related ef:BacklogComponent, ef:ProcedureSkillsToPrograms, ef:ThemeToTags ;
     skos:broader ef:BacklogComponent .
 
 ef:MultiGraphArchitecture skos:broader ef:SpecGraphComponent .
@@ -1064,9 +1082,9 @@ ef:McpFirstRouting rdf:type ef:Standard, skos:Concept ;
 ef:AgentSkills rdf:type ef:Standard, skos:Concept ;
     skos:prefLabel "Agent Skills" ;
     skos:altLabel "skill vs tool", "03-agent-skills" ;
-    skos:definition "Adopted create-side contract for agent skills: agentskills.io layout under skills/<name>/SKILL.md, thin .github/skills wrappers, and a designation test (tool vs skill vs runbook vs prompt pack). A skill whose body is only a store verb is non-conformant unless it wraps an existing Tool Transport tool with chair, order, dry-run, or a human gate." ;
+    skos:definition "Adopted create-side contract for agent skills: agentskills.io layout under skills/<name>/SKILL.md, thin .github/skills wrappers, and a designation test (tool vs skill vs runbook vs prompt pack). A skill whose body is only a store verb is non-conformant unless it wraps an existing Tool Transport tool with chair, order, dry-run, or a human gate. When the designation test picks skill or runbook and the procedure's steps are known, the skill or runbook must name the program that holds those steps and invoke it via that program's documented home variable — never a cwd-relative path. See Standard 15." ;
     skos:inScheme ef:KnowledgeTree ;
-    skos:related ef:SessionChairs, ef:McpFirstRouting, ef:ToolTransportComponent, ef:EposForgeMCPUsage .
+    skos:related ef:SessionChairs, ef:McpFirstRouting, ef:ToolTransportComponent, ef:EposForgeMCPUsage, ef:ProgramFirstProcedures .
 
 ef:CanonicalDocSources rdf:type ef:Standard, skos:Concept ;
     skos:prefLabel "Canonical Source Policy" ;
@@ -1080,7 +1098,7 @@ ef:AdapterLayoutMirror rdf:type ef:Standard, skos:Concept ;
 
 ef:AgentCodingGuidelines rdf:type ef:Standard, skos:Concept ;
     skos:prefLabel "Agent Coding Guidelines" ;
-    skos:definition "Adopted standard for agent conduct during an edit task. Session chairs decide which task this is; this standard governs how the implementer works once seated." ;
+    skos:definition "Adopted standard for agent conduct during an edit task and in operator-facing chat. Session chairs decide which task this is; this standard governs how the implementer works once seated. Chat is ordinary English: do not lead with backlog IDs or internal shorthand the operator did not use." ;
     skos:inScheme ef:KnowledgeTree ;
     skos:related ef:SessionChairs, ef:ImplementerChair .
 
@@ -1092,9 +1110,9 @@ ef:PairedDetection rdf:type ef:Standard, skos:Concept ;
 
 ef:UngameableGate rdf:type ef:Standard, skos:Concept ;
     skos:prefLabel "Ungameable Gate" ;
-    skos:definition "Adopted standard: a task may be declared done only when an ungameable integration gate passes, never on agent self-report. Five anti-gaming requirements, including write-scope separation between implementer and gate." ;
+    skos:definition "Adopted standard: a task may be declared done only when an ungameable integration gate passes, never on agent self-report. Five anti-gaming requirements, including write-scope separation between implementer and gate. When no gate yet covers the changed behavior: a done claim carries the command that was run and its result; no gate means no done (building the missing check is part of the task); a proxy (lint, build, commit message, healthy container, well-formed-only check, test written from the code, or the implementer re-reading its own diff) is not the outcome. The claim rule must live in always-loaded agent instructions." ;
     skos:inScheme ef:KnowledgeTree ;
-    skos:related ef:CrossAgentReviewContract, ef:ReviewerChair, ef:TestRunner .
+    skos:related ef:CrossAgentReviewContract, ef:ReviewerChair, ef:TestRunner, ef:PairedDetection .
 
 ef:TestRunner rdf:type ef:Concept, skos:Concept ;
     skos:prefLabel "test runner" ;
@@ -1103,12 +1121,14 @@ ef:TestRunner rdf:type ef:Concept, skos:Concept ;
     ef:adoptedDefinition "The slot the ungameable-gate rules run in — one clone-local command, not a mandated vendor, and not a new component." ;
     ef:variants "standing-suite", "posix standing runner", "example-not-mandate" ;
     ef:kind ef:NodeKindConcept ;
-    ef:lifecycleStatus ef:StatusDraft ;
+    ef:lifecycleStatus ef:StatusAdopted ;
+    skos:inScheme ef:KnowledgeTree ;
     skos:broader ef:SourceControlCIComponent ;
     skos:related ef:SourceControlCIComponent, ef:Kernel, ef:UngameableGate, ef:DetectionRatchet, ef:CrossAgentReviewContract .
 
 # Standard 11 is also typed on ef:PairedChangeEnforcement (Concept + Standard).
 # Standard 12 is also typed on ef:CodeSurfaceEncapsulation (Concept + Standard).
+# Standard 15 is also typed on ef:ProgramFirstProcedures (Concept + Standard).
 
 ef:ChatEventSchema rdf:type ef:Standard, skos:Concept ;
     skos:prefLabel "Chat Event Schema" ;
@@ -1121,6 +1141,31 @@ ef:SessionChairs rdf:type ef:Standard, skos:Concept ;
     skos:definition "Adopted standard distinguishing four layers adopters must keep separate: component role (factory slot), session chair (named judgment seat that must not blend with another seat), skill (discoverable procedure a chair may invoke), and tool (named Tool Transport function against a capability or system of record). Governs CLI-agnostic chair installation, the selector in standing instructions, the collision test, and load-then-refuse. A store verb is a tool, not a skill or a chair." ;
     skos:inScheme ef:KnowledgeTree ;
     skos:related ef:DevProductComponent, ef:AgentPolicyComponent, ef:RouterComponent, ef:ChairCollisionTest, ef:ImplementerChair, ef:ReviewerChair, ef:ElicitorChair, ef:OperatorChair, ef:CrossAgentReviewContract, ef:AgentSkills, ef:ToolTransportComponent, ef:McpFirstRouting .
+
+ef:ProgramFirstProcedures rdf:type ef:Concept, ef:Standard, skos:Concept ;
+    skos:prefLabel "Program-first procedures" ;
+    skos:altLabel "Standard 15", "vehicle-class", "home-variable invocation", "program-first" ;
+    skos:definition "Once the steps of a factory or product procedure are known, they live in a program under a declared code root. A skill or runbook wraps that program (when, dry-run, human gate, refusals, verify) and is not the only place the steps exist. Judgment stays in prose. Before committed code, the author names exactly one vehicle-class: host-ci-glue, in-repo-pipeline, library-or-service, vendor-locked-runtime, or disposable-spike. Invocation uses the documented home variable for that program's tree, never a cwd-relative path. Distinct from Standard 12, which governs product UX (conversational-first). Gates G1-G4 enforce vehicle-class markers, procedure-skill wrapping, home-anchored invocation, and Living Spec operating_inference. See 04-standards/15-program-first-procedures/." ;
+    skos:inScheme ef:KnowledgeTree ;
+    ef:kind ef:NodeKindConcept ;
+    ef:lifecycleStatus ef:StatusAdopted ;
+    skos:related ef:AgentSkills, ef:CodeSurfaceEncapsulation, ef:UngameableGate, ef:PairedChangeEnforcement, ef:PairedDetection, ef:LivingSpecComponent, ef:ProcedureSkillsToPrograms .
+
+### Migration Individuals
+
+ef:ProcedureSkillsToPrograms rdf:type ef:Migration, skos:Concept ;
+    rdfs:label "procedure-skills-to-programs" ;
+    skos:prefLabel "procedure-skills-to-programs" ;
+    skos:definition "Named strangler-fig migration: a step-list procedure skill or a cwd-relative invocation is the legacy shape; a program invoked via its documented home variable, wrapped by a skill or runbook, is the target shape. Completion commitment 2027-03-31. Product UX stays conversational-first (Standard 12); known procedures are program-first (Standard 15). Visibility of remaining debt is backlog Migration/LegacyShapeOf/TargetShapeOf fields plus skill-frontmatter legacy_shape_of markers." ;
+    skos:inScheme ef:KnowledgeTree ;
+    skos:related ef:ProgramFirstProcedures, ef:CodeSurfaceEncapsulation, ef:AgentSkills, ef:IndependentBacklogGraph .
+
+ef:ThemeToTags rdf:type ef:Migration, skos:Concept ;
+    rdfs:label "theme-to-tags" ;
+    skos:prefLabel "theme-to-tags" ;
+    skos:definition "Named strangler-fig migration of the file-based backlog schema: single-valued Theme: becomes multi-valued Tags:. Tags are associative grouping edges, distinct from Depends on:/Blocks: directional dependency edges." ;
+    skos:inScheme ef:KnowledgeTree ;
+    skos:related ef:IndependentBacklogGraph .
 
 ### Vision Pillar Individuals
 
@@ -1201,6 +1246,7 @@ ef:DevProductComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
 ef:RouterComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
 ef:ToolTransportComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
 ef:SpecGraphComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
+ef:WorkingMemoryComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
 ef:ExecutionSandboxComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
 ef:AgentPolicyComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
 ef:SourceControlCIComponent ef:usesAdapterPattern ef:UniversalAdapterPattern .
