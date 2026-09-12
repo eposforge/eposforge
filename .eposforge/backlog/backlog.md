@@ -811,3 +811,54 @@ Fix surface: eposforge-pattern
 Tags: secrets
 Verify with: an audit table lists every `.sh`, `.ps1` and Python entrypoint under `.eposforge/secrets-key-management/`, records for each whether it is a thin launcher over a shared core or a second implementation, and names the layout each one resolves; after the change every surviving pair launches ONE write-once core; no `.ps1` launcher is deleted; the same entrypoint invoked from a POSIX shell and from Windows Git Bash reaches the same core and produces the same result; each touched program carries a `vehicle-class:` marker; no plaintext secret value is printed by any path the audit touches.
 Notes: Filed 2026-09-07. Follow-up, deliberately independent of EF-091 so a bad collapse cannot revert the skill-path fixes; audit table comes first, before any collapse. Today's pairs already disagree on layout — `setup.sh` and `setup.ps1` both wrap `setup_core.py` (already the right shape), while the machine-request and authorize entrypoints resolve three different trees across their `.sh`, `.ps1` and Python forms. The rule is write once, thin launchers for OS-specific bits; dual POSIX + PowerShell *implementations* are declined because twins drift, which is exactly what these entrypoints demonstrate. Adjacency: EF-022 (relocatable resolver / `EPOS_SECRETS_HOME`) is the vault-location half and stays separate. Plan (scope, boundaries, verification detail): `backlog/plans/EF-092-secrets-launcher-audit.md`.
+
+## Issue EF-093 — Named migration `prose-to-contract`: agent-facing knowledge moves from prose an agent re-reads to contracts a runtime enforces
+ID: EF-093
+Title: Named migration `prose-to-contract`: agent-facing knowledge moves from prose an agent re-reads to contracts a runtime enforces
+Date: 2026-09-12
+Status: open
+Effort: XL
+Fix surface: eposforge-pattern
+Tags: skills, agent-policy, distribution
+Migration: prose-to-contract
+Verify with: `aggregate.sh --strangler` renders `prose-to-contract` with at least one target-shape item; this item states the completion commitment 2027-12-31 and the four phases below; every item filed under the umbrella carries `TargetShapeOf: prose-to-contract` (or `LegacyShapeOf:` where its own work still invests in the prose shape) so the whole programme is one view rather than a scatter of unrelated tickets; an agent that opens any member item can reach this owner row and read the overall direction without being told it exists; the phase ordering below is stated as an ordering, and phase 2 items do not start before the phase 1 declaration items are resolved.
+Notes: Filed 2026-09-12. Owner row only — no work happens here. This exists because the programme it names is large enough to fragment: roughly a dozen items across the pattern repo and its adopters that are individually small and collectively one direction, and the failure mode is that six months in nobody can see the shape any more. `procedure-skills-to-programs` (EF-086) is a PHASE of this migration, not a sibling — it does not get re-parented or closed early, but its completion is not this migration's completion.
+The direction in one sentence: knowledge an agent needs is currently held as prose the agent re-reads and re-interprets on every use, and it should be held as contracts a runtime enforces — a tool schema, a generated config, a declared root, a queryable graph.
+The four phases, in order:
+(1) DECLARE — every repo says what it is made of, so the later phases have something to point at. Code roots per repo (Standard 12 requirement 2). This is the cheapest phase and it gates the rest, because a graph or an indexer built before the boundary is declared indexes the wrong tree.
+(2) REGISTER — procedures and store verbs become callable things with schemas rather than prose recipes. `procedure-skills-to-programs` (EF-086) is the first half of this: steps move out of `SKILL.md` into a committed program. The second half is the tool hop, filed separately, because a program invoked by shelling out is not yet a contract the runtime enforces.
+(3) GENERATE — harness configuration, tool assignment and instruction projection stop being hand-maintained per surface and become emitted from one declaration. The assignment plane already does this for MCP servers; the same plane grows to cover which agent gets which tools.
+(4) NAVIGATE — the graph surfaces (contracts, code as-built, instruction topology, host topology, interaction corpus) become the way an agent finds things, replacing whole-corpus prose reads.
+Completion commitment: 2027-12-31. That is a commitment to have every member item resolved or explicitly re-scoped by that date, not a promise that the direction is finished — phase 4 in particular will outlive it.
+Public/private boundary: adopters file their own phase items in their own backlogs and reference this slug via `TargetShapeOf: prose-to-contract`. Adopter IDs never appear here (EF-047).
+Adjacency: EF-086 (phase 2, first half), EF-066 (the schema making this legible), EF-080 (the assignment plane phase 3 extends), Standard 03 (skill vs tool), Standard 04 (MCP two duties), Standard 12 (code-surface encapsulation), Standard 15 (program-first).
+
+## Issue EF-094 — Program-first is not tool-registered: add the second hop to the migration's definition of done
+ID: EF-094
+Title: Program-first is not tool-registered: add the second hop to the migration's definition of done
+Date: 2026-09-12
+Status: open
+Effort: M
+Fix surface: eposforge-pattern
+Tags: skills, agent-policy
+TargetShapeOf: prose-to-contract
+Depends on: EF-088
+Verify with: Standard 15 states that moving a procedure's steps into a program is the FIRST of two hops and names the second (registering the program as a Tool Transport tool with a declared schema), so a reader cannot conclude that a program-wrapped skill is finished; Standard 03's designation table gains a row or note distinguishing "a skill that wraps a program the agent shells out to" from "a skill that wraps a registered tool", with the test for when the second hop is required; a decision test exists that an agent can apply without judgement — at minimum, a procedure whose inputs and outputs are structured and whose body no longer contains judgement MUST be registered, and one whose body still contains a human gate or a refusal MAY stay a shelled-out program; EF-086's completion criteria are amended so the migration is not declared done on the program hop alone, or an explicit note records the decision to leave the second hop out of that migration's scope; `docs-lint` or an equivalent check can distinguish the two shapes mechanically (a `SKILL.md` invoking a program via the home variable, versus one naming a registered tool).
+Notes: Filed 2026-09-12. The gap this closes: Standard 15 requirement 1 says once the steps are known they live in a program and the skill wraps it. Standard 04 requirement 4 separately says a verb on a factory system of record must be a registered tool. Between them sits every procedure that is NOT a store verb — the majority — for which the current answer is "make it a program" and nothing says "then register it." A program the agent shells out to still loads its invocation prose into the conversation and still costs a round trip; the model does not see a schema, it sees instructions about a command. That is a smaller improvement than the standard implies, and an agent reading Standard 15 today will reasonably mark such a conversion complete.
+Do NOT resolve this by declaring every program a tool. The second hop has a real cost — an MCP server to host it, a schema to maintain, a lifecycle owner — and the majority of one-off glue does not earn it. The deliverable is the test that separates the two, not a blanket rule.
+Adjacency: EF-086 (the migration whose done-ness this changes), EF-088 (Standard 15 itself), EF-090 (skills wrap programs — the same seam one level down), Standard 03 requirement 4, Standard 04 requirement 4.
+
+## Issue EF-095 — A converted skill leaves a wrapper behind, and nothing says when it dies
+ID: EF-095
+Title: A converted skill leaves a wrapper behind, and nothing says when it dies
+Date: 2026-09-12
+Status: open
+Effort: S
+Fix surface: eposforge-pattern
+Tags: skills
+TargetShapeOf: prose-to-contract
+Depends on: EF-094
+Verify with: Standard 03 (or Standard 15, whichever owns the conversion path) states the retirement rule for a wrapper whose body has moved to a program or a tool: the conditions under which the wrapper is deleted rather than kept, who decides, and what happens to its trigger phrases so a user typing the old slash command is not left with nothing; the rule distinguishes a wrapper that still adds chair, order, dry-run or a human gate (keep — that is its job) from one that now only forwards (delete); a converted-but-not-retired wrapper is detectable, either by the file-level `legacy_shape_of` marker EF-087 already introduces or by a lint advisory, so the residue is countable rather than discovered years later; at least one already-converted wrapper in this repo is run through the rule as the worked example.
+Notes: Filed 2026-09-12. The observable risk: conversion is additive by default. Each hop leaves the prior shape in place because deleting it is nobody's step, and the estate accumulates wrappers that forward to programs that forward to tools. That is worse than either endpoint — three files to read, three places to drift.
+Deliberately small and deliberately AFTER the tool hop test (EF-094): a retirement rule written before the conversion test exists would have to guess what it is retiring.
+Adjacency: EF-087 (file-level legacy-shape markers — likely the detection surface), EF-094 (the hop this cleans up after), Standard 03 requirement 4.
