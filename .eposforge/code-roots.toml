@@ -1,0 +1,39 @@
+schema_version = "1"
+# Declared code roots for the EposForge pattern repo.
+#
+# Standard 12 (code-surface encapsulation) requires a mixed repo to name its
+# code surfaces explicitly; Standard 15 requirement 7 names the defaults
+# (`<container>/**/scripts`, `skills/*/scripts`), instantiated here against
+# this repo's uniform container name `.eposforge`.
+#
+# Reading rule: paths under `roots` are CODE. Everything else is PROSE — the
+# normative pattern, standards and research catalog — and belongs to the Spec
+# Graph, never to a code-structure index.
+#
+# Consumers: code-structure indexers, paired-change `code_globs`
+# (Standard 11), and the vehicle-class gate (Standard 15, G1). The G1 gate
+# already scans `.eposforge/**/scripts/**` and `skills/*/scripts/**`; this
+# file is the single declaration those two lists should agree with.
+
+roots = [
+  ".eposforge/**/scripts",
+  "skills/*/scripts",
+]
+
+# Matched by a root pattern but NOT code surfaces. The vendored virtualenv is
+# the reason this repo reports ~890 source files while owning far fewer: an
+# undeclared boundary makes a dependency tree look like product code.
+excludes = [
+  "**/.venv/**",                    # vendored third-party dependencies
+  ".scratchpad/**",                 # disposable spikes; never committed as the program
+]
+
+# Prose-primary trees, listed so the boundary is explicit rather than implied.
+prose_surfaces = [
+  "00-vision/**",
+  "01-architecture/**",
+  "02-roadmap/**",
+  "03-research/**",
+  "04-standards/**",
+  ".eposforge/backlog/**",
+]
