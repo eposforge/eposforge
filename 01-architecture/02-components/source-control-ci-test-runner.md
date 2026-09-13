@@ -51,6 +51,26 @@ Any Adapter (or other runner) that fills this sub-contract MUST:
 7. **No corpus backfill.** Already-shipped behavior gets a standing test
    when a bug is found, not as a campaign that writes tests for every
    old feature.
+8. **Something unattended runs it, and red reaches a person.** The
+   adopter chooses on push, on a schedule, or both. A suite that nothing
+   runs does not fill this sub-contract, however green it is locally.
+9. **Outcome altitude.** Checks prove what a user of the repository would
+   notice, through its real entry points (Ungameable Gate requirement 3).
+   A handful of checks per repository, not one per function.
+10. **Time budget.** The unattended run declares a wall-clock budget.
+    Exceeding it is a failure, reported as over budget rather than as an
+    unexplained timeout.
+11. **Optional short list.** A scheduled run MAY read a shorter
+    declaration in the same format as the suite (for example
+    `.eposforge/standing-nightly`). When it is absent, the scheduled run
+    executes the full suite under the same budget.
+12. **Detection is stated honestly.** A capability that arrived without a
+    check cannot be detected from commits. It is detectable only where
+    work is declared before it is built and names its covering check.
+    Review judges the rest.
+
+The folder that holds individual checks is not mandated;
+`.eposforge/standing-tests/` is suggested.
 
 The Adapter MUST NOT require a named vendor (pytest, Jest, xUnit, and so
 on). A worked reference may exist and MUST be tagged example-not-mandate.
