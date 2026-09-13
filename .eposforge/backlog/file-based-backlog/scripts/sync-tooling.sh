@@ -51,13 +51,13 @@ fi
 SRC_VERSION="$(cat "${SRC_DIR}/VERSION" | tr -d '[:space:]')"
 
 # Target scripts path mirrors the source layout convention.
-# For adopters this lands under their eposforge/ container (adopter layout).
-DEST_DIR="${TARGET}/eposforge/backlog/file-based-backlog/scripts"
+# Adopters and the framework both use the .eposforge/ container (Standard 07).
+DEST_DIR="${TARGET}/.eposforge/backlog/file-based-backlog/scripts"
 
 if [[ ! -d "$DEST_DIR" ]]; then
   echo "ERROR: target scripts directory not found: ${DEST_DIR}" >&2
   echo "  Is ${TARGET} an EposForge adopter repo with file-based-backlog installed?" >&2
-  echo "  (expected under eposforge/backlog/file-based-backlog/ per current layout)" >&2
+  echo "  (expected under .eposforge/backlog/file-based-backlog/ per current layout)" >&2
   exit 1
 fi
 
