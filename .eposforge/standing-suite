@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# standing-scope: hermetic
 # Standing properties for this tree. Clone-local: run from any checkout.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
