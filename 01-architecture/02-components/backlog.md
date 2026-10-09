@@ -112,6 +112,11 @@ In addition to the universal fields in
 - **Is not:** sprint planning, velocity estimation, or project finance.
 - **Is not:** a replacement for public issue trackers such as GitHub
   Issues.
+- **Is not:** a place for undecided ideas. A repo may keep an ideas
+  register (`.eposforge/ideas/ideas.md`, maintained by the `idea-capture`
+  skill) as a pre-backlog state beside active, slated and archive. Its
+  entries carry no effort, priority or dependency links and are not work
+  items; an idea enters the backlog only by promotion to an ordinary item.
 
 ## Graph Projection
 

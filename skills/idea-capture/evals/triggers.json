@@ -1,0 +1,17 @@
+{
+  "skill": "idea-capture",
+  "test_cases": [
+    {"input": "Capture this idea: a calendar view that shows when deliveries cluster", "should_trigger": true},
+    {"input": "Here's a napkin note, can you put it in the register?", "should_trigger": true},
+    {"input": "Notional feature for later: export everything as a single archive", "should_trigger": true},
+    {"input": "Just food for future development, not a ticket: voice input for notes", "should_trigger": true},
+    {"input": "Add to ideas — maybe a plugin system someday", "should_trigger": true},
+    {"input": "Promote IDEA-004 to the backlog, it's blocking the sync decision", "should_trigger": true},
+    {"input": "Reject that idea about public pages, nobody wants it", "should_trigger": true},
+    {"input": "Which ideas in the register conflict with each other?", "should_trigger": true},
+    {"input": "File a backlog item to fix the failing lint on main", "should_trigger": false},
+    {"input": "Help me debug this Python script", "should_trigger": false},
+    {"input": "What's the weather like today?", "should_trigger": false},
+    {"input": "Run the portfolio review on the backlog", "should_trigger": false}
+  ]
+}

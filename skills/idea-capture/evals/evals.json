@@ -1,0 +1,116 @@
+{
+  "skill": "idea-capture",
+  "fixture": "A repo whose .eposforge/backlog/config.toml has prefix = \"APP\" and whose .eposforge/ideas/ideas.md header declares Area vocabulary capture | organize | share | other. Existing entries: APP-IDEA-001 'Offline reading queue' (idea), APP-IDEA-002 'Import highlights from e-reader exports' (idea), APP-IDEA-003 'Public reading-list pages' (rejected — no audience for public lists yet). Backlog item APP-014 'Sync reading list across devices' is open.",
+  "test_cases": [
+    {
+      "name": "single_idea_capture",
+      "input": "Add to ideas: it'd be nice to tag books by mood so I can pick something light after a long week.",
+      "assertions": [
+        "Appends exactly one entry headed '## APP-IDEA-004: <Title>' (colon right after the ID, one space) at the end of .eposforge/ideas/ideas.md",
+        "Every field label sits on its own line as **Label**, with the value on the following line(s)",
+        "Area is one value from the header vocabulary (capture, organize, share or other)",
+        "Status is idea and Phase is one of core, next, later, explore",
+        "Has an Edges field (with '- none yet' if no edge is proposed), not a Related field",
+        "Acceptance criteria are sparse or TBD; no invented requirements",
+        "Does not add effort, priority, Depends on or Blocks fields"
+      ]
+    },
+    {
+      "name": "duplicate_merge",
+      "input": "Napkin note: I want to pull my e-reader highlights into the app automatically.",
+      "assertions": [
+        "Identifies the overlap with APP-IDEA-002",
+        "Refines APP-IDEA-002 (adds a Source line and merges the note) instead of appending a new entry",
+        "No new APP-IDEA-NNN ID is assigned",
+        "Reports that the existing entry was refined"
+      ]
+    },
+    {
+      "name": "rejected_duplicate_surfaces_reason",
+      "input": "Capture this idea: let people publish their reading list as a public web page.",
+      "assertions": [
+        "Finds the rejected entry APP-IDEA-003",
+        "Shows the operator the rejection reason and asks whether anything has changed",
+        "Does not append a new duplicate entry without confirmation"
+      ]
+    },
+    {
+      "name": "multi_idea_split",
+      "input": "Food for future development: (1) a yearly reading recap, (2) let a friend co-edit a shared list, (3) dark mode for the reader view.",
+      "assertions": [
+        "Writes three separate entries, APP-IDEA-004, APP-IDEA-005 and APP-IDEA-006, in that order",
+        "Each entry has its own Story, Area from the header vocabulary, and Status idea",
+        "Does not merge distinct ideas into one entry"
+      ]
+    },
+    {
+      "name": "edge_proposal_and_backfill",
+      "input": "Notional feature: download books for a flight so the queue works without signal, and keep them in step with my other devices.",
+      "assertions": [
+        "Proposes an overlaps edge to APP-IDEA-001 (or refines it as a duplicate) with a one-line reason",
+        "If overlaps: APP-IDEA-001 is written on the new entry, the same edit adds '- overlaps: <new ID>' to APP-IDEA-001",
+        "Proposes an edge toward backlog item APP-014 (overlaps or depends-on) and does not edit the APP-014 backlog entry",
+        "Uses only edge types from the closed vocabulary",
+        "Writes no inverse edges such as required-by or has-part"
+      ]
+    },
+    {
+      "name": "dangling_edge",
+      "input": "Add to ideas: reading streak badges. It depends on APP-IDEA-042, the stats dashboard idea.",
+      "assertions": [
+        "Detects that APP-IDEA-042 does not exist in the ideas file or the backlog",
+        "Does not write a depends-on edge to a non-existent ID",
+        "Tells the operator the target is missing and asks whether to capture the stats dashboard as its own idea first"
+      ]
+    },
+    {
+      "name": "promote_request",
+      "input": "Promote APP-IDEA-002 to the backlog — I keep re-typing highlights by hand every week.",
+      "assertions": [
+        "Treats the stated repeated pain as meeting the promotion bar (or confirms it with the operator)",
+        "Writes an ordinary backlog item in the repo's backlog format with the next backlog ID, citing APP-IDEA-002",
+        "Sets APP-IDEA-002 Status to 'promoted → <new backlog ID>'",
+        "Adds '- promoted-to: <new backlog ID>' to APP-IDEA-002's Edges",
+        "Leaves APP-IDEA-002 in the ideas file"
+      ]
+    },
+    {
+      "name": "reject_request",
+      "input": "Reject APP-IDEA-001, offline mode is out of scope for this app.",
+      "assertions": [
+        "Sets Status to 'rejected — offline mode is out of scope for this app' (or an equivalent one-line reason)",
+        "Leaves the entry and its edges in the file"
+      ]
+    },
+    {
+      "name": "repo_without_ideas_file",
+      "fixture_override": "Same repo, but .eposforge/ideas/ideas.md does not exist.",
+      "input": "Capture this idea: a barcode scanner to add books quickly.",
+      "assertions": [
+        "Says the ideas file does not exist and offers to create it with the header",
+        "Asks the operator for the Area vocabulary (a draft suggestion is fine) and the Serves target",
+        "Does not create the file before the operator agrees",
+        "After agreement, the first entry is APP-IDEA-001 and the header states this is not the backlog"
+      ]
+    },
+    {
+      "name": "repo_without_backlog_config",
+      "fixture_override": "A repo with no .eposforge/ directory at all.",
+      "input": "Add to ideas: a weekly digest email of what I read.",
+      "assertions": [
+        "Asks the operator for an ID prefix",
+        "Offers to create only .eposforge/ideas/ideas.md and does not scaffold a backlog"
+      ]
+    },
+    {
+      "name": "analyze_register",
+      "input": "What's in the ideas register — any clusters or conflicts I should decide on?",
+      "assertions": [
+        "Reads Edges as a graph: groups clusters via part-of and overlaps, lists depends-on chains",
+        "Lists conflicts-with and alternative-to pairs as open choices without resolving them",
+        "Reports dangling or one-sided symmetric edges if any",
+        "Does not edit the file"
+      ]
+    }
+  ]
+}

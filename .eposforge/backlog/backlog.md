@@ -926,3 +926,16 @@ Fix surface: eposforge-pattern
 Tags: source-control, distribution
 Verify with: a reference implementation tagged example-not-mandate provides, with no host names, forge addresses or credentials baked in, (a) run a repository's suite from a fresh clone under a budget, (b) prove a new check fails on a base revision and passes on HEAD, refusing a check that was never red, and (c) report the latest push-run result for the default branch's commit from a configured forge; each verb has a command line and a thin MCP front door; its own standing checks run clone-local with no network.
 Notes: Filed 2026-09-13. Only once a private adopter instance has run for a while; do not extract early. Adjacency: EF-098 (the contract this serves), EF-099.
+
+## Issue EF-101 — Add idea-capture skill: a per-repo register of undecided product ideas beside the backlog
+ID: EF-101
+Title: Add idea-capture skill: a per-repo register of undecided product ideas beside the backlog
+Date: 2026-10-09
+Status: resolved
+Effort: S
+Fix surface: eposforge-pattern
+Tags: skills, backlog-tooling
+Verify with: `skills/idea-capture/SKILL.md` exists with `name` and a trigger-phrase `description`, plus a thin `.github/skills/idea-capture/SKILL.md` wrapper; it names the register location (`.eposforge/ideas/ideas.md`), the `<PREFIX>-IDEA-NNN` ID rule read from the repo's backlog `config.toml`, a repo-specific Area vocabulary declared in the file header, the entry and file-header templates, a closed typed-edge vocabulary (symmetric edges on both nodes, directed on the source only, no written inverses, dangling-edge check), and capture, promote, reject and analyze workflows; `skills/idea-capture/evals/evals.json` covers a duplicate merge, a multi-idea split, edge proposal with back-fill, a dangling edge, a promote request and a repo without an ideas file; `01-architecture/02-components/backlog.md` notes the register as a pre-backlog state that is not work items.
+Validation: Landed 2026-10-09: skill, wrapper, changelog, evals and the one-paragraph boundary note in the backlog component contract. Designation per Standard 03 requirement 4 is skill (splitting notes, judging duplicates and proposing edges are judgment; no store verb). Evals are written but not yet run by an external grader.
+Resolved: 2026-10-09
+Notes: Filed and resolved in the same sitting so the new skill has an item (precedent: EF-040, EF-043). An adopter asked for somewhere to keep notional ideas so they are not forgotten without turning them into backlog items; the register is that undecided sibling. Its format is kept strictly parseable (entry heading, one `**Label**` per line, typed edge lines) so graph viewers that read file backlogs can read it too.
