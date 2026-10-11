@@ -267,7 +267,7 @@ def _generate_toml(content: str, active: list[dict], all_srv: list[dict], rmap: 
             # mcp-remote stdio proxy.
             out.append('type = "stdio"')
             out.append('command = "npx"')
-            out.append(f'args = {json.dumps(["-y", "mcp-remote", _resolve_url(s), "--transport", "sse-only"])}')
+            out.append(f'args = {json.dumps(["-y", "mcp-remote@0.14.3", _resolve_url(s), "--transport", "sse-only"])}')
             out.append("startup_timeout_sec = 60")
             proxy_env = _grok_sse_proxy_env()
             if proxy_env:
