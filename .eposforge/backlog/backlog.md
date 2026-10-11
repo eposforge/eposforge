@@ -34,6 +34,7 @@ Status: open
 Effort: L
 Fix surface: eposforge-pattern
 Tags: backlog-tooling, spec-graph
+Migration: single-graph-to-multi-graph
 Verify with: a top-level EF- item exists in active backlog referencing the four capture/plan files (the adopter architecture implementation plan and discussion capture, boundaries-layers-2026-06.md, adapter-layout-mirror.md); 4–6 child EF- items created for major threads (backlog graph independence/ingestion boundaries, multi-graph foundation for first adopter, targeted layout mirroring, agent grounding + policy, sync reliability/verification, terminology); the capture/plan files are updated with EF- references and "planning only" notes removed or marked "Phase 0 in progress"; portfolio-review run surfaces the evolution as a theme; terminology uses generic "Adopter Platform Spec repo" (no specific adopter identifiers) vs "Platform Instance"; first concrete (EF-057) started (explicit exclusion of raw backlog items from main Spec Graph). All changes tracked via the backlog's own graph.
 Notes: Phase 0 of the strangler-fig rollout for the 2026-06 architecture alignment (captured in the four files). Master item owns visibility and sequencing. Cross-cutting: (a) bake strangler/Migration/legacy-shape/target-shape concepts into backlog schema so agents using GraphRAG tooling can drive such evolutions — **carved out to EF-066 for independent delivery** (schema is decided; do not gate it behind the multi-graph GraphRAG work here); (b) any new agent/skills work follows AGENTS.md + 04-standards/08-agent-coding-guidelines and ships SKILL.md; (c) update the four files only for design state. Children will be filed for the threads. Adjacency: EF-011/012 (recall boundaries), EF-046/047/048 (backlog graph quality), EF-040 (portfolio visibility), EF-066 (strangler-tracking schema, carved from cross-cutting (a)).
 
@@ -81,6 +82,7 @@ Effort: M
 Fix surface: eposforge-pattern
 Depends on: EF-056
 Tags: backlog-tooling, spec-graph
+TargetShapeOf: single-graph-to-multi-graph
 Verify with: bulk-rebuild.sh, update-spec-graph skill, post-commit hook, and cognee.md exclude raw `backlog/*.md` / `.eposforge/backlog/*.md` (and plans/) from main eposforge-sync Spec Graph by default while still allowing ontology-level references to backlog *mechanics*; aggregate.sh + portfolio-review + ready.sh continue to provide GraphRAG-style views (themes, critical path, unanchored, mermaid) over the file-based markup (nodes from issues, edges from Depends/Blocks, communities from Tags); a new or extended skill can be invoked by agents for backlog-specific traversals without raw multi-repo file RAG; pilot on this repo + one adopter; separate from main graph (backlog items never in C6).
 Notes: First concrete delivery toward independent file-based backlog graph. Keeps core data pure markdown (portable). Tooling layer provides the RAG/Graph features. See capture for "where the capability lives". Adjacency: EF-056, EF-046/047 (explicit graph quality), EF-030 (lint as companion), EF-011 (conflation fix via boundaries).
 
