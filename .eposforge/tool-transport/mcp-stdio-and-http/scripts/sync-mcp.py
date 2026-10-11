@@ -265,7 +265,6 @@ def _generate_toml(content: str, active: list[dict], all_srv: list[dict], rmap: 
             # Grok (and Codex, which reuses this TOML dialect) drive Streamable
             # HTTP against classic-SSE servers (405s). Force classic SSE via an
             # mcp-remote stdio proxy.
-            out.append('type = "stdio"')
             out.append('command = "npx"')
             out.append(f'args = {json.dumps(["-y", "mcp-remote@0.14.3", _resolve_url(s), "--transport", "sse-only"])}')
             out.append("startup_timeout_sec = 60")
@@ -275,10 +274,8 @@ def _generate_toml(content: str, active: list[dict], all_srv: list[dict], rmap: 
                 for k, v in proxy_env.items():
                     out.append(f'{k} = {json.dumps(v)}')
         elif t == "http":
-            out.append(f'type = "{t}"')
             out.append(f'url = "{_resolve_url(s)}"')
         elif t == "stdio":
-            out.append('type = "stdio"')
             cmd, env = _wrap_with_epos_secrets(s, rmap)
             out.append(f'command = "{cmd[0]}"')
             out.append(f'args = {json.dumps(cmd[1:])}')
